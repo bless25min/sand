@@ -8,6 +8,8 @@ export type {
   LocalPressureResult,
 } from './combat/calculate-local-pressure';
 export type { CombatSideSnapshot } from './combat/combat-side-snapshot';
+export { createUnitCombatSnapshot } from './combat/create-unit-combat-snapshot';
+export type { CreateUnitCombatSnapshotInput } from './combat/create-unit-combat-snapshot';
 export { detectContactZones } from './contact/detect-contact-zones';
 export type { DetectContactZonesInput } from './contact/detect-contact-zones';
 export { resolveContact } from './contact/resolve-contact';
@@ -21,6 +23,8 @@ export type {
 } from './grid/create-grid';
 export { projectBattlefield } from './grid/project-battlefield';
 export type { ProjectBattlefieldInput } from './grid/project-battlefield';
+export { generateGreyfangLoot } from './loot/generate-greyfang-loot';
+export type { GenerateGreyfangLootInput } from './loot/generate-greyfang-loot';
 export { applyGreyfangLeaderLoss } from './monsters/apply-greyfang-leader-loss';
 export type {
   ApplyGreyfangLeaderLossInput,

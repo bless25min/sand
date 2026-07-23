@@ -33,12 +33,16 @@ export interface UnitState {
   readonly commandEfficiency: number;
   readonly attack: number;
   readonly defense: number;
+  readonly frontalDefense: number;
   readonly mobility: number;
   readonly carryingCapacity: number;
+  readonly equipmentWeight: number;
   readonly formation: FormationType;
   readonly executionState: UnitExecutionState;
   readonly commanderId?: string;
   readonly equipmentLoadoutId: string;
+  readonly equipmentIds: readonly string[];
+  readonly appearanceIds: readonly string[];
   readonly skillIds: readonly string[];
   readonly passiveIds: readonly string[];
   readonly statusEffectIds: readonly string[];

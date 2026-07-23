@@ -3,6 +3,7 @@ import type { Vec2 } from '@expedition/shared-types';
 import type { VisualPoint } from '../contracts/visual-point';
 import type { VisualUnitSource } from '../contracts/visual-unit-source';
 import { createFormationOffset } from '../formations/create-formation-offset';
+import { resolveEquipmentVisualStyle } from '../styles/resolve-equipment-visual-style';
 import { allocatePointCounts } from './allocate-point-counts';
 
 export interface CreateVisualPointsInput {
@@ -48,6 +49,7 @@ export function createVisualPoints(input: CreateVisualPointsInput): VisualPoint[
 
   input.sources.forEach((source, sourceIndex) => {
     assertSource(source);
+    const visualStyle = resolveEquipmentVisualStyle(source);
     const pointCount = allocations[sourceIndex];
 
     if (pointCount === undefined) {
@@ -71,10 +73,10 @@ export function createVisualPoints(input: CreateVisualPointsInput): VisualPoint[
         position: add(source.position, offset),
         targetPosition: add(source.targetPosition, offset),
         rotation: Math.atan2(source.direction.y, source.direction.x),
-        scale: source.pointScale,
+        scale: visualStyle.pointScale,
         alpha: 1,
-        shape: source.shape,
-        color: source.color,
+        shape: visualStyle.shape,
+        color: visualStyle.color,
         state: source.executionState === 'ROUTING' ? 'ROUTING' : 'ACTIVE',
         stateAgeSeconds: 0,
         animationSeed,

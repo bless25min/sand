@@ -8,11 +8,13 @@ Visual projection and PixiJS lifecycle.
 
 - Read-only visual snapshots.
 - Battle events.
+- Equipment appearance IDs.
 
 ## Public Output
 
 - Canvas visuals.
 - Selection signals.
+- Visual styles derived from appearance IDs.
 
 ## Allowed Dependencies
 

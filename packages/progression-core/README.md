@@ -9,12 +9,13 @@ Loot, inventory, crafting, and equipment effects.
 - Battle results.
 - Recipes.
 - Inventory.
-- `RandomSource`.
+- Material definitions supplied by the composition root.
+- Equipment definitions supplied by the composition root.
 
 ## Public Output
 
 - Progression state updates.
-- Progression events.
+- Recovery, retreat-loss, crafting, and equipment results.
 
 ## Allowed Dependencies
 

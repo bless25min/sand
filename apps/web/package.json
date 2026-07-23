@@ -9,7 +9,11 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@expedition/game-data": "workspace:*",
     "@expedition/pixi-renderer": "workspace:*",
+    "@expedition/progression-core": "workspace:*",
+    "@expedition/shared-types": "workspace:*",
+    "@expedition/simulation-core": "workspace:*",
     "react": "19.2.8",
     "react-dom": "19.2.8"
   }

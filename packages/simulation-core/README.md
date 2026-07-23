@@ -14,6 +14,7 @@ Deterministic battle rules and invariants.
 
 - State updates.
 - `BattleEvent` values.
+- Seeded, positioned loot drops.
 
 ## Allowed Dependencies
 

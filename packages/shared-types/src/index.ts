@@ -1,9 +1,18 @@
 export type { BattleState } from './battle/battle-state';
 export type { ContactType } from './contact/contact-type';
 export type { ContactZone } from './contact/contact-zone';
+export type { CraftingRecipe, RecipeIngredient } from './crafting/crafting-recipe';
+export type { EquipmentDefinition, EquipmentSlot } from './equipment/equipment-definition';
+export type { EquipmentInstance } from './equipment/equipment-instance';
+export type { RetreatOutcome } from './expedition/retreat-outcome';
 export type { BattleEvent, BattleEventType } from './events/battle-event';
 export type { GridCellState, GridState } from './grid/grid-state';
 export type { TerrainType } from './grid/terrain-type';
+export type { InventoryStack, InventoryState } from './inventory/inventory-state';
+export type { ItemRarity } from './items/item-rarity';
+export type { MaterialDefinition } from './items/material-definition';
+export type { MaterialId } from './items/material-id';
+export type { LootDrop } from './loot/loot-drop';
 export type { MonsterBehaviorState, MonsterGroupState } from './monsters/monster-group-state';
 export type { Vec2 } from './primitives/vec2';
 export type { FormationType } from './units/formation-type';

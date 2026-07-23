@@ -10,5 +10,7 @@ describe('App', () => {
     expect(markup).toContain('Project Expedition');
     expect(markup).toContain('遠征軍戰術沙盤');
     expect(markup).toContain('Simulation Core');
+    expect(markup).toContain('掉落如何改變下一場戰鬥');
+    expect(markup).toContain('角甲重盾');
   });
 });

@@ -15,5 +15,15 @@ test('renders one WebGL battlefield with the full visual point budget', async ({
   await expect(page.getByText('WebGL', { exact: true })).toBeVisible();
   await expect(page.getByRole('alert')).toHaveCount(0);
 
+  const progressionLoop = page.getByTestId('progression-loop');
+  await expect(progressionLoop).toBeVisible();
+  await expect(
+    progressionLoop.getByRole('heading', {
+      name: '掉落如何改變下一場戰鬥',
+    }),
+  ).toBeVisible();
+  await expect(progressionLoop.getByText('角甲重盾', { exact: true })).toBeVisible();
+  await expect(progressionLoop).toContainText('10 → 16');
+
   expect(pageErrors).toEqual([]);
 });

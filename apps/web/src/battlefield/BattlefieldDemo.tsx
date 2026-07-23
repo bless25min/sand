@@ -13,20 +13,24 @@ interface Diagnostics {
   readonly initializationMs: number;
 }
 
-export function BattlefieldDemo() {
+interface BattlefieldDemoProps {
+  readonly heavyAppearanceIds: readonly string[];
+}
+
+export function BattlefieldDemo({ heavyAppearanceIds }: BattlefieldDemoProps) {
   const hostRef = useRef<HTMLDivElement>(null);
   const [diagnostics, setDiagnostics] = useState<Diagnostics | null>(null);
   const [error, setError] = useState<string | null>(null);
   const points = useMemo(
     () =>
       createVisualPoints({
-        sources: createDemoSources(),
+        sources: createDemoSources(heavyAppearanceIds),
         pointBudget: 2_000,
         spacing: 4,
       }).map((point, index) =>
         index > 0 && index % 89 === 0 ? { ...point, state: 'CASUALTY' as const } : point,
       ),
-    [],
+    [heavyAppearanceIds],
   );
 
   useEffect(() => {
@@ -123,7 +127,7 @@ export function BattlefieldDemo() {
       <ul className="battlefield-legend" aria-label="戰場圖例">
         <li>
           <span className="legend-shape legend-shape--heavy" />
-          重步兵 · Dense Block
+          角甲重盾兵 · Dense Block
         </li>
         <li>
           <span className="legend-shape legend-shape--archer" />

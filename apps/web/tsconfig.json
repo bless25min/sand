@@ -8,5 +8,11 @@
     "tsBuildInfoFile": "../../node_modules/.cache/web.tsbuildinfo"
   },
   "include": ["src", "vite.config.ts"],
-  "references": [{ "path": "../../packages/pixi-renderer" }]
+  "references": [
+    { "path": "../../packages/game-data" },
+    { "path": "../../packages/pixi-renderer" },
+    { "path": "../../packages/progression-core" },
+    { "path": "../../packages/shared-types" },
+    { "path": "../../packages/simulation-core" }
+  ]
 }

@@ -24,3 +24,14 @@ Worker API
 ## Dependency Rule
 
 Adapters depend on stable contracts and pure cores. Pure cores never depend on adapters.
+
+Content definitions are injected by the Web composition root:
+
+```text
+game-data ─┐
+           ├─> apps/web ─> progression-core inputs
+rules ─────┘             └> pixi-renderer snapshots
+```
+
+`progression-core` does not import Greyfang content. This keeps inventory,
+recovery, retreat, crafting, and equipment rules reusable for later domains.

@@ -59,9 +59,21 @@ importers:
 
   apps/web:
     dependencies:
+      '@expedition/game-data':
+        specifier: workspace:*
+        version: link:../../packages/game-data
       '@expedition/pixi-renderer':
         specifier: workspace:*
         version: link:../../packages/pixi-renderer
+      '@expedition/progression-core':
+        specifier: workspace:*
+        version: link:../../packages/progression-core
+      '@expedition/shared-types':
+        specifier: workspace:*
+        version: link:../../packages/shared-types
+      '@expedition/simulation-core':
+        specifier: workspace:*
+        version: link:../../packages/simulation-core
       react:
         specifier: 19.2.8
         version: 19.2.8
@@ -77,7 +89,11 @@ importers:
 
   packages/command-schema: {}
 
-  packages/game-data: {}
+  packages/game-data:
+    dependencies:
+      '@expedition/shared-types':
+        specifier: workspace:*
+        version: link:../shared-types
 
   packages/pixi-renderer:
     dependencies:
@@ -88,7 +104,18 @@ importers:
         specifier: 8.19.0
         version: 8.19.0
 
-  packages/progression-core: {}
+  packages/progression-core:
+    dependencies:
+      '@expedition/shared-types':
+        specifier: workspace:*
+        version: link:../shared-types
+    devDependencies:
+      '@expedition/game-data':
+        specifier: workspace:*
+        version: link:../game-data
+      '@expedition/test-fixtures':
+        specifier: workspace:*
+        version: link:../test-fixtures
 
   packages/shared-types: {}
 

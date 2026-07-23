@@ -16,6 +16,7 @@ function source(id: string, overrides: Partial<VisualUnitSource> = {}): VisualUn
     shape: 'SQUARE',
     color: 0x5da9e9,
     pointScale: 1,
+    appearanceIds: [],
     ...overrides,
   };
 }

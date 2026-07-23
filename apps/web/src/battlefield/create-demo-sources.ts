@@ -1,6 +1,6 @@
 import type { VisualUnitSource } from '@expedition/pixi-renderer';
 
-export function createDemoSources(): VisualUnitSource[] {
+export function createDemoSources(heavyAppearanceIds: readonly string[] = []): VisualUnitSource[] {
   return [
     {
       id: 'ironwall-heavy',
@@ -14,6 +14,7 @@ export function createDemoSources(): VisualUnitSource[] {
       shape: 'SQUARE',
       color: 0x6fb6d9,
       pointScale: 0.32,
+      appearanceIds: heavyAppearanceIds,
     },
     {
       id: 'pinewatch-archers',
@@ -27,6 +28,7 @@ export function createDemoSources(): VisualUnitSource[] {
       shape: 'TRIANGLE',
       color: 0xa7d8b1,
       pointScale: 0.56,
+      appearanceIds: [],
     },
     {
       id: 'dawnlance-cavalry',
@@ -40,6 +42,7 @@ export function createDemoSources(): VisualUnitSource[] {
       shape: 'DIAMOND',
       color: 0xe6c66b,
       pointScale: 0.4,
+      appearanceIds: [],
     },
     {
       id: 'greyfang-pack',
@@ -53,6 +56,7 @@ export function createDemoSources(): VisualUnitSource[] {
       shape: 'CIRCLE',
       color: 0xd66d62,
       pointScale: 0.52,
+      appearanceIds: [],
     },
   ];
 }

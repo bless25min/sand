@@ -1,4 +1,8 @@
 import { BattlefieldDemo } from './battlefield/BattlefieldDemo';
+import { createMvpLoopSnapshot } from './expedition/create-mvp-loop-snapshot';
+import { ExpeditionLoopPanel } from './expedition/ExpeditionLoopPanel';
+
+const MVP_LOOP = createMvpLoopSnapshot();
 
 export function App() {
   return (
@@ -11,11 +15,13 @@ export function App() {
         </div>
         <div className="build-badge">
           <span>BUILD</span>
-          <strong>0.3.0 · GREYFANG</strong>
+          <strong>0.4.0 · LOOT LOOP</strong>
         </div>
       </header>
 
-      <BattlefieldDemo />
+      <BattlefieldDemo heavyAppearanceIds={MVP_LOOP.equippedUnit.appearanceIds} />
+
+      <ExpeditionLoopPanel snapshot={MVP_LOOP} />
 
       <footer className="system-note">
         <span>VISUAL PROJECTION ONLY</span>

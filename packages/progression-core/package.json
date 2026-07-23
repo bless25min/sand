@@ -15,5 +15,12 @@
   "scripts": {
     "build": "tsc -b",
     "typecheck": "tsc -b --pretty false"
+  },
+  "dependencies": {
+    "@expedition/shared-types": "workspace:*"
+  },
+  "devDependencies": {
+    "@expedition/game-data": "workspace:*",
+    "@expedition/test-fixtures": "workspace:*"
   }
 }

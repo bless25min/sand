@@ -14,4 +14,5 @@ export interface VisualUnitSource {
   readonly shape: PointShape;
   readonly color: number;
   readonly pointScale: number;
+  readonly appearanceIds: readonly string[];
 }

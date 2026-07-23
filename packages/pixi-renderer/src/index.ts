@@ -13,3 +13,5 @@ export type { AdvanceVisualPointInput } from './points/advance-visual-point';
 export { allocatePointCounts } from './points/allocate-point-counts';
 export { createVisualPoints } from './points/create-visual-points';
 export type { CreateVisualPointsInput } from './points/create-visual-points';
+export { resolveEquipmentVisualStyle } from './styles/resolve-equipment-visual-style';
+export type { VisualStyle } from './styles/resolve-equipment-visual-style';
