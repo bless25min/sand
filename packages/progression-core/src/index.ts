@@ -9,6 +9,8 @@ export { recoverLoot } from './inventory/recover-loot';
 export type { RecoveredLoot, RecoverLootInput, RecoverLootResult } from './inventory/recover-loot';
 export { applyRetreatLoss } from './retreat/apply-retreat-loss';
 export type { ApplyRetreatLossInput, RetreatLossResult } from './retreat/apply-retreat-loss';
+export { treatWounded } from './recovery/treat-wounded';
+export type { TreatWoundedInput, TreatWoundedResult } from './recovery/treat-wounded';
 export { calculateExperienceAwards } from './experience/calculate-experience-awards';
 export type {
   CalculateExperienceAwardsInput,
