@@ -1,37 +1,8 @@
-import type {
-  FormationType,
-  MonsterBehaviorState,
-  UnitState,
-  UnitType,
-} from '@expedition/shared-types';
+import type { MonsterBehaviorState, UnitState } from '@expedition/shared-types';
 import type { PlayableBattleState } from '@expedition/simulation-core';
 
 import type { CommandFeedback } from './create-command-feedback';
-
-const ROLE_LABELS: Readonly<Record<UnitType, string>> = {
-  HEAVY_INFANTRY: '前衛',
-  ARCHER: '遠射',
-  CAVALRY: '突擊',
-  HERO_TEAM: '支援',
-};
-
-const FORMATION_LABELS: Readonly<Record<FormationType, string>> = {
-  DENSE_BLOCK: '密集方陣',
-  LINE: '橫列',
-  COLUMN: '縱列',
-  LOOSE: '散開',
-  SQUARE: '方陣',
-  WEDGE: '楔形',
-};
-
-const INTENT_LABELS: Readonly<Record<MonsterBehaviorState, string>> = {
-  IDLE: '潛伏觀望',
-  HUNTING: '正面追獵',
-  ENCIRCLING: '迂迴包圍',
-  ENGAGED: '近身撕咬',
-  RETREATING: '脫離戰線',
-  ROUTING: '潰散逃亡',
-};
+import { formationLabel, intentLabel, roleLabel } from './tactical-labels';
 
 interface UnitHud {
   readonly id: string;
@@ -118,8 +89,8 @@ export function createBattlefieldHud(input: CreateBattlefieldHudInput): Battlefi
     selected: {
       id: unit.id,
       name: unit.name,
-      role: ROLE_LABELS[unit.unitType],
-      formation: FORMATION_LABELS[unit.formation],
+      role: roleLabel(unit.unitType),
+      formation: formationLabel(unit.formation),
       troops: unit.troopCount,
       initialTroops: unit.initialTroopCount,
       moralePercent: percent(unit.morale),
@@ -130,7 +101,7 @@ export function createBattlefieldHud(input: CreateBattlefieldHudInput): Battlefi
       id: monster.id,
       name: '灰牙狼群',
       intent: monster.behaviorState,
-      intentLabel: INTENT_LABELS[monster.behaviorState],
+      intentLabel: intentLabel(monster.behaviorState),
       troops: monster.troopCount,
       initialTroops: monster.initialTroopCount,
       moralePercent: percent(monster.morale),

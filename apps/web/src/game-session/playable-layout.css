@@ -1,7 +1,7 @@
 .battle-cockpit {
   display: grid;
-  grid-template-columns: minmax(0, 1.75fr) minmax(20rem, 0.75fr);
-  gap: 14px;
+  grid-template-columns: minmax(0, 1.9fr) minmax(19rem, 0.7fr);
+  gap: 10px;
   align-items: start;
 }
 
@@ -13,7 +13,7 @@
   position: sticky;
   top: 12px;
   display: grid;
-  gap: 12px;
+  gap: 8px;
   min-width: 0;
   align-content: start;
 }
@@ -21,7 +21,7 @@
 .tactical-console > section,
 .playable-expedition > .progression-actions {
   min-width: 0;
-  padding: 18px;
+  padding: 11px;
   border: 1px solid rgba(145, 190, 158, 0.2);
   border-radius: 16px;
   background: rgba(7, 20, 16, 0.84);
@@ -30,8 +30,8 @@
 .command-feedback {
   display: grid;
   gap: 5px;
-  margin: 10px 0 12px;
-  padding: 12px;
+  margin: 8px 0;
+  padding: 9px 10px;
   border: 1px solid rgba(145, 190, 158, 0.25);
   border-left: 4px solid #7db493;
   border-radius: 10px;
@@ -48,7 +48,7 @@
 .command-feedback p {
   margin: 0;
   color: #f0f6f1;
-  font-size: 0.88rem;
+  font-size: 0.78rem;
   line-height: 1.45;
 }
 

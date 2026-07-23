@@ -16,4 +16,15 @@ describe('App', () => {
     expect(markup).toContain('重盾衛隊');
     expect(markup).toContain('獵獸射手');
   });
+
+  it('keeps the playable battle first and collapses developer evidence', () => {
+    const markup = renderToStaticMarkup(<App />);
+    const playableIndex = markup.indexOf('data-testid="playable-expedition"');
+    const evidenceIndex = markup.indexOf('class="developer-evidence"');
+
+    expect(playableIndex).toBeGreaterThan(-1);
+    expect(evidenceIndex).toBeGreaterThan(playableIndex);
+    expect(markup).toContain('開發驗證資料');
+    expect(markup).not.toMatch(/<details[^>]*class="developer-evidence"[^>]*open/);
+  });
 });

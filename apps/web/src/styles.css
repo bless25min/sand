@@ -27,15 +27,15 @@ body {
 
 .app-shell {
   min-height: 100vh;
-  width: min(100%, 1440px);
+  width: min(100%, 1500px);
   margin: 0 auto;
-  padding: 2rem clamp(1rem, 4vw, 4rem) 2.5rem;
+  padding: 0.75rem clamp(0.75rem, 2.5vw, 2.5rem) 1.5rem;
 }
 
 .eyebrow {
-  margin: 0 0 0.55rem;
+  margin: 0;
   color: #c0a862;
-  font-size: 0.72rem;
+  font-size: 0.62rem;
   font-weight: 700;
   letter-spacing: 0.2em;
   text-transform: uppercase;
@@ -44,14 +44,14 @@ body {
 h1 {
   margin: 0;
   font-family: Georgia, 'Noto Serif TC', serif;
-  font-size: clamp(2.15rem, 5vw, 4.8rem);
+  font-size: clamp(1.25rem, 2.4vw, 2rem);
   font-weight: 500;
   letter-spacing: -0.045em;
   line-height: 0.95;
 }
 
 .subtitle {
-  margin: 0.8rem 0 0;
+  margin: 0;
   color: #89978c;
   font-size: 0.88rem;
   letter-spacing: 0.18em;
@@ -59,18 +59,31 @@ h1 {
 
 .command-header {
   display: flex;
-  align-items: end;
+  align-items: center;
   justify-content: space-between;
   gap: 2rem;
-  margin-bottom: 2rem;
-  padding-bottom: 1.5rem;
+  margin-bottom: 0.65rem;
+  padding: 0.15rem 0.25rem 0.65rem;
   border-bottom: 1px solid rgb(185 164 101 / 24%);
 }
 
+.brand-lockup {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.brand-lockup > div {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+}
+
 .build-badge {
-  display: grid;
-  gap: 0.35rem;
-  padding: 0.75rem 0 0.1rem 1.25rem;
+  display: flex;
+  gap: 0.55rem;
+  align-items: baseline;
+  padding-left: 1rem;
   border-left: 1px solid rgb(185 164 101 / 35%);
   text-align: right;
 }
@@ -106,18 +119,18 @@ h1 {
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  padding: 1.15rem 1.3rem;
+  padding: 0.7rem 0.9rem;
 }
 
 .section-kicker {
-  margin: 0 0 0.35rem;
+  margin: 0 0 0.18rem;
   color: #708078;
 }
 
 .battlefield-heading h2 {
   margin: 0;
   font-family: Georgia, 'Noto Serif TC', serif;
-  font-size: clamp(1.05rem, 2vw, 1.35rem);
+  font-size: clamp(0.9rem, 1.5vw, 1.05rem);
   font-weight: 500;
 }
 
@@ -456,6 +469,58 @@ h1 {
 .system-note span {
   flex: 0 0 auto;
   color: #9c8c59;
+}
+
+.developer-evidence {
+  overflow: hidden;
+  border: 1px solid rgb(133 159 139 / 20%);
+  border-radius: 12px;
+  background: rgb(7 19 15 / 74%);
+}
+
+.developer-evidence > summary {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 42px;
+  padding: 0.65rem 0.9rem;
+  color: #b7c5ba;
+  cursor: pointer;
+  list-style: none;
+}
+
+.developer-evidence > summary::-webkit-details-marker {
+  display: none;
+}
+
+.developer-evidence > summary::before {
+  color: #d5b35a;
+  content: '＋';
+}
+
+.developer-evidence[open] > summary::before {
+  content: '−';
+}
+
+.developer-evidence > summary span {
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+
+.developer-evidence > summary small {
+  color: #718078;
+  font-size: 0.65rem;
+}
+
+.developer-evidence > summary:focus-visible {
+  outline: 3px solid rgb(213 179 90 / 42%);
+  outline-offset: -3px;
+}
+
+.developer-evidence__content {
+  display: grid;
+  gap: 1rem;
+  padding: 0 0.9rem 0.9rem;
 }
 
 @keyframes live-pulse {

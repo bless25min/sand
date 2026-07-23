@@ -1,7 +1,7 @@
 .playable-expedition {
   display: grid;
-  gap: 18px;
-  margin-bottom: 28px;
+  gap: 9px;
+  margin-bottom: 9px;
 }
 
 .playable-heading {
@@ -9,9 +9,9 @@
   align-items: end;
   justify-content: space-between;
   gap: 24px;
-  padding: 22px 24px;
+  padding: 9px 13px;
   border: 1px solid rgba(145, 190, 158, 0.24);
-  border-radius: 18px;
+  border-radius: 12px;
   background:
     linear-gradient(135deg, rgba(27, 76, 55, 0.5), rgba(7, 18, 15, 0.9)),
     radial-gradient(circle at 75% 0%, rgba(214, 167, 75, 0.16), transparent 35%);
@@ -23,9 +23,15 @@
   margin: 0;
 }
 
+.playable-heading h2 {
+  font-family: Georgia, 'Noto Serif TC', serif;
+  font-size: 1.05rem;
+}
+
 .playable-heading > div > p:last-child {
-  margin: 7px 0 0;
+  margin: 3px 0 0;
   color: #aabdaf;
+  font-size: 0.7rem;
 }
 
 .reset-session,
@@ -61,20 +67,21 @@
 }
 
 .reset-session {
-  padding: 10px 14px;
+  padding: 7px 10px;
+  font-size: 0.72rem;
 }
 
 .unit-roster {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
-  margin-top: 12px;
+  gap: 6px;
+  margin-top: 7px;
 }
 
 .unit-select {
   display: grid;
-  gap: 4px;
-  padding: 12px;
+  gap: 2px;
+  padding: 7px 8px;
   text-align: left;
 }
 
@@ -83,12 +90,37 @@
   background: rgba(80, 61, 24, 0.46);
 }
 
-.unit-select strong {
+.unit-select__heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 5px;
+}
+
+.unit-select__heading strong {
   color: #d6e9d9;
+  overflow: hidden;
+  font-size: 0.7rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.unit-select__heading b {
+  padding: 2px 4px;
+  border-radius: 999px;
+  color: #d6a74b;
+  background: rgb(214 167 75 / 10%);
+  font-size: 0.52rem;
+}
+
+.unit-select__strength strong {
+  color: #edf4ee;
+  font-size: 0.82rem;
 }
 
 .unit-select small {
   color: #8fa89a;
+  font-size: 0.58rem;
 }
 
 .unit-select .unit-equipment {
@@ -99,14 +131,29 @@
 .command-bar {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
-  margin: 12px 0;
+  gap: 6px;
+  margin: 7px 0;
 }
 
 .command-bar button,
 .progression-actions button {
   min-height: 44px;
-  padding: 10px 12px;
+  padding: 7px 9px;
+}
+
+.command-bar button {
+  display: grid;
+  gap: 1px;
+  text-align: left;
+}
+
+.command-bar button strong {
+  font-size: 0.76rem;
+}
+
+.command-bar button small {
+  color: #8fa89a;
+  font-size: 0.57rem;
 }
 
 .command-bar .command-primary {
@@ -115,7 +162,12 @@
   background: #d6a74b;
 }
 
+.command-bar .command-primary small {
+  color: #364a3b;
+}
+
 .command-bar .command-danger {
+  grid-column: 1 / -1;
   color: #efb5aa;
   border-color: rgba(216, 102, 83, 0.55);
 }
@@ -124,24 +176,25 @@
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 6px;
-  margin: 0 0 12px;
+  margin: 0 0 7px;
 }
 
 .battle-readout dl > div {
-  padding: 8px 10px;
+  padding: 5px 7px;
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.035);
 }
 
 .battle-readout dt {
   color: #81998b;
-  font-size: 0.75rem;
+  font-size: 0.62rem;
 }
 
 .battle-readout dd {
   margin: 2px 0 0;
   color: #edf5ed;
   font-weight: 700;
+  font-size: 0.72rem;
 }
 
 .battle-readout ol,
@@ -157,7 +210,7 @@
   display: flex;
   gap: 8px;
   color: #b8cabc;
-  font-size: 0.82rem;
+  font-size: 0.68rem;
 }
 
 .battle-readout li span {

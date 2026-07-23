@@ -43,9 +43,9 @@ export function PlayableExpedition() {
     <section className="playable-expedition" data-testid="playable-expedition">
       <header className="playable-heading">
         <div>
-          <p className="section-kicker">PLAYABLE PHASE 04R</p>
-          <h2>可玩遠征 · 灰牙森林</h2>
-          <p>戰鬥 → 掉落 → 製造 → 裝備 → 再戰</p>
+          <p className="section-kicker">軍令回合制 · PHASE 04P</p>
+          <h2>灰牙古道戰役</h2>
+          <p>選定軍團，下令擊潰狼群 · 戰鬥 → 掉落 → 製造 → 裝備 → 再戰</p>
         </div>
         <button
           type="button"

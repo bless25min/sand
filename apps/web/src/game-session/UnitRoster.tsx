@@ -1,5 +1,7 @@
 import type { UnitState } from '@expedition/shared-types';
 
+import { formationLabel, roleLabel } from './tactical-labels';
+
 interface UnitRosterProps {
   readonly units: readonly UnitState[];
   readonly selectedUnitId: string;
@@ -18,12 +20,16 @@ export function UnitRoster({ units, selectedUnitId, onSelect }: UnitRosterProps)
           key={unit.id}
           onClick={() => onSelect(unit.id)}
         >
-          <span>{unit.name}</span>
-          <strong>
-            {unit.troopCount}/{unit.initialTroopCount}
-          </strong>
+          <span className="unit-select__heading">
+            <strong>{unit.name}</strong>
+            <b>{roleLabel(unit.unitType)}</b>
+          </span>
+          <span className="unit-select__strength">
+            <strong>{unit.troopCount.toLocaleString()}</strong>
+            <small> / {unit.initialTroopCount.toLocaleString()}</small>
+          </span>
           <small>
-            {unit.formation} · 士氣 {Math.round(unit.morale * 100)}%
+            {formationLabel(unit.formation)} · 士氣 {Math.round(unit.morale * 100)}%
           </small>
           {unit.appearanceIds.includes('HORNPLATE_SHIELD') ? (
             <small className="unit-equipment">角甲重盾</small>
