@@ -57,3 +57,9 @@ export type {
   PlayableBattleState,
 } from './session/playable-battle-state';
 export { resolveFixedOrder } from './session/resolve-fixed-order';
+export { isRangedVolleyAvailable, resolveRangedVolley } from './session/resolve-ranged-volley';
+export type {
+  RangedVolleyActors,
+  RangedVolleyResult,
+  ResolveRangedVolleyInput,
+} from './session/resolve-ranged-volley';

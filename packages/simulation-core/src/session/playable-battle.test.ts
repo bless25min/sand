@@ -108,6 +108,39 @@ describe('playable fixed-order battle', () => {
     expect(first.events.some((event) => event.type === 'CASUALTIES_APPLIED')).toBe(true);
   });
 
+  it('lets archers inflict losses before contact without forced movement', () => {
+    const source = createPlayableBattle({
+      seed: 'archer-volley',
+      units: [
+        createUnitState({
+          id: 'archers',
+          unitType: 'ARCHER',
+          troopCount: 120,
+          initialTroopCount: 120,
+          attack: 12,
+          position: { x: 0, y: 0 },
+        }),
+      ],
+      monsterGroup: createMonsterGroupState({
+        id: 'greyfang',
+        leaderId: 'greyfang-alpha',
+        troopCount: 80,
+        initialTroopCount: 80,
+        position: { x: 20, y: 0 },
+      }),
+    });
+
+    const result = resolveFixedOrder({
+      battle: source,
+      order: { unitId: 'archers', action: 'ATTACK' },
+    });
+
+    expect(result.units[0]?.position).toEqual(source.units[0]?.position);
+    expect(result.monsterGroup.troopCount).toBeLessThan(source.monsterGroup.troopCount);
+    expect(result.events.some((event) => event.type === 'RANGED_VOLLEY_RESOLVED')).toBe(true);
+    expect(result.events.some((event) => event.type === 'CASUALTIES_APPLIED')).toBe(false);
+  });
+
   it('replays a complete fixed-order sequence identically from the same seed', () => {
     const orders: FixedOrder[] = [
       { unitId: 'heavy', action: 'ADVANCE' },

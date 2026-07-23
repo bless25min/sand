@@ -3,6 +3,7 @@ import type { FixedOrder, MonsterGroupState, UnitState } from '@expedition/share
 import { planGreyfangMovement } from '../monsters/plan-greyfang-movement';
 import { advanceUnit } from '../movement/advance-unit';
 import { applyMonsterMovementPlan } from './apply-monster-movement-plan';
+import { isRangedVolleyAvailable } from './resolve-ranged-volley';
 
 const GREYFANG_MOVEMENT_DISTANCE = 8;
 const GREYFANG_ENCIRCLEMENT_DISTANCE = 2.5;
@@ -21,7 +22,11 @@ export interface AdvancePlayableTurnResult {
 }
 
 export function advancePlayableTurn(input: AdvancePlayableTurnInput): AdvancePlayableTurnResult {
-  const playerMoved = input.order.action === 'ADVANCE' || input.order.action === 'ATTACK';
+  const readyToVolley =
+    input.order.action === 'ATTACK' &&
+    isRangedVolleyAvailable({ unit: input.unit, monster: input.monster });
+  const playerMoved =
+    input.order.action === 'ADVANCE' || (input.order.action === 'ATTACK' && !readyToVolley);
   const unit = playerMoved
     ? advanceUnit({
         unit: input.unit,

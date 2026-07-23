@@ -9,6 +9,7 @@ import {
 } from './create-playable-battle-event';
 import type { PlayableBattleLootFacts, PlayableBattleState } from './playable-battle-state';
 import { resolvePlayableContact } from './resolve-playable-contact';
+import { isRangedVolleyAvailable, resolveRangedVolley } from './resolve-ranged-volley';
 
 export interface ResolveFixedOrderInput {
   readonly battle: PlayableBattleState;
@@ -24,6 +25,16 @@ function distanceBetween(unit: UnitState, target: { readonly x: number; readonly
 
 function replaceUnit(units: readonly UnitState[], next: UnitState): UnitState[] {
   return units.map((unit) => (unit.id === next.id ? next : unit));
+}
+
+function createLootFacts(monster: PlayableBattleState['monsterGroup']): PlayableBattleLootFacts {
+  return {
+    defeatedWolves: Math.min(
+      MAX_LOOT_ELIGIBLE_WOLVES,
+      monster.deadCount + monster.routedCount,
+    ),
+    defeatedHornedAlphas: monster.leaderId === undefined ? 0 : 1,
+  };
 }
 
 export function resolveFixedOrder(input: ResolveFixedOrderInput): PlayableBattleState {
@@ -78,6 +89,53 @@ export function resolveFixedOrder(input: ResolveFixedOrderInput): PlayableBattle
     );
   }
 
+  if (
+    input.order.action === 'ATTACK' &&
+    isRangedVolleyAvailable({ unit: moved, monster })
+  ) {
+    const volley = resolveRangedVolley({
+      seed: input.battle.seed,
+      tick,
+      unit: moved,
+      monster,
+    });
+    events.push(...volley.events);
+    const attackingUnit = { ...moved, executionState: 'ENGAGED' as const };
+
+    if (volley.victory) {
+      const lootFacts = createLootFacts(volley.monster);
+      events.push(
+        createBattleEndedEvent({
+          battle: input.battle,
+          tick,
+          outcome: 'VICTORY',
+          playerUnitIds: [unit.id],
+          cause: input.order.action,
+          lootFacts,
+        }),
+      );
+      return {
+        ...input.battle,
+        tick,
+        units: replaceUnit(input.battle.units, attackingUnit),
+        monsterGroup: volley.monster,
+        outcome: 'VICTORY',
+        events,
+        lastOrder: input.order,
+        lootFacts,
+      };
+    }
+
+    return {
+      ...input.battle,
+      tick,
+      units: replaceUnit(input.battle.units, attackingUnit),
+      monsterGroup: volley.monster,
+      events,
+      lastOrder: input.order,
+    };
+  }
+
   const inContact = distanceBetween(moved, monster.position) <= CONTACT_DISTANCE;
   if (inContact) {
     const contact = resolvePlayableContact({
@@ -108,13 +166,7 @@ export function resolveFixedOrder(input: ResolveFixedOrderInput): PlayableBattle
       };
     }
     if (contact.victory) {
-      const lootFacts: PlayableBattleLootFacts = {
-        defeatedWolves: Math.min(
-          MAX_LOOT_ELIGIBLE_WOLVES,
-          contact.monster.deadCount + contact.monster.routedCount,
-        ),
-        defeatedHornedAlphas: contact.monster.leaderId === undefined ? 0 : 1,
-      };
+      const lootFacts = createLootFacts(contact.monster);
       events.push(
         createBattleEndedEvent({
           battle: input.battle,
