@@ -8,6 +8,8 @@
 
 **Tech Stack:** TypeScript, React, PixiJS, Vitest, Playwright
 
+**Status:** Implemented; `pnpm check` passes with 177 tests and `pnpm test:e2e` passes 2 scenarios.
+
 ## Global Constraints
 
 - Follow `docs/superpowers/specs/2026-07-23-perceivable-battle-feedback-design.md`.
