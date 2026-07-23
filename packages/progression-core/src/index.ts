@@ -25,3 +25,4 @@ export type {
   ApplyUnitExperienceInput,
   ApplyUnitExperienceResult,
 } from './experience/apply-unit-experience';
+export { applyUnitStatModifiers } from './promotion/apply-unit-stat-modifiers';
