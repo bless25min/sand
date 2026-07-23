@@ -26,7 +26,7 @@ import {
   type CombatSideSnapshot,
 } from '@expedition/simulation-core';
 
-export interface LegionGrowthBattleMetrics {
+interface LegionGrowthBattleMetrics {
   readonly attackingPressure: number;
   readonly defendingPressure: number;
   readonly distanceMoved: number;
