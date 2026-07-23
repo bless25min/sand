@@ -93,11 +93,16 @@ frontal defense, as required by the offensive class trade-off.
 
 ## Deployment Evidence
 
-Deployment was intentionally not performed during this local verification phase. Live
-evidence will be appended only after the final whole-branch review and after the reviewed
-source commit is deployed.
+The final reviewed source was deployed to the existing Cloudflare Pages production
+project after all local quality gates and the Playwright E2E test passed.
 
-- Deployment ID: pending.
-- Deployment source commit: pending final review.
-- Production URL and HTTP evidence: pending.
-- Live build label, promoted class cards, canvas count, and console evidence: pending.
+- Deployment ID: `51cb1a87-2231-4644-930e-7114a20bd4de`.
+- Deployment source commit: `2949e0f5022e5126304ba56109d18ea6df424e08`.
+- Immutable deployment URL:
+  `https://51cb1a87.ai-expedition-legion-rpg.pages.dev/` (`200 OK`).
+- Canonical production URL: `https://ai-expedition-legion-rpg.pages.dev/` (`200 OK`).
+- Production JavaScript asset:
+  `/assets/index-CfQI3hgT.js` (`200 OK`, `application/javascript`).
+- Browser verification on the canonical URL found build label
+  `0.5.0 · LEGION GROWTH`, both `重盾衛隊` and `獵獸射手`, exactly two growth
+  articles, exactly one battlefield canvas, and zero console errors.
