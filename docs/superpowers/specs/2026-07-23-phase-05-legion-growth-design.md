@@ -136,14 +136,14 @@
 
 ```typescript
 type ExperienceReason =
-  | "BATTLE_PARTICIPATION"
-  | "COMMAND_COMPLETED"
-  | "FORMATION_HELD"
-  | "ALLY_PROTECTED"
-  | "MONSTER_DEFEATED"
-  | "BREAKTHROUGH_COMPLETED"
-  | "ROUT_SURVIVED"
-  | "UNKNOWN_NODE_EXPLORED";
+  | 'BATTLE_PARTICIPATION'
+  | 'COMMAND_COMPLETED'
+  | 'FORMATION_HELD'
+  | 'ALLY_PROTECTED'
+  | 'MONSTER_DEFEATED'
+  | 'BREAKTHROUGH_COMPLETED'
+  | 'ROUT_SURVIVED'
+  | 'UNKNOWN_NODE_EXPLORED';
 
 interface ExperienceAward {
   readonly reason: ExperienceReason;
@@ -157,16 +157,16 @@ interface ExperienceAward {
 
 固定 MVP 規則：
 
-| 原因 | 每次經驗 | 單次結算上限 |
-| --- | ---: | ---: |
-| 參與戰鬥 | 40 | 40 |
-| 完成軍令 | 20 | 40 |
-| 維持陣形 | 25 | 25 |
-| 保護友軍 | 25 | 25 |
-| 擊敗魔獸 | 10 | 50 |
-| 完成突破 | 30 | 30 |
-| 從潰敗中生還 | 20 | 20 |
-| 開荒未知節點 | 50 | 50 |
+| 原因         | 每次經驗 | 單次結算上限 |
+| ------------ | -------: | -----------: |
+| 參與戰鬥     |       40 |           40 |
+| 完成軍令     |       20 |           40 |
+| 維持陣形     |       25 |           25 |
+| 保護友軍     |       25 |           25 |
+| 擊敗魔獸     |       10 |           50 |
+| 完成突破     |       30 |           30 |
+| 從潰敗中生還 |       20 |           20 |
+| 開荒未知節點 |       50 |           50 |
 
 升級門檻：
 
@@ -188,9 +188,7 @@ interface ExperienceAward {
 
 ```typescript
 type ExperienceCalculationFailureReason =
-  | "INVALID_QUANTITY"
-  | "MISSING_EVIDENCE"
-  | "MISSING_EXPERIENCE_RULE";
+  'INVALID_QUANTITY' | 'MISSING_EVIDENCE' | 'MISSING_EXPERIENCE_RULE';
 ```
 
 成功結果包含 `totalExperience` 與逐原因明細；失敗結果包含
@@ -200,11 +198,11 @@ type ExperienceCalculationFailureReason =
 
 ```typescript
 type GrowthEventType =
-  | "EXPERIENCE_AWARDED"
-  | "LEVEL_GAINED"
-  | "CLASS_CHANGED"
-  | "WOUNDED_TREATED"
-  | "REINFORCEMENTS_ADDED";
+  | 'EXPERIENCE_AWARDED'
+  | 'LEVEL_GAINED'
+  | 'CLASS_CHANGED'
+  | 'WOUNDED_TREATED'
+  | 'REINFORCEMENTS_ADDED';
 
 interface GrowthEvent {
   readonly id: string;
@@ -236,7 +234,7 @@ interface UnitStatModifiers {
 ### 5.4 技能與職業
 
 ```typescript
-type SkillType = "PASSIVE" | "TACTICAL" | "REACTION" | "COMMAND" | "FIELD";
+type SkillType = 'PASSIVE' | 'TACTICAL' | 'REACTION' | 'COMMAND' | 'FIELD';
 
 interface SkillDefinition {
   readonly id: string;
@@ -327,10 +325,7 @@ interface UnitClassDefinition {
 `promoteUnit` 回傳辨別聯集，不以例外表示正常資格不足：
 
 ```typescript
-type PromotionFailureReason =
-  | "WRONG_SOURCE_CLASS"
-  | "LEVEL_TOO_LOW"
-  | "MISSING_SKILL_DEFINITION";
+type PromotionFailureReason = 'WRONG_SOURCE_CLASS' | 'LEVEL_TOO_LOW' | 'MISSING_SKILL_DEFINITION';
 ```
 
 規則：

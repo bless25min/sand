@@ -146,9 +146,7 @@ export function LegionGrowthPanel({ snapshot }: LegionGrowthPanelProps) {
                           <span>
                             {formatMetric(metric.before)} → {formatMetric(metric.after)}
                           </span>
-                          <em className={outcome === '代價' ? 'negative' : undefined}>
-                            {outcome}
-                          </em>
+                          <em className={outcome === '代價' ? 'negative' : undefined}>{outcome}</em>
                         </dd>
                       </div>
                     );

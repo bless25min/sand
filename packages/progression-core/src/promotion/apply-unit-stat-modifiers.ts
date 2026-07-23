@@ -2,10 +2,7 @@ import type { UnitState, UnitStatModifiers } from '@expedition/shared-types';
 
 const add = (base: number, delta = 0) => Number((base + delta).toFixed(4));
 
-export function applyUnitStatModifiers(
-  unit: UnitState,
-  modifiers: UnitStatModifiers,
-): UnitState {
+export function applyUnitStatModifiers(unit: UnitState, modifiers: UnitStatModifiers): UnitState {
   return {
     ...unit,
     attack: add(unit.attack, modifiers.attack),

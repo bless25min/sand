@@ -36,7 +36,10 @@ describe('calculateExperienceAwards', () => {
 
   it.each([
     [{ reason: 'COMMAND_COMPLETED', quantity: 0, evidenceIds: ['command-1'] }, 'INVALID_QUANTITY'],
-    [{ reason: 'COMMAND_COMPLETED', quantity: 1.5, evidenceIds: ['command-1'] }, 'INVALID_QUANTITY'],
+    [
+      { reason: 'COMMAND_COMPLETED', quantity: 1.5, evidenceIds: ['command-1'] },
+      'INVALID_QUANTITY',
+    ],
     [{ reason: 'COMMAND_COMPLETED', quantity: 1, evidenceIds: [] }, 'MISSING_EVIDENCE'],
   ] as const)('rejects invalid award %j atomically', (award, reason) => {
     expect(calculateExperienceAwards({ awards: [award], rules: EXPERIENCE_RULES })).toEqual({

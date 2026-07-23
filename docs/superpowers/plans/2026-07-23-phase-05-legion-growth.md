@@ -305,7 +305,10 @@ describe('calculateExperienceAwards', () => {
 
   it.each([
     [{ reason: 'COMMAND_COMPLETED', quantity: 0, evidenceIds: ['command-1'] }, 'INVALID_QUANTITY'],
-    [{ reason: 'COMMAND_COMPLETED', quantity: 1.5, evidenceIds: ['command-1'] }, 'INVALID_QUANTITY'],
+    [
+      { reason: 'COMMAND_COMPLETED', quantity: 1.5, evidenceIds: ['command-1'] },
+      'INVALID_QUANTITY',
+    ],
     [{ reason: 'COMMAND_COMPLETED', quantity: 1, evidenceIds: [] }, 'MISSING_EVIDENCE'],
   ] as const)('rejects invalid award %j atomically', (award, reason) => {
     expect(calculateExperienceAwards({ awards: [award], rules: EXPERIENCE_RULES })).toEqual({
@@ -333,9 +336,7 @@ Create these public result types in the implementation file:
 
 ```typescript
 export type ExperienceCalculationFailureReason =
-  | 'INVALID_QUANTITY'
-  | 'MISSING_EVIDENCE'
-  | 'MISSING_EXPERIENCE_RULE';
+  'INVALID_QUANTITY' | 'MISSING_EVIDENCE' | 'MISSING_EXPERIENCE_RULE';
 
 export interface ExperienceAwardDetail {
   readonly reason: ExperienceReason;
@@ -685,10 +686,7 @@ Expected: FAIL because the module does not exist.
 Validate a non-negative finite integer, then compute:
 
 ```typescript
-const availableVacancy = Math.max(
-  0,
-  unit.initialTroopCount - unit.troopCount - unit.woundedCount,
-);
+const availableVacancy = Math.max(0, unit.initialTroopCount - unit.troopCount - unit.woundedCount);
 const addedCount = Math.min(availableRecruits, availableVacancy);
 ```
 
@@ -867,7 +865,7 @@ Use a table with:
       appearanceIds: ['class-beast-hunter-marksman'],
     },
   },
-]
+];
 ```
 
 For each success, assert a `CLASS_CHANGED` event whose effects contain `fromClassId` and `toClassId`. Add separate failure tests for `WRONG_SOURCE_CLASS`, `LEVEL_TOO_LOW`, and `MISSING_SKILL_DEFINITION`; every failure must retain the exact source unit reference.
@@ -888,9 +886,7 @@ Define:
 
 ```typescript
 export type PromotionFailureReason =
-  | 'WRONG_SOURCE_CLASS'
-  | 'LEVEL_TOO_LOW'
-  | 'MISSING_SKILL_DEFINITION';
+  'WRONG_SOURCE_CLASS' | 'LEVEL_TOO_LOW' | 'MISSING_SKILL_DEFINITION';
 
 export interface PromoteUnitInput {
   readonly unit: UnitState;
@@ -1114,7 +1110,7 @@ Update App:
 ```tsx
 const LEGION_GROWTH = createLegionGrowthSnapshot();
 
-<LegionGrowthPanel snapshot={LEGION_GROWTH} />
+<LegionGrowthPanel snapshot={LEGION_GROWTH} />;
 ```
 
 Set the build badge to `0.5.0 · LEGION GROWTH`.

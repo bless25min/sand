@@ -8,9 +8,7 @@ import type {
 import { applyUnitStatModifiers } from './apply-unit-stat-modifiers';
 
 export type PromotionFailureReason =
-  | 'WRONG_SOURCE_CLASS'
-  | 'LEVEL_TOO_LOW'
-  | 'MISSING_SKILL_DEFINITION';
+  'WRONG_SOURCE_CLASS' | 'LEVEL_TOO_LOW' | 'MISSING_SKILL_DEFINITION';
 
 export interface PromoteUnitInput {
   readonly unit: UnitState;

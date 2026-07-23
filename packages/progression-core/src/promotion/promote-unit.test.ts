@@ -1,8 +1,4 @@
-import {
-  BEAST_HUNTER_MARKSMAN,
-  HEAVY_SHIELD_GUARD,
-  LEGION_SKILLS,
-} from '@expedition/game-data';
+import { BEAST_HUNTER_MARKSMAN, HEAVY_SHIELD_GUARD, LEGION_SKILLS } from '@expedition/game-data';
 import { createUnitState } from '@expedition/test-fixtures';
 import { describe, expect, it } from 'vitest';
 

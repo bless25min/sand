@@ -6,9 +6,7 @@ export interface CalculateExperienceAwardsInput {
 }
 
 export type ExperienceCalculationFailureReason =
-  | 'INVALID_QUANTITY'
-  | 'MISSING_EVIDENCE'
-  | 'MISSING_EXPERIENCE_RULE';
+  'INVALID_QUANTITY' | 'MISSING_EVIDENCE' | 'MISSING_EXPERIENCE_RULE';
 
 export interface ExperienceAwardDetail {
   readonly reason: ExperienceReason;

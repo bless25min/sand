@@ -21,12 +21,20 @@ export type TreatWoundedResult =
     };
 
 export function treatWounded(input: TreatWoundedInput): TreatWoundedResult {
-  if (!Number.isFinite(input.treatmentCapacity) || input.treatmentCapacity < 0 || !Number.isInteger(input.treatmentCapacity)) {
+  if (
+    !Number.isFinite(input.treatmentCapacity) ||
+    input.treatmentCapacity < 0 ||
+    !Number.isInteger(input.treatmentCapacity)
+  ) {
     return { ok: false, reason: 'INVALID_TREATMENT_CAPACITY', unit: input.unit };
   }
 
   const availableActiveSlots = Math.max(0, input.unit.initialTroopCount - input.unit.troopCount);
-  const treatedCount = Math.min(input.unit.woundedCount, input.treatmentCapacity, availableActiveSlots);
+  const treatedCount = Math.min(
+    input.unit.woundedCount,
+    input.treatmentCapacity,
+    availableActiveSlots,
+  );
   const remainingWoundedCount = input.unit.woundedCount - treatedCount;
   const unit = {
     ...input.unit,
