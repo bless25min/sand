@@ -13,5 +13,15 @@ describe('createBattlefieldSources', () => {
     expect(sources.find(({ id }) => id === 'ironwall-heavy')?.troopCount).toBe(
       session.battle.units[0]?.troopCount,
     );
+    expect(sources.find(({ id }) => id === 'ironwall-heavy')).toMatchObject({
+      morale: session.battle.units[0]?.morale,
+      fatigue: session.battle.units[0]?.fatigue,
+      cohesion: session.battle.units[0]?.cohesion,
+    });
+    expect(sources.find(({ id }) => id === 'greyfang-pack')).toMatchObject({
+      morale: session.battle.monsterGroup.morale,
+      fatigue: session.battle.monsterGroup.fatigue,
+      cohesion: session.battle.monsterGroup.cohesion,
+    });
   });
 });

@@ -11,6 +11,9 @@ export interface VisualUnitSource {
   readonly direction: Vec2;
   readonly formation: FormationType;
   readonly executionState: UnitExecutionState;
+  readonly morale: number;
+  readonly fatigue: number;
+  readonly cohesion: number;
   readonly shape: PointShape;
   readonly color: number;
   readonly pointScale: number;

@@ -23,6 +23,9 @@ function unitSource(unit: UnitState): VisualUnitSource {
     direction: unit.direction,
     formation: unit.formation,
     executionState: unit.executionState,
+    morale: unit.morale,
+    fatigue: unit.fatigue,
+    cohesion: unit.cohesion,
     shape:
       unit.unitType === 'HEAVY_INFANTRY'
         ? 'SQUARE'
@@ -57,6 +60,9 @@ export function createBattlefieldSources(battle: PlayableBattleState): VisualUni
       direction: monster.direction,
       formation: 'LOOSE',
       executionState: monsterExecutionState(monster.behaviorState),
+      morale: monster.morale,
+      fatigue: monster.fatigue,
+      cohesion: monster.cohesion,
       shape: 'CIRCLE',
       color: 0xd66d62,
       pointScale: 0.52,

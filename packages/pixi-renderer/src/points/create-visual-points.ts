@@ -30,6 +30,13 @@ function add(first: Vec2, second: Vec2): Vec2 {
   };
 }
 
+function assertNormalized(source: VisualUnitSource, key: 'morale' | 'fatigue' | 'cohesion'): void {
+  const value = source[key];
+  if (!Number.isFinite(value) || value < 0 || value > 1) {
+    throw new RangeError(`source ${source.id} ${key} must be between zero and one`);
+  }
+}
+
 function assertSource(source: VisualUnitSource): void {
   if (!Number.isFinite(source.pointScale) || source.pointScale <= 0) {
     throw new RangeError(`source ${source.id} pointScale must be greater than zero`);
@@ -38,6 +45,14 @@ function assertSource(source: VisualUnitSource): void {
   if (!Number.isInteger(source.color) || source.color < 0 || source.color > 0xffffff) {
     throw new RangeError(`source ${source.id} color must be a 24-bit integer`);
   }
+
+  assertNormalized(source, 'morale');
+  assertNormalized(source, 'fatigue');
+  assertNormalized(source, 'cohesion');
+}
+
+function seededUnit(seed: number): number {
+  return ((seed >>> 8) & 0xffff) / 0xffff;
 }
 
 export function createVisualPoints(input: CreateVisualPointsInput): VisualPoint[] {
@@ -58,23 +73,31 @@ export function createVisualPoints(input: CreateVisualPointsInput): VisualPoint[
 
     for (let localIndex = 0; localIndex < pointCount; localIndex += 1) {
       const animationSeed = hashString(`${source.id}:${localIndex}`);
+      const cohesionSpacing = input.spacing * (1 + (1 - source.cohesion) * 0.8);
       const offset = createFormationOffset({
         pointIndex: localIndex,
         pointCount,
         formation: source.formation,
-        spacing: input.spacing,
+        spacing: cohesionSpacing,
         animationSeed,
       });
+      const fatigueLag = source.fatigue * input.spacing * (0.35 + seededUnit(animationSeed) * 0.65);
+      const trailingOffset = {
+        x: -source.direction.x * fatigueLag,
+        y: -source.direction.y * fatigueLag,
+      };
+      const moraleWaver =
+        (seededUnit(animationSeed) - 0.5) * (1 - source.morale) * (Math.PI / 4);
 
       points.push({
         id: points.length,
         unitId: source.id,
         factionId: source.factionId,
-        position: add(source.position, offset),
-        targetPosition: add(source.targetPosition, offset),
-        rotation: Math.atan2(source.direction.y, source.direction.x),
+        position: add(add(source.position, offset), trailingOffset),
+        targetPosition: add(add(source.targetPosition, offset), trailingOffset),
+        rotation: Math.atan2(source.direction.y, source.direction.x) + moraleWaver,
         scale: visualStyle.pointScale,
-        alpha: 1,
+        alpha: 0.58 + source.morale * 0.42,
         shape: visualStyle.shape,
         color: visualStyle.color,
         state: source.executionState === 'ROUTING' ? 'ROUTING' : 'ACTIVE',
