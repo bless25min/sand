@@ -1,0 +1,4 @@
+apps/worker-api/worker-configuration.d.ts
+docs/AI_DEVELOPMENT_SPEC.md
+**/dist
+pnpm-lock.yaml

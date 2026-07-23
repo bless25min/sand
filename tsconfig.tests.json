@@ -1,0 +1,20 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "allowJs": false,
+    "jsx": "react-jsx",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "noEmit": true,
+    "paths": {
+      "@expedition/command-schema": ["./packages/command-schema/src/index.ts"],
+      "@expedition/game-data": ["./packages/game-data/src/index.ts"],
+      "@expedition/pixi-renderer": ["./packages/pixi-renderer/src/index.ts"],
+      "@expedition/progression-core": ["./packages/progression-core/src/index.ts"],
+      "@expedition/shared-types": ["./packages/shared-types/src/index.ts"],
+      "@expedition/simulation-core": ["./packages/simulation-core/src/index.ts"],
+      "@expedition/test-fixtures": ["./packages/test-fixtures/src/index.ts"]
+    },
+    "types": ["node", "vite/client"]
+  },
+  "include": ["apps/*/src/**/*.ts", "apps/*/src/**/*.tsx", "packages/*/src/**/*.ts"]
+}

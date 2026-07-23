@@ -1,0 +1,14 @@
+{
+  "name": "@expedition/worker-api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "types": "wrangler types worker-configuration.d.ts",
+    "build": "pnpm types && wrangler deploy --dry-run --outdir dist"
+  },
+  "dependencies": {
+    "hono": "4.12.31"
+  }
+}
