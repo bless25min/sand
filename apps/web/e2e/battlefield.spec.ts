@@ -10,12 +10,11 @@ test('renders one WebGL battlefield with the full visual point budget', async ({
 
   const battlefield = page.getByTestId('battlefield-canvas-host');
   await expect(battlefield).toHaveAttribute('data-point-count', '2000');
+  await expect(battlefield).toHaveAttribute('data-renderer', /WebGL|WebGPU/);
   await expect(battlefield.locator('canvas')).toHaveCount(1);
   await battlefield.locator('canvas').evaluate((canvas) => {
     canvas.dataset.rendererIdentity = 'persistent';
   });
-  await expect(page.getByText('Simulation Core', { exact: true })).toBeVisible();
-  await expect(page.getByText('WebGL', { exact: true })).toBeVisible();
   await expect(page.getByRole('alert')).toHaveCount(0);
 
   const playable = page.getByTestId('playable-expedition');
@@ -29,7 +28,7 @@ test('renders one WebGL battlefield with the full visual point budget', async ({
   await playable.getByRole('button', { name: '變換陣形' }).click();
   await expect(
     playable.getByTestId('unit-select').filter({ hasText: '第一重步兵團' }),
-  ).toContainText('LINE');
+  ).toContainText('橫列');
 
   for (let turn = 0; turn < 10; turn += 1) {
     const attack = playable.getByRole('button', { name: '攻擊' });
@@ -49,6 +48,10 @@ test('renders one WebGL battlefield with the full visual point budget', async ({
     playable.getByTestId('unit-select').filter({ hasText: '第一重步兵團' }),
   ).toContainText('角甲重盾');
   await expect(battlefield.locator('canvas')).toHaveCount(1);
+
+  const evidence = page.locator('.developer-evidence');
+  await expect(evidence).not.toHaveAttribute('open');
+  await evidence.locator('summary').click();
 
   const progressionLoop = page.getByTestId('progression-loop');
   await expect(progressionLoop).toBeVisible();
@@ -80,6 +83,9 @@ test('keeps commands beside the battlefield and names every visible order result
   const battlefield = playable.getByTestId('battlefield-canvas-host');
   const commands = playable.locator('.command-bar');
   await expect(cockpit).toBeVisible();
+  await expect(playable.getByText('擊潰灰牙狼群', { exact: true })).toBeVisible();
+  await expect(playable.getByText('敵軍意圖', { exact: true })).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollHeight)).toBeLessThan(900);
   await cockpit.scrollIntoViewIfNeeded();
 
   const battlefieldBox = await battlefield.boundingBox();
@@ -113,4 +119,31 @@ test('keeps commands beside the battlefield and names every visible order result
     'data-mode',
     'retreat',
   );
+});
+
+test('lets archers land a deterministic volley before contact', async ({ page }) => {
+  await page.setViewportSize({ width: 1_280, height: 720 });
+  await page.goto('/');
+
+  const playable = page.getByTestId('playable-expedition');
+  const battlefield = playable.getByTestId('battlefield-canvas-host');
+  await expect(battlefield).toHaveAttribute('data-point-count', '2000');
+
+  await playable
+    .getByTestId('unit-select')
+    .filter({ hasText: '松望弓兵團' })
+    .click();
+  await expect(playable.getByRole('button', { name: '攻擊' })).toContainText('射程內齊射');
+
+  for (let turn = 0; turn < 10; turn += 1) {
+    await playable.getByRole('button', { name: '攻擊' }).click();
+    if ((await playable.locator('.battlefield-impact--volley').count()) > 0) break;
+  }
+
+  await expect(playable.locator('.battlefield-impact--volley')).toContainText('箭雨命中');
+  await expect(playable.locator('.battlefield-impact--volley')).toContainText('我軍無損');
+  await expect(playable.getByText('箭雨命中', { exact: true }).first()).toBeVisible();
+  await expect(
+    playable.getByTestId('unit-select').filter({ hasText: '松望弓兵團' }),
+  ).toContainText('800');
 });
