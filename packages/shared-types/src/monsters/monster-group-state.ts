@@ -7,6 +7,7 @@ export interface MonsterGroupState {
   readonly id: string;
   readonly definitionId: string;
   readonly factionId: string;
+  readonly leaderId?: string;
   readonly troopCount: number;
   readonly initialTroopCount: number;
   readonly woundedCount: number;

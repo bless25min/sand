@@ -9,5 +9,6 @@ describe('App', () => {
 
     expect(markup).toContain('Project Expedition');
     expect(markup).toContain('遠征軍戰術沙盤');
+    expect(markup).toContain('Simulation Core');
   });
 });

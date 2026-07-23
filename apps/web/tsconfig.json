@@ -7,5 +7,6 @@
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "tsBuildInfoFile": "../../node_modules/.cache/web.tsbuildinfo"
   },
-  "include": ["src", "vite.config.ts"]
+  "include": ["src", "vite.config.ts"],
+  "references": [{ "path": "../../packages/pixi-renderer" }]
 }

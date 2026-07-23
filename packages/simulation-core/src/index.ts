@@ -21,6 +21,16 @@ export type {
 } from './grid/create-grid';
 export { projectBattlefield } from './grid/project-battlefield';
 export type { ProjectBattlefieldInput } from './grid/project-battlefield';
+export { applyGreyfangLeaderLoss } from './monsters/apply-greyfang-leader-loss';
+export type {
+  ApplyGreyfangLeaderLossInput,
+  GreyfangLeaderLossResult,
+} from './monsters/apply-greyfang-leader-loss';
+export { createGreyfangPack } from './monsters/create-greyfang-pack';
+export type { CreateGreyfangPackInput } from './monsters/create-greyfang-pack';
+export type { GreyfangMovementPlan } from './monsters/greyfang-movement-plan';
+export { planGreyfangMovement } from './monsters/plan-greyfang-movement';
+export type { PlanGreyfangMovementInput } from './monsters/plan-greyfang-movement';
 export { advanceUnit } from './movement/advance-unit';
 export type { AdvanceUnitInput, AdvanceUnitResult } from './movement/advance-unit';
 export { calculateMovementStep } from './movement/calculate-movement-step';
