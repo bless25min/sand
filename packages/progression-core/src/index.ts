@@ -11,6 +11,8 @@ export { applyRetreatLoss } from './retreat/apply-retreat-loss';
 export type { ApplyRetreatLossInput, RetreatLossResult } from './retreat/apply-retreat-loss';
 export { treatWounded } from './recovery/treat-wounded';
 export type { TreatWoundedInput, TreatWoundedResult } from './recovery/treat-wounded';
+export { replenishUnit } from './recovery/replenish-unit';
+export type { ReplenishUnitInput, ReplenishUnitResult } from './recovery/replenish-unit';
 export { calculateExperienceAwards } from './experience/calculate-experience-awards';
 export type {
   CalculateExperienceAwardsInput,
