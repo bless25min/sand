@@ -64,6 +64,198 @@
   animation: retreat-pulse 0.7s ease-in-out infinite alternate;
 }
 
+.battlefield-hud {
+  position: absolute;
+  z-index: 5;
+  inset: 0;
+  pointer-events: none;
+}
+
+.battle-objective {
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 34px;
+  padding: 7px 14px;
+  border: 1px solid rgb(213 179 90 / 48%);
+  border-radius: 999px;
+  color: #f4ead0;
+  background: rgb(9 19 15 / 90%);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 30%);
+  translate: -50% 0;
+}
+
+.battle-objective span,
+.hud-card__heading span {
+  color: #9fb0a5;
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+}
+
+.battle-objective strong {
+  font-size: 0.78rem;
+}
+
+.hud-card {
+  position: absolute;
+  bottom: 14px;
+  display: grid;
+  gap: 6px;
+  width: min(15rem, 38%);
+  padding: 11px 12px;
+  border: 1px solid rgb(133 159 139 / 36%);
+  border-radius: 10px;
+  background: rgb(6 16 12 / 88%);
+  box-shadow: 0 10px 28px rgb(0 0 0 / 34%);
+  backdrop-filter: blur(7px);
+}
+
+.hud-card--unit {
+  left: 14px;
+  border-left: 3px solid #d5b35a;
+}
+
+.hud-card--enemy {
+  right: 14px;
+  border-right: 3px solid #d76e61;
+}
+
+.hud-card__heading {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.hud-card__heading > div {
+  display: grid;
+  gap: 2px;
+}
+
+.hud-card__heading strong {
+  color: #f1ede0;
+  font-family: Georgia, 'Noto Serif TC', serif;
+  font-size: 0.85rem;
+}
+
+.hud-card__heading b {
+  padding: 3px 6px;
+  border-radius: 999px;
+  color: #ead48e;
+  background: rgb(213 179 90 / 12%);
+  font-size: 0.62rem;
+}
+
+.hud-card--enemy .hud-card__heading b {
+  color: #ffb0a4;
+  background: rgb(215 110 97 / 15%);
+}
+
+.hud-card p {
+  margin: 0;
+  font-size: 0.68rem;
+}
+
+.hud-card p strong {
+  color: #fff7e5;
+  font-size: 1rem;
+}
+
+.hud-card p span {
+  color: #809087;
+}
+
+.hud-meter {
+  display: grid;
+  grid-template-columns: 3.1rem minmax(0, 1fr) 2.3rem;
+  gap: 6px;
+  align-items: center;
+  color: #91a298;
+  font-size: 0.59rem;
+}
+
+.hud-meter strong {
+  color: #c8d5cb;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.6rem;
+  text-align: right;
+}
+
+.hud-meter progress {
+  overflow: hidden;
+  width: 100%;
+  height: 4px;
+  border: 0;
+  border-radius: 999px;
+  background: #27342d;
+}
+
+.hud-meter progress::-webkit-progress-bar {
+  background: #27342d;
+}
+
+.hud-meter progress::-webkit-progress-value {
+  border-radius: 999px;
+  background: #78bd8c;
+}
+
+.hud-meter progress::-moz-progress-bar {
+  background: #78bd8c;
+}
+
+.hud-meter progress.hud-meter--warning::-webkit-progress-value {
+  background: #d8a75a;
+}
+
+.hud-meter progress.hud-meter--danger::-webkit-progress-value {
+  background: #d76e61;
+}
+
+.battlefield-impact {
+  position: absolute;
+  top: 43%;
+  left: 50%;
+  display: grid;
+  gap: 2px;
+  min-width: 9rem;
+  padding: 10px 14px;
+  border: 1px solid rgb(239 130 111 / 65%);
+  border-radius: 8px;
+  color: #fff2e8;
+  background: rgb(84 28 23 / 88%);
+  box-shadow: 0 0 30px rgb(239 130 111 / 30%);
+  text-align: center;
+  translate: -50% -50%;
+  animation: impact-arrive 240ms ease-out both;
+}
+
+.battlefield-impact--volley {
+  border-color: rgb(220 190 110 / 70%);
+  background: rgb(70 55 21 / 90%);
+  box-shadow: 0 0 30px rgb(220 190 110 / 24%);
+}
+
+.battlefield-impact strong {
+  font-family: Georgia, 'Noto Serif TC', serif;
+  font-size: 1rem;
+}
+
+.battlefield-impact span {
+  color: #ecc2b9;
+  font-size: 0.7rem;
+}
+
+@keyframes impact-arrive {
+  from {
+    opacity: 0;
+    scale: 0.82;
+  }
+}
+
 @keyframes intent-flow {
   to {
     stroke-dashoffset: -21;
@@ -85,7 +277,33 @@
 
 @media (prefers-reduced-motion: reduce) {
   .battlefield-intent-line line,
-  .unit-focus-marker {
+  .unit-focus-marker,
+  .battlefield-impact {
     animation: none;
+  }
+}
+
+@media (max-width: 620px) {
+  .battle-objective {
+    top: 8px;
+    min-width: max-content;
+  }
+
+  .hud-card {
+    bottom: 8px;
+    width: calc(50% - 12px);
+    padding: 8px;
+  }
+
+  .hud-card--unit {
+    left: 8px;
+  }
+
+  .hud-card--enemy {
+    right: 8px;
+  }
+
+  .hud-card .hud-meter:nth-last-child(-n + 2) {
+    display: none;
   }
 }

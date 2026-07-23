@@ -4,6 +4,7 @@ import { BattlefieldDemo } from '../battlefield/BattlefieldDemo';
 import { BattleReadout } from './BattleReadout';
 import { CommandBar } from './CommandBar';
 import { CommandFeedbackBanner } from './CommandFeedbackBanner';
+import { createBattlefieldHud } from './create-battlefield-hud';
 import { createBattlefieldSources } from './create-battlefield-sources';
 import { createCommandFeedback } from './create-command-feedback';
 import { createPlayableSession } from './create-playable-session';
@@ -32,6 +33,11 @@ export function PlayableExpedition() {
   if (selectedUnit === undefined) {
     throw new Error('playable expedition requires at least one player unit');
   }
+  const hud = createBattlefieldHud({
+    battle: state.battle,
+    selectedUnitId: state.selectedUnitId,
+    feedback,
+  });
 
   return (
     <section className="playable-expedition" data-testid="playable-expedition">
@@ -56,6 +62,7 @@ export function PlayableExpedition() {
           battleLabel={`灰牙森林 · 林間道路 · 第 ${state.battleNumber} 戰`}
           selectedUnitId={state.selectedUnitId}
           action={state.battle.lastOrder?.action}
+          hud={hud}
         />
 
         <aside className="tactical-console" aria-label="戰術指揮台">

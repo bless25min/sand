@@ -13,6 +13,7 @@ const EVENT_LABELS: Readonly<Record<string, string>> = {
   ORDER_ISSUED: '軍令下達',
   UNIT_MOVED: '戰線移動',
   FORMATION_CHANGED: '陣形變更',
+  RANGED_VOLLEY_RESOLVED: '箭雨命中',
   CASUALTIES_APPLIED: '接敵傷亡',
   BATTLE_ENDED: '戰鬥結束',
 };
