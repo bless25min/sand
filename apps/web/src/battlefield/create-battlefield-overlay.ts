@@ -1,13 +1,7 @@
 import type { VisualUnitSource } from '@expedition/pixi-renderer';
 import type { FixedOrderAction, Vec2 } from '@expedition/shared-types';
 
-export type BattlefieldOverlayMode =
-  | 'idle'
-  | 'advance'
-  | 'hold'
-  | 'attack'
-  | 'formation'
-  | 'retreat';
+type BattlefieldOverlayMode = 'idle' | 'advance' | 'hold' | 'attack' | 'formation' | 'retreat';
 
 export interface BattlefieldOverlay {
   readonly mode: BattlefieldOverlayMode;
@@ -26,7 +20,7 @@ export interface BattlefieldOverlay {
 export interface CreateBattlefieldOverlayInput {
   readonly sources: readonly VisualUnitSource[];
   readonly selectedUnitId: string;
-  readonly action?: FixedOrderAction;
+  readonly action?: FixedOrderAction | undefined;
 }
 
 const MODES: Readonly<Record<FixedOrderAction, BattlefieldOverlayMode>> = {
@@ -45,9 +39,7 @@ const ACTION_LABELS: Readonly<Record<FixedOrderAction, string>> = {
   RETREAT: '撤退',
 };
 
-export function createBattlefieldOverlay(
-  input: CreateBattlefieldOverlayInput,
-): BattlefieldOverlay {
+export function createBattlefieldOverlay(input: CreateBattlefieldOverlayInput): BattlefieldOverlay {
   const source = input.sources.find(({ id }) => id === input.selectedUnitId);
   const mode = input.action === undefined ? 'idle' : MODES[input.action];
 

@@ -1,13 +1,7 @@
 import type { FixedOrderAction, FormationType, UnitState, Vec2 } from '@expedition/shared-types';
 import type { PlayableBattleState } from '@expedition/simulation-core';
 
-export type CommandFeedbackTone =
-  | 'advance'
-  | 'hold'
-  | 'attack'
-  | 'impact'
-  | 'formation'
-  | 'retreat';
+type CommandFeedbackTone = 'advance' | 'hold' | 'attack' | 'impact' | 'formation' | 'retreat';
 
 export interface CommandFeedback {
   readonly action: FixedOrderAction;
@@ -23,7 +17,7 @@ export interface CommandFeedback {
 }
 
 export interface CreateCommandFeedbackInput {
-  readonly previousBattle?: PlayableBattleState;
+  readonly previousBattle?: PlayableBattleState | undefined;
   readonly battle: PlayableBattleState;
   readonly selectedUnitId: string;
 }
@@ -58,9 +52,7 @@ function findUnit(battle: PlayableBattleState, unitId: string): UnitState | unde
   return battle.units.find((unit) => unit.id === unitId);
 }
 
-export function createCommandFeedback(
-  input: CreateCommandFeedbackInput,
-): CommandFeedback | null {
+export function createCommandFeedback(input: CreateCommandFeedbackInput): CommandFeedback | null {
   const order = input.battle.lastOrder;
   const previousBattle = input.previousBattle;
   if (order === undefined || previousBattle === undefined) return null;
@@ -86,15 +78,12 @@ export function createCommandFeedback(
     input.battle.monsterGroup.morale,
   );
   const impact =
-    playerTroopLoss > 0 ||
-    monsterTroopLoss > 0 ||
-    playerMoraleDelta < 0 ||
-    monsterMoraleDelta < 0;
+    playerTroopLoss > 0 || monsterTroopLoss > 0 || playerMoraleDelta < 0 || monsterMoraleDelta < 0;
   let tone: CommandFeedbackTone =
     order.action === 'CHANGE_FORMATION'
       ? 'formation'
       : (order.action.toLowerCase() as CommandFeedbackTone);
-  let summary = '';
+  let summary: string;
 
   if (order.action === 'ADVANCE') {
     summary = `${currentUnit.name}推進 ${distanceMoved} 格；灰牙逼近 ${monsterDistance} 格。`;

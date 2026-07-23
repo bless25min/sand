@@ -1,4 +1,8 @@
-import { mountPointCloud, type MountedPointCloud, type VisualPoint } from '@expedition/pixi-renderer';
+import {
+  mountPointCloud,
+  type MountedPointCloud,
+  type VisualPoint,
+} from '@expedition/pixi-renderer';
 import { useEffect, useRef, useState, type RefObject } from 'react';
 
 export interface PointCloudStatus {
@@ -11,7 +15,7 @@ export function usePointCloud(
   hostRef: RefObject<HTMLDivElement | null>,
   points: readonly VisualPoint[],
 ) {
-  const mountedRef = useRef<MountedPointCloud>();
+  const mountedRef = useRef<MountedPointCloud | undefined>(undefined);
   const latestPointsRef = useRef(points);
   const [status, setStatus] = useState<PointCloudStatus | null>(null);
   const [error, setError] = useState<string | null>(null);

@@ -125,4 +125,3 @@
 - [ ] Inspect the production-sized page at 1280 x 720 and confirm controls and battlefield remain simultaneously visible during input.
 - [ ] Review the consolidated diff for unrelated changes, oversized files, and architecture boundary violations.
 - [ ] Commit any verification-only corrections as `fix: close battle feedback verification gaps`.
-

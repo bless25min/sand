@@ -15,8 +15,7 @@ export function CommandFeedbackBanner({ feedback }: CommandFeedbackBannerProps) 
   }
 
   const showLosses = feedback.playerTroopLoss > 0 || feedback.monsterTroopLoss > 0;
-  const showMorale =
-    feedback.playerMoraleDelta !== 0 || feedback.monsterMoraleDelta !== 0;
+  const showMorale = feedback.playerMoraleDelta !== 0 || feedback.monsterMoraleDelta !== 0;
 
   return (
     <div

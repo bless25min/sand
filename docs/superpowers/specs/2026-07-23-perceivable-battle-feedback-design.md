@@ -86,4 +86,3 @@ Allow selecting units and targets directly on the canvas. This is closer to an R
 - Renderer updates may arrive before async mount finishes; retain the latest pending snapshot.
 - Overlays must not intercept command input.
 - Accessible text is the source of E2E truth; pixel differences remain supplementary evidence.
-

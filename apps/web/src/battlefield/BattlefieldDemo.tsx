@@ -12,7 +12,7 @@ interface BattlefieldDemoProps {
   readonly sources: readonly VisualUnitSource[];
   readonly battleLabel: string;
   readonly selectedUnitId: string;
-  readonly action?: FixedOrderAction;
+  readonly action?: FixedOrderAction | undefined;
 }
 
 export function BattlefieldDemo({

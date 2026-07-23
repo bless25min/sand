@@ -68,9 +68,7 @@ describe('reconcileVisualPoints', () => {
 
   it('retains casualties that are still fading across later snapshots', () => {
     const casualty = { ...point(9, 'heavy', 6, 'CASUALTY'), alpha: 0.5 };
-    const result = reconcileVisualPoints([point(0, 'heavy', 5), casualty], [
-      point(0, 'heavy', 20),
-    ]);
+    const result = reconcileVisualPoints([point(0, 'heavy', 5), casualty], [point(0, 'heavy', 20)]);
 
     expect(result).toContainEqual(casualty);
   });
