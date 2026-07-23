@@ -44,6 +44,12 @@ export type { FormationProfile } from './movement/formation-profile';
 export type { MovementMode } from './movement/movement-mode';
 export type { RandomSource } from './rng/random-source';
 export { createSeededRandom, SeededRandom } from './rng/seeded-random';
+export {
+  createFallbackGameGenome,
+  normalizeGameGenome,
+  probeGameGenome,
+  validateGameGenome,
+} from './system-breaker/genome/index';
 export { assertBattleState, findBattleStateViolations } from './state/assert-battle-state';
 export type { BattleStateViolation, BattleStateViolationCode } from './state/assert-battle-state';
 export type { CreateBattleStateInput } from './state/battle-state-input';

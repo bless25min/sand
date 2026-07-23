@@ -1,0 +1,28 @@
+export {
+  CORE_RESOURCE_IDS,
+  MODULE_EFFECT_IDS,
+  MODULE_ROLE_COUNTS,
+  MODULE_ROLE_IDS,
+  MODULE_TARGET_IDS,
+  MODULE_TRIGGER_IDS,
+  THREAT_KIND_IDS,
+  THREAT_MODIFIER_IDS,
+  WORLD_RULE_IDS,
+} from './game-genome';
+export type {
+  CoreResourceId,
+  GameEnding,
+  GameGenome,
+  GameModuleDefinition,
+  GameThreat,
+  GenomeCounter,
+  GenomeProbe,
+  GenomeValidation,
+  ModuleEffectId,
+  ModuleRoleId,
+  ModuleTargetId,
+  ModuleTriggerId,
+  ThreatKindId,
+  ThreatModifierId,
+  WorldRuleId,
+} from './game-genome';
