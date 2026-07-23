@@ -1,11 +1,11 @@
 import {
-  createVisualPoints,
   mountPointCloud,
   type MountedPointCloud,
+  type VisualUnitSource,
 } from '@expedition/pixi-renderer';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
-import { createDemoSources } from './create-demo-sources';
+import { createBattlefieldPoints } from './create-battlefield-points';
 
 interface Diagnostics {
   readonly pointCount: number;
@@ -14,24 +14,15 @@ interface Diagnostics {
 }
 
 interface BattlefieldDemoProps {
-  readonly heavyAppearanceIds: readonly string[];
+  readonly sources: readonly VisualUnitSource[];
+  readonly battleLabel: string;
 }
 
-export function BattlefieldDemo({ heavyAppearanceIds }: BattlefieldDemoProps) {
+export function BattlefieldDemo({ sources, battleLabel }: BattlefieldDemoProps) {
   const hostRef = useRef<HTMLDivElement>(null);
   const [diagnostics, setDiagnostics] = useState<Diagnostics | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const points = useMemo(
-    () =>
-      createVisualPoints({
-        sources: createDemoSources(heavyAppearanceIds),
-        pointBudget: 2_000,
-        spacing: 4,
-      }).map((point, index) =>
-        index > 0 && index % 89 === 0 ? { ...point, state: 'CASUALTY' as const } : point,
-      ),
-    [heavyAppearanceIds],
-  );
+  const points = useMemo(() => createBattlefieldPoints(sources), [sources]);
 
   useEffect(() => {
     const host = hostRef.current;
@@ -76,7 +67,7 @@ export function BattlefieldDemo({ heavyAppearanceIds }: BattlefieldDemoProps) {
       <div className="battlefield-heading">
         <div>
           <p className="section-kicker">LIVE TACTICAL PROJECTION</p>
-          <h2 id="battlefield-title">灰牙森林 · 接觸線 07</h2>
+          <h2 id="battlefield-title">{battleLabel}</h2>
         </div>
         <span className="live-indicator">
           <span aria-hidden="true" />

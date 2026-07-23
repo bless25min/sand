@@ -1,0 +1,213 @@
+.playable-expedition {
+  display: grid;
+  gap: 18px;
+  margin-bottom: 28px;
+}
+
+.playable-heading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 22px 24px;
+  border: 1px solid rgba(145, 190, 158, 0.24);
+  border-radius: 18px;
+  background:
+    linear-gradient(135deg, rgba(27, 76, 55, 0.5), rgba(7, 18, 15, 0.9)),
+    radial-gradient(circle at 75% 0%, rgba(214, 167, 75, 0.16), transparent 35%);
+}
+
+.playable-heading h2,
+.playable-console h3 {
+  margin: 0;
+}
+
+.playable-heading > div > p:last-child {
+  margin: 7px 0 0;
+  color: #aabdaf;
+}
+
+.reset-session,
+.command-bar button,
+.unit-select,
+.progression-actions button {
+  border: 1px solid rgba(145, 190, 158, 0.34);
+  border-radius: 10px;
+  color: #eaf3eb;
+  background: rgba(14, 35, 27, 0.88);
+  font: inherit;
+  cursor: pointer;
+  transition:
+    transform 120ms ease,
+    border-color 120ms ease,
+    background 120ms ease;
+}
+
+.reset-session:hover,
+.command-bar button:hover,
+.unit-select:hover,
+.progression-actions button:hover {
+  transform: translateY(-1px);
+  border-color: rgba(214, 167, 75, 0.8);
+}
+
+.reset-session:focus-visible,
+.command-bar button:focus-visible,
+.unit-select:focus-visible,
+.progression-actions button:focus-visible {
+  outline: 3px solid rgba(214, 167, 75, 0.42);
+  outline-offset: 2px;
+}
+
+.reset-session {
+  padding: 10px 14px;
+}
+
+.playable-console {
+  display: grid;
+  grid-template-columns: 1.15fr 1fr 0.8fr;
+  gap: 14px;
+}
+
+.playable-console > section {
+  min-width: 0;
+  padding: 18px;
+  border: 1px solid rgba(145, 190, 158, 0.2);
+  border-radius: 16px;
+  background: rgba(7, 20, 16, 0.84);
+}
+
+.unit-roster {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.unit-select {
+  display: grid;
+  gap: 4px;
+  padding: 12px;
+  text-align: left;
+}
+
+.unit-select[aria-pressed='true'] {
+  border-color: #d6a74b;
+  background: rgba(80, 61, 24, 0.46);
+}
+
+.unit-select strong {
+  color: #d6e9d9;
+}
+
+.unit-select small {
+  color: #8fa89a;
+}
+
+.unit-select .unit-equipment {
+  color: #d6a74b;
+  font-weight: 700;
+}
+
+.command-bar {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin: 12px 0;
+}
+
+.command-bar button,
+.progression-actions button {
+  min-height: 44px;
+  padding: 10px 12px;
+}
+
+.command-bar .command-primary {
+  color: #132018;
+  border-color: #d6a74b;
+  background: #d6a74b;
+}
+
+.command-bar .command-danger {
+  color: #efb5aa;
+  border-color: rgba(216, 102, 83, 0.55);
+}
+
+.battle-readout dl {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+  margin: 0 0 12px;
+}
+
+.battle-readout dl > div {
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.battle-readout dt {
+  color: #81998b;
+  font-size: 0.75rem;
+}
+
+.battle-readout dd {
+  margin: 2px 0 0;
+  color: #edf5ed;
+  font-weight: 700;
+}
+
+.battle-readout ol,
+.progression-actions ul {
+  display: grid;
+  gap: 5px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.battle-readout li {
+  display: flex;
+  gap: 8px;
+  color: #b8cabc;
+  font-size: 0.82rem;
+}
+
+.battle-readout li span {
+  color: #d6a74b;
+  font-variant-numeric: tabular-nums;
+}
+
+.progression-actions {
+  border-color: rgba(214, 167, 75, 0.35) !important;
+  background: linear-gradient(160deg, rgba(62, 49, 24, 0.5), rgba(7, 20, 16, 0.9)) !important;
+}
+
+.progression-actions p,
+.phase-complete {
+  color: #aabdaf;
+}
+
+.progression-actions button {
+  width: 100%;
+  margin-top: 14px;
+  border-color: #d6a74b;
+}
+
+@media (max-width: 900px) {
+  .playable-console {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 620px) {
+  .playable-heading {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .unit-roster,
+  .command-bar {
+    grid-template-columns: 1fr;
+  }
+}

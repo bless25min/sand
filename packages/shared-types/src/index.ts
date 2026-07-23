@@ -15,6 +15,7 @@ export type { MaterialDefinition } from './items/material-definition';
 export type { MaterialId } from './items/material-id';
 export type { LootDrop } from './loot/loot-drop';
 export type { MonsterBehaviorState, MonsterGroupState } from './monsters/monster-group-state';
+export type { FixedOrder, FixedOrderAction } from './orders/fixed-order';
 export type { Vec2 } from './primitives/vec2';
 export type { ExperienceAward, ExperienceReason, ExperienceRule } from './progression/experience';
 export type { FormationType } from './units/formation-type';

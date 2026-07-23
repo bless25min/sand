@@ -2,11 +2,14 @@ import type { Vec2 } from '../primitives/vec2';
 
 export type BattleEventType =
   | 'BATTLE_STARTED'
+  | 'ORDER_ISSUED'
   | 'UNIT_MOVED'
+  | 'FORMATION_CHANGED'
   | 'CONTACT_STARTED'
   | 'CASUALTIES_APPLIED'
   | 'MORALE_CHANGED'
-  | 'UNIT_ROUTED';
+  | 'UNIT_ROUTED'
+  | 'BATTLE_ENDED';
 
 export interface BattleEvent {
   readonly id: string;

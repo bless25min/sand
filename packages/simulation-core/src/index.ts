@@ -48,3 +48,10 @@ export { assertBattleState, findBattleStateViolations } from './state/assert-bat
 export type { BattleStateViolation, BattleStateViolationCode } from './state/assert-battle-state';
 export type { CreateBattleStateInput } from './state/battle-state-input';
 export { createBattleState } from './state/create-battle-state';
+export { createPlayableBattle } from './session/create-playable-battle';
+export type {
+  PlayableBattleLootFacts,
+  PlayableBattleOutcome,
+  PlayableBattleState,
+} from './session/playable-battle-state';
+export { resolveFixedOrder } from './session/resolve-fixed-order';

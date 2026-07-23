@@ -1,0 +1,215 @@
+.legion-growth-panel {
+  margin-top: 1.25rem;
+  overflow: hidden;
+  border: 1px solid rgb(185 164 101 / 24%);
+  border-radius: 1rem;
+  background: linear-gradient(135deg, rgb(37 47 31 / 90%), rgb(8 20 16 / 94%)), #0a1712;
+}
+
+.growth-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.25rem 1.3rem;
+  border-bottom: 1px solid rgb(185 164 101 / 18%);
+}
+
+.growth-heading h2 {
+  margin: 0;
+  font-family: Georgia, 'Noto Serif TC', serif;
+  font-size: clamp(1.05rem, 2vw, 1.35rem);
+  font-weight: 500;
+}
+
+.growth-status {
+  flex: 0 0 auto;
+  padding: 0.45rem 0.7rem;
+  border: 1px solid rgb(121 199 146 / 28%);
+  border-radius: 999px;
+  color: #8fc9a1;
+  font-size: 0.68rem;
+}
+
+.growth-card-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.growth-unit-card {
+  min-width: 0;
+}
+
+.growth-unit-card + .growth-unit-card {
+  border-left: 1px solid rgb(133 159 139 / 15%);
+}
+
+.growth-card-heading {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.2rem 1.25rem;
+  border-bottom: 1px solid rgb(133 159 139 / 15%);
+}
+
+.growth-card-heading p {
+  margin: 0 0 0.3rem;
+  color: #718078;
+  font-size: 0.64rem;
+  letter-spacing: 0.08em;
+}
+
+.growth-card-heading h3 {
+  margin: 0;
+  color: #e1ddcf;
+  font-family: Georgia, 'Noto Serif TC', serif;
+  font-size: 1.05rem;
+  font-weight: 500;
+}
+
+.growth-card-heading > span {
+  flex: 0 0 auto;
+  color: #c7b672;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.68rem;
+}
+
+.growth-timeline {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.growth-timeline li {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.7rem 1.25rem;
+  border-bottom: 1px solid rgb(133 159 139 / 10%);
+  color: #7e8d83;
+  font-size: 0.68rem;
+}
+
+.growth-timeline strong {
+  color: #d5c589;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.68rem;
+  font-weight: 500;
+  text-align: right;
+}
+
+.growth-summary,
+.growth-metrics {
+  display: grid;
+  margin: 0;
+}
+
+.growth-summary {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  border-bottom: 1px solid rgb(133 159 139 / 15%);
+}
+
+.growth-summary > div,
+.growth-metrics > div {
+  display: grid;
+  gap: 0.35rem;
+  min-width: 0;
+  padding: 0.85rem 1.25rem;
+}
+
+.growth-summary > div {
+  border-right: 1px solid rgb(133 159 139 / 10%);
+  border-bottom: 1px solid rgb(133 159 139 / 10%);
+}
+
+.growth-summary > div:nth-child(2n) {
+  border-right: 0;
+}
+
+.growth-summary > div:nth-last-child(-n + 2) {
+  border-bottom: 0;
+}
+
+.growth-summary dt,
+.growth-metrics dt {
+  color: #718078;
+  font-size: 0.62rem;
+  letter-spacing: 0.08em;
+}
+
+.growth-summary dd,
+.growth-metrics dd {
+  margin: 0;
+  color: #d8d4c6;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.74rem;
+}
+
+.growth-next-battle h4 {
+  margin: 0;
+  padding: 1rem 1.25rem 0.35rem;
+  color: #a08c55;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+
+.growth-metrics {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.growth-metrics > div {
+  border-right: 1px solid rgb(133 159 139 / 10%);
+  border-bottom: 1px solid rgb(133 159 139 / 10%);
+}
+
+.growth-metrics > div:nth-child(2n) {
+  border-right: 0;
+}
+
+.growth-metrics > div:nth-last-child(-n + 2) {
+  border-bottom: 0;
+}
+
+.growth-metrics dd {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.growth-metrics em {
+  color: #78be8c;
+  font-family: inherit;
+  font-size: 0.62rem;
+  font-style: normal;
+}
+
+.growth-metrics em.negative {
+  color: #d09a78;
+}
+
+@media (max-width: 760px) {
+  .growth-card-grid,
+  .growth-metrics {
+    grid-template-columns: 1fr;
+  }
+
+  .growth-unit-card + .growth-unit-card {
+    border-top: 1px solid rgb(133 159 139 / 15%);
+    border-left: 0;
+  }
+
+  .growth-metrics > div,
+  .growth-metrics > div:nth-child(2n) {
+    border-right: 0;
+    border-bottom: 1px solid rgb(133 159 139 / 10%);
+  }
+
+  .growth-metrics > div:last-child {
+    border-bottom: 0;
+  }
+}

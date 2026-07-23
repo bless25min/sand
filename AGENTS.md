@@ -24,6 +24,14 @@
 - Add a failing test before production behavior.
 - Run local checks first, then `pnpm check` at batch completion.
 
+## Batch Efficiency
+
+- Define each batch as one player-visible, independently testable outcome.
+- Keep design and plan documents under 150 lines each; reference source files instead of copying code.
+- During implementation, run only affected tests. Run `pnpm check` once at batch completion and once before deployment only when the source changed afterward.
+- Perform one consolidated review per batch, not one review or commit per helper.
+- Split files near 150 lines when they contain multiple change reasons; otherwise record why keeping the file whole is clearer.
+
 ## Commands
 
 - `pnpm dev`

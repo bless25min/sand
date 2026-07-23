@@ -15,6 +15,34 @@ test('renders one WebGL battlefield with the full visual point budget', async ({
   await expect(page.getByText('WebGL', { exact: true })).toBeVisible();
   await expect(page.getByRole('alert')).toHaveCount(0);
 
+  const playable = page.getByTestId('playable-expedition');
+  await expect(playable.getByTestId('unit-select')).toHaveCount(4);
+  await playable.getByRole('button', { name: '推進' }).click();
+  await expect(playable).toContainText('Tick1');
+  await playable.getByRole('button', { name: '變換陣形' }).click();
+  await expect(
+    playable.getByTestId('unit-select').filter({ hasText: '第一重步兵團' }),
+  ).toContainText('LINE');
+
+  for (let turn = 0; turn < 10; turn += 1) {
+    const attack = playable.getByRole('button', { name: '攻擊' });
+    if ((await attack.count()) === 0) break;
+    await attack.click();
+  }
+
+  await expect(playable.getByRole('heading', { name: '戰場已肅清' })).toBeVisible();
+  await playable.getByRole('button', { name: '回收全部素材' }).click();
+  await playable.getByRole('button', { name: '返回基地' }).click();
+  await playable.getByRole('button', { name: '製造角甲重盾' }).click();
+  await playable.getByRole('button', { name: '裝備第一重步兵團' }).click();
+  await playable.getByRole('button', { name: '進入強化再戰' }).click();
+
+  await expect(playable).toContainText('第 2 戰');
+  await expect(
+    playable.getByTestId('unit-select').filter({ hasText: '第一重步兵團' }),
+  ).toContainText('角甲重盾');
+  await expect(battlefield.locator('canvas')).toHaveCount(1);
+
   const progressionLoop = page.getByTestId('progression-loop');
   await expect(progressionLoop).toBeVisible();
   await expect(

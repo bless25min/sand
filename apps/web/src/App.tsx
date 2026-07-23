@@ -1,6 +1,6 @@
-import { BattlefieldDemo } from './battlefield/BattlefieldDemo';
 import { createMvpLoopSnapshot } from './expedition/create-mvp-loop-snapshot';
 import { ExpeditionLoopPanel } from './expedition/ExpeditionLoopPanel';
+import { PlayableExpedition } from './game-session/PlayableExpedition';
 import { createLegionGrowthSnapshot } from './legion-growth/create-legion-growth-snapshot';
 import { LegionGrowthPanel } from './legion-growth/LegionGrowthPanel';
 
@@ -18,19 +18,19 @@ export function App() {
         </div>
         <div className="build-badge">
           <span>BUILD</span>
-          <strong>0.5.0 · LEGION GROWTH</strong>
+          <strong>0.6.0 · PLAYABLE LOOP</strong>
         </div>
       </header>
 
-      <BattlefieldDemo heavyAppearanceIds={MVP_LOOP.equippedUnit.appearanceIds} />
+      <PlayableExpedition />
 
       <ExpeditionLoopPanel snapshot={MVP_LOOP} />
 
       <LegionGrowthPanel snapshot={LEGION_GROWTH} />
 
       <footer className="system-note">
-        <span>VISUAL PROJECTION ONLY</span>
-        PixiJS 只讀取快照；兵力、傷亡、士氣與戰鬥結果由 Simulation Core 決定。
+        <span>RULE-DRIVEN PLAYABLE PROJECTION</span>
+        PixiJS 只讀取即時狀態；固定軍令與戰鬥結果由 Simulation Core 決定。
       </footer>
     </main>
   );
