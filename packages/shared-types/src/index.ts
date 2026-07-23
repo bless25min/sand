@@ -6,6 +6,7 @@ export type { EquipmentDefinition, EquipmentSlot } from './equipment/equipment-d
 export type { EquipmentInstance } from './equipment/equipment-instance';
 export type { RetreatOutcome } from './expedition/retreat-outcome';
 export type { BattleEvent, BattleEventType } from './events/battle-event';
+export type { GrowthEvent, GrowthEventType } from './events/growth-event';
 export type { GridCellState, GridState } from './grid/grid-state';
 export type { TerrainType } from './grid/terrain-type';
 export type { InventoryStack, InventoryState } from './inventory/inventory-state';
@@ -15,6 +16,10 @@ export type { MaterialId } from './items/material-id';
 export type { LootDrop } from './loot/loot-drop';
 export type { MonsterBehaviorState, MonsterGroupState } from './monsters/monster-group-state';
 export type { Vec2 } from './primitives/vec2';
+export type { ExperienceAward, ExperienceReason, ExperienceRule } from './progression/experience';
 export type { FormationType } from './units/formation-type';
 export type { MoraleState } from './units/morale-state';
+export type { UnitClassDefinition } from './units/unit-class-definition';
 export type { UnitExecutionState, UnitState, UnitType } from './units/unit-state';
+export type { UnitStatModifiers } from './units/unit-stat-modifiers';
+export type { SkillDefinition, SkillType } from './skills/skill-definition';
