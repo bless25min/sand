@@ -6,5 +6,9 @@
     "lib": ["ES2022"],
     "tsBuildInfoFile": "../../node_modules/.cache/worker-api.tsbuildinfo"
   },
-  "include": ["src", "worker-configuration.d.ts"]
+  "include": ["src", "worker-configuration.d.ts"],
+  "references": [
+    { "path": "../../packages/shared-types" },
+    { "path": "../../packages/simulation-core" }
+  ]
 }

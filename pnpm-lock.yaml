@@ -83,6 +83,12 @@ importers:
 
   apps/worker-api:
     dependencies:
+      '@expedition/shared-types':
+        specifier: workspace:*
+        version: link:../../packages/shared-types
+      '@expedition/simulation-core':
+        specifier: workspace:*
+        version: link:../../packages/simulation-core
       hono:
         specifier: 4.12.31
         version: 4.12.31

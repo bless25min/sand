@@ -18,7 +18,8 @@ function removeInstance(run: SystemBreakerRun, instanceId: string): void {
   run.inventory = run.inventory.filter((module) => module.instanceId !== instanceId);
   run.board.cells = run.board.cells.map((cell) => {
     if (cell.module?.instanceId !== instanceId) return cell;
-    const { module: _removed, ...emptyCell } = cell;
+    const emptyCell = { ...cell };
+    delete emptyCell.module;
     return emptyCell;
   });
 }

@@ -9,6 +9,8 @@
     "build": "pnpm types && wrangler deploy --dry-run --outdir dist"
   },
   "dependencies": {
+    "@expedition/shared-types": "workspace:*",
+    "@expedition/simulation-core": "workspace:*",
     "hono": "4.12.31"
   }
 }
