@@ -1,0 +1,32 @@
+import { existsSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
+import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+import { describe, expect, it } from 'vitest';
+
+const repositoryRoot = fileURLToPath(new URL('../../../../', import.meta.url));
+const buildCommand =
+  process.platform === 'win32'
+    ? {
+        arguments: ['/d', '/s', '/c', 'pnpm.cmd --filter @expedition/web build:sites'],
+        executable: 'cmd.exe',
+      }
+    : {
+        arguments: ['--filter', '@expedition/web', 'build:sites'],
+        executable: 'pnpm',
+      };
+
+describe('Sites build layout', () => {
+  it('stages the worker and browser assets in their independent directories', () => {
+    execFileSync(buildCommand.executable, buildCommand.arguments, {
+      cwd: repositoryRoot,
+      stdio: 'pipe',
+    });
+
+    expect(existsSync(join(repositoryRoot, 'dist', 'server', 'index.js'))).toBe(true);
+    expect(existsSync(join(repositoryRoot, 'dist', 'client', 'index.html'))).toBe(true);
+    expect(existsSync(join(repositoryRoot, 'dist', '.openai', 'hosting.json'))).toBe(true);
+    expect(existsSync(join(repositoryRoot, 'dist', 'index.html'))).toBe(false);
+  });
+});
