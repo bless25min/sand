@@ -26,3 +26,20 @@ export type {
   ThreatModifierId,
   WorldRuleId,
 } from './game-genome';
+export type {
+  BoardCell,
+  BoardCommand,
+  BoardCommandFailure,
+  ChainEvent,
+  ChainEventType,
+  CommandResult,
+  ModuleInstance,
+  ModuleLevel,
+  RoundResult,
+  ShopOffer,
+  SystemBoard,
+  SystemBreakerRun,
+  SystemBreakerStatus,
+  SystemFragment,
+  SystemShop,
+} from './game-state';

@@ -1,9 +1,4 @@
-export const CORE_RESOURCE_IDS = [
-  'PROGRESS',
-  'INTEGRITY',
-  'INSTABILITY',
-  'CREDITS',
-] as const;
+export const CORE_RESOURCE_IDS = ['PROGRESS', 'INTEGRITY', 'INSTABILITY', 'CREDITS'] as const;
 export const MODULE_ROLE_IDS = [
   'PRODUCER',
   'AMPLIFIER',

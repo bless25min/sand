@@ -52,10 +52,7 @@ export function validateGameGenome(genome: GameGenome): GenomeValidation {
     if (threat.round !== index + 1) issues.push(`threats[${index}].round`);
     if (!contains(THREAT_KIND_IDS, threat.kind)) issues.push(`threats[${index}].kind`);
     if (!contains(THREAT_MODIFIER_IDS, threat.modifier)) issues.push(`threats[${index}].modifier`);
-    if (
-      threat.phaseTwoModifier &&
-      !contains(THREAT_MODIFIER_IDS, threat.phaseTwoModifier)
-    )
+    if (threat.phaseTwoModifier && !contains(THREAT_MODIFIER_IDS, threat.phaseTwoModifier))
       issues.push(`threats[${index}].phaseTwoModifier`);
     if (!threat.id || !threat.name || !threat.telegraph) issues.push(`threats[${index}].text`);
   });

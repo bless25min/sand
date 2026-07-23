@@ -26,7 +26,10 @@ const moduleRows: ReadonlyArray<
 ];
 
 function cleanPrompt(prompt: string): string {
-  const clean = prompt.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
+  const clean = prompt
+    .replace(/<[^>]*>/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
   return clean.slice(0, 32) || '無名異常';
 }
 
@@ -74,22 +77,21 @@ function createThreats(seed: string): GameThreat[] {
       ...(round === 7
         ? {
             phaseTwoModifier:
-              random.nextInt(0, 1) === 0 ? ('REVERSE_HORIZONTAL' as const) : ('PUNISH_REPEAT' as const),
+              random.nextInt(0, 1) === 0
+                ? ('REVERSE_HORIZONTAL' as const)
+                : ('PUNISH_REPEAT' as const),
           }
         : {}),
     };
   });
 }
 
-export function createFallbackGameGenome(input: {
-  prompt: string;
-  seed: string;
-}): GameGenome {
+export function createFallbackGameGenome(input: { prompt: string; seed: string }): GameGenome {
   const theme = cleanPrompt(input.prompt);
   const random = createSeededRandom(`${input.seed}:${theme}:rules`);
   const firstRule = random.nextInt(0, WORLD_RULE_IDS.length - 1);
-  const secondRule = (firstRule + 1 + random.nextInt(0, WORLD_RULE_IDS.length - 2)) %
-    WORLD_RULE_IDS.length;
+  const secondRule =
+    (firstRule + 1 + random.nextInt(0, WORLD_RULE_IDS.length - 2)) % WORLD_RULE_IDS.length;
 
   return {
     version: 1,

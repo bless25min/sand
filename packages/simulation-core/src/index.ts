@@ -50,6 +50,13 @@ export {
   probeGameGenome,
   validateGameGenome,
 } from './system-breaker/genome/index';
+export {
+  applyBoardCommand,
+  createSystemBreakerRun,
+  decodeRunCode,
+  encodeRunCode,
+  resolveSystemBreakerRound,
+} from './system-breaker/run/index';
 export { assertBattleState, findBattleStateViolations } from './state/assert-battle-state';
 export type { BattleStateViolation, BattleStateViolationCode } from './state/assert-battle-state';
 export type { CreateBattleStateInput } from './state/battle-state-input';
