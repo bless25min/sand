@@ -18,7 +18,8 @@
 }
 
 .playable-heading h2,
-.playable-console h3 {
+.tactical-console h3,
+.progression-actions h3 {
   margin: 0;
 }
 
@@ -61,20 +62,6 @@
 
 .reset-session {
   padding: 10px 14px;
-}
-
-.playable-console {
-  display: grid;
-  grid-template-columns: 1.15fr 1fr 0.8fr;
-  gap: 14px;
-}
-
-.playable-console > section {
-  min-width: 0;
-  padding: 18px;
-  border: 1px solid rgba(145, 190, 158, 0.2);
-  border-radius: 16px;
-  background: rgba(7, 20, 16, 0.84);
 }
 
 .unit-roster {
@@ -192,12 +179,6 @@
   width: 100%;
   margin-top: 14px;
   border-color: #d6a74b;
-}
-
-@media (max-width: 900px) {
-  .playable-console {
-    grid-template-columns: 1fr;
-  }
 }
 
 @media (max-width: 620px) {

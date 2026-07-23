@@ -24,6 +24,8 @@ function prepareRematchArmy(army: readonly UnitState[]): UnitState[] {
 }
 
 export function createPlayableRematch(state: PlayableSessionState): PlayableSessionState {
+  const { previousBattle, ...stateWithoutPreviousBattle } = state;
+  void previousBattle;
   const army = prepareRematchArmy(state.army);
   const monsterGroup = createGreyfangPack({
     id: 'greyfang-pack-veteran',
@@ -34,7 +36,7 @@ export function createPlayableRematch(state: PlayableSessionState): PlayableSess
   });
 
   return {
-    ...state,
+    ...stateWithoutPreviousBattle,
     phase: 'BATTLE',
     battleNumber: 2,
     selectedUnitId: army[0]?.id ?? state.selectedUnitId,

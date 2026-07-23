@@ -1,66 +1,33 @@
-import {
-  mountPointCloud,
-  type MountedPointCloud,
-  type VisualUnitSource,
-} from '@expedition/pixi-renderer';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import type { VisualUnitSource } from '@expedition/pixi-renderer';
+import type { FixedOrderAction } from '@expedition/shared-types';
+import { useMemo, useRef } from 'react';
 
+import { BattlefieldOverlay } from './BattlefieldOverlay';
+import { createBattlefieldOverlay } from './create-battlefield-overlay';
 import { createBattlefieldPoints } from './create-battlefield-points';
-
-interface Diagnostics {
-  readonly pointCount: number;
-  readonly rendererType: string;
-  readonly initializationMs: number;
-}
+import { usePointCloud } from './use-point-cloud';
+import './battlefield-feedback.css';
 
 interface BattlefieldDemoProps {
   readonly sources: readonly VisualUnitSource[];
   readonly battleLabel: string;
+  readonly selectedUnitId: string;
+  readonly action?: FixedOrderAction;
 }
 
-export function BattlefieldDemo({ sources, battleLabel }: BattlefieldDemoProps) {
+export function BattlefieldDemo({
+  sources,
+  battleLabel,
+  selectedUnitId,
+  action,
+}: BattlefieldDemoProps) {
   const hostRef = useRef<HTMLDivElement>(null);
-  const [diagnostics, setDiagnostics] = useState<Diagnostics | null>(null);
-  const [error, setError] = useState<string | null>(null);
   const points = useMemo(() => createBattlefieldPoints(sources), [sources]);
-
-  useEffect(() => {
-    const host = hostRef.current;
-
-    if (host === null) {
-      return;
-    }
-
-    const controller = new AbortController();
-    let mounted: MountedPointCloud | undefined;
-
-    void mountPointCloud({
-      host,
-      points,
-      width: 1_100,
-      height: 620,
-      backgroundColor: 0x07120f,
-      signal: controller.signal,
-    })
-      .then((result) => {
-        mounted = result;
-        setDiagnostics({
-          pointCount: result.pointCount,
-          rendererType: result.rendererType,
-          initializationMs: result.initializationMs,
-        });
-      })
-      .catch((reason: unknown) => {
-        if (!(reason instanceof DOMException && reason.name === 'AbortError')) {
-          setError(reason instanceof Error ? reason.message : '未知渲染錯誤');
-        }
-      });
-
-    return () => {
-      controller.abort();
-      mounted?.destroy();
-    };
-  }, [points]);
+  const overlay = useMemo(
+    () => createBattlefieldOverlay({ sources, selectedUnitId, action }),
+    [action, selectedUnitId, sources],
+  );
+  const { status: diagnostics, error } = usePointCloud(hostRef, points);
 
   return (
     <section className="battlefield-panel" aria-labelledby="battlefield-title">
@@ -84,6 +51,7 @@ export function BattlefieldDemo({ sources, battleLabel }: BattlefieldDemoProps) 
           data-testid="battlefield-canvas-host"
           data-point-count={diagnostics?.pointCount ?? 'loading'}
         />
+        <BattlefieldOverlay overlay={overlay} />
         <div className="grid-overlay" aria-hidden="true" />
         <div className="map-label map-label--north">灰牙稜線</div>
         <div className="map-label map-label--south">林間道路</div>

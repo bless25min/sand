@@ -11,6 +11,9 @@ test('renders one WebGL battlefield with the full visual point budget', async ({
   const battlefield = page.getByTestId('battlefield-canvas-host');
   await expect(battlefield).toHaveAttribute('data-point-count', '2000');
   await expect(battlefield.locator('canvas')).toHaveCount(1);
+  await battlefield.locator('canvas').evaluate((canvas) => {
+    canvas.dataset.rendererIdentity = 'persistent';
+  });
   await expect(page.getByText('Simulation Core', { exact: true })).toBeVisible();
   await expect(page.getByText('WebGL', { exact: true })).toBeVisible();
   await expect(page.getByRole('alert')).toHaveCount(0);
@@ -19,6 +22,10 @@ test('renders one WebGL battlefield with the full visual point budget', async ({
   await expect(playable.getByTestId('unit-select')).toHaveCount(4);
   await playable.getByRole('button', { name: '推進' }).click();
   await expect(playable).toContainText('Tick1');
+  await expect(battlefield.locator('canvas')).toHaveAttribute(
+    'data-renderer-identity',
+    'persistent',
+  );
   await playable.getByRole('button', { name: '變換陣形' }).click();
   await expect(
     playable.getByTestId('unit-select').filter({ hasText: '第一重步兵團' }),
@@ -60,4 +67,50 @@ test('renders one WebGL battlefield with the full visual point budget', async ({
   await expect(legionGrowth.getByText('獵獸射手', { exact: true })).toBeVisible();
 
   expect(pageErrors).toEqual([]);
+});
+
+test('keeps commands beside the battlefield and names every visible order result', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1_280, height: 720 });
+  await page.goto('/');
+
+  const playable = page.getByTestId('playable-expedition');
+  const cockpit = playable.getByTestId('battle-cockpit');
+  const battlefield = playable.getByTestId('battlefield-canvas-host');
+  const commands = playable.locator('.command-bar');
+  await expect(cockpit).toBeVisible();
+  await cockpit.scrollIntoViewIfNeeded();
+
+  const battlefieldBox = await battlefield.boundingBox();
+  const commandBox = await commands.boundingBox();
+  expect(battlefieldBox).not.toBeNull();
+  expect(commandBox).not.toBeNull();
+  if (battlefieldBox === null || commandBox === null) return;
+  const verticalOverlap =
+    Math.min(battlefieldBox.y + battlefieldBox.height, commandBox.y + commandBox.height) -
+    Math.max(battlefieldBox.y, commandBox.y);
+  expect(verticalOverlap).toBeGreaterThan(100);
+
+  const assertOrder = async (button: string, expected: string) => {
+    await playable.getByRole('button', { name: button }).click();
+    await expect(playable.getByTestId('command-feedback')).toContainText(expected);
+  };
+  const reset = async () => {
+    await playable.getByRole('button', { name: '重設相同 Seed' }).click();
+  };
+
+  await assertOrder('推進', '推進');
+  await reset();
+  await assertOrder('固守', '固守');
+  await reset();
+  await assertOrder('攻擊', '攻擊');
+  await reset();
+  await assertOrder('變換陣形', '橫列陣');
+  await reset();
+  await assertOrder('撤退', '撤退');
+  await expect(playable.getByTestId('battlefield-unit-focus')).toHaveAttribute(
+    'data-mode',
+    'retreat',
+  );
 });

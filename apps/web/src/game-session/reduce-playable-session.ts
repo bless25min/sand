@@ -64,6 +64,7 @@ export function reducePlayableSession(
         : { unitId: state.selectedUnitId, action: action.action };
     return withBattleResult({
       ...state,
+      previousBattle: state.battle,
       battle: resolveFixedOrder({
         battle: state.battle,
         order,

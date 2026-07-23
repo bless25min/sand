@@ -1,0 +1,127 @@
+.battle-cockpit {
+  display: grid;
+  grid-template-columns: minmax(0, 1.75fr) minmax(20rem, 0.75fr);
+  gap: 14px;
+  align-items: start;
+}
+
+.battle-cockpit > .battlefield-panel {
+  min-width: 0;
+}
+
+.tactical-console {
+  position: sticky;
+  top: 12px;
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+  align-content: start;
+}
+
+.tactical-console > section,
+.playable-expedition > .progression-actions {
+  min-width: 0;
+  padding: 18px;
+  border: 1px solid rgba(145, 190, 158, 0.2);
+  border-radius: 16px;
+  background: rgba(7, 20, 16, 0.84);
+}
+
+.command-feedback {
+  display: grid;
+  gap: 5px;
+  margin: 10px 0 12px;
+  padding: 12px;
+  border: 1px solid rgba(145, 190, 158, 0.25);
+  border-left: 4px solid #7db493;
+  border-radius: 10px;
+  background: rgba(17, 45, 34, 0.78);
+}
+
+.command-feedback > span {
+  color: #dbeade;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+}
+
+.command-feedback p {
+  margin: 0;
+  color: #f0f6f1;
+  font-size: 0.88rem;
+  line-height: 1.45;
+}
+
+.command-feedback dl {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  margin: 3px 0 0;
+}
+
+.command-feedback dl > div {
+  padding: 6px 8px;
+  border-radius: 6px;
+  background: rgb(0 0 0 / 18%);
+}
+
+.command-feedback dt,
+.command-feedback small {
+  color: #a8bcae;
+  font-size: 0.7rem;
+}
+
+.command-feedback dd {
+  margin: 1px 0 0;
+  color: #f3b0a4;
+  font-weight: 800;
+}
+
+.command-feedback--advance {
+  border-left-color: #6fb6d9;
+}
+
+.command-feedback--hold {
+  border-left-color: #86bd96;
+}
+
+.command-feedback--attack,
+.command-feedback--impact {
+  border-left-color: #ef826f;
+  background: rgba(74, 29, 24, 0.78);
+}
+
+.command-feedback--formation {
+  border-left-color: #d6a74b;
+}
+
+.command-feedback--retreat {
+  border-left-color: #c98f85;
+  background: rgba(55, 31, 29, 0.82);
+}
+
+@media (max-width: 900px) {
+  .battle-cockpit {
+    grid-template-columns: 1fr;
+  }
+
+  .tactical-console {
+    position: static;
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 620px) {
+  .tactical-console {
+    grid-template-columns: 1fr;
+  }
+
+  .tactical-command {
+    position: sticky;
+    z-index: 8;
+    bottom: 0;
+    max-height: 72vh;
+    overflow: auto;
+    box-shadow: 0 -12px 30px rgb(0 0 0 / 38%);
+  }
+}

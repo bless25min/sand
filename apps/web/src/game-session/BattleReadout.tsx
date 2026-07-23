@@ -1,5 +1,13 @@
 import type { PlayableSessionState } from './playable-session-types';
 
+const ORDER_LABELS: Readonly<Record<string, string>> = {
+  ADVANCE: '推進',
+  HOLD: '固守',
+  ATTACK: '攻擊',
+  CHANGE_FORMATION: '變換陣形',
+  RETREAT: '撤退',
+};
+
 const EVENT_LABELS: Readonly<Record<string, string>> = {
   BATTLE_STARTED: '戰鬥開始',
   ORDER_ISSUED: '軍令下達',
@@ -11,7 +19,7 @@ const EVENT_LABELS: Readonly<Record<string, string>> = {
 
 export function BattleReadout({ state }: { readonly state: PlayableSessionState }) {
   const monster = state.battle.monsterGroup;
-  const recentEvents = state.battle.events.slice(-6).reverse();
+  const recentEvents = state.battle.events.slice(-4).reverse();
 
   return (
     <div className="battle-readout" aria-live="polite">
@@ -39,7 +47,9 @@ export function BattleReadout({ state }: { readonly state: PlayableSessionState 
         {recentEvents.map((event) => (
           <li key={event.id}>
             <span>T{event.tick}</span>
-            {EVENT_LABELS[event.type] ?? event.type}
+            {event.type === 'ORDER_ISSUED'
+              ? `${ORDER_LABELS[event.causes[0] ?? ''] ?? '軍令'}下達`
+              : (EVENT_LABELS[event.type] ?? event.type)}
           </li>
         ))}
       </ol>

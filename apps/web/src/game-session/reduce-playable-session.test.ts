@@ -30,6 +30,8 @@ describe('playable expedition session', () => {
     const state = reducePlayableSession(source, { type: 'ISSUE_ORDER', action: 'ADVANCE' });
 
     expect(source.battle.tick).toBe(0);
+    expect(source.previousBattle).toBeUndefined();
+    expect(state.previousBattle).toEqual(source.battle);
     expect(state.battle.tick).toBe(1);
     expect(state.battle.units[0]?.position).not.toEqual(source.battle.units[0]?.position);
   });
@@ -100,6 +102,7 @@ describe('playable expedition session', () => {
     expect(state.battle.monsterGroup.initialTroopCount).toBeGreaterThan(1_200);
     expect(state.battle.units[0]?.appearanceIds).toContain('HORNPLATE_SHIELD');
     expect(state.recoveredDropIds).toEqual([]);
+    expect(state.previousBattle).toBeUndefined();
   });
 
   it('resets the complete session to the same seed and initial state', () => {

@@ -14,7 +14,7 @@ function nextFormation(current: FormationType): FormationType {
 
 export function CommandBar({ unit, onOrder }: CommandBarProps) {
   return (
-    <div className="command-bar" aria-label="固定軍令">
+    <div className="command-bar" role="group" aria-label="固定軍令">
       <button type="button" onClick={() => onOrder('ADVANCE')}>
         推進
       </button>

@@ -16,6 +16,7 @@ export interface PlayableSessionState {
   readonly battleNumber: 1 | 2;
   readonly selectedUnitId: string;
   readonly battle: PlayableBattleState;
+  readonly previousBattle?: PlayableBattleState;
   readonly army: readonly UnitState[];
   readonly drops: readonly LootDrop[];
   readonly inventory: InventoryState;
