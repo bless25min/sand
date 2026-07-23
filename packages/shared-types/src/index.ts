@@ -1,4 +1,6 @@
 export type { BattleState } from './battle/battle-state';
+export type { ContactType } from './contact/contact-type';
+export type { ContactZone } from './contact/contact-zone';
 export type { BattleEvent, BattleEventType } from './events/battle-event';
 export type { GridCellState, GridState } from './grid/grid-state';
 export type { TerrainType } from './grid/terrain-type';

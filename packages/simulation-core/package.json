@@ -18,5 +18,8 @@
   },
   "dependencies": {
     "@expedition/shared-types": "workspace:*"
+  },
+  "devDependencies": {
+    "@expedition/test-fixtures": "workspace:*"
   }
 }
