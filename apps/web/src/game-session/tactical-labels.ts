@@ -1,8 +1,4 @@
-import type {
-  FormationType,
-  MonsterBehaviorState,
-  UnitType,
-} from '@expedition/shared-types';
+import type { FormationType, MonsterBehaviorState, UnitType } from '@expedition/shared-types';
 
 const ROLE_LABELS: Readonly<Record<UnitType, string>> = {
   HEAVY_INFANTRY: '前衛',

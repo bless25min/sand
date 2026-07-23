@@ -61,10 +61,7 @@ function selectedUnit(input: CreateBattlefieldHudInput): UnitState {
 
 function createImpact(input: CreateBattlefieldHudInput): BattlefieldImpactHud | null {
   const feedback = input.feedback;
-  if (
-    feedback === null ||
-    (feedback.playerTroopLoss === 0 && feedback.monsterTroopLoss === 0)
-  ) {
+  if (feedback === null || (feedback.playerTroopLoss === 0 && feedback.monsterTroopLoss === 0)) {
     return null;
   }
 
@@ -84,8 +81,7 @@ export function createBattlefieldHud(input: CreateBattlefieldHudInput): Battlefi
   const monster = input.battle.monsterGroup;
 
   return {
-    objective:
-      input.battle.outcome === 'IN_PROGRESS' ? '擊潰灰牙狼群' : '戰鬥結束，整備軍團',
+    objective: input.battle.outcome === 'IN_PROGRESS' ? '擊潰灰牙狼群' : '戰鬥結束，整備軍團',
     selected: {
       id: unit.id,
       name: unit.name,

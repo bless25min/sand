@@ -25,6 +25,7 @@ and deltas into small view models consumed by React components.
 ### Task 1: Rule-owned Greyfang movement
 
 **Files:**
+
 - Create: `packages/simulation-core/src/session/apply-monster-movement-plan.ts`
 - Create: `packages/simulation-core/src/session/apply-monster-movement-plan.test.ts`
 - Modify: `packages/simulation-core/src/session/advance-playable-turn.ts`
@@ -32,6 +33,7 @@ and deltas into small view models consumed by React components.
 - Modify: `packages/simulation-core/src/index.ts`
 
 **Interfaces:**
+
 - Consumes: `GreyfangMovementPlan`, `MonsterGroupState`, movement distance.
 - Produces: `applyMonsterMovementPlan(input): MonsterGroupState`.
 
@@ -44,6 +46,7 @@ and deltas into small view models consumed by React components.
 ### Task 2: Deterministic archer volley
 
 **Files:**
+
 - Create: `packages/simulation-core/src/session/resolve-ranged-volley.ts`
 - Create: `packages/simulation-core/src/session/resolve-ranged-volley.test.ts`
 - Modify: `packages/shared-types/src/events/battle-event.ts`
@@ -52,6 +55,7 @@ and deltas into small view models consumed by React components.
 - Modify: `packages/simulation-core/src/index.ts`
 
 **Interfaces:**
+
 - Produces: `resolveRangedVolley({seed,tick,unit,monster})` returning updated monster,
   traceable events, `victory`, and deterministic loss facts.
 - Trigger: archer `ATTACK` while distance is greater than 3 and at most 35.
@@ -64,6 +68,7 @@ and deltas into small view models consumed by React components.
 ### Task 3: Project morale, fatigue, and cohesion
 
 **Files:**
+
 - Modify: `packages/pixi-renderer/src/contracts/visual-unit-source.ts`
 - Modify: `packages/pixi-renderer/src/points/create-visual-points.ts`
 - Modify: `packages/pixi-renderer/src/points/create-visual-points.test.ts`
@@ -71,6 +76,7 @@ and deltas into small view models consumed by React components.
 - Modify: `apps/web/src/game-session/create-battlefield-sources.test.ts`
 
 **Interfaces:**
+
 - `VisualUnitSource` adds normalized `morale`, `fatigue`, and `cohesion`.
 - Point projection deterministically maps them to opacity, formation spacing, and
   orientation stability.
@@ -83,6 +89,7 @@ and deltas into small view models consumed by React components.
 ### Task 4: Battlefield HUD view models
 
 **Files:**
+
 - Create: `apps/web/src/battlefield/create-battlefield-hud.ts`
 - Create: `apps/web/src/battlefield/create-battlefield-hud.test.ts`
 - Create: `apps/web/src/battlefield/BattlefieldHud.tsx`
@@ -92,6 +99,7 @@ and deltas into small view models consumed by React components.
 - Modify: `apps/web/src/game-session/create-command-feedback.test.ts`
 
 **Interfaces:**
+
 - `createBattlefieldHud({battle,selectedUnitId,feedback})` returns objective, selected
   formation, enemy intent, status bars, and optional loss pulse.
 
@@ -104,6 +112,7 @@ and deltas into small view models consumed by React components.
 ### Task 5: Viewport-first combat screen
 
 **Files:**
+
 - Modify: `apps/web/src/App.tsx`
 - Modify: `apps/web/src/App.test.tsx`
 - Modify: `apps/web/src/game-session/PlayableExpedition.tsx`
@@ -116,6 +125,7 @@ and deltas into small view models consumed by React components.
 - Modify: `apps/web/src/battlefield/battlefield-feedback.css`
 
 **Interfaces:**
+
 - Active session stays first; static loop/growth evidence moves into a closed `<details>`.
 - Command buttons expose role-specific hints without adding new rule ownership.
 
@@ -128,6 +138,7 @@ and deltas into small view models consumed by React components.
 ### Task 6: End-to-end gate
 
 **Files:**
+
 - Modify: `apps/web/e2e/battlefield.spec.ts`
 - Create: `docs/reviews/phase-04p-combat-experience-validation.md`
 

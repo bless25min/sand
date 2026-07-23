@@ -8,9 +8,7 @@ export interface ApplyMonsterMovementPlanInput {
   readonly baseDistance: number;
 }
 
-export function applyMonsterMovementPlan(
-  input: ApplyMonsterMovementPlanInput,
-): MonsterGroupState {
+export function applyMonsterMovementPlan(input: ApplyMonsterMovementPlanInput): MonsterGroupState {
   if (!Number.isFinite(input.baseDistance) || input.baseDistance < 0) {
     throw new RangeError('baseDistance must be a non-negative finite number');
   }

@@ -51,10 +51,7 @@ export function resolveRangedVolley(input: ResolveRangedVolleyInput): RangedVoll
     Math.max(1, Math.round(input.unit.attack * formationScale * accuracyScale)),
   );
   const remainingTroops = input.monster.troopCount - losses;
-  const moraleLoss = Math.min(
-    0.16,
-    0.04 + (losses / input.monster.initialTroopCount) * 1.5,
-  );
+  const moraleLoss = Math.min(0.16, 0.04 + (losses / input.monster.initialTroopCount) * 1.5);
   const morale = Math.max(0, input.monster.morale - moraleLoss);
   const victory = remainingTroops === 0 || morale <= 0.22;
   const routed = victory ? remainingTroops : 0;

@@ -129,10 +129,7 @@ test('lets archers land a deterministic volley before contact', async ({ page })
   const battlefield = playable.getByTestId('battlefield-canvas-host');
   await expect(battlefield).toHaveAttribute('data-point-count', '2000');
 
-  await playable
-    .getByTestId('unit-select')
-    .filter({ hasText: '松望弓兵團' })
-    .click();
+  await playable.getByTestId('unit-select').filter({ hasText: '松望弓兵團' }).click();
   await expect(playable.getByRole('button', { name: '攻擊' })).toContainText('射程內齊射');
 
   for (let turn = 0; turn < 10; turn += 1) {
@@ -143,7 +140,7 @@ test('lets archers land a deterministic volley before contact', async ({ page })
   await expect(playable.locator('.battlefield-impact--volley')).toContainText('箭雨命中');
   await expect(playable.locator('.battlefield-impact--volley')).toContainText('我軍無損');
   await expect(playable.getByText('箭雨命中', { exact: true }).first()).toBeVisible();
-  await expect(
-    playable.getByTestId('unit-select').filter({ hasText: '松望弓兵團' }),
-  ).toContainText('800');
+  await expect(playable.getByTestId('unit-select').filter({ hasText: '松望弓兵團' })).toContainText(
+    '800',
+  );
 });

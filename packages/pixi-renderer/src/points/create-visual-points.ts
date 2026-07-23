@@ -86,8 +86,7 @@ export function createVisualPoints(input: CreateVisualPointsInput): VisualPoint[
         x: -source.direction.x * fatigueLag,
         y: -source.direction.y * fatigueLag,
       };
-      const moraleWaver =
-        (seededUnit(animationSeed) - 0.5) * (1 - source.morale) * (Math.PI / 4);
+      const moraleWaver = (seededUnit(animationSeed) - 0.5) * (1 - source.morale) * (Math.PI / 4);
 
       points.push({
         id: points.length,

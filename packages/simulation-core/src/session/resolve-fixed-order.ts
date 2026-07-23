@@ -29,10 +29,7 @@ function replaceUnit(units: readonly UnitState[], next: UnitState): UnitState[] 
 
 function createLootFacts(monster: PlayableBattleState['monsterGroup']): PlayableBattleLootFacts {
   return {
-    defeatedWolves: Math.min(
-      MAX_LOOT_ELIGIBLE_WOLVES,
-      monster.deadCount + monster.routedCount,
-    ),
+    defeatedWolves: Math.min(MAX_LOOT_ELIGIBLE_WOLVES, monster.deadCount + monster.routedCount),
     defeatedHornedAlphas: monster.leaderId === undefined ? 0 : 1,
   };
 }
@@ -89,10 +86,7 @@ export function resolveFixedOrder(input: ResolveFixedOrderInput): PlayableBattle
     );
   }
 
-  if (
-    input.order.action === 'ATTACK' &&
-    isRangedVolleyAvailable({ unit: moved, monster })
-  ) {
+  if (input.order.action === 'ATTACK' && isRangedVolleyAvailable({ unit: moved, monster })) {
     const volley = resolveRangedVolley({
       seed: input.battle.seed,
       tick,
