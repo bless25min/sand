@@ -16,3 +16,8 @@ export type {
   ExperienceCalculationFailureReason,
   ExperienceCalculationResult,
 } from './experience/calculate-experience-awards';
+export { applyUnitExperience } from './experience/apply-unit-experience';
+export type {
+  ApplyUnitExperienceInput,
+  ApplyUnitExperienceResult,
+} from './experience/apply-unit-experience';
