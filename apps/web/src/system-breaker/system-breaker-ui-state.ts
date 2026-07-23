@@ -8,8 +8,7 @@ import type {
 
 import type { GameGenomeGeneration } from './system-breaker-api';
 
-type SystemBreakerUiPhase =
-  'PROMPT' | 'GENERATING' | 'CONTRACT' | 'PLAY' | 'PLAYBACK' | 'ENDING';
+type SystemBreakerUiPhase = 'PROMPT' | 'GENERATING' | 'CONTRACT' | 'PLAY' | 'PLAYBACK' | 'ENDING';
 export type PlaybackSpeed = 1 | 2 | 0;
 type UiGenomeResponse = Omit<GameGenomeGeneration, 'source'> & {
   source: GameGenomeGeneration['source'] | 'RUN_CODE';

@@ -4,7 +4,7 @@ test('renders one WebGL battlefield with the full visual point budget', async ({
   const pageErrors: Error[] = [];
   page.on('pageerror', (error) => pageErrors.push(error));
 
-  await page.goto('/');
+  await page.goto('/?legacy=1');
 
   await expect(page.getByRole('heading', { name: 'Project Expedition' })).toBeVisible();
 
@@ -76,7 +76,7 @@ test('keeps commands beside the battlefield and names every visible order result
   page,
 }) => {
   await page.setViewportSize({ width: 1_280, height: 720 });
-  await page.goto('/');
+  await page.goto('/?legacy=1');
 
   const playable = page.getByTestId('playable-expedition');
   const cockpit = playable.getByTestId('battle-cockpit');
@@ -123,7 +123,7 @@ test('keeps commands beside the battlefield and names every visible order result
 
 test('lets archers land a deterministic volley before contact', async ({ page }) => {
   await page.setViewportSize({ width: 1_280, height: 720 });
-  await page.goto('/');
+  await page.goto('/?legacy=1');
 
   const playable = page.getByTestId('playable-expedition');
   const battlefield = playable.getByTestId('battlefield-canvas-host');
