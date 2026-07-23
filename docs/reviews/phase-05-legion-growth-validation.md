@@ -4,10 +4,10 @@ Date: 2026-07-23
 
 ## Verified Source
 
-- Commit range: `18def5286adf54eba90a3d20ab63cc9fe9bd094e..26f2b4d5c83ad0207654c8e3ad9327cd15b72472`
-- Verified source commit: `26f2b4d5c83ad0207654c8e3ad9327cd15b72472`
+- Commit range: `18def5286adf54eba90a3d20ab63cc9fe9bd094e..1ad8f85665e76faf54b7399ea9877006066c6a09`
+- Verified source commit: `1ad8f85665e76faf54b7399ea9877006066c6a09`
 - Scope: Phase 5 legion experience, recovery, promotion, trade-offs, snapshot composition,
-  player-facing evidence, and cross-platform repository gates.
+  player-facing evidence, E2E server ownership, and cross-platform repository gates.
 
 ## Commands and Status
 
@@ -22,6 +22,11 @@ Date: 2026-07-23
 | `pnpm.cmd test:e2e`                                                                                                      |    0 | Playwright passed 1 of 1 tests.                                                                                                     |
 | `.\node_modules\.bin\vitest.cmd run apps/web/src/legion-growth/create-legion-growth-snapshot.test.ts --reporter=verbose` |    0 | Focused deterministic snapshot suite passed 5 of 5 tests.                                                                           |
 | Read-only Vite SSR numeric invariant assertion                                                                           |    0 | Printed and asserted the exact class and formation values below.                                                                    |
+| Final-review focused suite before implementation                                                                         |    1 | RED: occupied-port preflight was not exported and both invalid passive definitions incorrectly promoted successfully.               |
+| Final-review focused suite after implementation                                                                          |    0 | Three files and 14 tests passed, including missing-rule coverage and the occupied-port regression.                                  |
+| First final-review `pnpm.cmd check`                                                                                      |    1 | Test fixture typecheck exposed a possibly undefined indexed skill definition; no production failure.                                |
+| Fresh final-review `pnpm.cmd check`                                                                                      |    0 | Complete repository gate passed against the verified source commit.                                                                 |
+| Fresh final-review `pnpm.cmd test:e2e`                                                                                   |    0 | Playwright passed 1 of 1 tests through the ownership-hardened runner.                                                               |
 | `git diff --check 18def52..HEAD`                                                                                         |    0 | No whitespace errors.                                                                                                               |
 | `git diff --stat 18def52..HEAD`                                                                                          |    0 | Phase 5 source, tests, approved plan/spec formatting, and gate configuration only.                                                  |
 | `git status --short` after restoring generated declarations                                                              |    0 | Empty before this validation document was created.                                                                                  |
@@ -33,12 +38,16 @@ Date: 2026-07-23
 - Prettier: passed.
 - Dependency Cruiser: no violations across 156 modules and 344 dependencies.
 - Knip: passed.
-- Vitest: 47 test files and 137 tests passed.
+- Vitest: 48 test files and 141 tests passed.
 - Workspace builds: all nine buildable projects passed, including the Worker API type
   generation and deploy dry-run and the Vite web production build.
 - Web build: 778 modules transformed; production assets emitted successfully.
 - Playwright: 1 test passed. It asserts one PixiJS canvas, a 2,000-point battlefield, two
   legion promotion cards, both promoted class names, no alert, and no page errors.
+- The occupied-port regression binds an ephemeral TCP port and calls the exported E2E
+  preflight. The test passes only when an existing listener is rejected before Vite or
+  Playwright can be spawned, and it is included in the normal Vitest and `pnpm.cmd check`
+  gates.
 
 Wrangler reported `EPERM` while attempting to write optional debug logs outside the
 workspace sandbox. Worker type generation and the deployment dry-run still completed, the
