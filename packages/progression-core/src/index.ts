@@ -26,3 +26,9 @@ export type {
   ApplyUnitExperienceResult,
 } from './experience/apply-unit-experience';
 export { applyUnitStatModifiers } from './promotion/apply-unit-stat-modifiers';
+export { promoteUnit } from './promotion/promote-unit';
+export type {
+  PromoteUnitInput,
+  PromotionFailureReason,
+  PromotionResult,
+} from './promotion/promote-unit';
