@@ -1,0 +1,109 @@
+.sb-shop > header > button,
+.sb-inventory button {
+  min-height: 38px;
+  border: 1px solid var(--sb-line);
+  background: transparent;
+  color: var(--sb-muted);
+  cursor: pointer;
+}
+
+.sb-offers {
+  display: grid;
+  gap: 0.6rem;
+  padding: 0.8rem;
+}
+
+.sb-offer {
+  padding: 0.8rem;
+  border: 1px solid var(--sb-line);
+  border-left: 3px solid var(--offer-color, var(--sb-cyan));
+  background: var(--sb-panel-2);
+}
+
+.sb-offer > span,
+.sb-offer code {
+  color: var(--offer-color);
+  font:
+    0.6rem ui-monospace,
+    monospace;
+}
+
+.sb-offer h3 {
+  margin: 0.2rem 0;
+  font-size: 0.95rem;
+}
+
+.sb-offer p {
+  margin: 0.35rem 0;
+  color: var(--sb-muted);
+  font-size: 0.7rem;
+}
+
+.sb-offer footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 0.65rem;
+}
+
+.sb-offer footer button {
+  min-height: 38px;
+  border: 1px solid var(--offer-color);
+  background: transparent;
+  color: var(--offer-color);
+  cursor: pointer;
+}
+
+.sb-offer--sold {
+  display: grid;
+  min-height: 7rem;
+  place-items: center;
+  color: var(--sb-muted);
+}
+
+.sb-inventory {
+  padding: 0.8rem;
+  border-top: 1px solid var(--sb-line);
+}
+
+.sb-inventory > span {
+  color: var(--sb-muted);
+  font-size: 0.7rem;
+}
+
+.sb-inventory > div {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 0.35rem;
+  margin-top: 0.4rem;
+}
+
+.sb-inventory > div.is-selected {
+  outline: 1px solid var(--sb-cyan);
+}
+
+.sb-inventory > div button:first-child {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 0.45rem;
+  color: var(--sb-text);
+  text-align: left;
+}
+
+.sb-inventory button span {
+  color: var(--sb-muted);
+  font-size: 0.6rem;
+}
+
+@media (min-width: 720px) {
+  .sb-offers {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (min-width: 1100px) {
+  .sb-offers {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,0 +1,25 @@
+.sb-cell--producer,
+.sb-offer--producer {
+  --role-color: var(--sb-cyan);
+  --offer-color: var(--sb-cyan);
+}
+.sb-cell--amplifier,
+.sb-offer--amplifier {
+  --role-color: var(--sb-magenta);
+  --offer-color: var(--sb-magenta);
+}
+.sb-cell--stabilizer,
+.sb-offer--stabilizer {
+  --role-color: var(--sb-green);
+  --offer-color: var(--sb-green);
+}
+.sb-cell--defense,
+.sb-offer--defense {
+  --role-color: var(--sb-amber);
+  --offer-color: var(--sb-amber);
+}
+.sb-cell--converter,
+.sb-offer--converter {
+  --role-color: #a992ff;
+  --offer-color: #a992ff;
+}

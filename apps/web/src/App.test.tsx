@@ -4,27 +4,19 @@ import { describe, expect, it } from 'vitest';
 import { App } from './App';
 
 describe('App', () => {
-  it('identifies the Project Expedition development shell', () => {
-    const markup = renderToStaticMarkup(<App />);
+  it('uses SYSTEM BREAKER as the default playable product', () => {
+    const markup = renderToStaticMarkup(<App legacy={false} />);
 
-    expect(markup).toContain('Project Expedition');
-    expect(markup).toContain('遠征軍戰術沙盤');
-    expect(markup).toContain('Simulation Core');
-    expect(markup).toContain('掉落如何改變下一場戰鬥');
-    expect(markup).toContain('角甲重盾');
-    expect(markup).toContain('軍團成長與雙線轉職');
-    expect(markup).toContain('重盾衛隊');
-    expect(markup).toContain('獵獸射手');
+    expect(markup).toContain('SYSTEM BREAKER');
+    expect(markup).toContain('輸入一個世界');
+    expect(markup).toContain('生成可破壞系統');
+    expect(markup).not.toContain('data-testid="playable-expedition"');
   });
 
-  it('keeps the playable battle first and collapses developer evidence', () => {
-    const markup = renderToStaticMarkup(<App />);
-    const playableIndex = markup.indexOf('data-testid="playable-expedition"');
-    const evidenceIndex = markup.indexOf('class="developer-evidence"');
+  it('keeps the former expedition available only through legacy mode', () => {
+    const markup = renderToStaticMarkup(<App legacy />);
 
-    expect(playableIndex).toBeGreaterThan(-1);
-    expect(evidenceIndex).toBeGreaterThan(playableIndex);
-    expect(markup).toContain('開發驗證資料');
-    expect(markup).not.toMatch(/<details[^>]*class="developer-evidence"[^>]*open/);
+    expect(markup).toContain('Project Expedition');
+    expect(markup).toContain('data-testid="playable-expedition"');
   });
 });

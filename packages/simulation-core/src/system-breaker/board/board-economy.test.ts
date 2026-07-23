@@ -7,6 +7,18 @@ const createRun = () =>
   createSystemBreakerRun(createFallbackGameGenome({ prompt: '折疊都市', seed: 'board-economy' }));
 
 describe('system breaker board economy', () => {
+  it('opens with both an output choice and a survival choice', () => {
+    const run = createRun();
+    const offered = run.shop.offers.map((offer) =>
+      run.genome.modules.find((module) => module.id === offer?.definitionId),
+    );
+
+    expect(offered.some((module) => module?.role === 'PRODUCER')).toBe(true);
+    expect(
+      offered.some((module) => module?.role === 'DEFENSE' || module?.role === 'STABILIZER'),
+    ).toBe(true);
+  });
+
   it('buys and places an offered module without letting React own prices', () => {
     const initial = createRun();
     const offer = initial.shop.offers[0]!;
