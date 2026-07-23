@@ -48,4 +48,23 @@ describe('calculateExperienceAwards', () => {
       awardIndex: 0,
     });
   });
+
+  it('returns the award index when an experience rule is missing', () => {
+    expect(
+      calculateExperienceAwards({
+        awards: [
+          {
+            reason: 'COMMAND_COMPLETED',
+            quantity: 1,
+            evidenceIds: ['command-1'],
+          },
+        ],
+        rules: {},
+      }),
+    ).toEqual({
+      ok: false,
+      reason: 'MISSING_EXPERIENCE_RULE',
+      awardIndex: 0,
+    });
+  });
 });

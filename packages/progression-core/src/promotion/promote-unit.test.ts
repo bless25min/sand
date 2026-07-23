@@ -135,4 +135,60 @@ describe('promoteUnit', () => {
     });
     expect(result.unit).toBe(unit);
   });
+
+  it('rejects a dangling passive ID and preserves the source unit', () => {
+    const unit = createUnitState({ classId: 'infantry', level: 2 });
+    const danglingPassiveId = 'missing-passive';
+
+    const result = promoteUnit({
+      unit,
+      classDefinition: {
+        ...HEAVY_SHIELD_GUARD,
+        passiveIds: [danglingPassiveId],
+      },
+      skillDefinitions: LEGION_SKILLS,
+      eventId: 'event-dangling-passive',
+    });
+
+    expect(result).toEqual({
+      ok: false,
+      reason: 'MISSING_SKILL_DEFINITION',
+      unit,
+      missingSkillId: danglingPassiveId,
+    });
+    expect(result.unit).toBe(unit);
+  });
+
+  it('rejects a passive ID whose skill definition is not passive and preserves the source unit', () => {
+    const unit = createUnitState({ classId: 'infantry', level: 2 });
+    const passiveId = HEAVY_SHIELD_GUARD.passiveIds[0];
+    if (passiveId === undefined) {
+      throw new Error('Expected the heavy shield guard to define a passive');
+    }
+    const passiveDefinition = LEGION_SKILLS[passiveId];
+    if (passiveDefinition === undefined) {
+      throw new Error('Expected the heavy shield guard passive definition');
+    }
+
+    const result = promoteUnit({
+      unit,
+      classDefinition: HEAVY_SHIELD_GUARD,
+      skillDefinitions: {
+        ...LEGION_SKILLS,
+        [passiveId]: {
+          ...passiveDefinition,
+          type: 'TACTICAL',
+        },
+      },
+      eventId: 'event-non-passive-skill',
+    });
+
+    expect(result).toEqual({
+      ok: false,
+      reason: 'MISSING_SKILL_DEFINITION',
+      unit,
+      missingSkillId: passiveId,
+    });
+    expect(result.unit).toBe(unit);
+  });
 });

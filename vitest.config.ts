@@ -17,7 +17,11 @@ export default defineConfig({
     },
   },
   test: {
-    include: ['apps/**/src/**/*.test.{ts,tsx}', 'packages/**/src/**/*.test.ts'],
+    include: [
+      'apps/**/src/**/*.test.{ts,tsx}',
+      'packages/**/src/**/*.test.ts',
+      'scripts/**/*.test.mjs',
+    ],
     passWithNoTests: false,
     reporters: ['default'],
   },

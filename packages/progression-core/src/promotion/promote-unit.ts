@@ -46,6 +46,22 @@ export function promoteUnit(input: PromoteUnitInput): PromotionResult {
     skills.push(skill);
   }
 
+  for (const passiveId of classDefinition.passiveIds) {
+    const passive = skillDefinitions[passiveId];
+    if (
+      !classDefinition.skillIds.includes(passiveId) ||
+      passive === undefined ||
+      passive.type !== 'PASSIVE'
+    ) {
+      return {
+        ok: false,
+        reason: 'MISSING_SKILL_DEFINITION',
+        unit,
+        missingSkillId: passiveId,
+      };
+    }
+  }
+
   let promotedUnit = applyUnitStatModifiers(unit, classDefinition.statModifiers);
   for (const skill of skills) {
     promotedUnit = applyUnitStatModifiers(promotedUnit, skill.statModifiers);

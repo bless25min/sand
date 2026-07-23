@@ -1,13 +1,36 @@
 import { spawn } from 'node:child_process';
+import { createConnection } from 'node:net';
 import process from 'node:process';
 import { clearTimeout, setTimeout } from 'node:timers';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 
 const rootDirectory = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const previewUrl = 'http://127.0.0.1:4173';
+const previewHost = '127.0.0.1';
+const previewPort = 4173;
+const previewUrl = `http://${previewHost}:${previewPort}`;
 const startupTimeoutMs = 20_000;
 const shutdownTimeoutMs = 5_000;
+
+export async function assertPortAvailable(host, port) {
+  await new Promise((resolve, reject) => {
+    const socket = createConnection({ host, port });
+
+    socket.once('connect', () => {
+      socket.destroy();
+      reject(new Error(`E2E preview port ${host}:${port} is already occupied`));
+    });
+    socket.once('error', (error) => {
+      socket.destroy();
+      if (error.code === 'ECONNREFUSED') {
+        resolve();
+        return;
+      }
+
+      reject(new Error(`Could not verify E2E preview port ${host}:${port}: ${error.message}`));
+    });
+  });
+}
 
 function waitForExit(child, timeoutMs) {
   if (child.exitCode !== null || child.signalCode !== null) {
@@ -66,15 +89,17 @@ async function stopPreview(preview) {
 }
 
 async function run() {
+  await assertPortAvailable(previewHost, previewPort);
+
   const preview = spawn(
     process.execPath,
     [
       path.join(rootDirectory, 'node_modules', 'vite', 'bin', 'vite.js'),
       'preview',
       '--host',
-      '127.0.0.1',
+      previewHost,
       '--port',
-      '4173',
+      String(previewPort),
       '--strictPort',
     ],
     {
@@ -87,6 +112,9 @@ async function run() {
 
   try {
     await waitForPreview(preview);
+    if (preview.exitCode !== null || preview.signalCode !== null) {
+      throw new Error(`Vite preview exited after readiness (code ${preview.exitCode ?? 'none'})`);
+    }
 
     const playwright = spawn(
       process.execPath,
@@ -120,4 +148,9 @@ async function run() {
   }
 }
 
-await run();
+if (
+  process.argv[1] !== undefined &&
+  path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)
+) {
+  await run();
+}
