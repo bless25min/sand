@@ -1,11 +1,17 @@
 import { describe, expect, it } from 'vitest';
 
-import { createLegionGrowthSnapshot } from './create-legion-growth-snapshot';
+import {
+  createLegionGrowthSnapshot,
+  type LegionGrowthUnitSnapshot,
+} from './create-legion-growth-snapshot';
 
 describe('createLegionGrowthSnapshot', () => {
   it('replays both growth paths deterministically', () => {
     const first = createLegionGrowthSnapshot();
+    const units: readonly [LegionGrowthUnitSnapshot, LegionGrowthUnitSnapshot] = first.units;
+
     expect(createLegionGrowthSnapshot()).toEqual(first);
+    expect(units).toHaveLength(2);
     expect(first.units.map((entry) => entry.after.classId)).toEqual([
       'heavy-shield-guard',
       'beast-hunter-marksman',

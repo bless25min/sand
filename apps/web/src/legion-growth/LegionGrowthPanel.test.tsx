@@ -33,6 +33,7 @@ describe('LegionGrowthPanel', () => {
               ...firstUnit,
               experienceDetails: [{ ...firstDetail, reason: 'ALLY_PROTECTED' }],
             },
+            snapshot.units[1],
           ],
         }}
       />,

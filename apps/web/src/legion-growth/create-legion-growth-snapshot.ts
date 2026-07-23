@@ -51,7 +51,7 @@ export interface LegionGrowthUnitSnapshot {
 }
 
 export interface LegionGrowthSnapshot {
-  readonly units: readonly LegionGrowthUnitSnapshot[];
+  readonly units: readonly [LegionGrowthUnitSnapshot, LegionGrowthUnitSnapshot];
 }
 
 interface LegionGrowthFixture {
