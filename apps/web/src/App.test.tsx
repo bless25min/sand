@@ -12,5 +12,8 @@ describe('App', () => {
     expect(markup).toContain('Simulation Core');
     expect(markup).toContain('掉落如何改變下一場戰鬥');
     expect(markup).toContain('角甲重盾');
+    expect(markup).toContain('軍團成長與雙線轉職');
+    expect(markup).toContain('重盾衛隊');
+    expect(markup).toContain('獵獸射手');
   });
 });

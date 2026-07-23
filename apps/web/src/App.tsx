@@ -1,8 +1,11 @@
 import { BattlefieldDemo } from './battlefield/BattlefieldDemo';
 import { createMvpLoopSnapshot } from './expedition/create-mvp-loop-snapshot';
 import { ExpeditionLoopPanel } from './expedition/ExpeditionLoopPanel';
+import { createLegionGrowthSnapshot } from './legion-growth/create-legion-growth-snapshot';
+import { LegionGrowthPanel } from './legion-growth/LegionGrowthPanel';
 
 const MVP_LOOP = createMvpLoopSnapshot();
+const LEGION_GROWTH = createLegionGrowthSnapshot();
 
 export function App() {
   return (
@@ -15,13 +18,15 @@ export function App() {
         </div>
         <div className="build-badge">
           <span>BUILD</span>
-          <strong>0.4.0 · LOOT LOOP</strong>
+          <strong>0.5.0 · LEGION GROWTH</strong>
         </div>
       </header>
 
       <BattlefieldDemo heavyAppearanceIds={MVP_LOOP.equippedUnit.appearanceIds} />
 
       <ExpeditionLoopPanel snapshot={MVP_LOOP} />
+
+      <LegionGrowthPanel snapshot={LEGION_GROWTH} />
 
       <footer className="system-note">
         <span>VISUAL PROJECTION ONLY</span>

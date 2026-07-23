@@ -25,5 +25,11 @@ test('renders one WebGL battlefield with the full visual point budget', async ({
   await expect(progressionLoop.getByText('角甲重盾', { exact: true })).toBeVisible();
   await expect(progressionLoop).toContainText('10 → 16');
 
+  const legionGrowth = page.getByTestId('legion-growth');
+  await expect(legionGrowth).toBeVisible();
+  await expect(legionGrowth.getByTestId('growth-unit-card')).toHaveCount(2);
+  await expect(legionGrowth.getByText('重盾衛隊', { exact: true })).toBeVisible();
+  await expect(legionGrowth.getByText('獵獸射手', { exact: true })).toBeVisible();
+
   expect(pageErrors).toEqual([]);
 });
