@@ -9,3 +9,10 @@ export { recoverLoot } from './inventory/recover-loot';
 export type { RecoveredLoot, RecoverLootInput, RecoverLootResult } from './inventory/recover-loot';
 export { applyRetreatLoss } from './retreat/apply-retreat-loss';
 export type { ApplyRetreatLossInput, RetreatLossResult } from './retreat/apply-retreat-loss';
+export { calculateExperienceAwards } from './experience/calculate-experience-awards';
+export type {
+  CalculateExperienceAwardsInput,
+  ExperienceAwardDetail,
+  ExperienceCalculationFailureReason,
+  ExperienceCalculationResult,
+} from './experience/calculate-experience-awards';
