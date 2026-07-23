@@ -3,6 +3,7 @@ import { Application, RendererType } from 'pixi.js';
 import type { VisualPoint } from '../contracts/visual-point';
 import { PixiPointLayer } from '../layers/pixi-point-layer';
 import { advanceVisualPoint } from '../points/advance-visual-point';
+import { reconcileVisualPoints } from '../points/reconcile-visual-points';
 import { createPointTextures } from '../textures/create-point-textures';
 
 export interface MountPointCloudInput {
@@ -45,7 +46,7 @@ export async function mountPointCloud(input: MountPointCloudInput): Promise<Moun
   const canvas = application.canvas;
   canvas.style.width = '100%';
   canvas.style.height = 'auto';
-  let points = [...input.points];
+  let points = reconcileVisualPoints([], input.points);
   layer.sync(points);
   application.stage.addChild(layer.container);
   input.host.replaceChildren(canvas);
@@ -77,7 +78,7 @@ export async function mountPointCloud(input: MountPointCloudInput): Promise<Moun
           : 'Canvas',
     initializationMs: performance.now() - startedAt,
     setPoints(nextPoints) {
-      points = [...nextPoints];
+      points = reconcileVisualPoints(points, nextPoints);
       layer.sync(points);
     },
     destroy() {
