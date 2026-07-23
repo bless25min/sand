@@ -1,10 +1,8 @@
 import {
   BEAST_HUNTER_MARKSMAN,
-  BEAST_HUNTING_MANUAL,
   EXPERIENCE_RULES,
   HEAVY_SHIELD_GUARD,
   LEGION_SKILLS,
-  SHIELD_WALL_TRAINING,
 } from '@expedition/game-data';
 import {
   applyUnitExperience,
@@ -18,7 +16,6 @@ import type {
   ContactZone,
   ExperienceAward,
   GrowthEvent,
-  SkillDefinition,
   UnitClassDefinition,
   UnitState,
 } from '@expedition/shared-types';
@@ -60,7 +57,6 @@ interface LegionGrowthFixture {
   readonly treatmentCapacity: number;
   readonly availableRecruits: number;
   readonly classDefinition: UnitClassDefinition;
-  readonly skillDefinition: SkillDefinition;
 }
 
 const BASE_UNIT: UnitState = {
@@ -131,7 +127,6 @@ const INFANTRY: LegionGrowthFixture = {
   treatmentCapacity: 7,
   availableRecruits: 10,
   classDefinition: HEAVY_SHIELD_GUARD,
-  skillDefinition: SHIELD_WALL_TRAINING,
 };
 
 const ARCHER: LegionGrowthFixture = {
@@ -176,7 +171,6 @@ const ARCHER: LegionGrowthFixture = {
   treatmentCapacity: 10,
   availableRecruits: 15,
   classDefinition: BEAST_HUNTER_MARKSMAN,
-  skillDefinition: BEAST_HUNTING_MANUAL,
 };
 
 const GREYFANG: CombatSideSnapshot = {
@@ -243,6 +237,15 @@ function battleMetrics(unit: UnitState): LegionGrowthBattleMetrics {
 }
 
 function createUnitGrowthSnapshot(fixture: LegionGrowthFixture): LegionGrowthUnitSnapshot {
+  const skillId = fixture.classDefinition.skillIds[0];
+  if (skillId === undefined) {
+    throw new Error(`fixed legion growth fixture has no skill ID: ${fixture.classDefinition.id}`);
+  }
+  const skillDefinition = LEGION_SKILLS[skillId];
+  if (skillDefinition === undefined) {
+    throw new Error(`fixed legion growth fixture has no skill definition: ${skillId}`);
+  }
+
   const calculation = calculateExperienceAwards({
     awards: fixture.awards,
     rules: EXPERIENCE_RULES,
@@ -300,7 +303,7 @@ function createUnitGrowthSnapshot(fixture: LegionGrowthFixture): LegionGrowthUni
     treatedCount: treatment.treatedCount,
     reinforcementCount: reinforcement.addedCount,
     className: fixture.classDefinition.name,
-    skillName: fixture.skillDefinition.name,
+    skillName: skillDefinition.name,
     before: fixture.unit,
     after: promotion.unit,
     beforeMetrics: battleMetrics(fixture.unit),

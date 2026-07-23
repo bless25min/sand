@@ -46,4 +46,16 @@ describe('treatWounded', () => {
     expect(result).toEqual({ ok: false, reason: 'INVALID_TREATMENT_CAPACITY', unit });
     if (!result.ok) expect(result.unit).toBe(unit);
   });
+
+  it.each([
+    ['a negative integer', -1],
+    ['positive infinity', Number.POSITIVE_INFINITY],
+    ['NaN', Number.NaN],
+  ])('rejects %s capacity without replacing the source unit', (_description, treatmentCapacity) => {
+    const unit = createUnitState({ woundedCount: 5 });
+    const result = treatWounded({ unit, treatmentCapacity, eventId: 'treatment-bad' });
+
+    expect(result).toEqual({ ok: false, reason: 'INVALID_TREATMENT_CAPACITY', unit });
+    if (!result.ok) expect(result.unit).toBe(unit);
+  });
 });
