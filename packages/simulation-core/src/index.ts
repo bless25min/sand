@@ -49,6 +49,8 @@ export type { BattleStateViolation, BattleStateViolationCode } from './state/ass
 export type { CreateBattleStateInput } from './state/battle-state-input';
 export { createBattleState } from './state/create-battle-state';
 export { createPlayableBattle } from './session/create-playable-battle';
+export { applyMonsterMovementPlan } from './session/apply-monster-movement-plan';
+export type { ApplyMonsterMovementPlanInput } from './session/apply-monster-movement-plan';
 export type {
   PlayableBattleLootFacts,
   PlayableBattleOutcome,

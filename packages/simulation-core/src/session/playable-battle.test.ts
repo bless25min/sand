@@ -19,6 +19,7 @@ function battleAtDistance(distance: number) {
     ],
     monsterGroup: createMonsterGroupState({
       id: 'greyfang',
+      leaderId: 'greyfang-alpha',
       factionId: 'greyfang',
       troopCount: 80,
       initialTroopCount: 80,
@@ -80,6 +81,13 @@ describe('playable fixed-order battle', () => {
       sourceIds: ['greyfang'],
       position: result.monsterGroup.position,
     });
+  });
+
+  it('keeps the Greyfang encircling intent visible before contact', () => {
+    const result = issue({ unitId: 'heavy', action: 'HOLD' }, 6);
+
+    expect(result.monsterGroup.behaviorState).toBe('ENCIRCLING');
+    expect(result.events.some((event) => event.type === 'CASUALTIES_APPLIED')).toBe(false);
   });
 
   it('lets the Greyfang pack attack when formation changes in contact', () => {

@@ -1,7 +1,11 @@
 import type { FixedOrder, MonsterGroupState, UnitState } from '@expedition/shared-types';
 
+import { planGreyfangMovement } from '../monsters/plan-greyfang-movement';
 import { advanceUnit } from '../movement/advance-unit';
-import { moveMonsterToward } from './move-monster-toward';
+import { applyMonsterMovementPlan } from './apply-monster-movement-plan';
+
+const GREYFANG_MOVEMENT_DISTANCE = 8;
+const GREYFANG_ENCIRCLEMENT_DISTANCE = 2.5;
 
 export interface AdvancePlayableTurnInput {
   readonly unit: UnitState;
@@ -28,7 +32,19 @@ export function advancePlayableTurn(input: AdvancePlayableTurnInput): AdvancePla
         mode: input.order.action === 'ATTACK' ? 'FORCED_MARCH' : 'NORMAL',
       }).unit
     : { ...input.unit, executionState: 'IDLE' as const };
-  const monster = moveMonsterToward(input.monster, unit.position, 8);
+  const monsterPlan = planGreyfangMovement({
+    pack: input.monster,
+    targetPosition: unit.position,
+    leaderAlive: input.monster.leaderId !== undefined,
+  });
+  const monster = applyMonsterMovementPlan({
+    monster: input.monster,
+    plan: monsterPlan,
+    baseDistance:
+      monsterPlan.behaviorState === 'ENCIRCLING'
+        ? GREYFANG_ENCIRCLEMENT_DISTANCE
+        : GREYFANG_MOVEMENT_DISTANCE,
+  });
   const monsterMoved =
     monster.position.x !== input.monster.position.x ||
     monster.position.y !== input.monster.position.y;
