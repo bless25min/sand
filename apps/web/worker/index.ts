@@ -6,12 +6,15 @@ interface StaticAssetsBinding {
 
 interface SitesEnvironment {
   ASSETS: StaticAssetsBinding;
+  API_BASE_URL?: string;
 }
 
 export default {
   fetch(request: Request, environment: SitesEnvironment): Promise<Response> {
-    return handleStaticSiteRequest(request, (assetRequest) =>
-      environment.ASSETS.fetch(assetRequest),
+    return handleStaticSiteRequest(
+      request,
+      (assetRequest) => environment.ASSETS.fetch(assetRequest),
+      { apiBaseUrl: environment.API_BASE_URL },
     );
   },
 };
