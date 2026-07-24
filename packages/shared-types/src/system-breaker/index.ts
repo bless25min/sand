@@ -41,6 +41,7 @@ export type {
   ShopOffer,
   SystemBoard,
   SystemBreakerRun,
+  SystemBreakerRoundPreview,
   SystemBreakerStatus,
   SystemFragment,
   SystemShop,

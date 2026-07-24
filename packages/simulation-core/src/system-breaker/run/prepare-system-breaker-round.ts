@@ -20,7 +20,19 @@ export function prepareSystemBreakerRound(
   round: number,
 ): SystemBreakerRun {
   const board = resizeBoard(input.board, round >= 3 ? 3 : 2);
-  board.cells = board.cells.map((cell) => ({ ...cell, blocked: false, locked: false }));
+  board.cells = board.cells.map((cell) => ({
+    ...cell,
+    blocked: false,
+    locked: false,
+    ...(cell.module
+      ? {
+          module: {
+            ...cell.module,
+            cooldownRemaining: Math.max(0, cell.module.cooldownRemaining - 1),
+          },
+        }
+      : {}),
+  }));
   if (round === 4) board.cells.at(-1)!.blocked = true;
   if (round === 7) {
     const ranked = board.cells

@@ -28,7 +28,7 @@ describe('resolveChain event cap', () => {
       },
       board: {
         size: 3 as const,
-        cells: Array.from({ length: 8 }, (_, index) => ({
+        cells: Array.from({ length: 18 }, (_, index) => ({
           index,
           blocked: false,
           locked: false,
@@ -47,6 +47,6 @@ describe('resolveChain event cap', () => {
     expect(result.events).toHaveLength(32);
     expect(result.events.filter((event) => event.type === 'CHAIN_LIMIT_REACHED')).toHaveLength(1);
     expect(result.events.at(-1)?.type).toBe('CHAIN_LIMIT_REACHED');
-    expect(result.resources.PROGRESS).toBe(15);
+    expect(result.resources.PROGRESS).toBe(20);
   });
 });

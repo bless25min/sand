@@ -146,4 +146,16 @@ export interface RoundResult {
   run: SystemBreakerRun;
   events: ChainEvent[];
   success: boolean;
+  summary: SystemBreakerRoundPreview;
+}
+
+export interface SystemBreakerRoundPreview {
+  projectedProgress: number;
+  targetProgress: number;
+  success: boolean;
+  integrity: number;
+  instability: number;
+  credits: number;
+  triggeredCount: number;
+  blockedCount: number;
 }

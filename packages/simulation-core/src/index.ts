@@ -55,6 +55,7 @@ export {
   createSystemBreakerRun,
   decodeRunCode,
   encodeRunCode,
+  previewSystemBreakerRound,
   resolveSystemBreakerRound,
 } from './system-breaker/run/index';
 export { assertBattleState, findBattleStateViolations } from './state/assert-battle-state';
