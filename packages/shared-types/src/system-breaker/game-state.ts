@@ -107,19 +107,34 @@ export type ChainEventType =
   | 'MODULE_REVIVED'
   | 'CHAIN_LIMIT_REACHED';
 
-export type ChainEventImpact =
-  | { kind: 'RESOURCE'; resource: CoreResourceId; delta: number }
-  | { kind: 'EFFECT'; effect: ModuleEffectId };
-
-export interface ChainEvent {
+interface ChainEventBase {
   sequence: number;
-  type: ChainEventType;
   message: string;
   moduleInstanceId?: string;
   role?: ModuleRoleId;
   value?: number;
-  impact?: ChainEventImpact;
 }
+
+export interface ChainEventResourceChange {
+  resource: CoreResourceId;
+  delta: number;
+}
+
+export type ChainEvent =
+  | (ChainEventBase & {
+      type: 'RESOURCE_CHANGED';
+      resourceChanges: readonly [ChainEventResourceChange, ...ChainEventResourceChange[]];
+      effect?: never;
+    })
+  | (ChainEventBase & {
+      type: Exclude<ChainEventType, 'RESOURCE_CHANGED'>;
+      resourceChanges?: never;
+      effect?: ModuleEffectId;
+    });
+
+export type ChainEventInput =
+  | Omit<Extract<ChainEvent, { type: 'RESOURCE_CHANGED' }>, 'sequence'>
+  | Omit<Exclude<ChainEvent, { type: 'RESOURCE_CHANGED' }>, 'sequence'>;
 
 export interface RoundResult {
   run: SystemBreakerRun;

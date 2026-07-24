@@ -1,4 +1,11 @@
-import type { ChainEvent, GameModuleDefinition, SystemBreakerRun } from '@expedition/shared-types';
+import {
+  CORE_RESOURCE_IDS,
+  type ChainEvent,
+  type ChainEventInput,
+  type ChainEventResourceChange,
+  type GameModuleDefinition,
+  type SystemBreakerRun,
+} from '@expedition/shared-types';
 
 import { applyEffect, type EffectState } from './apply-effect';
 
@@ -6,6 +13,16 @@ const EVENT_LIMIT = 32;
 
 export interface ChainResolution extends EffectState {
   events: ChainEvent[];
+}
+
+function resourceChanges(
+  before: SystemBreakerRun['resources'],
+  after: SystemBreakerRun['resources'],
+): ChainEventResourceChange[] {
+  return CORE_RESOURCE_IDS.flatMap((resource) => {
+    const delta = after[resource] - before[resource];
+    return delta === 0 ? [] : [{ resource, delta }];
+  });
 }
 
 function ruleMultiplier(run: SystemBreakerRun, cellIndex: number, triggerCount: number): number {
@@ -36,7 +53,7 @@ export function resolveChain(run: SystemBreakerRun): ChainResolution {
   };
   const events: ChainEvent[] = [];
   let limited = false;
-  const append = (event: Omit<ChainEvent, 'sequence'>): boolean => {
+  const append = (event: ChainEventInput): boolean => {
     if (events.length >= EVENT_LIMIT - 1) {
       events.push({
         sequence: events.length + 1,
@@ -76,11 +93,13 @@ export function resolveChain(run: SystemBreakerRun): ChainResolution {
         message: `${definition.name} 觸發${repeat ? '第二次' : ''}。`,
         moduleInstanceId: instance.instanceId,
         role: definition.role,
+        effect: definition.effect,
       });
       let value =
         definition.baseValue * instance.level * ruleMultiplier(run, cell.index, events.length);
       if (run.activeCounter?.role === definition.role) value *= run.activeCounter.outputMultiplier;
       if (run.savedFragment?.moduleId === definition.id) value += run.savedFragment.bonus;
+      const priorResources = state.resources;
       state = applyEffect(state, definition, value);
       if (run.activeModifier === 'OVERLOAD') state.resources.INSTABILITY += 2;
       if (
@@ -89,12 +108,16 @@ export function resolveChain(run: SystemBreakerRun): ChainResolution {
         run.genome.threats[6]?.phaseTwoModifier === 'PUNISH_REPEAT'
       )
         state.resources.INSTABILITY += 5;
-      append({
-        type: 'RESOURCE_CHANGED',
-        message: `${definition.name} 改寫資源。`,
-        moduleInstanceId: instance.instanceId,
-        value: Math.round(value),
-      });
+      const changes = resourceChanges(priorResources, state.resources);
+      if (changes.length > 0) {
+        append({
+          type: 'RESOURCE_CHANGED',
+          message: `${definition.name} 改寫資源。`,
+          moduleInstanceId: instance.instanceId,
+          value: Math.round(value),
+          resourceChanges: changes as [ChainEventResourceChange, ...ChainEventResourceChange[]],
+        });
+      }
     }
   }
   return { ...state, events };
