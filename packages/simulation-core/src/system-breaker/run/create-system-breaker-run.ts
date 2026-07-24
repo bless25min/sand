@@ -24,6 +24,7 @@ export function createSystemBreakerRun(
     bestChain: 0,
     nextInstanceId: 1,
     chainLog: [],
+    previousRoundDamagedIntegrity: false,
   };
   return prepareSystemBreakerRound(initial, 1);
 }

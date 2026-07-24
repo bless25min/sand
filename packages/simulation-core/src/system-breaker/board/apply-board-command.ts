@@ -61,6 +61,7 @@ export function applyBoardCommand(run: SystemBreakerRun, command: BoardCommand):
       instanceId: `module-instance-${next.nextInstanceId}`,
       definitionId: offer.definitionId,
       level: 1,
+      cooldownRemaining: 0,
     });
     next.nextInstanceId += 1;
     next.shop.offers[command.offerIndex] = null;

@@ -19,7 +19,14 @@ describe('system breaker run', () => {
       ...initial,
       round: 2,
       resources: { ...initial.resources, PROGRESS: 999 },
-      inventory: [{ instanceId: 'owned', definitionId: definition.id, level: 1 as const }],
+      inventory: [
+        {
+          instanceId: 'owned',
+          definitionId: definition.id,
+          level: 1 as const,
+          cooldownRemaining: 0,
+        },
+      ],
     };
 
     const result = resolveSystemBreakerRound(roundTwo);

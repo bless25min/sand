@@ -19,6 +19,7 @@ function createCrowdedRun(seed: string) {
           instanceId: `repeat-${index}`,
           definitionId: repeating.id,
           level: 2 as const,
+          cooldownRemaining: 0,
         },
       })),
     },

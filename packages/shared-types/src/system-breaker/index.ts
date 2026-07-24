@@ -31,6 +31,7 @@ export type {
   BoardCommand,
   BoardCommandFailure,
   ChainEvent,
+  ChainEventImpact,
   ChainEventType,
   CommandResult,
   ModuleInstance,

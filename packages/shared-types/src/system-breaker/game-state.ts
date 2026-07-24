@@ -1,4 +1,11 @@
-import type { GameGenome, GenomeCounter, ModuleRoleId, ThreatModifierId } from './game-genome';
+import type {
+  CoreResourceId,
+  GameGenome,
+  GenomeCounter,
+  ModuleEffectId,
+  ModuleRoleId,
+  ThreatModifierId,
+} from './game-genome';
 
 export type ModuleLevel = 1 | 2;
 export type SystemBreakerStatus = 'PREPARE' | 'VICTORY' | 'DEFEAT';
@@ -7,6 +14,7 @@ export interface ModuleInstance {
   instanceId: string;
   definitionId: string;
   level: ModuleLevel;
+  cooldownRemaining: number;
 }
 
 export interface BoardCell {
@@ -62,6 +70,7 @@ export interface SystemBreakerRun {
   bestChain: number;
   nextInstanceId: number;
   chainLog: ChainEvent[];
+  previousRoundDamagedIntegrity: boolean;
 }
 
 export type BoardCommand =
@@ -98,6 +107,10 @@ export type ChainEventType =
   | 'MODULE_REVIVED'
   | 'CHAIN_LIMIT_REACHED';
 
+export type ChainEventImpact =
+  | { kind: 'RESOURCE'; resource: CoreResourceId; delta: number }
+  | { kind: 'EFFECT'; effect: ModuleEffectId };
+
 export interface ChainEvent {
   sequence: number;
   type: ChainEventType;
@@ -105,6 +118,7 @@ export interface ChainEvent {
   moduleInstanceId?: string;
   role?: ModuleRoleId;
   value?: number;
+  impact?: ChainEventImpact;
 }
 
 export interface RoundResult {

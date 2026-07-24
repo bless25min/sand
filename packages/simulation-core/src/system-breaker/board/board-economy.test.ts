@@ -41,8 +41,8 @@ describe('system breaker board economy', () => {
     const run = {
       ...initial,
       inventory: [
-        { instanceId: 'one', definitionId: definition.id, level: 1 as const },
-        { instanceId: 'two', definitionId: definition.id, level: 1 as const },
+        { instanceId: 'one', definitionId: definition.id, level: 1 as const, cooldownRemaining: 0 },
+        { instanceId: 'two', definitionId: definition.id, level: 1 as const, cooldownRemaining: 0 },
       ],
       board: {
         ...initial.board,
@@ -67,8 +67,8 @@ describe('system breaker board economy', () => {
     const stocked = {
       ...initial,
       inventory: [
-        { instanceId: 'one', definitionId: definition.id, level: 1 as const },
-        { instanceId: 'two', definitionId: definition.id, level: 1 as const },
+        { instanceId: 'one', definitionId: definition.id, level: 1 as const, cooldownRemaining: 0 },
+        { instanceId: 'two', definitionId: definition.id, level: 1 as const, cooldownRemaining: 0 },
       ],
     };
     const fused = applyBoardCommand(stocked, {
@@ -80,7 +80,7 @@ describe('system breaker board economy', () => {
 
     expect(fused.accepted).toBe(true);
     expect(fused.run.inventory).toEqual([
-      { instanceId: 'two', definitionId: definition.id, level: 2 },
+      { instanceId: 'two', definitionId: definition.id, level: 2, cooldownRemaining: 0 },
     ]);
     expect(
       applyBoardCommand(fused.run, {
