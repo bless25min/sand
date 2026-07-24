@@ -91,8 +91,37 @@ describe('handleStaticSiteRequest', () => {
     expect(response).toBe(upstreamResponse);
   });
 
-  it.each([undefined, 'not a valid URL'])(
-    'returns 503 for an API request when the API base is missing or invalid',
+  it('preserves a second API path segment while stripping the prefix only once', async () => {
+    const fetchAsset = vi.fn(async () => new Response('asset'));
+    const upstreamResponse = new Response('ok');
+    const fetchUpstream = vi.fn<ApiUpstreamFetcher>(async () => upstreamResponse);
+
+    const response = await handleStaticSiteRequest(
+      new Request('https://example.test/api/api/health'),
+      fetchAsset,
+      {
+        apiBaseUrl: 'https://api.example.test',
+        fetchUpstream,
+      },
+    );
+
+    expect(fetchAsset).not.toHaveBeenCalled();
+    expect(fetchUpstream).toHaveBeenCalledOnce();
+    expect(fetchUpstream.mock.calls[0]?.[0].url).toBe('https://api.example.test/api/health');
+    expect(response).toBe(upstreamResponse);
+  });
+
+  it.each([
+    undefined,
+    'not a valid URL',
+    'ftp://api.example.test',
+    'https://player@api.example.test',
+    'https://player:secret@api.example.test',
+    'https://api.example.test/v1',
+    'https://api.example.test?version=1',
+    'https://api.example.test#internal',
+  ])(
+    'returns 503 without fetching assets or upstream when the API base is missing or invalid',
     async (apiBaseUrl) => {
       const fetchAsset = vi.fn(async () => new Response('asset'));
       const fetchUpstream = vi.fn<ApiUpstreamFetcher>();

@@ -11,10 +11,12 @@ interface SitesEnvironment {
 
 export default {
   fetch(request: Request, environment: SitesEnvironment): Promise<Response> {
+    const options = environment.API_BASE_URL ? { apiBaseUrl: environment.API_BASE_URL } : {};
+
     return handleStaticSiteRequest(
       request,
       (assetRequest) => environment.ASSETS.fetch(assetRequest),
-      { apiBaseUrl: environment.API_BASE_URL },
+      options,
     );
   },
 };

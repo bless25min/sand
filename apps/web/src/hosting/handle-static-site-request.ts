@@ -61,7 +61,14 @@ function createUpstreamUrl(requestUrl: URL, apiBaseUrl?: string): URL | undefine
   try {
     const upstreamUrl = new URL(apiBaseUrl);
 
-    if (upstreamUrl.protocol !== 'http:' && upstreamUrl.protocol !== 'https:') {
+    if (
+      (upstreamUrl.protocol !== 'http:' && upstreamUrl.protocol !== 'https:') ||
+      upstreamUrl.username ||
+      upstreamUrl.password ||
+      upstreamUrl.pathname !== '/' ||
+      upstreamUrl.search ||
+      upstreamUrl.hash
+    ) {
       return undefined;
     }
 
