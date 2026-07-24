@@ -1,8 +1,11 @@
 import type { BoardCommand, SystemBreakerRun } from '@expedition/shared-types';
 
+import { ModuleRuleText } from './ModuleRuleText';
+
 export function SystemBoard(props: {
   run: SystemBreakerRun;
   selectedInstanceId: string | null;
+  activeInstanceId: string | null;
   disabled?: boolean;
   onSelect: (instanceId: string | null) => void;
   onCommand: (command: BoardCommand) => void;
@@ -26,11 +29,13 @@ export function SystemBoard(props: {
           const definition = props.run.genome.modules.find(
             (module) => module.id === cell.module?.definitionId,
           );
+          const active = cell.module?.instanceId === props.activeInstanceId;
           return (
             <article
               className={[
                 'sb-cell',
                 cell.blocked || cell.locked ? 'sb-cell--blocked' : '',
+                active ? 'sb-cell--active' : '',
                 definition ? `sb-cell--${definition.role.toLowerCase()}` : '',
               ].join(' ')}
               key={cell.index}
@@ -39,6 +44,7 @@ export function SystemBoard(props: {
                 type="button"
                 className="sb-cell__target"
                 aria-label={`格位 ${cell.index + 1}`}
+                aria-current={active ? 'step' : undefined}
                 disabled={props.disabled || cell.blocked || cell.locked}
                 onClick={() => {
                   if (props.selectedInstanceId)
@@ -58,14 +64,16 @@ export function SystemBoard(props: {
                     <small>{definition.role}</small>
                     <strong>{definition.name}</strong>
                     <em>LV.{cell.module.level}</em>
-                    <code>
-                      {definition.trigger} → {definition.effect}
-                    </code>
+                    <ModuleRuleText
+                      definition={definition}
+                      cooldownRemaining={cell.module.cooldownRemaining}
+                    />
                     <b>+{definition.baseValue * cell.module.level}</b>
                   </>
                 ) : (
                   <span className="sb-cell__empty">＋ 放置</span>
                 )}
+                {active && <span className="sb-cell__active-label">目前執行中</span>}
               </button>
               {cell.module && (
                 <button

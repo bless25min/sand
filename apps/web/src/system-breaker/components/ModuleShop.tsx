@@ -1,5 +1,7 @@
 import type { BoardCommand, ModuleInstance, SystemBreakerRun } from '@expedition/shared-types';
 
+import { ModuleRuleText } from './ModuleRuleText';
+
 export function ModuleShop(props: {
   run: SystemBreakerRun;
   selectedInstanceId: string | null;
@@ -51,9 +53,7 @@ export function ModuleShop(props: {
               <span>{module.role}</span>
               <h3>{module.name}</h3>
               <p>{module.description}</p>
-              <code>
-                {module.trigger} → {module.effect}
-              </code>
+              <ModuleRuleText definition={module} />
               <footer>
                 <b>+{module.baseValue}</b>
                 <button

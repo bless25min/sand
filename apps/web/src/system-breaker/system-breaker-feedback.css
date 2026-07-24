@@ -43,6 +43,12 @@
   color: var(--sb-green);
 }
 
+.sb-event small {
+  grid-column: 2 / -1;
+  color: var(--sb-muted);
+  font-size: 0.58rem;
+}
+
 .sb-event--threat_hit b,
 .sb-event--chain_limit_reached b {
   color: var(--sb-magenta);

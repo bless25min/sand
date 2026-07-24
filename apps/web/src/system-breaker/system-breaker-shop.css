@@ -20,12 +20,20 @@
   background: var(--sb-panel-2);
 }
 
-.sb-offer > span,
-.sb-offer code {
+.sb-offer > span {
   color: var(--offer-color);
   font:
     0.6rem ui-monospace,
     monospace;
+}
+
+.sb-offer .sb-module-rules {
+  display: grid;
+  gap: 0.2rem;
+  margin-top: 0.45rem;
+  color: var(--sb-muted);
+  font-size: 0.62rem;
+  line-height: 1.4;
 }
 
 .sb-offer h3 {

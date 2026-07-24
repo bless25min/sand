@@ -6,12 +6,14 @@ import { ChainPlayback } from './components/ChainPlayback';
 import { ModuleShop } from './components/ModuleShop';
 import { ResourceStrip } from './components/ResourceStrip';
 import { RoundControls } from './components/RoundControls';
+import { RoundPreview } from './components/RoundPreview';
 import { RunEnding } from './components/RunEnding';
 import { SystemBoard } from './components/SystemBoard';
 import { SystemHeader } from './components/SystemHeader';
 import { WorldContract } from './components/WorldContract';
 import { WorldPrompt } from './components/WorldPrompt';
 import { generateGameGenome } from './system-breaker-api';
+import { createRoundDisplayProjection } from './create-round-display-projection';
 import { createSystemBreakerUiState, systemBreakerReducer } from './system-breaker-reducer';
 import { loadFragment } from './system-breaker-storage';
 import { browserStorage, useFragmentPersistence, usePlayback } from './use-system-breaker-effects';
@@ -20,6 +22,7 @@ import './system-breaker-role-colors.css';
 import './system-breaker.css';
 import './system-breaker-contract.css';
 import './system-breaker-game.css';
+import './system-breaker-preview.css';
 import './system-breaker-board.css';
 import './system-breaker-shop.css';
 import './system-breaker-feedback.css';
@@ -101,6 +104,7 @@ export function SystemBreakerApp() {
 
   const run = state.run!;
   const command = (value: BoardCommand) => dispatch({ type: 'BOARD_COMMAND', command: value });
+  const projection = createRoundDisplayProjection(run, state.lastEvents, state.visibleEventCount);
   return (
     <main className="sb-shell sb-shell--game">
       <SystemHeader compact title={run.genome.title} />
@@ -112,10 +116,12 @@ export function SystemBreakerApp() {
         onSpeed={(speed) => dispatch({ type: 'SET_SPEED', speed })}
         onExecute={() => dispatch({ type: 'EXECUTE_ROUND' })}
       />
+      <RoundPreview preview={projection.preview} counter={run.activeCounter} />
       <div className="sb-game-grid">
         <SystemBoard
           run={run}
           selectedInstanceId={state.selectedInstanceId}
+          activeInstanceId={projection.activeInstanceId}
           disabled={state.phase === 'PLAYBACK'}
           onSelect={(instanceId) => dispatch({ type: 'SELECT_INSTANCE', instanceId })}
           onCommand={command}
