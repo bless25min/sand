@@ -26,19 +26,6 @@ describe('POST /game-genomes', () => {
     expect((await requestGenome(app, { prompt: 'x'.repeat(241) })).status).toBe(400);
   });
 
-  it('accepts a normalized and playable AI draft while preserving caller seed', async () => {
-    const draft = createFallbackGameGenome({ prompt: 'AI 世界', seed: 'wrong-seed' });
-    const app = createWorkerApp({ generateDraft: async () => draft });
-
-    const response = await requestGenome(app, { prompt: 'AI 世界', seed: 'fixed-seed' });
-    const payload = (await response.json()) as GenomePayload;
-
-    expect(response.status).toBe(200);
-    expect(payload.source).toBe('AI');
-    expect(payload.seed).toBe('fixed-seed');
-    expect(payload.genome.seed).toBe('fixed-seed');
-  });
-
   it.each([
     ['invalid draft', async () => ({ modules: [] })],
     ['AI error', async () => Promise.reject(new Error('provider failed'))],
@@ -48,10 +35,11 @@ describe('POST /game-genomes', () => {
     const response = await requestGenome(app, { prompt: '裂隙市場', seed: 'fallback-7' });
     const payload = (await response.json()) as GenomePayload;
 
-    expect(payload.source).toBe('FALLBACK');
-    expect(payload.genome).toEqual(
-      createFallbackGameGenome({ prompt: '裂隙市場', seed: 'fallback-7' }),
-    );
+    expect(payload).toEqual({
+      genome: createFallbackGameGenome({ prompt: '裂隙市場', seed: 'fallback-7' }),
+      source: 'FALLBACK',
+      seed: 'fallback-7',
+    });
   });
 
   it('falls back after the injected generation timeout', async () => {

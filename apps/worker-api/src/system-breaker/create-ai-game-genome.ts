@@ -1,4 +1,5 @@
-import { GAME_GENOME_JSON_SCHEMA } from './game-genome-schema';
+import { createGameGenomeThemeContext } from './create-game-genome-theme-context';
+import { GAME_GENOME_THEME_JSON_SCHEMA } from './game-genome-schema';
 
 export interface GenerateDraftInput {
   prompt: string;
@@ -18,12 +19,8 @@ export type GenerateDraft = (
   bindings?: SystemBreakerBindings,
 ) => Promise<unknown>;
 
-const SYSTEM_PROMPT = `你是 SYSTEM BREAKER 世界設計器。將主題轉成一個七回合、可驗證的系統。
-只輸出符合 JSON schema 的資料，不輸出 Markdown、程式碼或公式。
-只能使用 schema 內的 trigger、effect、role、target、rule、modifier ID。
-12 個模組角色數固定為 PRODUCER 3、AMPLIFIER 2、STABILIZER 2、DEFENSE 3、CONVERTER 2。
-第 7 個 threat 必須是 BOSS，modifier 為 LOCK_TOP_OUTPUT，phaseTwoModifier 為
-REVERSE_HORIZONTAL 或 PUNISH_REPEAT。所有顯示文字使用繁體中文。`;
+const SYSTEM_PROMPT =
+  '你是 SYSTEM BREAKER 世界文案設計器。只輸出符合 JSON schema 的繁體中文主題文案，不要 Markdown、程式碼、公式或 schema 之外的欄位。既定 mechanics 只供文案依陣列索引對齊，不可回傳或改寫。';
 
 export const createAiGameGenome: GenerateDraft = async (input, bindings) => {
   if (!bindings?.AI) throw new Error('AI_BINDING_UNAVAILABLE');
@@ -32,14 +29,14 @@ export const createAiGameGenome: GenerateDraft = async (input, bindings) => {
       { role: 'system', content: SYSTEM_PROMPT },
       {
         role: 'user',
-        content: `主題：${input.prompt}\n固定 seed：${input.seed}`,
+        content: `世界概念：${input.prompt}\n既定 mechanics：\n${createGameGenomeThemeContext(input)}`,
       },
     ],
     response_format: {
       type: 'json_schema',
-      json_schema: GAME_GENOME_JSON_SCHEMA,
+      json_schema: GAME_GENOME_THEME_JSON_SCHEMA,
     },
-    max_tokens: 2200,
+    max_tokens: 1600,
   });
   const response =
     output && typeof output === 'object' && 'response' in output

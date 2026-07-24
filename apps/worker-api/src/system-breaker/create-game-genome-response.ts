@@ -1,15 +1,16 @@
 import {
   createFallbackGameGenome,
-  normalizeGameGenome,
   probeGameGenome,
   validateGameGenome,
 } from '@expedition/simulation-core';
 
+import { compileGameGenomeTheme } from './compile-game-genome-theme';
 import type {
   GenerateDraft,
   GenerateDraftInput,
   SystemBreakerBindings,
 } from './create-ai-game-genome';
+import { validateGameGenomeTheme } from './validate-game-genome-theme';
 
 export interface GameGenomeResponse {
   genome: ReturnType<typeof createFallbackGameGenome>;
@@ -30,8 +31,9 @@ export async function createGameGenomeResponse(
 ): Promise<GameGenomeResponse> {
   try {
     const draft = await Promise.race([generateDraft(input, bindings), timeout(timeoutMs)]);
-    const genome = normalizeGameGenome(draft, input.seed);
-    if (genome && validateGameGenome(genome).valid && probeGameGenome(genome).playable) {
+    const theme = validateGameGenomeTheme(draft);
+    const genome = compileGameGenomeTheme(input, theme);
+    if (validateGameGenome(genome).valid && probeGameGenome(genome).playable) {
       return { genome, source: 'AI', seed: input.seed };
     }
   } catch {
