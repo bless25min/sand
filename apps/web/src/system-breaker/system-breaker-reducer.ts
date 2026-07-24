@@ -4,6 +4,7 @@ import {
   decodeRunCode,
   resolveSystemBreakerRound,
 } from '@expedition/simulation-core';
+import type { SystemFragment } from '@expedition/shared-types';
 
 import {
   createSystemBreakerUiState,
@@ -12,6 +13,20 @@ import {
 } from './system-breaker-ui-state';
 
 export { createSystemBreakerUiState, type PlaybackSpeed } from './system-breaker-ui-state';
+
+function startRun(state: SystemBreakerUiState, fragment?: SystemFragment): SystemBreakerUiState {
+  return {
+    ...state,
+    phase: 'PLAY',
+    run: createSystemBreakerRun(state.genomeResponse!.genome, fragment),
+    pendingRound: null,
+    lastEvents: [],
+    visibleEventCount: 0,
+    selectedInstanceId: null,
+    error: null,
+    feedback: null,
+  };
+}
 
 function finishPlayback(state: SystemBreakerUiState): SystemBreakerUiState {
   if (!state.pendingRound) return state;
@@ -45,8 +60,7 @@ export function systemBreakerReducer(
   if (action.type === 'GENOME_READY')
     return { ...state, phase: 'CONTRACT', genomeResponse: action.response, error: null };
   if (action.type === 'ACCEPT_CONTRACT' && state.genomeResponse) {
-    const run = createSystemBreakerRun(state.genomeResponse.genome, action.fragment);
-    return { ...state, phase: 'PLAY', run, feedback: '先購買模組，再點擊格位放置。' };
+    return startRun(state, action.fragment);
   }
   if (action.type === 'SELECT_INSTANCE') return { ...state, selectedInstanceId: action.instanceId };
   if (action.type === 'BOARD_COMMAND' && state.run && state.phase === 'PLAY') {

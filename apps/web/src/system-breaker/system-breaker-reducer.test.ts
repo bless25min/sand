@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { createFallbackGameGenome, encodeRunCode } from '@expedition/simulation-core';
+import type { SystemFragment } from '@expedition/shared-types';
 
 import { createSystemBreakerUiState, systemBreakerReducer } from './system-breaker-reducer';
 
@@ -10,6 +11,55 @@ const genome = createFallbackGameGenome({
 });
 
 describe('system breaker UI reducer', () => {
+  it('starts a replay with a fresh UI session while retaining the chosen speed', () => {
+    const fragment: SystemFragment = {
+      version: 1,
+      moduleId: 'replay-fragment',
+      name: 'Replay fragment',
+      bonus: 3,
+    };
+    let state = systemBreakerReducer(createSystemBreakerUiState(), {
+      type: 'GENOME_READY',
+      response: { genome, source: 'FALLBACK', seed: genome.seed },
+    });
+    state = systemBreakerReducer(state, { type: 'ACCEPT_CONTRACT' });
+    state = systemBreakerReducer(state, { type: 'EXECUTE_ROUND' });
+    const staleState = {
+      ...state,
+      phase: 'ENDING' as const,
+      lastEvents: [
+        {
+          type: 'THREAT_HIT' as const,
+          sequence: 99,
+          message: 'Stale chain event',
+          value: 10,
+        },
+      ],
+      visibleEventCount: 1,
+      speed: 2 as const,
+      selectedInstanceId: 'stale-instance',
+      error: 'Stale error',
+      feedback: 'Stale feedback',
+    };
+
+    const replayed = systemBreakerReducer(staleState, { type: 'ACCEPT_CONTRACT', fragment });
+
+    expect(replayed.phase).toBe('PLAY');
+    expect(replayed.run).not.toBe(staleState.run);
+    expect(replayed.run?.genome).toBe(genome);
+    expect(replayed.run?.savedFragment).toEqual(fragment);
+    expect(replayed.run?.chainLog).toEqual([]);
+    expect(replayed.pendingRound).toBeNull();
+    expect(replayed.lastEvents).toEqual([]);
+    expect(replayed.visibleEventCount).toBe(0);
+    expect(replayed.selectedInstanceId).toBeNull();
+    expect(replayed.error).toBeNull();
+    expect(replayed.feedback).toBeNull();
+    expect(replayed.speed).toBe(2);
+    expect(replayed.prompt).toBe(staleState.prompt);
+    expect(replayed.genomeResponse).toBe(staleState.genomeResponse);
+  });
+
   it('orchestrates contract, board command, playback, and all seven rounds', () => {
     let state = createSystemBreakerUiState();
     state = systemBreakerReducer(state, { type: 'START_GENERATION' });
