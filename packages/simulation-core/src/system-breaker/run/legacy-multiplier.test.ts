@@ -61,4 +61,31 @@ describe('legacy module multiplier context', () => {
     expect(result.events.filter((event) => event.type === 'MODULE_TRIGGERED')).toHaveLength(1);
     expect(result.summary.projectedProgress).toBe(43);
   });
+
+  it('carries repeatOnce virtual event positions into the next activation', () => {
+    const repeating = testModule('repeating', { baseValue: 20, repeatOnce: true });
+    const normal = testModule('normal', { baseValue: 20 });
+    const run = withLegacyMomentumRules(
+      runWithModules(
+        [repeating, normal],
+        [
+          {
+            ...cell(0, moduleInstance('repeating')),
+            module: { ...moduleInstance('repeating'), definitionId: repeating.id },
+          },
+          {
+            ...cell(1, moduleInstance('normal')),
+            module: { ...moduleInstance('normal'), definitionId: normal.id },
+          },
+          cell(2),
+          cell(3),
+        ],
+      ),
+    );
+
+    const result = resolveSystemBreakerRound(run);
+
+    expect(result.summary.projectedProgress).toBe(66);
+    expect(result.events.filter((event) => event.type === 'MODULE_TRIGGERED')).toHaveLength(2);
+  });
 });

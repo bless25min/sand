@@ -53,6 +53,7 @@ export function resolveChain(run: SystemBreakerRun): ChainResolution {
 
   if (run.round === 7) append({ type: 'BOSS_PHASE_TWO', message: 'Boss 第二階段規則已載入。' });
 
+  let legacyEventCount = 0;
   const activate = (cellIndex: number, definition: GameModuleDefinition): boolean => {
     const cell = board.cells.find((candidate) => candidate.index === cellIndex);
     const instance = cell?.module;
@@ -62,7 +63,7 @@ export function resolveChain(run: SystemBreakerRun): ChainResolution {
       state,
       cell,
       definition,
-      legacyEventCount: events.length,
+      legacyEventCount,
       roundStartResources: run.resources,
     });
     if (events.length + activation.events.length > EVENT_LIMIT - 1) {
@@ -71,6 +72,7 @@ export function resolveChain(run: SystemBreakerRun): ChainResolution {
     }
     activation.events.forEach(append);
     state = activation.state;
+    legacyEventCount = activation.nextLegacyEventCount;
     cell.module = activation.module;
     firedModuleInstanceIds.add(instance.instanceId);
     return true;
@@ -122,6 +124,7 @@ export function resolveChain(run: SystemBreakerRun): ChainResolution {
       moduleInstanceId: cell.module.instanceId,
     });
   }
+  legacyEventCount = events.length;
   resolveStage('ROUND_START', staged);
   if (!limited) resolveStage('FIXED_TIME', staged);
   while (!limited && resolveStage('REACTIVE', ascending)) {

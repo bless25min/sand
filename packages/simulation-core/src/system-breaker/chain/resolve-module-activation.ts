@@ -50,6 +50,7 @@ function ruleMultiplier(
 export interface ModuleActivation {
   events: ChainEventInput[];
   module: ModuleInstance;
+  nextLegacyEventCount: number;
   state: EffectState;
 }
 
@@ -130,6 +131,7 @@ export function resolveModuleActivation(input: {
       ...instance,
       cooldownRemaining: input.definition.cooldown === 0 ? 0 : input.definition.cooldown + 1,
     },
+    nextLegacyEventCount: legacyEventCount,
     state,
   };
 }
