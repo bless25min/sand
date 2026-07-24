@@ -122,19 +122,25 @@ export interface ChainEventResourceChange {
 
 export type ChainEvent =
   | (ChainEventBase & {
+      type: 'MODULE_TRIGGERED';
+      effect: ModuleEffectId;
+      resourceChanges?: never;
+    })
+  | (ChainEventBase & {
       type: 'RESOURCE_CHANGED';
       resourceChanges: readonly [ChainEventResourceChange, ...ChainEventResourceChange[]];
       effect?: never;
     })
   | (ChainEventBase & {
-      type: Exclude<ChainEventType, 'RESOURCE_CHANGED'>;
+      type: Exclude<ChainEventType, 'MODULE_TRIGGERED' | 'RESOURCE_CHANGED'>;
       resourceChanges?: never;
-      effect?: ModuleEffectId;
+      effect?: never;
     });
 
 export type ChainEventInput =
+  | Omit<Extract<ChainEvent, { type: 'MODULE_TRIGGERED' }>, 'sequence'>
   | Omit<Extract<ChainEvent, { type: 'RESOURCE_CHANGED' }>, 'sequence'>
-  | Omit<Exclude<ChainEvent, { type: 'RESOURCE_CHANGED' }>, 'sequence'>;
+  | Omit<Exclude<ChainEvent, { type: 'MODULE_TRIGGERED' | 'RESOURCE_CHANGED' }>, 'sequence'>;
 
 export interface RoundResult {
   run: SystemBreakerRun;

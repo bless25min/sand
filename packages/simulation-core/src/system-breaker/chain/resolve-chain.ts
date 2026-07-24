@@ -54,6 +54,7 @@ export function resolveChain(run: SystemBreakerRun): ChainResolution {
   const events: ChainEvent[] = [];
   let limited = false;
   const append = (event: ChainEventInput): boolean => {
+    if (limited) return false;
     if (events.length >= EVENT_LIMIT - 1) {
       events.push({
         sequence: events.length + 1,
@@ -95,6 +96,7 @@ export function resolveChain(run: SystemBreakerRun): ChainResolution {
         role: definition.role,
         effect: definition.effect,
       });
+      if (limited) break;
       let value =
         definition.baseValue * instance.level * ruleMultiplier(run, cell.index, events.length);
       if (run.activeCounter?.role === definition.role) value *= run.activeCounter.outputMultiplier;
