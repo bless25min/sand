@@ -22,7 +22,7 @@ const run: SystemBreakerRun = {
         name: '甲模組',
         description: '測試用',
         role: 'PRODUCER',
-        trigger: 'ROUND_START',
+        trigger: 'DISABLED',
         effect: 'ADD_PROGRESS',
         target: 'SELF',
         baseValue: 4,
@@ -159,6 +159,34 @@ describe('playback projections', () => {
     );
 
     expect(markup).toContain('LOCKED');
+    expect(markup).toContain('甲模組');
+    expect(markup).toContain('觸發：自身格被封鎖或鎖定時');
+    expect(markup).toContain('目標：自身（永遠可用）');
+    expect(markup).toContain('冷卻：目前還需等待 0 回合；啟動後跳過接下來 1 回合');
     expect(markup).toContain('目前執行中');
+  });
+
+  it('keeps an empty blocked cell as a locked placeholder', () => {
+    const blockedRun = {
+      ...run,
+      board: {
+        ...run.board,
+        cells: run.board.cells.map((cell) =>
+          cell.index === 1 ? { ...cell, blocked: true } : cell,
+        ),
+      },
+    };
+    const markup = renderToStaticMarkup(
+      <SystemBoard
+        run={blockedRun}
+        selectedInstanceId={null}
+        activeInstanceId={null}
+        onSelect={() => undefined}
+        onCommand={() => undefined}
+      />,
+    );
+
+    expect(markup).toContain('LOCKED');
+    expect(markup).not.toContain('格位 2">甲模組');
   });
 });

@@ -57,10 +57,11 @@ export function SystemBoard(props: {
                 }}
               >
                 <span className="sb-cell__index">0{cell.index + 1}</span>
-                {cell.blocked || cell.locked ? (
-                  <strong className="sb-cell__blocked">LOCKED</strong>
-                ) : definition && cell.module ? (
+                {definition && cell.module ? (
                   <>
+                    {(cell.blocked || cell.locked) && (
+                      <span className="sb-cell__blocked sb-cell__blocked--badge">LOCKED</span>
+                    )}
                     <small>{definition.role}</small>
                     <strong>{definition.name}</strong>
                     <em>LV.{cell.module.level}</em>
@@ -70,6 +71,8 @@ export function SystemBoard(props: {
                     />
                     <b>+{definition.baseValue * cell.module.level}</b>
                   </>
+                ) : cell.blocked || cell.locked ? (
+                  <strong className="sb-cell__blocked">LOCKED</strong>
                 ) : (
                   <span className="sb-cell__empty">＋ 放置</span>
                 )}

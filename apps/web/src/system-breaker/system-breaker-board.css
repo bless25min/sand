@@ -148,6 +148,16 @@
   letter-spacing: 0.1em;
 }
 
+.sb-cell__blocked--badge {
+  position: absolute;
+  top: 1.25rem;
+  left: 0.45rem;
+  margin: 0;
+  font:
+    0.5rem ui-monospace,
+    monospace;
+}
+
 .sb-cell__sell {
   position: absolute;
   left: 0.4rem;
