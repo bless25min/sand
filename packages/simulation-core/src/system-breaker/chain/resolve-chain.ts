@@ -62,7 +62,8 @@ export function resolveChain(run: SystemBreakerRun): ChainResolution {
       state,
       cell,
       definition,
-      triggerCount: firedModuleInstanceIds.size,
+      legacyEventCount: events.length,
+      roundStartResources: run.resources,
     });
     if (events.length + activation.events.length > EVENT_LIMIT - 1) {
       reachLimit();

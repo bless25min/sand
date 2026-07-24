@@ -20,13 +20,18 @@ function resourceChanges(
   });
 }
 
-function ruleMultiplier(run: SystemBreakerRun, cellIndex: number, triggerCount: number): number {
+function ruleMultiplier(
+  run: SystemBreakerRun,
+  roundStartResources: SystemBreakerRun['resources'],
+  cellIndex: number,
+  legacyEventCount: number,
+): number {
   let multiplier = 1;
-  if (run.genome.rules.includes('HIGH_INSTABILITY_BONUS') && run.resources.INSTABILITY >= 50)
+  if (run.genome.rules.includes('HIGH_INSTABILITY_BONUS') && roundStartResources.INSTABILITY >= 50)
     multiplier += 0.3;
-  if (run.genome.rules.includes('LOW_INTEGRITY_BONUS') && run.resources.INTEGRITY <= 40)
+  if (run.genome.rules.includes('LOW_INTEGRITY_BONUS') && roundStartResources.INTEGRITY <= 40)
     multiplier += 0.25;
-  if (run.genome.rules.includes('CHAIN_MOMENTUM')) multiplier += triggerCount * 0.03;
+  if (run.genome.rules.includes('CHAIN_MOMENTUM')) multiplier += legacyEventCount * 0.03;
   const row = Math.floor(cellIndex / run.board.size);
   const column = cellIndex % run.board.size;
   if (
@@ -53,10 +58,10 @@ export function resolveModuleActivation(input: {
   state: EffectState;
   cell: BoardCell;
   definition: GameModuleDefinition;
-  triggerCount: number;
+  legacyEventCount: number;
+  roundStartResources: SystemBreakerRun['resources'];
 }): ModuleActivation {
   const instance = input.cell.module!;
-  const multiplier = ruleMultiplier(input.run, input.cell.index, input.triggerCount);
   const events: ChainEventInput[] = [
     {
       type: 'MODULE_TRIGGERED',
@@ -67,8 +72,16 @@ export function resolveModuleActivation(input: {
     },
   ];
   let state = input.state;
+  let legacyEventCount = input.legacyEventCount;
   const repetitions = input.definition.repeatOnce ? 2 : 1;
   for (let repeat = 0; repeat < repetitions; repeat += 1) {
+    legacyEventCount += 1;
+    const multiplier = ruleMultiplier(
+      input.run,
+      input.roundStartResources,
+      input.cell.index,
+      legacyEventCount,
+    );
     const value = input.definition.baseValue * instance.level * multiplier;
     const counterValue =
       input.run.activeCounter?.role === input.definition.role
@@ -101,13 +114,15 @@ export function resolveModuleActivation(input: {
         },
       };
     const changes = resourceChanges(before, state.resources);
-    if (changes.length > 0)
+    if (changes.length > 0) {
       events.push({
         type: 'RESOURCE_CHANGED',
         message: `${input.definition.name} 改寫資源。`,
         moduleInstanceId: instance.instanceId,
         resourceChanges: changes as [ChainEventResourceChange, ...ChainEventResourceChange[]],
       });
+      legacyEventCount += 1;
+    }
   }
   return {
     events,

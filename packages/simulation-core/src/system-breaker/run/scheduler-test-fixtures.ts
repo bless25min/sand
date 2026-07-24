@@ -26,5 +26,9 @@ export function runWithModules(
   const run = createRun(cells);
   const genomeModules = [...modules];
   while (genomeModules.length < 3) genomeModules.push(testModule(`filler-${genomeModules.length}`));
-  return { ...run, genome: { ...run.genome, modules: genomeModules } };
+  return {
+    ...run,
+    board: { ...run.board, size: cells.length > 4 ? 3 : 2, cells },
+    genome: { ...run.genome, modules: genomeModules },
+  };
 }

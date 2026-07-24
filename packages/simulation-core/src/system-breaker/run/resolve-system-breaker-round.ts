@@ -6,6 +6,7 @@ import type {
   SystemBreakerRun,
   SystemFragment,
 } from '@expedition/shared-types';
+import { CORE_RESOURCE_IDS } from '@expedition/shared-types';
 
 import { resolveChain } from '../chain/resolve-chain';
 import { prepareSystemBreakerRound } from './prepare-system-breaker-round';
@@ -57,6 +58,7 @@ export function resolveSystemBreakerRound(run: SystemBreakerRun): RoundResult {
   const threat = run.genome.threats[run.round - 1]!;
   const chain = resolveChain(run);
   const resources = { ...chain.resources };
+  const resourcesBeforeThreat = { ...resources };
   const success = resources.PROGRESS >= threat.targetProgress;
   const integrityDamage = success ? 0 : Math.max(0, threat.integrityDamage - chain.protection);
   if (!success) {
@@ -72,11 +74,10 @@ export function resolveSystemBreakerRound(run: SystemBreakerRun): RoundResult {
     type: success ? 'THREAT_DEFEATED' : 'THREAT_HIT',
     message: success ? `${threat.name} 已擊穿。` : `${threat.name} 反擊。`,
   });
-  const resourceChanges: ChainEventResourceChange[] = [];
-  if (integrityDamage > 0) resourceChanges.push({ resource: 'INTEGRITY', delta: -integrityDamage });
-  if (!success && threat.instabilityGain > 0)
-    resourceChanges.push({ resource: 'INSTABILITY', delta: threat.instabilityGain });
-  resourceChanges.push({ resource: 'CREDITS', delta: creditReward });
+  const resourceChanges: ChainEventResourceChange[] = CORE_RESOURCE_IDS.flatMap((resource) => {
+    const delta = resources[resource] - resourcesBeforeThreat[resource];
+    return delta === 0 ? [] : [{ resource, delta }];
+  });
   if (resourceChanges.length > 0)
     events = append(events, {
       type: 'RESOURCE_CHANGED',

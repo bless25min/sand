@@ -7,23 +7,32 @@ import { runWithModules, testModule } from './scheduler-test-fixtures';
 describe('system breaker scheduler', () => {
   it('resolves staged triggers before ascending reactive passes', () => {
     const start = testModule('start');
+    const fixed = testModule('fixed', { trigger: 'FIXED_TIME' });
     const firstReactive = testModule('first-reactive', { trigger: 'ADJACENT_TRIGGER' });
     const secondReactive = testModule('second-reactive', { trigger: 'ADJACENT_TRIGGER' });
     const run = runWithModules(
-      [start, firstReactive, secondReactive],
+      [start, fixed, firstReactive, secondReactive],
       [
         {
-          ...cell(0, moduleInstance('first-reactive')),
+          ...cell(1, moduleInstance('first-reactive')),
           module: { ...moduleInstance('first-reactive'), definitionId: firstReactive.id },
         },
         {
-          ...cell(1, moduleInstance('second-reactive')),
+          ...cell(2, moduleInstance('second-reactive')),
           module: { ...moduleInstance('second-reactive'), definitionId: secondReactive.id },
         },
-        cell(2),
+        cell(0),
+        cell(3),
+        cell(4),
         {
-          ...cell(3, moduleInstance('start')),
+          ...cell(5, moduleInstance('start')),
           module: { ...moduleInstance('start'), definitionId: start.id },
+        },
+        cell(6),
+        cell(7),
+        {
+          ...cell(8, moduleInstance('fixed')),
+          module: { ...moduleInstance('fixed'), definitionId: fixed.id },
         },
       ],
     );
@@ -34,7 +43,7 @@ describe('system breaker scheduler', () => {
       result.events
         .filter((event) => event.type === 'MODULE_TRIGGERED')
         .map((event) => event.moduleInstanceId),
-    ).toEqual(['start', 'second-reactive', 'first-reactive']);
+    ).toEqual(['start', 'fixed', 'second-reactive', 'first-reactive']);
   });
 
   it('applies repeatOnce twice as one activation', () => {

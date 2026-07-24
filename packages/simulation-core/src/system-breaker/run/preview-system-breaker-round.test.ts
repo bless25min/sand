@@ -44,4 +44,33 @@ describe('previewSystemBreakerRound', () => {
       { resource: 'INSTABILITY', delta: -2 },
     ]);
   });
+
+  it('projects clamped threat impacts with exact signed resource deltas', () => {
+    const run = runWithModules([], [cell(0), cell(1), cell(2), cell(3)]);
+    const threats = [...run.genome.threats] as typeof run.genome.threats;
+    threats[0] = {
+      ...threats[0]!,
+      targetProgress: 1,
+      integrityDamage: 10,
+      instabilityGain: 10,
+    };
+    const input = {
+      ...run,
+      genome: { ...run.genome, threats },
+      resources: { PROGRESS: 0, INTEGRITY: 3, INSTABILITY: 99, CREDITS: 998 },
+    };
+
+    const preview = previewSystemBreakerRound(input);
+    const execution = resolveSystemBreakerRound(input);
+
+    expect(preview).toEqual(execution.summary);
+    expect(preview).toMatchObject({ integrity: 0, instability: 100, credits: 999 });
+    expect(
+      execution.events.find((event) => event.type === 'RESOURCE_CHANGED')?.resourceChanges,
+    ).toEqual([
+      { resource: 'INTEGRITY', delta: -3 },
+      { resource: 'INSTABILITY', delta: 1 },
+      { resource: 'CREDITS', delta: 1 },
+    ]);
+  });
 });
