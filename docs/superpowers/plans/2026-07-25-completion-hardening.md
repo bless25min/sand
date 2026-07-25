@@ -91,9 +91,9 @@ Hunts remain declarative data. Pages advanced mode reuses the existing hosting a
 
 ### Task 4: Release Gate and Deployment
 
-- [ ] Review the consolidated diff against this spec and keep protected user files unstaged.
-- [ ] Run `pnpm check` and one focused follow-up only if a batch-related failure is fixed.
-- [ ] Browser-test guild, playback, rewards, replay, mobile width, and console output.
-- [ ] Push the default branch, deploy the API Worker, then deploy exact committed Web assets.
-- [ ] Verify Worker `/health`, Pages `/api/health`, canonical/immutable URLs, source commit, and live
+- [x] Review the consolidated diff against this spec and keep protected user files unstaged.
+- [x] Run `pnpm check` and one focused follow-up only if a batch-related failure is fixed.
+- [x] Browser-test guild, playback, rewards, replay, mobile width, and console output.
+- [x] Push the default branch, deploy the API Worker, then deploy exact committed Web assets.
+- [x] Verify Worker `/health`, Pages `/api/health`, canonical/immutable URLs, source commit, and live
       bundle hashes.
