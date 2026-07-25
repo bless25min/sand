@@ -56,7 +56,10 @@ function isQuestRecords(value: unknown) {
     (record) =>
       isRecord(record) &&
       isFiniteNumber(record.clears) &&
-      (record.bestClearMs === undefined || isFiniteNumber(record.bestClearMs)),
+      (record.bestClearMs === undefined || isFiniteNumber(record.bestClearMs)) &&
+      (record.bestOverkill === undefined || isFiniteNumber(record.bestOverkill)) &&
+      (record.bestLootMultiplier === undefined || isFiniteNumber(record.bestLootMultiplier)) &&
+      (record.bestItemQuality === undefined || isFiniteNumber(record.bestItemQuality)),
   );
 }
 

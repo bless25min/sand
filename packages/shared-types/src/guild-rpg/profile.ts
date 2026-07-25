@@ -10,6 +10,9 @@ export interface GuildAdventurer {
 export interface QuestRecord {
   clears: number;
   bestClearMs?: number;
+  bestOverkill?: number;
+  bestLootMultiplier?: number;
+  bestItemQuality?: number;
 }
 
 export interface GuildProfile {

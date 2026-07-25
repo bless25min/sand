@@ -118,7 +118,7 @@ describe('right-thumb mobile flow', () => {
     expect(markup).toContain('>軍令<');
     expect(markup).toContain('>目標<');
     expect(markup).toContain('撤銷上一步');
-    expect(markup).toContain('釋放軍令');
+    expect(markup).toContain('提早釋放');
     expect(markup).not.toContain('行動 0%');
     expect(markup).toContain('壓力 0%');
     expect(markup).toContain('data-thumb-slot="primary"');

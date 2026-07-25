@@ -119,6 +119,22 @@ export function GuildScreen({ state, dispatch }: GuildScreenProps) {
                       <dt>最佳</dt>
                       <dd>{formatTime(record?.bestClearMs)}</dd>
                     </div>
+                    <div>
+                      <dt>最高溢傷</dt>
+                      <dd>{record?.bestOverkill ?? '—'}</dd>
+                    </div>
+                    <div>
+                      <dt>掉落效率</dt>
+                      <dd>
+                        {record?.bestLootMultiplier
+                          ? `×${record.bestLootMultiplier.toFixed(2)}`
+                          : '—'}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt>最高品質</dt>
+                      <dd>{record?.bestItemQuality ?? '—'}</dd>
+                    </div>
                   </dl>
                   <button
                     type="button"

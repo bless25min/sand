@@ -28,6 +28,12 @@ export function BattleUnitCard({ unit, selected, onSelect }: BattleUnitCardProps
       <div className="gr-meter gr-meter--hp">
         <span style={{ width: `${hpRatio}%` }} />
       </div>
+      {unit.huntTraits?.map((trait) => (
+        <div className="gr-unit__trait" key={trait.id}>
+          <strong>{trait.name}</strong>
+          <span>{trait.description}</span>
+        </div>
+      ))}
       {unit.side === 'enemies' && (
         <div className="gr-meter gr-meter--gauge">
           <span style={{ width: `${unit.gauge}%` }} />

@@ -171,11 +171,11 @@ Overkill and loot efficiency on mobile or desktop.
 - Modify: combo hunt data, battle/reward/guild components, presenters, reducer, save, mobile CSS
 - Modify: `docs/superpowers/plans/2026-07-25-overkill-combo-rework.md`
 
-- [ ] Write the golden-flow and UI contract tests for three successful engines, strong enemy
+- [x] Write the golden-flow and UI contract tests for three successful engines, strong enemy
       pressure, early safe release, full wipe, exclusive loot, rebuild, replay, and persistence.
-- [ ] Run the focused golden-flow and UI tests; verify RED.
-- [ ] Complete boss/guard behaviors, counter traits, trace presentation, responsive right-thumb
+- [x] Run the focused golden-flow and UI tests; verify RED.
+- [x] Complete boss/guard behaviors, counter traits, trace presentation, responsive right-thumb
       controls, playback escalation, accessibility, reduced motion, and replay statistics.
-- [ ] Re-run all guild-rpg tests; verify GREEN, then perform one consolidated requirements review.
-- [ ] Fix review findings, run `pnpm check` once, and manually verify 375x812, 390x844, and desktop.
-- [ ] Commit the complete reviewed rework while excluding the two protected user-modified files.
+- [x] Re-run all guild-rpg tests; verify GREEN, then perform one consolidated requirements review.
+- [x] Fix review findings, run `pnpm check` once, and manually verify 375x812, 390x844, and desktop.
+- [x] Commit the complete reviewed rework while excluding the two protected user-modified files.

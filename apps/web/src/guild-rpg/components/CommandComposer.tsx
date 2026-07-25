@@ -15,6 +15,7 @@ export function CommandComposer({ state, dispatch }: CommandComposerProps) {
   const availableCards = runtime.availableCardIds.map(
     (cardId) => GUILD_GAME_CONTENT.cards[cardId]!,
   );
+  const earlyRelease = draftCards.length > 0 && draftCards.length < 4;
 
   return (
     <section className="gr-command gr-combo-composer" aria-label="自由軍令編排">
@@ -43,7 +44,7 @@ export function CommandComposer({ state, dispatch }: CommandComposerProps) {
             onClick={() => dispatch({ type: 'RELEASE_COMBO' })}
             disabled={draftCards.length === 0}
           >
-            釋放軍令
+            {earlyRelease ? '提早釋放' : '釋放軍令'}
           </button>
         </div>
       </div>

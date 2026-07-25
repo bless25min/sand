@@ -27,6 +27,17 @@ export const GUILD_HUNTS: readonly HuntDefinition[] = [
     enemies: [
       {
         enemyId: 'wolf_scout',
+        traits: [
+          {
+            id: 'scatter_gap',
+            name: '彈射缺口',
+            description: '高速散陣會放大 Ricochet 傷害。',
+            counterBuildIds: ['ricochet'],
+            pressureMultiplier: 1.15,
+            vulnerableTransform: 'ricochet',
+            vulnerabilityMultiplier: 1.5,
+          },
+        ],
         material: { id: 'scout_fang', name: '斥候狼牙', baseQuantity: 1 },
         equipment: [
           equipment('scout_charm', '斥候追風符', 'accessory', 'speed', 3, ['ricochet_focus']),
@@ -34,11 +45,35 @@ export const GUILD_HUNTS: readonly HuntDefinition[] = [
       },
       {
         enemyId: 'wolf_hunter',
+        traits: [
+          {
+            id: 'riposte_gap',
+            name: '反擊破綻',
+            description: '獵手追擊後會暴露給 Repeat 反震。',
+            counterBuildIds: ['retaliation'],
+            pressureMultiplier: 1.25,
+            vulnerableTransform: 'repeat',
+            vulnerabilityMultiplier: 1.5,
+          },
+        ],
         material: { id: 'hunter_sinew', name: '獵手筋腱', baseQuantity: 1 },
         equipment: [equipment('hunter_bow', '灰牙獵弓', 'weapon', 'attack', 9, ['ricochet_focus'])],
       },
       {
         enemyId: 'wolf_alpha',
+        traits: [
+          {
+            id: 'pack_bulwark',
+            name: '狼群壁壘',
+            description: '護衛存活時減傷；聖輝轉換能撕開核心。',
+            counterBuildIds: ['healing_overflow'],
+            pressureMultiplier: 1.5,
+            guardedByEnemyIds: ['wolf_scout', 'wolf_hunter'],
+            guardedDamageMultiplier: 0.55,
+            vulnerableTransform: 'convert_element',
+            vulnerabilityMultiplier: 1.5,
+          },
+        ],
         material: { id: 'alpha_core', name: '首領狼核', baseQuantity: 2 },
         equipment: [
           equipment('alpha_plate', '首領護胸', 'armor', 'defense', 8, ['retaliation_bash']),

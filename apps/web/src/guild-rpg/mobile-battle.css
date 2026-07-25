@@ -26,9 +26,47 @@
   }
 
   .gr-battle__controls,
-  .gr-command,
-  .gr-combo-playback {
+  .gr-command {
     display: none;
+  }
+
+  .gr-combo-playback {
+    position: fixed;
+    z-index: 12;
+    top: 58px;
+    right: 8px;
+    left: 8px;
+    display: block;
+    max-height: 58px;
+    padding: 7px 10px;
+    overflow: hidden;
+    pointer-events: none;
+    backdrop-filter: blur(10px);
+  }
+
+  .gr-combo-playback header {
+    align-items: center;
+  }
+
+  .gr-combo-playback h2,
+  .gr-combo-playback ol {
+    display: none;
+  }
+
+  .gr-combo-playback dl {
+    gap: 8px;
+  }
+
+  .gr-combo-playback dl div {
+    min-width: 40px;
+  }
+
+  .gr-combo-playback dt {
+    font-size: 0.48rem;
+  }
+
+  .gr-combo-playback dd {
+    font-size: 0.72rem;
   }
 
   .gr-battlefield {
@@ -96,6 +134,15 @@
 
   .gr-unit header b {
     font-size: 0.48rem;
+  }
+
+  .gr-unit__trait {
+    margin-top: 5px;
+    padding: 3px 5px;
+  }
+
+  .gr-unit__trait span {
+    display: none;
   }
 
   .gr-unit__numbers {

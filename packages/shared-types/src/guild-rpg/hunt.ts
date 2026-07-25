@@ -1,6 +1,7 @@
 import type { EquipmentItem, GuildEquipmentSlot, GuildItemRarity } from './equipment';
 import type { MaterialReward, QuestRewards } from './profile';
 import type { GuildStatKey } from './stats';
+import type { ComboTransformKind } from './combo/rules';
 
 export interface HuntMaterialDefinition {
   id: string;
@@ -17,10 +18,23 @@ export interface HuntEquipmentDefinition {
   ruleIds?: readonly string[];
 }
 
+export interface HuntEnemyTrait {
+  id: string;
+  name: string;
+  description: string;
+  counterBuildIds: readonly string[];
+  pressureMultiplier?: number;
+  guardedByEnemyIds?: readonly string[];
+  guardedDamageMultiplier?: number;
+  vulnerableTransform?: ComboTransformKind;
+  vulnerabilityMultiplier?: number;
+}
+
 export interface HuntEnemyRewards {
   enemyId: string;
   material: HuntMaterialDefinition;
   equipment: readonly HuntEquipmentDefinition[];
+  traits?: readonly HuntEnemyTrait[];
 }
 
 export interface HuntDefinition {
@@ -50,6 +64,7 @@ export interface HuntRewardAxes {
   quantityMultiplier: number;
   individualOverkill: Readonly<Record<string, number>>;
   sharedOverflow: number;
+  totalOverkill: number;
 }
 
 export interface HuntRewards extends QuestRewards {

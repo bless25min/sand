@@ -1,4 +1,5 @@
 import type { GuildRpgState } from '../state/game-reducer';
+import { COMBO_STAGE_LABEL, comboEscalationStage } from '../presenters';
 
 interface ComboPlaybackProps {
   state: GuildRpgState;
@@ -6,11 +7,18 @@ interface ComboPlaybackProps {
 
 export function ComboPlayback({ state }: ComboPlaybackProps) {
   const runtime = state.battle!.combo!;
+  const stage = comboEscalationStage(runtime);
   return (
-    <section className="gr-combo-playback" aria-live="polite">
+    <section
+      className="gr-combo-playback"
+      data-escalation-stage={stage}
+      role="status"
+      aria-live="polite"
+      aria-atomic="true"
+    >
       <header>
         <div>
-          <p>CAUSAL TRACE</p>
+          <p>{COMBO_STAGE_LABEL[stage]}</p>
           <h2>軍令結算紀錄</h2>
         </div>
         <dl>
@@ -25,6 +33,10 @@ export function ComboPlayback({ state }: ComboPlaybackProps) {
           <div>
             <dt>OVERKILL</dt>
             <dd>{runtime.metrics.totalOverkill}</dd>
+          </div>
+          <div>
+            <dt>共享溢傷</dt>
+            <dd>{runtime.metrics.annihilationOverflow}</dd>
           </div>
         </dl>
       </header>

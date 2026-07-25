@@ -70,6 +70,13 @@
   font-size: 1.7rem;
 }
 
+.gr-reward-quality {
+  color: #e6b85f;
+  font-size: 0.66rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+}
+
 .gr-reward-card ul {
   min-height: 42px;
   margin: 0 0 18px;

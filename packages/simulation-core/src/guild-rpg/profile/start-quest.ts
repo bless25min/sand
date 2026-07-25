@@ -22,8 +22,14 @@ export function startGuildQuest(
     leaderAuto,
   });
   const build = compileBuild(profile, content);
+  const hunt = content.hunts.find((candidate) => candidate.questId === questId);
   return {
     ...battle,
+    units: battle.units.map((unit) => {
+      if (unit.side !== 'enemies') return unit;
+      const traits = hunt?.enemies.find((enemy) => enemy.enemyId === unit.id)?.traits;
+      return traits ? { ...unit, huntTraits: traits } : unit;
+    }),
     combo: {
       phase: 'composing' as const,
       draft: { cardIds: [] },

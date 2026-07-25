@@ -20,6 +20,7 @@ export function BattleThumbControls({ state, dispatch }: BattleThumbControlsProp
   const [page, setPage] = useState<BattleThumbPage>('cards');
   const [cardPage, setCardPage] = useState(0);
   const selectedTarget = battle.units.find((unit) => unit.id === battle.selectedTargetId);
+  const earlyRelease = runtime.draft.cardIds.length > 0 && runtime.draft.cardIds.length < 4;
 
   let actions: readonly ThumbDeckAction[];
   let title: string;
@@ -60,8 +61,8 @@ export function BattleThumbControls({ state, dispatch }: BattleThumbControlsProp
       },
       {
         id: 'release',
-        label: '釋放軍令',
-        detail: '完整結算不中斷',
+        label: earlyRelease ? '提早釋放' : '釋放軍令',
+        detail: earlyRelease ? '保命並保留戰果' : '完整結算不中斷',
         slot: 'primary',
         tone: 'primary',
         disabled: runtime.draft.cardIds.length === 0,
@@ -77,8 +78,8 @@ export function BattleThumbControls({ state, dispatch }: BattleThumbControlsProp
     actions = [
       {
         id: 'release',
-        label: '釋放軍令',
-        detail: '完整結算不中斷',
+        label: earlyRelease ? '提早釋放' : '釋放軍令',
+        detail: earlyRelease ? '保命並保留戰果' : '完整結算不中斷',
         slot: 'primary',
         tone: 'primary',
         disabled: runtime.draft.cardIds.length === 0,

@@ -1,6 +1,7 @@
 import type { AdventurerDefinition, GuildSkillDefinition, QuestDefinition } from './content';
 import type { ComboRuntimeState } from './combo/runtime';
 import type { GuildAdventurer } from './profile';
+import type { HuntEnemyTrait } from './hunt';
 import type { GuildStats } from './stats';
 
 export type BattleStatus = 'active' | 'victory' | 'defeat';
@@ -18,6 +19,7 @@ export interface BattleUnit {
   guarding: boolean;
   isLeader: boolean;
   skillIds: readonly string[];
+  huntTraits?: readonly HuntEnemyTrait[];
 }
 
 export interface BattleAction {

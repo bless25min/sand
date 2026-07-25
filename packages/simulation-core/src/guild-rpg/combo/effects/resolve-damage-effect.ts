@@ -1,10 +1,16 @@
 import type { BattleUnit, ComboEvent } from '@expedition/shared-types';
 
 import { applyComboDamage } from '../apply-combo-damage';
+import { calculateHuntDamage } from '../calculate-hunt-damage';
 import type { RuleEffectContext, RuleEffectResult } from '../rule-effect';
 
 function livingEnemies(units: readonly BattleUnit[]) {
   return units.filter((unit) => unit.side === 'enemies' && unit.currentHp > 0);
+}
+
+function selectedEnemyId(units: readonly BattleUnit[], selectedTargetId?: string) {
+  const enemies = livingEnemies(units);
+  return enemies.find((enemy) => enemy.id === selectedTargetId)?.id ?? enemies[0]?.id;
 }
 
 function selectTargets(context: RuleEffectContext, units: readonly BattleUnit[]) {
@@ -44,18 +50,46 @@ export function resolveDamageEffect(context: RuleEffectContext): RuleEffectResul
   } else {
     targets.forEach((target, index) => {
       const current = units.find((unit) => unit.id === target.id)!;
-      const outcome = applyComboDamage(current, amount, metrics, livingEnemies(units).length === 1);
+      const adjustedAmount = calculateHuntDamage(current, units, amount, context.rule.transforms);
+      const outcome = applyComboDamage(
+        current,
+        adjustedAmount,
+        metrics,
+        livingEnemies(units).length === 1,
+      );
       metrics = outcome.metrics;
       if (outcome.target) Object.assign(current, outcome.target);
+      const damageCausalId = `${context.parentCausalId}:damage:${index}:${target.id}`;
       events.push({
         id: runtime.events.length + events.length,
-        causalId: `${context.parentCausalId}:damage:${index}:${target.id}`,
+        causalId: damageCausalId,
         parentCausalId: context.parentCausalId,
         kind: 'damage',
-        message: `${context.rule.name}對${target.name}造成 ${amount} 傷害。`,
+        message: `${context.rule.name}對${target.name}造成 ${adjustedAmount} 傷害。`,
         targetId: target.id,
-        amount,
+        amount: adjustedAmount,
       });
+      if (outcome.defeated) {
+        events.push({
+          id: runtime.events.length + events.length,
+          causalId: `${damageCausalId}:defeat`,
+          parentCausalId: damageCausalId,
+          kind: 'unit_defeated',
+          message: `${target.name}被${context.rule.name}擊敗。`,
+          targetId: target.id,
+        });
+      }
+      if (outcome.overflow > 0) {
+        events.push({
+          id: runtime.events.length + events.length,
+          causalId: `${damageCausalId}:overkill`,
+          parentCausalId: damageCausalId,
+          kind: 'overkill',
+          message: `OVERKILL +${outcome.overflow}`,
+          targetId: target.id,
+          amount: outcome.overflow,
+        });
+      }
     });
   }
 
@@ -64,7 +98,7 @@ export function resolveDamageEffect(context: RuleEffectContext): RuleEffectResul
     battle: {
       ...context.battle,
       status: enemiesAlive ? context.battle.status : 'victory',
-      selectedTargetId: livingEnemies(units)[0]?.id,
+      selectedTargetId: selectedEnemyId(units, context.battle.selectedTargetId),
       units,
       combo: {
         ...runtime,

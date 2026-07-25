@@ -132,6 +132,16 @@
   background: #090d0eaa;
 }
 
+.gr-combo-playback[data-escalation-stage='break'],
+.gr-combo-playback[data-escalation-stage='overflow'] {
+  animation: gr-trace-pulse 480ms ease-out;
+}
+
+.gr-combo-playback[data-escalation-stage='overflow'] {
+  border-color: #e1ad4b66;
+  box-shadow: inset 3px 0 #e1ad4b;
+}
+
 .gr-combo-playback header,
 .gr-combo-playback dl {
   display: flex;
@@ -285,5 +295,20 @@
 
   .gr-combat-log ol {
     grid-template-columns: 1fr;
+  }
+}
+
+@keyframes gr-trace-pulse {
+  50% {
+    border-color: #f2c76e;
+    background: #2b2112;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gr-combo-playback,
+  .gr-meter span {
+    animation: none;
+    transition: none;
   }
 }

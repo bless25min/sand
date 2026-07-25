@@ -1,5 +1,6 @@
 import type {
   AdventurerRole,
+  ComboRuntimeState,
   GuildEquipmentSlot,
   GuildItemRarity,
   GuildStatKey,
@@ -37,3 +38,17 @@ export function formatTime(milliseconds?: number) {
   if (milliseconds === undefined) return '—';
   return `${(milliseconds / 1_000).toFixed(1)} 秒`;
 }
+
+export type ComboEscalationStage = 'stack' | 'break' | 'overflow';
+
+export function comboEscalationStage(runtime: ComboRuntimeState): ComboEscalationStage {
+  if (runtime.metrics.annihilationOverflow > 0) return 'overflow';
+  if (runtime.metrics.defeatedEnemyIds.length > 0) return 'break';
+  return 'stack';
+}
+
+export const COMBO_STAGE_LABEL: Readonly<Record<ComboEscalationStage, string>> = {
+  stack: 'STACK & COMMIT',
+  break: 'ACCELERATE & BREAK',
+  overflow: 'OVERFLOW & LOOT',
+};

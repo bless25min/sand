@@ -19,7 +19,7 @@ export function HuntResultSummary({ rewards }: HuntResultSummaryProps) {
   ].filter((badge): badge is string => Boolean(badge));
 
   return (
-    <section className="gr-hunt-summary" aria-label="狩獵結算">
+    <section className="gr-hunt-summary" data-escalation-stage="overflow" aria-label="狩獵結算">
       <div className="gr-hunt-summary__badges">
         {badges.map((badge) => (
           <strong key={badge}>{badge}</strong>

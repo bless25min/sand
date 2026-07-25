@@ -81,6 +81,7 @@ function calculateAxes(
     quantityMultiplier,
     individualOverkill: individualOverkill(input),
     sharedOverflow: runtime?.metrics.annihilationOverflow ?? 0,
+    totalOverkill: runtime?.metrics.totalOverkill ?? 0,
   };
 }
 

@@ -1,5 +1,5 @@
 import { GUILD_GAME_CONTENT } from '@expedition/game-data';
-import type { EquipmentItem } from '@expedition/shared-types';
+import type { EquipmentItem, HuntEquipmentItem } from '@expedition/shared-types';
 import { equipmentPower } from '@expedition/simulation-core';
 import { useState } from 'react';
 
@@ -13,6 +13,10 @@ interface EquipmentCardProps {
   selectedAdventurerId?: string;
   onAdventurerChange?: (adventurerId: string) => void;
   hideActions?: boolean;
+}
+
+function isHuntEquipment(item: EquipmentItem): item is HuntEquipmentItem {
+  return 'qualityScore' in item && 'sourceEnemyId' in item;
 }
 
 export function EquipmentCard({
@@ -48,6 +52,12 @@ export function EquipmentCard({
         <span>{STAT_LABEL[item.mainStat.stat]}</span>
         <strong>+{item.mainStat.value}</strong>
       </div>
+      {isHuntEquipment(item) && (
+        <p className="gr-reward-quality">
+          OVERKILL QUALITY {Math.round(item.qualityScore)}
+          {item.jackpot ? ' · ANNIHILATION CHEST' : ''}
+        </p>
+      )}
       <ul>
         {item.affixes.length ? (
           item.affixes.map((affix, index) => (

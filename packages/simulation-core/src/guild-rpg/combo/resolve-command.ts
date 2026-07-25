@@ -8,9 +8,15 @@ import type {
 } from '@expedition/shared-types';
 
 import { applyComboDamage } from './apply-combo-damage';
+import { calculateHuntDamage } from './calculate-hunt-damage';
 
 function livingEnemies(units: readonly BattleUnit[]) {
   return units.filter((unit) => unit.side === 'enemies' && unit.currentHp > 0);
+}
+
+function selectedEnemyId(units: readonly BattleUnit[], selectedTargetId?: string) {
+  const enemies = livingEnemies(units);
+  return enemies.find((enemy) => enemy.id === selectedTargetId)?.id ?? enemies[0]?.id;
 }
 
 function replaceUnit(units: BattleUnit[], nextUnit: BattleUnit) {
@@ -107,7 +113,8 @@ export function resolveCommand(
 
       targets.forEach((target) => {
         const remainingEnemyCount = livingEnemies(units).length;
-        const outcome = applyComboDamage(target, effect.amount, metrics, remainingEnemyCount === 1);
+        const amount = calculateHuntDamage(target, units, effect.amount);
+        const outcome = applyComboDamage(target, amount, metrics, remainingEnemyCount === 1);
         metrics = outcome.metrics;
         if (outcome.target) replaceUnit(units, outcome.target);
         const damageCausalId = `${causalId}:${target.id}`;
@@ -115,10 +122,10 @@ export function resolveCommand(
           causalId: damageCausalId,
           parentCausalId: step.causalId,
           kind: 'damage',
-          message: `${card.name}對${target.name}造成 ${effect.amount} 傷害。`,
+          message: `${card.name}對${target.name}造成 ${amount} 傷害。`,
           actorId: card.ownerId,
           targetId: target.id,
-          amount: effect.amount,
+          amount,
         });
         if (outcome.defeated) {
           pushEvent({
@@ -155,7 +162,7 @@ export function resolveCommand(
     ...battle,
     status: enemiesAlive ? 'active' : 'victory',
     sequence: battle.sequence + events.length,
-    selectedTargetId: livingEnemies(units)[0]?.id,
+    selectedTargetId: selectedEnemyId(units, battle.selectedTargetId),
     units,
     combo: {
       ...battle.combo,
