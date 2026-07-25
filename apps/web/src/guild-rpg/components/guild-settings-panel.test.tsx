@@ -15,7 +15,7 @@ describe('Guild settings panel', () => {
 
     expect(markup).toContain('aria-label="遊戲設定"');
     expect(markup).toContain('音效音量');
-    expect(markup).toContain('音樂');
+    expect(markup).toContain('戰鬥音效');
     expect(markup).toContain('震動');
     expect(markup).toContain('減少動態');
     expect(markup).toContain('重新播放教學');

@@ -7,6 +7,7 @@ import { GuildSettingsPanel } from './components/GuildSettingsPanel';
 import { RewardScreen } from './components/RewardScreen';
 import { useBattleClock } from './hooks/use-battle-clock';
 import { useComboPlayback } from './hooks/use-combo-playback';
+import { useSensationOutput } from './hooks/use-sensation-output';
 import { storeGuildPreferences } from './preferences/guild-preferences';
 import { createGuildRpgState, loadGuildRpgState } from './state/create-game-state';
 import { guildRpgReducer } from './state/game-reducer';
@@ -40,6 +41,7 @@ export function GuildRpgApp() {
 
   useBattleClock(battleRunning, state.speed, dispatch);
   useComboPlayback(state, dispatch);
+  useSensationOutput(state);
 
   useEffect(() => {
     if (state.screen !== 'guild') return;

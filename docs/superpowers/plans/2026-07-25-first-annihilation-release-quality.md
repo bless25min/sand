@@ -99,12 +99,12 @@ interface SensationOutput { unlock(): void; play(cue: SensationCueId): void;
   setPaused(paused: boolean): void; dispose(): void; }
 ```
 
-- [ ] Write tests for ordered/deduplicated cue projection, volume clamp, muted/unsupported adapters,
+- [x] Write tests for ordered/deduplicated cue projection, volume clamp, muted/unsupported adapters,
       bounded haptic patterns, user-gesture unlock, pause/visibility suspension, and reduced motion.
-- [ ] Run focused tests and verify RED for the missing projection and browser adapter.
-- [ ] Implement injected AudioContext/vibration ports, procedural gain envelopes and pulse bed; hook
+- [x] Run focused tests and verify RED for the missing projection and browser adapter.
+- [x] Implement injected AudioContext/vibration ports, procedural gain envelopes and pulse bed; hook
       only to newly visible events/messages so React rerenders never replay old cues.
-- [ ] Re-run focused tests, typecheck, and ESLint; verify GREEN and commit
+- [x] Re-run focused tests, typecheck, and ESLint; verify GREEN and commit
       `feat: amplify battle sensation cues`.
 
 ### Task 4: Prove and Release Batch 1

@@ -50,7 +50,7 @@ export function GuildSettingsPanel({ state, dispatch }: GuildSettingsPanelProps)
             })
           }
         >
-          音樂：{state.preferences.musicEnabled ? '開啟' : '關閉'}
+          戰鬥音效：{state.preferences.musicEnabled ? '開啟' : '關閉'}
         </button>
         <button
           type="button"
