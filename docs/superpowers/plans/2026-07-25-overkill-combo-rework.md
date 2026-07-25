@@ -150,13 +150,13 @@ quantity and jackpot rewards before loot scatters across the result screen.
 calculateHuntRewards(input: HuntRewardInput, random: RandomSource): HuntRewards
 ```
 
-- [ ] Write tests for material-only failure, kill-gated tables, enemy-specific items, every reward
+- [x] Write tests for material-only failure, kill-gated tables, enemy-specific items, every reward
       axis, shared post-kill Overflow, deterministic rarity, save migration, and no lost overflow.
-- [ ] Run focused reward/storage tests; verify RED.
-- [ ] Implement hunt reward math, materials, exclusive rule-bearing items, reward transitions,
+- [x] Run focused reward/storage tests; verify RED.
+- [x] Implement hunt reward math, materials, exclusive rule-bearing items, reward transitions,
       migration, result summary, batched loot rain, and item decisions.
-- [ ] Re-run reward, profile, storage, reducer, and reward-component tests; verify GREEN.
-- [ ] Perform one Task 3 review, fix findings, run the affected tests, and commit the batch.
+- [x] Re-run reward, profile, storage, reducer, and reward-component tests; verify GREEN.
+- [x] Perform one Task 3 review, fix findings, run the affected tests, and commit the batch.
 
 ### Task 4: Complete Strong Hunt and Replay Experience
 

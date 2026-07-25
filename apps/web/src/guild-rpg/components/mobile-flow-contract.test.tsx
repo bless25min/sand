@@ -43,6 +43,24 @@ function returnWithInventory(): GuildRpgState {
   return guildRpgReducer(state, { type: 'RETURN_GUILD' });
 }
 
+function reachFailedRewards(): GuildRpgState {
+  let state = guildRpgReducer(createGuildRpgState(), {
+    type: 'START_QUEST',
+    questId: 'border_pack',
+  });
+  state = {
+    ...state,
+    battle: {
+      ...state.battle!,
+      status: 'defeat',
+      units: state.battle!.units.map((unit) =>
+        unit.side === 'heroes' ? { ...unit, currentHp: 0 } : unit,
+      ),
+    },
+  };
+  return guildRpgReducer(state, { type: 'TICK', elapsedMs: 0 });
+}
+
 describe('right-thumb mobile flow', () => {
   it('keeps guild navigation and the quest action in the thumb command deck', () => {
     const markup = renderToStaticMarkup(
@@ -119,9 +137,24 @@ describe('right-thumb mobile flow', () => {
     );
 
     expect(markup).toContain('aria-label="戰利品操作"');
+    expect(markup).toContain('data-loot-rain="true"');
+    expect(markup).toContain('CHAIN WIPE');
+    expect(markup).toContain('ANNIHILATION');
+    expect(markup).toContain('敵人材料');
     expect(markup).toContain('立即裝備');
     expect(markup).toContain('放入背包');
     expect(markup).toContain('出售');
     expect(resolvedMarkup).toContain('返回公會');
+  });
+
+  it('renders a material-only failed hunt with an immediate safe return', () => {
+    const state = reachFailedRewards();
+    const markup = renderToStaticMarkup(<RewardScreen state={state} dispatch={dispatch} />);
+
+    expect(markup).toContain('撤退結算');
+    expect(markup).toContain('敵人材料');
+    expect(markup).toContain('返回公會');
+    expect(markup).not.toContain('立即裝備');
+    expect(markup).not.toContain('新委託已解鎖');
   });
 });

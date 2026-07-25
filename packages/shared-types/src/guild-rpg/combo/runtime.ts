@@ -52,4 +52,6 @@ export interface ComboRuntimeState {
   availableCardIds: readonly string[];
   events: readonly ComboEvent[];
   metrics: ComboMetrics;
+  lastCommandEventStartIndex?: number;
+  lastCommandEnemyStartHpRatios?: Readonly<Record<string, number>>;
 }

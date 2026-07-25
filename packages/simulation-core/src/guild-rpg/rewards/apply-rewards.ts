@@ -22,6 +22,17 @@ export function applyQuestRewards(
 ): GuildProfile {
   const questIndex = quests.findIndex((quest) => quest.id === rewards.questId);
   if (questIndex < 0) throw new Error(`Unknown quest reward: ${rewards.questId}`);
+  const materials = { ...profile.materials };
+  for (const material of rewards.materials ?? []) {
+    materials[material.id] = (materials[material.id] ?? 0) + material.quantity;
+  }
+  if (rewards.successful === false) {
+    return {
+      ...profile,
+      materials,
+      nextLootSeed: profile.nextLootSeed + 1,
+    };
+  }
   const previous = profile.questRecords[rewards.questId];
   const nextQuest = quests[questIndex + 1];
   const unlocked = new Set(profile.unlockedQuestIds);
@@ -29,6 +40,7 @@ export function applyQuestRewards(
 
   return {
     ...profile,
+    materials,
     party: profile.party.map((member) => awardExperience(member, rewards.experience)),
     gold: profile.gold + rewards.gold,
     unlockedQuestIds: quests.filter((quest) => unlocked.has(quest.id)).map((quest) => quest.id),

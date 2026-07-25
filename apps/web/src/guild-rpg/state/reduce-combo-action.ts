@@ -59,7 +59,19 @@ export function reduceComboAction(
   if (command.diagnostics.length > 0) {
     return { battle, message: command.diagnostics.join('；') };
   }
-  const resolved = resolveCommand(battle, command, cards);
+  const battleAtRelease: GuildBattleState = {
+    ...battle,
+    combo: {
+      ...runtime,
+      lastCommandEventStartIndex: runtime.events.length,
+      lastCommandEnemyStartHpRatios: Object.fromEntries(
+        battle.units
+          .filter((unit) => unit.side === 'enemies' && unit.currentHp > 0)
+          .map((unit) => [unit.id, unit.currentHp / unit.stats.hp]),
+      ),
+    },
+  };
+  const resolved = resolveCommand(battleAtRelease, command, cards);
   return {
     battle: resolveTriggerQueue({ battle: resolved, command, rules }).battle,
     message: `軍令釋放：${command.cardIds.length} 張卡牌完整結算。`,

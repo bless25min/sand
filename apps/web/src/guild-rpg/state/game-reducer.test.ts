@@ -1,3 +1,4 @@
+import type { HuntRewards } from '@expedition/shared-types';
 import { describe, expect, it } from 'vitest';
 
 import { createGuildRpgState } from './create-game-state';
@@ -54,24 +55,33 @@ describe('guild RPG reducer', () => {
 
     state = guildRpgReducer(state, { type: 'RELEASE_COMBO' });
     expect(state.screen).toBe('rewards');
-    expect(state.rewards?.items).toHaveLength(2);
+    expect(state.rewards?.items.length).toBeGreaterThan(2);
+    expect(state.rewards).toMatchObject({
+      successful: true,
+      axes: {
+        chainWipe: true,
+        annihilation: true,
+        perfectAnnihilation: true,
+      },
+    });
+    const huntRewards = state.rewards as HuntRewards;
+    expect(huntRewards.axes.sharedOverflow).toBeGreaterThan(0);
+    expect(
+      huntRewards.items.every((item) => item.qualityScore >= huntRewards.axes.sharedOverflow),
+    ).toBe(true);
     expect(state.profile.questRecords.border_pack?.clears).toBe(1);
 
-    const [kept, sold] = state.rewards!.items;
-    state = guildRpgReducer(state, {
-      type: 'CHOOSE_ITEM',
-      itemId: kept!.id,
-      choice: 'keep',
-      adventurerId: 'lyra',
-    });
-    state = guildRpgReducer(state, {
-      type: 'CHOOSE_ITEM',
-      itemId: sold!.id,
-      choice: 'sell',
-      adventurerId: 'lyra',
-    });
+    const [kept, ...sold] = state.rewards!.items;
+    for (const [index, item] of [kept!, ...sold].entries()) {
+      state = guildRpgReducer(state, {
+        type: 'CHOOSE_ITEM',
+        itemId: item.id,
+        choice: index === 0 ? 'keep' : 'sell',
+        adventurerId: 'lyra',
+      });
+    }
 
-    expect(state.resolvedItemIds).toHaveLength(2);
+    expect(state.resolvedItemIds).toHaveLength(state.rewards!.items.length);
     expect(state.profile.inventory).toHaveLength(1);
 
     state = guildRpgReducer(state, { type: 'RETURN_GUILD' });
@@ -110,5 +120,27 @@ describe('guild RPG reducer', () => {
     state = { ...state, battle: { ...state.battle!, status: 'defeat' } };
     state = guildRpgReducer(state, { type: 'RETURN_GUILD' });
     expect(state.screen).toBe('guild');
+  });
+
+  it('moves a failed hunt to material-only rewards', () => {
+    let state = guildRpgReducer(createGuildRpgState(), {
+      type: 'START_QUEST',
+      questId: 'border_pack',
+    });
+    state = {
+      ...state,
+      battle: {
+        ...state.battle!,
+        status: 'defeat',
+        units: state.battle!.units.map((unit) =>
+          unit.side === 'heroes' ? { ...unit, currentHp: 0 } : unit,
+        ),
+      },
+    };
+    state = guildRpgReducer(state, { type: 'TICK', elapsedMs: 0 });
+
+    expect(state.screen).toBe('rewards');
+    expect(state.rewards?.items).toEqual([]);
+    expect(state.rewards?.materials?.length).toBeGreaterThan(0);
   });
 });

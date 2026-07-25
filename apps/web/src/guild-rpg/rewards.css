@@ -42,6 +42,114 @@
   font-family: Georgia, serif;
 }
 
+.gr-hunt-summary {
+  display: grid;
+  gap: 14px;
+  padding: 20px;
+  border: 1px solid #ffffff17;
+  border-top: 0;
+  background: linear-gradient(135deg, #d7a6420c, #ffffff03);
+}
+
+.gr-hunt-summary__badges,
+.gr-hunt-summary__stats,
+.gr-hunt-summary__materials {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.gr-hunt-summary__badges strong {
+  padding: 6px 9px;
+  border: 1px solid #e4ad4c66;
+  color: #ffd98d;
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+}
+
+.gr-hunt-summary__stats span,
+.gr-hunt-summary__materials span {
+  padding: 5px 8px;
+  background: #ffffff08;
+  color: #aeb8b4;
+  font-size: 0.75rem;
+}
+
+.gr-hunt-summary__stats b,
+.gr-hunt-summary__materials b {
+  color: #efd18f;
+}
+
+.gr-hunt-summary__materials p {
+  width: 100%;
+  margin: 0;
+  color: #718079;
+  font-size: 0.68rem;
+  font-weight: 900;
+  letter-spacing: 0.16em;
+}
+
+.gr-loot-rain {
+  position: relative;
+  z-index: 2;
+  height: 0;
+  pointer-events: none;
+}
+
+.gr-loot-rain__batch {
+  position: absolute;
+  inset: 0;
+}
+
+.gr-loot-rain__drop {
+  --loot-delay: 0s;
+  --loot-column: 0;
+  position: absolute;
+  top: -80px;
+  left: calc(6% + var(--loot-column) * 7.5%);
+  width: 7px;
+  height: 18px;
+  border-radius: 999px;
+  background: #cf9b42;
+  box-shadow: 0 0 14px #cf9b4299;
+  animation: gr-loot-fall 1.4s ease-in var(--loot-delay) both;
+}
+
+.gr-loot-rain__drop--equipment {
+  background: #88bde0;
+  box-shadow: 0 0 14px #88bde099;
+}
+
+.gr-loot-rain__drop--jackpot {
+  width: 11px;
+  background: #ffd35f;
+  box-shadow: 0 0 24px #ffd35fcc;
+}
+
+@keyframes gr-loot-fall {
+  from {
+    translate: 0 0;
+    rotate: 0deg;
+    opacity: 0;
+  }
+
+  15% {
+    opacity: 1;
+  }
+
+  to {
+    translate: 40px 360px;
+    rotate: 210deg;
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gr-loot-rain__drop {
+    animation: none;
+  }
+}
+
 .gr-reward-party {
   display: grid;
   grid-template-columns: repeat(3, 1fr);

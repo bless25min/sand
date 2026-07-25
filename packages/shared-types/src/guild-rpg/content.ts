@@ -1,4 +1,5 @@
 import type { EquipmentAffixDefinition, EquipmentBaseDefinition } from './equipment';
+import type { HuntDefinition } from './hunt';
 import type { CardCatalog } from './combo/content';
 import type { BuildDefinition, RuleCatalog } from './combo/rules';
 import type { GuildStats } from './stats';
@@ -47,6 +48,7 @@ export interface GuildGameContent {
   cards: CardCatalog;
   rules: RuleCatalog;
   builds: readonly BuildDefinition[];
+  hunts: readonly HuntDefinition[];
   skills: Readonly<Record<string, GuildSkillDefinition>>;
   quests: readonly QuestDefinition[];
   equipmentBases: readonly EquipmentBaseDefinition[];

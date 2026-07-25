@@ -8,17 +8,16 @@ import type {
 import {
   advanceGuildBattle,
   advanceComposition,
-  applyQuestRewards,
   compileBuild,
   createSeededRandom,
   equipStoredItem,
-  generateQuestRewards,
   resolveItemChoice,
   startGuildQuest,
   submitLeaderAction,
 } from '@expedition/simulation-core';
 
 import { reduceComboAction, type ComboCommandAction } from './reduce-combo-action';
+import { reduceHuntResult } from './reduce-hunt-result';
 
 export interface GuildRpgState {
   screen: 'guild' | 'battle' | 'rewards';
@@ -49,22 +48,16 @@ function actionRandom(battle: GuildBattleState) {
 }
 
 function finishBattle(state: GuildRpgState, battle: GuildBattleState): GuildRpgState {
-  if (battle.status !== 'victory') return { ...state, battle };
-  const rewards = generateQuestRewards(
-    state.profile,
-    battle,
-    GUILD_GAME_CONTENT,
-    createSeededRandom(`${battle.seed}:loot`),
-  );
-  if (!rewards) return { ...state, battle };
+  const result = reduceHuntResult(state.profile, battle, GUILD_GAME_CONTENT);
+  if (!result) return { ...state, battle };
   return {
     ...state,
     screen: 'rewards',
     battle,
-    rewards,
+    rewards: result.rewards,
     resolvedItemIds: [],
-    profile: applyQuestRewards(state.profile, rewards, GUILD_GAME_CONTENT.quests),
-    message: `遠征勝利，獲得 ${rewards.experience} 經驗與 ${rewards.gold} 金幣！`,
+    profile: result.profile,
+    message: result.message,
   };
 }
 

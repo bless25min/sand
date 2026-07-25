@@ -5,9 +5,27 @@ import { describe, expect, it } from 'vitest';
 import { parseGuildSave, serializeGuildSave } from './guild-save';
 
 describe('guild save', () => {
-  it('round-trips a version-one profile', () => {
+  it('round-trips a version-two profile', () => {
     const profile = { ...createGuildProfile(GUILD_GAME_CONTENT), gold: 987 };
     expect(parseGuildSave(serializeGuildSave(profile))).toEqual(profile);
+  });
+
+  it('migrates a version-one profile without losing progress', () => {
+    const current = createGuildProfile(GUILD_GAME_CONTENT);
+    const legacy = JSON.stringify({
+      ...current,
+      version: 1,
+      materials: undefined,
+      selectedBuildId: undefined,
+      gold: 321,
+    });
+
+    expect(parseGuildSave(legacy)).toMatchObject({
+      version: 2,
+      materials: {},
+      selectedBuildId: 'retaliation',
+      gold: 321,
+    });
   });
 
   it.each(['', '{', 'null', '{"version":2}', '{"version":1,"party":[]}'])(

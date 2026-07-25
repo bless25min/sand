@@ -15,4 +15,5 @@ export { resolveItemChoice } from './equipment/resolve-item-choice';
 export { createGuildProfile } from './profile/create-profile';
 export { startGuildQuest } from './profile/start-quest';
 export { applyQuestRewards } from './rewards/apply-rewards';
+export { calculateHuntRewards } from './rewards/calculate-hunt-rewards';
 export { generateEquipmentItem, generateQuestRewards } from './rewards/generate-rewards';

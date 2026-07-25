@@ -22,20 +22,22 @@ export function RewardThumbControls({ state, dispatch }: RewardThumbControlsProp
     ),
   );
   const [sellConfirmationId, setSellConfirmationId] = useState<string>();
-  const item = rewards.items[itemIndex]!;
+  const item = rewards.items[itemIndex];
   const adventurer = state.profile.party[adventurerIndex]!;
   const hero = GUILD_GAME_CONTENT.adventurers.find(
     (candidate) => candidate.id === adventurer.definitionId,
   )!;
   const allResolved = state.resolvedItemIds.length === rewards.items.length;
-  const resolved = state.resolvedItemIds.includes(item.id);
+  const resolved = item ? state.resolvedItemIds.includes(item.id) : false;
 
   function nextItem() {
+    if (rewards.items.length === 0) return;
     setSellConfirmationId(undefined);
     setItemIndex((current) => wrapThumbIndex(current, rewards.items.length, 1));
   }
 
   function resolve(choice: ItemChoice) {
+    if (!item) return;
     dispatch({
       type: 'CHOOSE_ITEM',
       itemId: item.id,
@@ -46,7 +48,7 @@ export function RewardThumbControls({ state, dispatch }: RewardThumbControlsProp
   }
 
   let actions: readonly ThumbDeckAction[];
-  if (allResolved) {
+  if (allResolved || !item) {
     actions = [
       {
         id: 'return-guild',
@@ -108,25 +110,27 @@ export function RewardThumbControls({ state, dispatch }: RewardThumbControlsProp
 
   return (
     <section className="gr-mobile-reward-stage">
-      <EquipmentCard
-        item={item}
-        state={state}
-        dispatch={dispatch}
-        selectedAdventurerId={adventurer.definitionId}
-        onAdventurerChange={(id) =>
-          setAdventurerIndex(
-            Math.max(
-              0,
-              state.profile.party.findIndex((member) => member.definitionId === id),
-            ),
-          )
-        }
-        hideActions
-      />
+      {item && (
+        <EquipmentCard
+          item={item}
+          state={state}
+          dispatch={dispatch}
+          selectedAdventurerId={adventurer.definitionId}
+          onAdventurerChange={(id) =>
+            setAdventurerIndex(
+              Math.max(
+                0,
+                state.profile.party.findIndex((member) => member.definitionId === id),
+              ),
+            )
+          }
+          hideActions
+        />
+      )}
       <ThumbCommandDeck
         ariaLabel="戰利品操作"
         eyebrow={allResolved ? 'LOOT COMPLETE' : `LOOT ${itemIndex + 1}/${rewards.items.length}`}
-        title={allResolved ? '戰利品已處理完成' : item.name}
+        title={allResolved || !item ? '戰利品已處理完成' : item.name}
         status={allResolved ? '可以返回公會' : `比較：${hero.name}`}
         feedback={state.message}
         actions={actions}

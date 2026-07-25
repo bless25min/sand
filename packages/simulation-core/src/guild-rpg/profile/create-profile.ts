@@ -12,7 +12,7 @@ export function createGuildProfile(content: GuildGameContent): GuildProfile {
     content.adventurers[0]!;
 
   return {
-    version: 1,
+    version: 2,
     leaderId: preferredLeader.id,
     party: content.adventurers.map((definition) => ({
       definitionId: definition.id,
@@ -21,6 +21,7 @@ export function createGuildProfile(content: GuildGameContent): GuildProfile {
       equipment: {},
     })),
     inventory: [],
+    materials: {},
     gold: 40,
     unlockedQuestIds: [firstQuest.id],
     questRecords: {},

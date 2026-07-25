@@ -2,6 +2,8 @@ import { GUILD_GAME_CONTENT } from '@expedition/game-data';
 
 import type { GuildRpgAction, GuildRpgState } from '../state/game-reducer';
 import { EquipmentCard } from './EquipmentCard';
+import { HuntResultSummary } from './HuntResultSummary';
+import { LootRain } from './LootRain';
 import { RewardThumbControls } from './RewardThumbControls';
 
 interface RewardScreenProps {
@@ -11,17 +13,21 @@ interface RewardScreenProps {
 
 export function RewardScreen({ state, dispatch }: RewardScreenProps) {
   const rewards = state.rewards!;
+  const successful = rewards.successful !== false;
   const allResolved = state.resolvedItemIds.length === rewards.items.length;
-  const nextQuest = GUILD_GAME_CONTENT.quests.find(
-    (quest) =>
-      state.profile.unlockedQuestIds.includes(quest.id) && !state.profile.questRecords[quest.id],
-  );
+  const nextQuest = successful
+    ? GUILD_GAME_CONTENT.quests.find(
+        (quest) =>
+          state.profile.unlockedQuestIds.includes(quest.id) &&
+          !state.profile.questRecords[quest.id],
+      )
+    : undefined;
 
   return (
     <main className="gr-rewards">
       <header className="gr-rewards__hero">
-        <p>QUEST COMPLETE</p>
-        <h1>遠征勝利</h1>
+        <p>{successful ? 'QUEST COMPLETE' : 'HUNT RECOVERY'}</p>
+        <h1>{successful ? '遠征勝利' : '撤退結算'}</h1>
         <span>{state.message}</span>
         <div>
           <strong>+{rewards.experience} EXP</strong>
@@ -29,6 +35,9 @@ export function RewardScreen({ state, dispatch }: RewardScreenProps) {
           <strong>{(rewards.clearMs / 1_000).toFixed(1)} SEC</strong>
         </div>
       </header>
+
+      <HuntResultSummary rewards={rewards} />
+      <LootRain rewards={rewards} />
 
       <section className="gr-reward-party" aria-label="隊伍成長">
         {state.profile.party.map((member) => {
@@ -51,9 +60,11 @@ export function RewardScreen({ state, dispatch }: RewardScreenProps) {
         <div className="gr-section__heading">
           <div>
             <p>LOOT DECISION</p>
-            <h2 id="loot-title">選擇戰利品去向</h2>
+            <h2 id="loot-title">{rewards.items.length ? '選擇戰利品去向' : '本次沒有裝備掉落'}</h2>
           </div>
-          <span>每件都必須裝備、保留或出售</span>
+          <span>
+            {rewards.items.length ? '每件都必須裝備、保留或出售' : '材料已直接存入公會倉庫'}
+          </span>
         </div>
         <div className="gr-reward-grid">
           {rewards.items.map((item) => (
@@ -72,7 +83,7 @@ export function RewardScreen({ state, dispatch }: RewardScreenProps) {
           type="button"
           className="gr-button gr-button--primary"
           disabled={!allResolved}
-          title={allResolved ? undefined : '先決定兩件戰利品的去向'}
+          title={allResolved ? undefined : '先決定所有戰利品的去向'}
           onClick={() => dispatch({ type: 'RETURN_GUILD' })}
         >
           {allResolved

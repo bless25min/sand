@@ -6,6 +6,7 @@ import {
   GUILD_COMBO_CARDS,
   GUILD_COMBO_CONTENT,
   GUILD_COMBO_RULES,
+  GUILD_HUNTS,
 } from './combo';
 import { GUILD_EQUIPMENT_AFFIXES, GUILD_EQUIPMENT_BASES } from './equipment';
 import { GUILD_QUESTS } from './quests';
@@ -17,6 +18,7 @@ export {
   GUILD_COMBO_BUILDS,
   GUILD_COMBO_CONTENT,
   GUILD_COMBO_RULES,
+  GUILD_HUNTS,
   GUILD_EQUIPMENT_AFFIXES,
   GUILD_EQUIPMENT_BASES,
   GUILD_QUESTS,
@@ -28,6 +30,7 @@ export const GUILD_GAME_CONTENT: GuildGameContent = {
   cards: GUILD_COMBO_CARDS,
   rules: GUILD_COMBO_RULES,
   builds: GUILD_COMBO_BUILDS,
+  hunts: GUILD_HUNTS,
   skills: GUILD_SKILLS,
   quests: GUILD_QUESTS,
   equipmentBases: GUILD_EQUIPMENT_BASES,

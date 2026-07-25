@@ -13,6 +13,10 @@ interface GuildScreenProps {
 }
 
 export function GuildScreen({ state, dispatch }: GuildScreenProps) {
+  const materialCount = Object.values(state.profile.materials).reduce(
+    (total, quantity) => total + quantity,
+    0,
+  );
   return (
     <main className="gr-shell">
       <header className="gr-topbar">
@@ -25,6 +29,8 @@ export function GuildScreen({ state, dispatch }: GuildScreenProps) {
           <strong>{state.profile.gold}</strong>
           <span>背包</span>
           <strong>{state.profile.inventory.length}/20</strong>
+          <span>材料</span>
+          <strong>{materialCount}</strong>
         </div>
       </header>
 

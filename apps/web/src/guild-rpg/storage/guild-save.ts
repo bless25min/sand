@@ -1,6 +1,7 @@
 import type { GuildProfile } from '@expedition/shared-types';
 
-const GUILD_SAVE_KEY = 'expedition:guild-rpg:v1';
+const GUILD_SAVE_KEY = 'expedition:guild-rpg:v2';
+const LEGACY_GUILD_SAVE_KEY = 'expedition:guild-rpg:v1';
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -59,9 +60,22 @@ function isQuestRecords(value: unknown) {
   );
 }
 
-function isValidProfile(value: unknown): value is GuildProfile {
+function isMaterials(value: unknown) {
+  return (
+    isRecord(value) &&
+    Object.values(value).every((quantity) => isFiniteNumber(quantity) && quantity >= 0)
+  );
+}
+
+function isCompatibleProfile(value: unknown) {
   if (!isRecord(value)) return false;
-  if (value.version !== 1 || !Array.isArray(value.party) || value.party.length !== 3) return false;
+  if (
+    (value.version !== 1 && value.version !== 2) ||
+    !Array.isArray(value.party) ||
+    value.party.length !== 3
+  ) {
+    return false;
+  }
   if (
     typeof value.leaderId !== 'string' ||
     !isFiniteNumber(value.gold) ||
@@ -71,7 +85,14 @@ function isValidProfile(value: unknown): value is GuildProfile {
     !Array.isArray(value.unlockedQuestIds) ||
     !value.unlockedQuestIds.every((questId) => typeof questId === 'string') ||
     (value.selectedBuildId !== undefined && typeof value.selectedBuildId !== 'string') ||
+    (value.materials !== undefined && !isMaterials(value.materials)) ||
     !isQuestRecords(value.questRecords)
+  ) {
+    return false;
+  }
+  if (
+    value.version === 2 &&
+    (typeof value.selectedBuildId !== 'string' || !isMaterials(value.materials))
   ) {
     return false;
   }
@@ -94,14 +115,26 @@ export function parseGuildSave(serialized: string | null): GuildProfile | undefi
   if (!serialized) return undefined;
   try {
     const parsed: unknown = JSON.parse(serialized);
-    return isValidProfile(parsed) ? parsed : undefined;
+    if (!isCompatibleProfile(parsed) || !isRecord(parsed)) return undefined;
+    return {
+      ...(parsed as unknown as Omit<GuildProfile, 'version' | 'materials' | 'selectedBuildId'>),
+      version: 2,
+      materials: isMaterials(parsed.materials)
+        ? (parsed.materials as Readonly<Record<string, number>>)
+        : {},
+      selectedBuildId:
+        typeof parsed.selectedBuildId === 'string' ? parsed.selectedBuildId : 'retaliation',
+    };
   } catch {
     return undefined;
   }
 }
 
 export function loadGuildSave(storage: Pick<Storage, 'getItem'>) {
-  return parseGuildSave(storage.getItem(GUILD_SAVE_KEY));
+  return (
+    parseGuildSave(storage.getItem(GUILD_SAVE_KEY)) ??
+    parseGuildSave(storage.getItem(LEGACY_GUILD_SAVE_KEY))
+  );
 }
 
 export function storeGuildSave(storage: Pick<Storage, 'setItem'>, profile: GuildProfile) {

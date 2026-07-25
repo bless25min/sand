@@ -1,0 +1,218 @@
+import type {
+  ComboRuntimeState,
+  GuildBattleState,
+  GuildProfile,
+  HuntDefinition,
+} from '@expedition/shared-types';
+import { describe, expect, it } from 'vitest';
+
+import type { RandomSource } from '../../rng/random-source';
+import { calculateHuntRewards } from './calculate-hunt-rewards';
+
+class FixedRandom implements RandomSource {
+  constructor(private readonly value: number) {}
+  next() {
+    return this.value;
+  }
+  nextInt(minimum: number) {
+    return minimum;
+  }
+}
+
+const hunt: HuntDefinition = {
+  id: 'training-hunt',
+  questId: 'training',
+  rewardExperience: 30,
+  rewardGold: 20,
+  bossEnemyId: 'boss',
+  guardEnemyIds: ['guard-a', 'guard-b'],
+  enemies: [
+    {
+      enemyId: 'guard-a',
+      material: { id: 'guard-a-shard', name: '甲碎片', baseQuantity: 1 },
+      equipment: [
+        {
+          id: 'guard-a-blade',
+          name: '甲之刃',
+          slot: 'weapon',
+          mainStat: 'attack',
+          baseValue: 8,
+        },
+      ],
+    },
+    {
+      enemyId: 'guard-b',
+      material: { id: 'guard-b-shard', name: '乙碎片', baseQuantity: 1 },
+      equipment: [
+        {
+          id: 'guard-b-mail',
+          name: '乙之甲',
+          slot: 'armor',
+          mainStat: 'defense',
+          baseValue: 8,
+        },
+      ],
+    },
+    {
+      enemyId: 'boss',
+      material: { id: 'boss-core', name: '王核', baseQuantity: 2 },
+      equipment: [
+        {
+          id: 'boss-crown',
+          name: '王冠',
+          slot: 'accessory',
+          mainStat: 'speed',
+          baseValue: 4,
+          ruleIds: ['boss-rule'],
+        },
+      ],
+    },
+  ],
+  annihilationChest: {
+    id: 'annihilation-chest',
+    name: '殲滅寶箱',
+    slot: 'accessory',
+    mainStat: 'attack',
+    baseValue: 12,
+    ruleIds: ['chest-rule'],
+  },
+};
+
+const profile: GuildProfile = {
+  version: 2,
+  leaderId: 'hero',
+  party: [],
+  inventory: [],
+  materials: {},
+  gold: 0,
+  unlockedQuestIds: ['training'],
+  questRecords: {},
+  nextLootSeed: 7,
+  selectedBuildId: 'retaliation',
+};
+
+function combo(
+  startRatios: Readonly<Record<string, number>>,
+  sharedOverflow = 0,
+): ComboRuntimeState {
+  return {
+    phase: 'complete',
+    draft: { cardIds: [] },
+    availableCardIds: [],
+    events: [
+      {
+        id: 0,
+        causalId: 'overkill:guard-a',
+        kind: 'overkill',
+        message: 'OVERKILL',
+        targetId: 'guard-a',
+        amount: 40,
+      },
+    ],
+    metrics: {
+      comboCount: 3,
+      totalDamage: 500,
+      totalOverkill: 40 + sharedOverflow,
+      defeatedEnemyIds: Object.keys(startRatios),
+      annihilationOverflow: sharedOverflow,
+    },
+    lastCommandEventStartIndex: 0,
+    lastCommandEnemyStartHpRatios: startRatios,
+  };
+}
+
+function battle(
+  status: GuildBattleState['status'],
+  killedEnemyIds: readonly string[],
+  startRatios: Readonly<Record<string, number>> = {},
+  sharedOverflow = 0,
+): GuildBattleState {
+  const enemyIds = ['guard-a', 'guard-b', 'boss'];
+  return {
+    questId: 'training',
+    seed: 'reward-seed',
+    elapsedMs: 12_000,
+    sequence: 20,
+    status,
+    units: enemyIds.map((id) => ({
+      id,
+      name: id,
+      side: 'enemies' as const,
+      stats: { hp: 100, attack: 1, defense: 1, speed: 1, healing: 0 },
+      currentHp: killedEnemyIds.includes(id) ? 0 : 50,
+      gauge: 0,
+      threat: 0,
+      guarding: false,
+      isLeader: false,
+      skillIds: [],
+    })),
+    leaderAuto: false,
+    events: [],
+    combo: combo(startRatios, sharedOverflow),
+  };
+}
+
+describe('hunt reward calculation', () => {
+  it('awards enemy materials but never equipment on failure', () => {
+    const rewards = calculateHuntRewards(
+      { profile, battle: battle('defeat', []), hunt },
+      new FixedRandom(0.5),
+    );
+
+    expect(rewards.successful).toBe(false);
+    expect(rewards.items).toEqual([]);
+    expect(rewards.materials.map((material) => material.id)).toEqual([
+      'guard-a-shard',
+      'guard-b-shard',
+      'boss-core',
+    ]);
+  });
+
+  it('unlocks only killed enemy equipment and keeps rarity deterministic', () => {
+    const input = {
+      profile,
+      battle: battle('victory', ['guard-a'], { 'guard-a': 1 }),
+      hunt,
+    };
+    const first = calculateHuntRewards(input, new FixedRandom(0.8));
+    const second = calculateHuntRewards(input, new FixedRandom(0.8));
+
+    expect(first).toEqual(second);
+    expect(first.items).toHaveLength(1);
+    expect(first.items[0]).toMatchObject({
+      baseId: 'guard-a-blade',
+      sourceEnemyId: 'guard-a',
+    });
+  });
+
+  it('stacks every annihilation axis and preserves shared overflow in all item quality', () => {
+    const startRatios = { 'guard-a': 1, 'guard-b': 1, boss: 1 };
+    const rewards = calculateHuntRewards(
+      { profile, battle: battle('victory', Object.keys(startRatios), startRatios, 180), hunt },
+      new FixedRandom(0.4),
+    );
+
+    expect(rewards.axes).toMatchObject({
+      multiKill: 3,
+      chainWipe: true,
+      annihilation: true,
+      perfectAnnihilation: true,
+      bossChest: true,
+      sharedOverflow: 180,
+    });
+    expect(rewards.axes.quantityMultiplier).toBeGreaterThan(1);
+    expect(rewards.items.some((item) => item.jackpot)).toBe(true);
+    expect(rewards.items.every((item) => item.qualityScore >= 180)).toBe(true);
+  });
+
+  it('does not award Perfect Annihilation when one enemy started below ninety percent', () => {
+    const startRatios = { 'guard-a': 1, 'guard-b': 0.8, boss: 1 };
+    const rewards = calculateHuntRewards(
+      { profile, battle: battle('victory', Object.keys(startRatios), startRatios), hunt },
+      new FixedRandom(0),
+    );
+
+    expect(rewards.axes.annihilation).toBe(true);
+    expect(rewards.axes.perfectAnnihilation).toBe(false);
+  });
+});
