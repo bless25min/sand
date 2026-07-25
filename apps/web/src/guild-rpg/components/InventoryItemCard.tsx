@@ -1,3 +1,4 @@
+import { GUILD_GAME_CONTENT } from '@expedition/game-data';
 import type { EquipmentItem } from '@expedition/shared-types';
 import type { ReactNode } from 'react';
 
@@ -32,6 +33,14 @@ export function InventoryItemCard({ item, selected = false, children }: Inventor
               .join(' · ')
           : '無附加屬性'}
       </span>
+      {item.ruleIds && item.ruleIds.length > 0 && (
+        <span>
+          規則節點：
+          {item.ruleIds
+            .map((ruleId) => GUILD_GAME_CONTENT.rules[ruleId]?.name ?? ruleId)
+            .join(' · ')}
+        </span>
+      )}
       {children}
     </article>
   );

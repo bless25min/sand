@@ -60,6 +60,14 @@ export function EquipmentCard({
           <li>無附加屬性</li>
         )}
       </ul>
+      {item.ruleIds && item.ruleIds.length > 0 && (
+        <p>
+          規則節點：
+          {item.ruleIds
+            .map((ruleId) => GUILD_GAME_CONTENT.rules[ruleId]?.name ?? ruleId)
+            .join(' · ')}
+        </p>
+      )}
       <label>
         比較對象
         <select value={adventurerId} onChange={(event) => setAdventurerId(event.target.value)}>

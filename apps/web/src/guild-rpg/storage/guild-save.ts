@@ -36,7 +36,9 @@ function isEquipment(value: unknown) {
     isModifier(value.mainStat) &&
     Array.isArray(value.affixes) &&
     value.affixes.every(isModifier) &&
-    isFiniteNumber(value.sellValue)
+    isFiniteNumber(value.sellValue) &&
+    (value.ruleIds === undefined ||
+      (Array.isArray(value.ruleIds) && value.ruleIds.every((ruleId) => typeof ruleId === 'string')))
   );
 }
 
@@ -68,6 +70,7 @@ function isValidProfile(value: unknown): value is GuildProfile {
     !value.inventory.every(isEquipment) ||
     !Array.isArray(value.unlockedQuestIds) ||
     !value.unlockedQuestIds.every((questId) => typeof questId === 'string') ||
+    (value.selectedBuildId !== undefined && typeof value.selectedBuildId !== 'string') ||
     !isQuestRecords(value.questRecords)
   ) {
     return false;

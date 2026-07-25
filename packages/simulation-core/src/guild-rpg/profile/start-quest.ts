@@ -1,6 +1,7 @@
 import type { GuildGameContent, GuildProfile } from '@expedition/shared-types';
 
 import { createGuildBattle } from '../battle/create-battle';
+import { compileBuild } from '../combo/compile-build';
 
 export function startGuildQuest(
   profile: GuildProfile,
@@ -20,15 +21,13 @@ export function startGuildQuest(
     seed: `${questId}-${profile.nextLootSeed}`,
     leaderAuto,
   });
-  const partyIds = new Set(profile.party.map((member) => member.definitionId));
+  const build = compileBuild(profile, content);
   return {
     ...battle,
     combo: {
       phase: 'composing' as const,
       draft: { cardIds: [] },
-      availableCardIds: Object.values(content.cards)
-        .filter((card) => partyIds.has(card.ownerId))
-        .map((card) => card.id),
+      availableCardIds: build.cardIds,
       events: [],
       metrics: {
         comboCount: 0,

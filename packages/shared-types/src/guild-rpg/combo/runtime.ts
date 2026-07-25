@@ -5,6 +5,7 @@ export interface CommandDraft {
 export interface CompiledCommandStep {
   cardId: string;
   causalId: string;
+  emittedTags: readonly string[];
 }
 
 export interface CompiledCommand {
@@ -21,6 +22,8 @@ export type ComboEventKind =
   | 'unit_defeated'
   | 'overkill'
   | 'enemy_pressure'
+  | 'rule_triggered'
+  | 'infinite_engine'
   | 'victory'
   | 'defeat';
 

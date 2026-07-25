@@ -21,6 +21,7 @@ export interface GuildProfile {
   unlockedQuestIds: readonly string[];
   questRecords: Readonly<Record<string, QuestRecord>>;
   nextLootSeed: number;
+  selectedBuildId?: string;
 }
 
 export interface QuestRewards {

@@ -16,6 +16,27 @@ const FULL_WIPE_COMMAND = [
 ] as const;
 
 describe('guild RPG reducer', () => {
+  it('switches the active build only during guild preparation', () => {
+    const initial = createGuildRpgState();
+    const selected = guildRpgReducer(initial, {
+      type: 'SET_BUILD',
+      buildId: 'ricochet',
+    });
+    const invalid = guildRpgReducer(selected, {
+      type: 'SET_BUILD',
+      buildId: 'missing',
+    });
+
+    expect(selected.profile.selectedBuildId).toBe('ricochet');
+    expect(invalid).toBe(selected);
+    expect(
+      guildRpgReducer(guildRpgReducer(selected, { type: 'START_QUEST', questId: 'border_pack' }), {
+        type: 'SET_BUILD',
+        buildId: 'retaliation',
+      }).profile.selectedBuildId,
+    ).toBe('ricochet');
+  });
+
   it('composes and releases one complete command into rewards and replay', () => {
     let state = guildRpgReducer(createGuildRpgState(), {
       type: 'START_QUEST',

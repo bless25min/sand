@@ -58,6 +58,18 @@ describe('right-thumb mobile flow', () => {
     expect(markup).toContain('開始遠征');
   });
 
+  it('shows three switchable build graphs during guild preparation', () => {
+    const markup = renderToStaticMarkup(
+      <GuildScreen state={createGuildRpgState()} dispatch={dispatch} />,
+    );
+
+    expect(markup).toContain('反擊壁壘');
+    expect(markup).toContain('殲滅彈射');
+    expect(markup).toContain('溢療裁決');
+    expect(markup).toContain('切換 Build');
+    expect(markup).toContain('目前規則');
+  });
+
   it('offers party and inventory decisions without leaving the guild thumb zone', () => {
     const partyMarkup = renderToStaticMarkup(
       <GuildMobileStage state={createGuildRpgState()} dispatch={dispatch} initialPage="party" />,

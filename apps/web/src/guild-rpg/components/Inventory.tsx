@@ -16,7 +16,7 @@ export function Inventory({ state, dispatch }: InventoryProps) {
           <p>VAULT · {state.profile.inventory.length}/20</p>
           <h2 id="inventory-title">公會背包</h2>
         </div>
-        <span>純文字裝備；數值與搭配就是全部</span>
+        <span>文字裝備同時提供數值與可編入 Build 的規則節點</span>
       </div>
       {state.profile.inventory.length === 0 ? (
         <div className="gr-empty">完成遠征並選擇「保留」，裝備就會出現在這裡。</div>

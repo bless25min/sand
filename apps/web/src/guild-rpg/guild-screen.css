@@ -57,3 +57,66 @@
     font-size: clamp(2.8rem, 14vw, 4.8rem);
   }
 }
+.gr-build-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.gr-build-grid .gr-card {
+  display: grid;
+  gap: 8px;
+  padding: 18px;
+}
+
+.gr-build-grid .gr-card.is-selected {
+  border-color: #dca447;
+  box-shadow: inset 3px 0 #dca447;
+}
+
+.gr-build-grid p,
+.gr-build-grid h3,
+.gr-build-grid span {
+  margin: 0;
+}
+
+.gr-build-grid p,
+.gr-build-graph span {
+  color: #dca447;
+  font-size: 0.62rem;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+}
+
+.gr-build-grid span {
+  min-height: 44px;
+  color: #919b99;
+  font-size: 0.72rem;
+  line-height: 1.5;
+}
+
+.gr-build-graph {
+  display: grid;
+  grid-template-columns: 1fr 0.5fr 1.5fr 0.6fr;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.gr-build-graph div {
+  display: grid;
+  gap: 4px;
+  padding: 10px;
+  border: 1px solid #ffffff14;
+  background: #0d1214;
+}
+
+.gr-build-graph strong {
+  font-size: 0.75rem;
+}
+
+@media (max-width: 900px) {
+  .gr-build-grid,
+  .gr-build-graph {
+    grid-template-columns: 1fr;
+  }
+}

@@ -2,7 +2,9 @@ import type { GuildGameContent, GuildProfile } from '@expedition/shared-types';
 
 export function createGuildProfile(content: GuildGameContent): GuildProfile {
   const firstQuest = content.quests[0];
+  const firstBuild = content.builds[0];
   if (!firstQuest) throw new Error('Guild RPG content requires at least one quest');
+  if (!firstBuild) throw new Error('Guild RPG content requires at least one combo build');
   if (content.adventurers.length !== 3) throw new Error('Guild RPG MVP requires three adventurers');
 
   const preferredLeader =
@@ -23,5 +25,6 @@ export function createGuildProfile(content: GuildGameContent): GuildProfile {
     unlockedQuestIds: [firstQuest.id],
     questRecords: {},
     nextLootSeed: 1,
+    selectedBuildId: firstBuild.id,
   };
 }

@@ -7,6 +7,7 @@ import { createSeededRandom } from '../../rng/seeded-random';
 import { resolveItemChoice } from '../equipment/resolve-item-choice';
 import { equipStoredItem } from '../equipment/equip-stored-item';
 import { equipmentPower } from '../equipment/compare-equipment';
+import { compileBuild } from '../combo/compile-build';
 import { createGuildProfile } from './create-profile';
 import { applyQuestRewards } from '../rewards/apply-rewards';
 import { generateEquipmentItem, generateQuestRewards } from '../rewards/generate-rewards';
@@ -55,6 +56,28 @@ describe('guild profile and rewards', () => {
     expect(profile.leaderId).toBe('lyra');
     expect(profile.unlockedQuestIds).toEqual(['border_pack']);
     expect(profile.inventory).toEqual([]);
+    expect(profile.selectedBuildId).toBe('retaliation');
+  });
+
+  it('compiles the selected build with rule-bearing equipment', () => {
+    const profile = createGuildProfile(GUILD_GAME_CONTENT);
+    const ruleItem = { ...item('rule-weapon'), ruleIds: ['steel_echo'] };
+    const configured = {
+      ...profile,
+      selectedBuildId: 'ricochet',
+      party: profile.party.map((member) =>
+        member.definitionId === 'lyra'
+          ? { ...member, equipment: { ...member.equipment, weapon: ruleItem } }
+          : member,
+      ),
+    };
+
+    const compiled = compileBuild(configured, GUILD_GAME_CONTENT);
+    expect(compiled.buildId).toBe('ricochet');
+    expect(compiled.cardIds).toEqual(
+      GUILD_GAME_CONTENT.builds.find((build) => build.id === 'ricochet')?.cardIds,
+    );
+    expect(compiled.ruleIds).toEqual(expect.arrayContaining(['ricochet_fork', 'steel_echo']));
   });
 
   it('generates deterministic victory rewards and no defeat reward', () => {

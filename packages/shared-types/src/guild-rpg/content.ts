@@ -1,5 +1,6 @@
 import type { EquipmentAffixDefinition, EquipmentBaseDefinition } from './equipment';
 import type { CardCatalog } from './combo/content';
+import type { BuildDefinition, RuleCatalog } from './combo/rules';
 import type { GuildStats } from './stats';
 
 export type AdventurerRole = 'vanguard' | 'ranger' | 'cleric';
@@ -44,6 +45,8 @@ export interface QuestDefinition {
 export interface GuildGameContent {
   adventurers: readonly AdventurerDefinition[];
   cards: CardCatalog;
+  rules: RuleCatalog;
+  builds: readonly BuildDefinition[];
   skills: Readonly<Record<string, GuildSkillDefinition>>;
   quests: readonly QuestDefinition[];
   equipmentBases: readonly EquipmentBaseDefinition[];

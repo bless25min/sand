@@ -21,7 +21,11 @@ export function compileCommand(draft: CommandDraft, cards: CardCatalog): Compile
       diagnostics.push(`${card.name}需要 ${missingTags.join(', ')}`);
       return;
     }
-    steps.push({ cardId, causalId: `card:${index}:${cardId}` });
+    steps.push({
+      cardId,
+      causalId: `card:${index}:${cardId}`,
+      emittedTags: [...card.emitsTags],
+    });
     card.emitsTags.forEach((tag) => emittedTags.add(tag));
   });
 

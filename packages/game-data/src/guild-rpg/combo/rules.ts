@@ -1,0 +1,58 @@
+import type { RuleCatalog } from '@expedition/shared-types';
+
+export const GUILD_COMBO_RULES: RuleCatalog = {
+  retaliation_bash: {
+    id: 'retaliation_bash',
+    name: '格擋反震',
+    description: '每次 Block 對集火目標追加反擊。',
+    trigger: 'block',
+    selector: 'target',
+    effects: [{ kind: 'damage', amount: 45 }],
+    transforms: ['repeat'],
+  },
+  ricochet_fork: {
+    id: 'ricochet_fork',
+    name: '彈射分岔',
+    description: '每次 Hit 對全體追加彈射傷害。',
+    trigger: 'hit',
+    selector: 'all',
+    effects: [{ kind: 'damage', amount: 18 }],
+    transforms: ['fork', 'ricochet'],
+  },
+  overflow_judgment: {
+    id: 'overflow_judgment',
+    name: '溢療裁決',
+    description: 'HealOverflow 轉為全體裁決傷害。',
+    trigger: 'heal_overflow',
+    selector: 'all',
+    effects: [{ kind: 'damage', amount: 25 }],
+    transforms: ['convert_element', 'multiply'],
+  },
+  steel_echo: {
+    id: 'steel_echo',
+    name: '鐵刃回音',
+    description: '每張卡牌追加一次武器回音。',
+    trigger: 'card_played',
+    selector: 'target',
+    effects: [{ kind: 'damage', amount: 8 }],
+    transforms: ['copy_next'],
+  },
+  ricochet_focus: {
+    id: 'ricochet_focus',
+    name: '長弓折射',
+    description: '裝備長弓後，Hit 追加微型彈射。',
+    trigger: 'hit',
+    selector: 'all',
+    effects: [{ kind: 'damage', amount: 8 }],
+    transforms: ['ricochet'],
+  },
+  overflow_reserve: {
+    id: 'overflow_reserve',
+    name: '橡木溢流',
+    description: '法杖把 HealOverflow 轉成額外傷害。',
+    trigger: 'heal_overflow',
+    selector: 'all',
+    effects: [{ kind: 'damage', amount: 10 }],
+    transforms: ['multiply'],
+  },
+};

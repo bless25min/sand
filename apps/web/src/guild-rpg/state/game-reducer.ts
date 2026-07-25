@@ -9,6 +9,7 @@ import {
   advanceGuildBattle,
   advanceComposition,
   applyQuestRewards,
+  compileBuild,
   createSeededRandom,
   equipStoredItem,
   generateQuestRewards,
@@ -37,6 +38,7 @@ export type GuildRpgAction =
   | { type: 'USE_SKILL'; skillId: string; targetId: string }
   | { type: 'TOGGLE_AUTO' }
   | { type: 'SET_SPEED'; speed: 1 | 2 }
+  | { type: 'SET_BUILD'; buildId: string }
   | { type: 'SET_LEADER'; adventurerId: string }
   | { type: 'EQUIP_STORED'; itemId: string; adventurerId: string }
   | { type: 'CHOOSE_ITEM'; itemId: string; choice: ItemChoice; adventurerId: string }
@@ -78,6 +80,15 @@ export function guildRpgReducer(state: GuildRpgState, action: GuildRpgAction): G
     };
   }
   if (action.type === 'SET_SPEED') return { ...state, speed: action.speed };
+  if (action.type === 'SET_BUILD' && state.screen === 'guild') {
+    const build = GUILD_GAME_CONTENT.builds.find((candidate) => candidate.id === action.buildId);
+    if (!build || build.id === state.profile.selectedBuildId) return state;
+    return {
+      ...state,
+      profile: { ...state.profile, selectedBuildId: build.id },
+      message: `已切換為「${build.name}」。下一次軍令將套用新的規則圖。`,
+    };
+  }
   if (action.type === 'SET_LEADER' && state.screen === 'guild') {
     if (!state.profile.party.some((member) => member.definitionId === action.adventurerId)) {
       return state;
@@ -124,7 +135,11 @@ export function guildRpgReducer(state: GuildRpgState, action: GuildRpgAction): G
     action.type === 'UNDO_COMBO_CARD' ||
     action.type === 'RELEASE_COMBO'
   ) {
-    const resolution = reduceComboAction(state.battle, action, GUILD_GAME_CONTENT.cards);
+    const build = compileBuild(state.profile, GUILD_GAME_CONTENT);
+    const rules = Object.fromEntries(
+      build.ruleIds.map((ruleId) => [ruleId, GUILD_GAME_CONTENT.rules[ruleId]!]),
+    );
+    const resolution = reduceComboAction(state.battle, action, GUILD_GAME_CONTENT.cards, rules);
     const next = { ...state, battle: resolution.battle, message: resolution.message };
     return action.type === 'RELEASE_COMBO' ? finishBattle(next, resolution.battle) : next;
   }

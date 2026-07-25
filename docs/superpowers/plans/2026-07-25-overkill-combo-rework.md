@@ -120,13 +120,13 @@ validateComboContent(content: ComboContent): readonly ContentDiagnostic[]
 compileBuild(profile: GuildProfile, content: ComboContent): CompiledBuild
 ```
 
-- [ ] Write tests for trigger/selector/transform vocabulary, the three anchor builds, equipment graph
+- [x] Write tests for trigger/selector/transform vocabulary, the three anchor builds, equipment graph
       changes, invalid content diagnostics, causal-cycle conversion, and `Infinite Engine`.
-- [ ] Run the focused rules/content/profile tests; verify RED.
-- [ ] Implement the bounded registry, declarative rules, three build loadouts, content validator,
+- [x] Run the focused rules/content/profile tests; verify RED.
+- [x] Implement the bounded registry, declarative rules, three build loadouts, content validator,
       profile selection, and development workbench without adding per-item UI logic.
-- [ ] Re-run affected core, data, profile, reducer, and component tests; verify GREEN.
-- [ ] Perform one Task 2 review, fix findings, run the affected tests, and commit the batch.
+- [x] Re-run affected core, data, profile, reducer, and component tests; verify GREEN.
+- [x] Perform one Task 2 review, fix findings, run the affected tests, and commit the batch.
 
 ### Task 3: Overkill, Annihilation, and Loot Rain
 

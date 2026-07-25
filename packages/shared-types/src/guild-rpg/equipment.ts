@@ -12,6 +12,7 @@ export interface EquipmentItem {
   mainStat: StatModifier;
   affixes: readonly StatModifier[];
   sellValue: number;
+  ruleIds?: readonly string[];
 }
 
 export interface EquipmentLoadout {
@@ -26,6 +27,7 @@ export interface EquipmentBaseDefinition {
   slot: GuildEquipmentSlot;
   mainStat: StatModifier['stat'];
   baseValue: number;
+  ruleIds?: readonly string[];
 }
 
 export interface EquipmentAffixDefinition {

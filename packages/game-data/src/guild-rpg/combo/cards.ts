@@ -75,7 +75,7 @@ const CARDS: readonly ComboCardDefinition[] = [
     ownerId: 'elin',
     name: '晨光祈禱',
     description: '治療最低生命隊友，建立治療觸發。',
-    emitsTags: ['healed'],
+    emitsTags: ['healed', 'heal_overflow'],
     effects: [{ kind: 'heal', target: 'lowest_hp_ally', amount: 45 }],
   },
   {

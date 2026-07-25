@@ -2,6 +2,7 @@ import { GUILD_GAME_CONTENT } from '@expedition/game-data';
 
 import { formatTime } from '../presenters';
 import type { GuildRpgAction, GuildRpgState } from '../state/game-reducer';
+import { BuildWorkbench } from '../dev/BuildWorkbench';
 import { AdventurerCard } from './AdventurerCard';
 import { GuildMobileStage } from './GuildMobileStage';
 import { Inventory } from './Inventory';
@@ -32,8 +33,8 @@ export function GuildScreen({ state, dispatch }: GuildScreenProps) {
           <p className="gr-eyebrow">PREPARE · QUEST · LOOT · REPEAT</p>
           <h1 id="guild-title">三人小隊，一次更好的遠征。</h1>
           <p>
-            選擇隊長親自下令；另外兩名隊員依職責自動作戰。反覆攻略、刷取文字裝備，
-            用更少時間突破下一個據點。
+            切換軍令引擎，讓三名冒險者的卡牌與裝備規則連成同一條因果鏈。
+            反覆攻略、換裝重組，讓下一次釋放更快進入 Overkill。
           </p>
         </div>
         <aside>
@@ -45,13 +46,14 @@ export function GuildScreen({ state, dispatch }: GuildScreenProps) {
       <GuildMobileStage state={state} dispatch={dispatch} />
 
       <div className="gr-guild-desktop">
+        <BuildWorkbench state={state} dispatch={dispatch} />
         <section className="gr-section" aria-labelledby="party-title">
           <div className="gr-section__heading">
             <div>
               <p>ACTIVE PARTY</p>
               <h2 id="party-title">遠征隊伍</h2>
             </div>
-            <span>點選角色即可切換手動隊長</span>
+            <span>裝備可加入新的規則節點；隊長仍代表隊伍視角</span>
           </div>
           <div className="gr-party-grid">
             {state.profile.party.map((member) => {
