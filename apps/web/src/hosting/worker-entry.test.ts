@@ -8,9 +8,10 @@ afterEach(() => {
 
 describe('production Pages worker entry', () => {
   it('proxies API requests to the deployed Worker when no override is configured', async () => {
-    const fetchUpstream = vi.fn(async (_request: Request) =>
-      Response.json({ service: 'worker-api', status: 'ok' }),
-    );
+    const fetchUpstream = vi.fn(async (request: Request) => {
+      expect(request.method).toBe('GET');
+      return Response.json({ service: 'worker-api', status: 'ok' });
+    });
     vi.stubGlobal('fetch', fetchUpstream);
     const fetchAsset = vi.fn(async () => new Response('asset'));
 
