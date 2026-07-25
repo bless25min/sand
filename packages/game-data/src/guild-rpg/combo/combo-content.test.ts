@@ -2,6 +2,7 @@ import type { ComboContent } from '@expedition/shared-types';
 import { describe, expect, it } from 'vitest';
 
 import { GUILD_COMBO_CONTENT } from './index';
+import { GUILD_HUNTS } from './hunts';
 import { validateComboContent } from './validate-content';
 
 describe('combo content factory', () => {
@@ -12,6 +13,28 @@ describe('combo content factory', () => {
       'ricochet',
       'healing_overflow',
     ]);
+  });
+
+  it('gives every hunt readable counters, exclusive equipment, and an annihilation chest', () => {
+    const buildIds = GUILD_COMBO_CONTENT.builds.map((build) => build.id).sort();
+
+    for (const hunt of GUILD_HUNTS) {
+      expect(hunt.annihilationChest, hunt.id).toBeDefined();
+      expect(
+        hunt.enemies.every(
+          (enemy) => (enemy.traits?.length ?? 0) > 0 && enemy.equipment.length > 0,
+        ),
+        hunt.id,
+      ).toBe(true);
+      const favoredBuildIds = [
+        ...new Set(
+          hunt.enemies.flatMap(
+            (enemy) => enemy.traits?.flatMap((trait) => trait.counterBuildIds) ?? [],
+          ),
+        ),
+      ].sort();
+      expect(favoredBuildIds, hunt.id).toEqual(buildIds);
+    }
   });
 
   it('diagnoses unsupported grammar and missing graph references', () => {

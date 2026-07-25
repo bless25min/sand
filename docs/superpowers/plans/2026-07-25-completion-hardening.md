@@ -23,6 +23,7 @@ Hunts remain declarative data. Pages advanced mode reuses the existing hosting a
 ### Task 1: Observable Command Playback
 
 **Files:**
+
 - Modify: `apps/web/src/guild-rpg/state/game-reducer.ts`
 - Create: `apps/web/src/guild-rpg/hooks/use-combo-playback.ts`
 - Create: `apps/web/src/guild-rpg/components/ComboPlaybackScreen.tsx`
@@ -32,6 +33,7 @@ Hunts remain declarative data. Pages advanced mode reuses the existing hosting a
 - Test: reducer and component contract tests under `apps/web/src/guild-rpg`
 
 **Interfaces:**
+
 - Produces: `ComboPlaybackState { eventStartIndex; visibleEventCount }`
 - Produces actions: `ADVANCE_PLAYBACK`, `COMPLETE_PLAYBACK`
 - Consumes: immutable `GuildComboRuntime.events`
@@ -47,23 +49,26 @@ Hunts remain declarative data. Pages advanced mode reuses the existing hosting a
 ### Task 2: Complete Mine and Shrine Hunts
 
 **Files:**
+
 - Modify: `packages/game-data/src/guild-rpg/combo/hunts.ts`
 - Modify: `packages/game-data/src/guild-rpg/combo/combo-content.test.ts`
 - Modify only if validation requires it: `packages/game-data/src/guild-rpg/combo/validate-content.ts`
 
 **Interfaces:**
+
 - Consumes: existing `EnemyTraitDefinition`, three Build IDs, and hunt reward tables.
 - Produces: traits and `annihilationChest` for all three hunts.
 
-- [ ] Add content tests requiring every enemy to expose a trait, every Build to be favored in every
+- [x] Add content tests requiring every enemy to expose a trait, every Build to be favored in every
       hunt, and every hunt to expose a boss-plus-guards chest; verify RED.
-- [ ] Add mine and shrine traits and exclusive chests using only the existing grammar.
-- [ ] Run combo content, golden hunt, and reward tests; verify GREEN.
-- [ ] Commit `feat: complete mine and shrine hunt identities`.
+- [x] Add mine and shrine traits and exclusive chests using only the existing grammar.
+- [x] Run combo content, golden hunt, and reward tests; verify GREEN.
+- [x] Commit `feat: complete mine and shrine hunt identities`.
 
 ### Task 3: Production API, Metadata, and Chunks
 
 **Files:**
+
 - Modify: `apps/web/worker/index.ts`
 - Modify: `apps/web/vite.worker.config.ts`
 - Modify: `scripts/stage-sites-build.mjs`
@@ -73,6 +78,7 @@ Hunts remain declarative data. Pages advanced mode reuses the existing hosting a
 - Test: hosting layout, worker entry, metadata, and Vite config tests
 
 **Interfaces:**
+
 - Produces: Pages `dist/_worker.js` and Sites `dist/server/index.js`.
 - Uses: `API_BASE_URL` override or the production Worker URL.
 - Produces: explicit `react`, `pixi`, and `prototypes` code-splitting groups.
