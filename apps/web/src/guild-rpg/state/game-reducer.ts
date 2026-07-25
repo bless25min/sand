@@ -31,7 +31,7 @@ export interface GuildRpgState {
   message: string;
 }
 
-export interface ComboPlaybackState {
+interface ComboPlaybackState {
   eventStartIndex: number;
   startingUnits: readonly BattleUnit[];
   visibleEventCount: number;
