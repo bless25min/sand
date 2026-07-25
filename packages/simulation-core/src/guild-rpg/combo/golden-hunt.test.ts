@@ -58,7 +58,12 @@ function start(profile: GuildProfile) {
 
 function huntRewards(profile: GuildProfile, battle: GuildBattleState): HuntRewards {
   return calculateHuntRewards(
-    { profile, battle, hunt: GUILD_GAME_CONTENT.hunts[0]! },
+    {
+      profile,
+      battle,
+      hunt: GUILD_GAME_CONTENT.hunts[0]!,
+      equipmentAffixes: GUILD_GAME_CONTENT.equipmentAffixes,
+    },
     createSeededRandom(`${battle.seed}:hunt-loot`),
   );
 }

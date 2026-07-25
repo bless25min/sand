@@ -77,6 +77,24 @@
   letter-spacing: 0.08em;
 }
 
+.gr-reward-linkage,
+.gr-reward-rules {
+  display: grid;
+  gap: 4px;
+  margin: 10px 0 14px;
+  padding: 10px;
+  border-left: 2px solid var(--rarity);
+  background: color-mix(in srgb, var(--rarity) 7%, transparent);
+  color: #aeb7b4;
+  font-size: 0.72rem;
+}
+
+.gr-reward-linkage strong,
+.gr-reward-rules > strong,
+.gr-reward-rules b {
+  color: var(--rarity);
+}
+
 .gr-reward-card ul {
   min-height: 42px;
   margin: 0 0 18px;
@@ -114,6 +132,30 @@
 
 .gr-compare.is-down strong {
   color: #e36d5b;
+}
+
+.gr-stat-diff {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 4px;
+  margin: 10px 0 0;
+}
+
+.gr-stat-diff div {
+  padding: 6px 4px;
+  background: #05080975;
+  text-align: center;
+}
+
+.gr-stat-diff dt {
+  color: #77817f;
+  font-size: 0.56rem;
+}
+
+.gr-stat-diff dd {
+  margin: 2px 0 0;
+  font-size: 0.7rem;
+  font-weight: 900;
 }
 
 .gr-reward-actions {

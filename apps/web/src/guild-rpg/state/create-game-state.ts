@@ -10,6 +10,7 @@ export function createGuildRpgState(profile?: GuildProfile): GuildRpgState {
     profile: profile ?? createGuildProfile(GUILD_GAME_CONTENT),
     speed: 1,
     resolvedItemIds: [],
+    activatedRuleIds: [],
     message: profile ? '公會紀錄已載入。' : '新的遠征公會已成立。',
   };
 }

@@ -59,6 +59,7 @@ export function GuildMobileStage({
           quest,
           questCount: GUILD_GAME_CONTENT.quests.length,
           unlocked,
+          replay: Boolean(state.profile.questRecords[quest.id]),
           dispatch,
           setQuestIndex,
         })
@@ -95,6 +96,7 @@ export function GuildMobileStage({
           questUnlocked={unlocked}
           member={member}
           hero={hero}
+          selectedBuildId={state.profile.selectedBuildId}
           isLeader={member.definitionId === state.profile.leaderId}
           visibleItems={visibleItems}
           selectedItemId={selectedItem?.id}

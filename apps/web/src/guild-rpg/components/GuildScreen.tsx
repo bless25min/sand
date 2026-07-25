@@ -1,5 +1,6 @@
 import { GUILD_GAME_CONTENT } from '@expedition/game-data';
 
+import { createHuntSensationModel } from '../presentation/hunt-sensation-model';
 import { formatTime } from '../presenters';
 import type { GuildRpgAction, GuildRpgState } from '../state/game-reducer';
 import { BuildWorkbench } from '../dev/BuildWorkbench';
@@ -93,6 +94,11 @@ export function GuildScreen({ state, dispatch }: GuildScreenProps) {
             {GUILD_GAME_CONTENT.quests.map((quest, index) => {
               const unlocked = state.profile.unlockedQuestIds.includes(quest.id);
               const record = state.profile.questRecords[quest.id];
+              const sensation = createHuntSensationModel(
+                quest.id,
+                state.profile.selectedBuildId,
+                GUILD_GAME_CONTENT,
+              );
               return (
                 <article
                   className={`gr-card gr-quest ${unlocked ? '' : 'is-locked'}`}
@@ -102,6 +108,15 @@ export function GuildScreen({ state, dispatch }: GuildScreenProps) {
                   <p>{unlocked ? `建議 Lv.${quest.recommendedLevel}` : '尚未解鎖'}</p>
                   <h3>{quest.name}</h3>
                   <p>{quest.description}</p>
+                  <div className="gr-quest__intel">
+                    <strong>
+                      {sensation.build.payoffLabel} · 可破{' '}
+                      {sensation.counterTargets.join('、') || '等待切換 Build'}
+                    </strong>
+                    <span>處刑順序：{sensation.executionOrder.join(' → ')}</span>
+                    <span>專屬掉落：{sensation.exclusiveDropNames.join('、')}</span>
+                    {sensation.chestName && <b>殲滅寶箱：{sensation.chestName}</b>}
+                  </div>
                   <dl>
                     <div>
                       <dt>敵軍</dt>
@@ -143,7 +158,7 @@ export function GuildScreen({ state, dispatch }: GuildScreenProps) {
                     title={unlocked ? undefined : '先完成上一個遠征委託'}
                     onClick={() => dispatch({ type: 'START_QUEST', questId: quest.id })}
                   >
-                    {unlocked ? '開始遠征' : '需要前置勝利'}
+                    {unlocked ? (record ? '帶新引擎重刷' : '開始遠征') : '需要前置勝利'}
                   </button>
                 </article>
               );

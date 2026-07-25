@@ -86,4 +86,25 @@
   .gr-mobile-reward-stage .gr-compare {
     margin-top: 7px;
   }
+
+  .gr-mobile-reward-stage .gr-reward-linkage,
+  .gr-mobile-reward-stage .gr-reward-rules {
+    margin: 6px 0;
+    padding: 6px 8px;
+    font-size: 0.6rem;
+  }
+
+  .gr-mobile-reward-stage .gr-reward-rules span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .gr-mobile-reward-stage .gr-stat-diff {
+    margin-top: 6px;
+  }
+
+  .gr-mobile-reward-stage .gr-stat-diff div {
+    padding: 3px 2px;
+  }
 }

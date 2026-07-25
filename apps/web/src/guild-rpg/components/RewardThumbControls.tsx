@@ -3,6 +3,7 @@ import type { ItemChoice } from '@expedition/shared-types';
 import { useState } from 'react';
 
 import { wrapThumbIndex } from '../mobile/thumb-deck-model';
+import { createEquipmentSensationModel } from '../presentation/equipment-sensation-model';
 import type { GuildRpgAction, GuildRpgState } from '../state/game-reducer';
 import { EquipmentCard } from './EquipmentCard';
 import { ThumbCommandDeck, type ThumbDeckAction } from './ThumbCommandDeck';
@@ -15,12 +16,17 @@ interface RewardThumbControlsProps {
 export function RewardThumbControls({ state, dispatch }: RewardThumbControlsProps) {
   const rewards = state.rewards!;
   const [itemIndex, setItemIndex] = useState(0);
-  const [adventurerIndex, setAdventurerIndex] = useState(() =>
-    Math.max(
+  const [adventurerIndex, setAdventurerIndex] = useState(() => {
+    const firstItem = rewards.items[0];
+    const bestId = firstItem
+      ? createEquipmentSensationModel(firstItem, state.profile, GUILD_GAME_CONTENT).bestAdventurer
+          .id
+      : state.profile.leaderId;
+    return Math.max(
       0,
-      state.profile.party.findIndex((member) => member.definitionId === state.profile.leaderId),
-    ),
-  );
+      state.profile.party.findIndex((member) => member.definitionId === bestId),
+    );
+  });
   const [sellConfirmationId, setSellConfirmationId] = useState<string>();
   const item = rewards.items[itemIndex];
   const adventurer = state.profile.party[adventurerIndex]!;
@@ -33,7 +39,17 @@ export function RewardThumbControls({ state, dispatch }: RewardThumbControlsProp
   function nextItem() {
     if (rewards.items.length === 0) return;
     setSellConfirmationId(undefined);
-    setItemIndex((current) => wrapThumbIndex(current, rewards.items.length, 1));
+    const nextIndex = wrapThumbIndex(itemIndex, rewards.items.length, 1);
+    const next = rewards.items[nextIndex]!;
+    const bestId = createEquipmentSensationModel(next, state.profile, GUILD_GAME_CONTENT)
+      .bestAdventurer.id;
+    setItemIndex(nextIndex);
+    setAdventurerIndex(
+      Math.max(
+        0,
+        state.profile.party.findIndex((member) => member.definitionId === bestId),
+      ),
+    );
   }
 
   function resolve(choice: ItemChoice) {
@@ -131,7 +147,7 @@ export function RewardThumbControls({ state, dispatch }: RewardThumbControlsProp
         ariaLabel="戰利品操作"
         eyebrow={allResolved ? 'LOOT COMPLETE' : `LOOT ${itemIndex + 1}/${rewards.items.length}`}
         title={allResolved || !item ? '戰利品已處理完成' : item.name}
-        status={allResolved ? '可以返回公會' : `比較：${hero.name}`}
+        status={allResolved ? '可以返回公會' : `最佳裝備者：${hero.name}`}
         feedback={state.message}
         actions={actions}
       />

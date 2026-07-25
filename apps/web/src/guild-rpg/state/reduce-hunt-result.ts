@@ -25,7 +25,7 @@ export function reduceHuntResult(
   const hunt = content.hunts.find((candidate) => candidate.questId === battle.questId);
   if (!hunt) throw new Error(`Unknown hunt for quest: ${battle.questId}`);
   const rewards = calculateHuntRewards(
-    { profile, battle, hunt },
+    { profile, battle, hunt, equipmentAffixes: content.equipmentAffixes },
     createSeededRandom(`${battle.seed}:hunt-loot`),
   );
   return {

@@ -31,6 +31,25 @@
   line-height: 1.5;
 }
 
+.gr-quest__intel {
+  display: grid;
+  gap: 4px;
+  margin: 14px 0;
+  padding: 10px;
+  border-left: 2px solid #dca447;
+  background: #dca4470b;
+  font-size: 0.68rem;
+}
+
+.gr-quest__intel strong,
+.gr-quest__intel b {
+  color: #edbf6c;
+}
+
+.gr-quest__intel span {
+  color: #9aa4a1;
+}
+
 .gr-quest dl {
   display: grid;
   grid-template-columns: 1fr 1fr;

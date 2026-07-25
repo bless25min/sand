@@ -136,7 +136,7 @@ function playbackImpact(
   }
   if (latest.kind === 'rule_triggered') return { kind: 'trigger', label: 'RULE TRIGGERED' };
   if (stage === 'overkill') {
-    const overkill = events.findLast((event) =>
+    const overkill = findLastEvent(events, (event) =>
       ['overkill', 'infinite_engine'].includes(event.kind),
     );
     return {
@@ -147,7 +147,7 @@ function playbackImpact(
     };
   }
   if (stage === 'break') {
-    const defeated = events.findLast((event) => event.kind === 'unit_defeated');
+    const defeated = findLastEvent(events, (event) => event.kind === 'unit_defeated');
     return {
       kind: 'kill',
       ...(defeated?.targetId ? { targetId: defeated.targetId } : {}),
@@ -157,6 +157,14 @@ function playbackImpact(
   return stage === 'trigger'
     ? { kind: 'trigger', label: 'ENGINE CHAINING' }
     : { kind: 'stack', label: 'STACKING' };
+}
+
+function findLastEvent(events: readonly ComboEvent[], predicate: (event: ComboEvent) => boolean) {
+  for (let index = events.length - 1; index >= 0; index -= 1) {
+    const event = events[index]!;
+    if (predicate(event)) return event;
+  }
+  return undefined;
 }
 
 function isImpactEvent(event?: ComboEvent) {

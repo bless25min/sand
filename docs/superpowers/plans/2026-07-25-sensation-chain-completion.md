@@ -60,13 +60,13 @@ target, signature route, predicted damage/kills/Overkill, reward ladder, and nex
 - Modify: `BattleScreen.tsx`, `BattleUnitCard.tsx`, `CommandComposer.tsx`,
   `BattleThumbControls.tsx`, `battle.css`, `battle-command.css`, mobile battle CSS and tests
 
-- [ ] Write failing core/content/presenter tests for clone-safe preview, milestones, build identity,
+- [x] Write failing core/content/presenter tests for clone-safe preview, milestones, build identity,
       pressure labels, guard/counter context, signature progress, and next-card guidance.
-- [ ] Run the focused tests and verify RED for missing behavior, not syntax.
-- [ ] Add the minimal metadata, preview resolver, presentation model, battle cockpit, execution-target
+- [x] Run the focused tests and verify RED for missing behavior, not syntax.
+- [x] Add the minimal metadata, preview resolver, presentation model, battle cockpit, execution-target
       treatment, and forecast panels; preview exceptions must leave compose/release usable.
-- [ ] Re-run focused core/data/web tests and verify GREEN.
-- [ ] Review the player-visible Task 1 chain once, fix findings, and commit.
+- [x] Re-run focused core/data/web tests and verify GREEN.
+- [x] Review the player-visible Task 1 chain once, fix findings, and commit.
 
 ### Task 2: Release Into an Escalating Annihilation
 
@@ -80,13 +80,13 @@ natural acceleration and layered impact make the same deterministic event stream
 - Modify: `ComboPlayback.tsx`, `ComboPlaybackScreen.tsx`, `BattleUnitCard.tsx`
 - Modify: battle/playback CSS and `combo-flow-contract.test.tsx`
 
-- [ ] Write failing model/component tests for all five stages, event-aware acceleration, current
+- [x] Write failing model/component tests for all five stages, event-aware acceleration, current
       impact, kill/Overkill/annihilation cues, climax-preserving skip, and reduced-motion semantics.
-- [ ] Run focused playback/component tests and verify RED.
-- [ ] Derive presentation stages from emitted events, add layered hit/guard-break/kill/Overkill
+- [x] Run focused playback/component tests and verify RED.
+- [x] Derive presentation stages from emitted events, add layered hit/guard-break/kill/Overkill
       emphasis, accelerate dense chains, and preserve final projection when skipped.
-- [ ] Re-run focused tests and verify GREEN.
-- [ ] Review the player-visible Task 2 chain once, fix findings, and commit.
+- [x] Re-run focused tests and verify GREEN.
+- [x] Review the player-visible Task 2 chain once, fix findings, and commit.
 
 ### Task 3: Turn Loot Into the Next Engine
 
@@ -103,13 +103,13 @@ states what rule just joined the engine.
 - Modify: `EquipmentCard.tsx`, `RewardScreen.tsx`, `GuildScreen.tsx`, reward/guild CSS
 - Modify: reducer, golden-flow, storage, presenter, component, and mobile contract tests
 
-- [ ] Write failing reward/presenter/reducer/UI tests for bounded decision drops, rarity affix counts,
+- [x] Write failing reward/presenter/reducer/UI tests for bounded decision drops, rarity affix counts,
       source/build/rule links, best-owner default, full comparison, activated-rule feedback, records,
       and one-tap replay cue.
-- [ ] Run focused tests and verify RED.
-- [ ] Generate one item per eligible enemy and one annihilation chest, select affixes from the
+- [x] Run focused tests and verify RED.
+- [x] Generate one item per eligible enemy and one annihilation chest, select affixes from the
       existing catalog deterministically, enrich equipment presentation, and close the guild loop.
-- [ ] Re-run all Guild RPG tests and verify GREEN.
+- [x] Re-run all Guild RPG tests and verify GREEN.
 - [ ] Perform one consolidated requirements review, fix findings, rerun focused verification,
       commit, then run `pnpm check` once.
 

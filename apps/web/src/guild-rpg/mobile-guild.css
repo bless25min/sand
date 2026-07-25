@@ -58,6 +58,14 @@
     color: #dcb05f;
   }
 
+  .gr-mobile-guild-stage .gr-quest > span {
+    display: block;
+    margin-top: 8px;
+    color: #9da7a4;
+    font-size: 0.68rem;
+    line-height: 1.45;
+  }
+
   .gr-mobile-guild-stage .gr-hero-card {
     padding: 16px;
   }

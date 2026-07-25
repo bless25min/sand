@@ -11,9 +11,18 @@ function equipment(
   slot: GuildEquipmentSlot,
   mainStat: GuildStatKey,
   baseValue: number,
+  recommendedBuildIds: readonly string[],
   ruleIds: readonly string[] = [],
 ): HuntEquipmentDefinition {
-  return { id, name, slot, mainStat, baseValue, ...(ruleIds.length ? { ruleIds } : {}) };
+  return {
+    id,
+    name,
+    slot,
+    mainStat,
+    baseValue,
+    recommendedBuildIds,
+    ...(ruleIds.length ? { ruleIds } : {}),
+  };
 }
 
 export const GUILD_HUNTS: readonly HuntDefinition[] = [
@@ -40,7 +49,15 @@ export const GUILD_HUNTS: readonly HuntDefinition[] = [
         ],
         material: { id: 'scout_fang', name: '斥候狼牙', baseQuantity: 1 },
         equipment: [
-          equipment('scout_charm', '斥候追風符', 'accessory', 'speed', 3, ['ricochet_focus']),
+          equipment(
+            'scout_charm',
+            '斥候追風符',
+            'accessory',
+            'speed',
+            3,
+            ['ricochet'],
+            ['ricochet_focus'],
+          ),
         ],
       },
       {
@@ -57,7 +74,17 @@ export const GUILD_HUNTS: readonly HuntDefinition[] = [
           },
         ],
         material: { id: 'hunter_sinew', name: '獵手筋腱', baseQuantity: 1 },
-        equipment: [equipment('hunter_bow', '灰牙獵弓', 'weapon', 'attack', 9, ['ricochet_focus'])],
+        equipment: [
+          equipment(
+            'hunter_bow',
+            '灰牙獵弓',
+            'weapon',
+            'attack',
+            9,
+            ['ricochet'],
+            ['ricochet_focus'],
+          ),
+        ],
       },
       {
         enemyId: 'wolf_alpha',
@@ -76,7 +103,15 @@ export const GUILD_HUNTS: readonly HuntDefinition[] = [
         ],
         material: { id: 'alpha_core', name: '首領狼核', baseQuantity: 2 },
         equipment: [
-          equipment('alpha_plate', '首領護胸', 'armor', 'defense', 8, ['retaliation_bash']),
+          equipment(
+            'alpha_plate',
+            '首領護胸',
+            'armor',
+            'defense',
+            8,
+            ['retaliation'],
+            ['retaliation_bash'],
+          ),
         ],
       },
     ],
@@ -86,6 +121,7 @@ export const GUILD_HUNTS: readonly HuntDefinition[] = [
       'accessory',
       'attack',
       12,
+      ['retaliation', 'ricochet'],
       ['steel_echo', 'ricochet_focus'],
     ),
   },
@@ -114,7 +150,15 @@ export const GUILD_HUNTS: readonly HuntDefinition[] = [
         ],
         material: { id: 'guard_rivet', name: '盾手鉚釘', baseQuantity: 2 },
         equipment: [
-          equipment('goblin_wall', '礦坑盾甲', 'armor', 'defense', 11, ['retaliation_bash']),
+          equipment(
+            'goblin_wall',
+            '礦坑盾甲',
+            'armor',
+            'defense',
+            11,
+            ['retaliation'],
+            ['retaliation_bash'],
+          ),
         ],
       },
       {
@@ -131,7 +175,7 @@ export const GUILD_HUNTS: readonly HuntDefinition[] = [
           },
         ],
         material: { id: 'raider_edge', name: '襲擊者刃片', baseQuantity: 1 },
-        equipment: [equipment('raider_blade', '礦坑襲刃', 'weapon', 'attack', 11)],
+        equipment: [equipment('raider_blade', '礦坑襲刃', 'weapon', 'attack', 11, ['retaliation'])],
       },
       {
         enemyId: 'goblin_slinger',
@@ -148,7 +192,15 @@ export const GUILD_HUNTS: readonly HuntDefinition[] = [
         ],
         material: { id: 'slinger_cord', name: '投石索繩', baseQuantity: 1 },
         equipment: [
-          equipment('slinger_charm', '彈道護符', 'accessory', 'speed', 4, ['ricochet_focus']),
+          equipment(
+            'slinger_charm',
+            '彈道護符',
+            'accessory',
+            'speed',
+            4,
+            ['ricochet'],
+            ['ricochet_focus'],
+          ),
         ],
       },
     ],
@@ -158,6 +210,7 @@ export const GUILD_HUNTS: readonly HuntDefinition[] = [
       'accessory',
       'defense',
       15,
+      ['retaliation', 'healing_overflow'],
       ['retaliation_bash', 'overflow_reserve'],
     ),
   },
@@ -186,7 +239,15 @@ export const GUILD_HUNTS: readonly HuntDefinition[] = [
         ],
         material: { id: 'ember_core', name: '燼火龍核', baseQuantity: 3 },
         equipment: [
-          equipment('ember_staff', '燼火溢流杖', 'weapon', 'healing', 14, ['overflow_reserve']),
+          equipment(
+            'ember_staff',
+            '燼火溢流杖',
+            'weapon',
+            'healing',
+            14,
+            ['healing_overflow'],
+            ['overflow_reserve'],
+          ),
         ],
       },
       {
@@ -211,7 +272,9 @@ export const GUILD_HUNTS: readonly HuntDefinition[] = [
           },
         ],
         material: { id: 'drake_scale', name: '聖祠龍鱗', baseQuantity: 2 },
-        equipment: [equipment('drake_mail', '聖祠鱗甲', 'armor', 'hp', 42, ['steel_echo'])],
+        equipment: [
+          equipment('drake_mail', '聖祠鱗甲', 'armor', 'hp', 42, ['retaliation'], ['steel_echo']),
+        ],
       },
     ],
     annihilationChest: equipment(
@@ -220,6 +283,7 @@ export const GUILD_HUNTS: readonly HuntDefinition[] = [
       'accessory',
       'healing',
       18,
+      ['healing_overflow', 'retaliation'],
       ['overflow_reserve', 'steel_echo'],
     ),
   },

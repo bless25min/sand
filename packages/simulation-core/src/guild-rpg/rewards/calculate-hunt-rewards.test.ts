@@ -1,6 +1,7 @@
 import type {
   ComboRuntimeState,
   GuildBattleState,
+  EquipmentAffixDefinition,
   GuildProfile,
   HuntDefinition,
 } from '@expedition/shared-types';
@@ -37,6 +38,7 @@ const hunt: HuntDefinition = {
           slot: 'weapon',
           mainStat: 'attack',
           baseValue: 8,
+          recommendedBuildIds: ['retaliation'],
         },
       ],
     },
@@ -50,6 +52,7 @@ const hunt: HuntDefinition = {
           slot: 'armor',
           mainStat: 'defense',
           baseValue: 8,
+          recommendedBuildIds: ['retaliation'],
         },
       ],
     },
@@ -63,6 +66,7 @@ const hunt: HuntDefinition = {
           slot: 'accessory',
           mainStat: 'speed',
           baseValue: 4,
+          recommendedBuildIds: ['ricochet'],
           ruleIds: ['boss-rule'],
         },
       ],
@@ -74,9 +78,15 @@ const hunt: HuntDefinition = {
     slot: 'accessory',
     mainStat: 'attack',
     baseValue: 12,
+    recommendedBuildIds: ['retaliation', 'ricochet'],
     ruleIds: ['chest-rule'],
   },
 };
+
+const equipmentAffixes: readonly EquipmentAffixDefinition[] = [
+  { id: 'savage', name: '兇猛', stat: 'attack' },
+  { id: 'swift', name: '迅捷', stat: 'speed' },
+];
 
 const profile: GuildProfile = {
   version: 2,
@@ -155,7 +165,7 @@ function battle(
 describe('hunt reward calculation', () => {
   it('awards enemy materials but never equipment on failure', () => {
     const rewards = calculateHuntRewards(
-      { profile, battle: battle('defeat', []), hunt },
+      { profile, battle: battle('defeat', []), hunt, equipmentAffixes },
       new FixedRandom(0.5),
     );
 
@@ -173,6 +183,7 @@ describe('hunt reward calculation', () => {
       profile,
       battle: battle('victory', ['guard-a'], { 'guard-a': 1 }),
       hunt,
+      equipmentAffixes,
     };
     const first = calculateHuntRewards(input, new FixedRandom(0.8));
     const second = calculateHuntRewards(input, new FixedRandom(0.8));
@@ -188,7 +199,12 @@ describe('hunt reward calculation', () => {
   it('stacks every annihilation axis and preserves shared overflow in all item quality', () => {
     const startRatios = { 'guard-a': 1, 'guard-b': 1, boss: 1 };
     const rewards = calculateHuntRewards(
-      { profile, battle: battle('victory', Object.keys(startRatios), startRatios, 180), hunt },
+      {
+        profile,
+        battle: battle('victory', Object.keys(startRatios), startRatios, 180),
+        hunt,
+        equipmentAffixes,
+      },
       new FixedRandom(0.4),
     );
 
@@ -201,14 +217,46 @@ describe('hunt reward calculation', () => {
       sharedOverflow: 180,
     });
     expect(rewards.axes.quantityMultiplier).toBeGreaterThan(1);
+    expect(rewards.items).toHaveLength(4);
+    expect(rewards.items.filter((item) => !item.jackpot).map((item) => item.sourceEnemyId)).toEqual(
+      ['guard-a', 'guard-b', 'boss'],
+    );
     expect(rewards.items.some((item) => item.jackpot)).toBe(true);
     expect(rewards.items.every((item) => item.qualityScore >= 180)).toBe(true);
+  });
+
+  it.each([
+    [0.4, 'common', 0],
+    [0.65, 'uncommon', 1],
+    [0.85, 'rare', 1],
+    [0.94, 'epic', 2],
+    [0.99, 'legendary', 2],
+  ] as const)('gives %s rarity roll a deterministic %s-affix payoff', (roll, rarity, count) => {
+    const rewards = calculateHuntRewards(
+      {
+        profile,
+        battle: battle('victory', ['guard-a'], { 'guard-a': 1 }),
+        hunt,
+        equipmentAffixes,
+      },
+      new FixedRandom(roll),
+    );
+
+    expect(rewards.items[0]?.rarity).toBe(rarity);
+    expect(rewards.items[0]?.affixes).toHaveLength(count);
+    expect(rewards.items[0]?.recommendedBuildIds).toEqual(['retaliation']);
+    expect(rewards.items[0]?.affixes.every((affix) => affix.sourceId)).toBe(true);
   });
 
   it('does not award Perfect Annihilation when one enemy started below ninety percent', () => {
     const startRatios = { 'guard-a': 1, 'guard-b': 0.8, boss: 1 };
     const rewards = calculateHuntRewards(
-      { profile, battle: battle('victory', Object.keys(startRatios), startRatios), hunt },
+      {
+        profile,
+        battle: battle('victory', Object.keys(startRatios), startRatios),
+        hunt,
+        equipmentAffixes,
+      },
       new FixedRandom(0),
     );
 

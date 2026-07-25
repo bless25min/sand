@@ -1,8 +1,8 @@
 import { GUILD_GAME_CONTENT } from '@expedition/game-data';
-import type { EquipmentItem, HuntEquipmentItem } from '@expedition/shared-types';
-import { equipmentPower } from '@expedition/simulation-core';
+import type { EquipmentItem, GuildStatKey, HuntEquipmentItem } from '@expedition/shared-types';
 import { useState } from 'react';
 
+import { createEquipmentSensationModel } from '../presentation/equipment-sensation-model';
 import { RARITY_LABEL, SLOT_LABEL, STAT_LABEL } from '../presenters';
 import type { GuildRpgAction, GuildRpgState } from '../state/game-reducer';
 
@@ -27,13 +27,16 @@ export function EquipmentCard({
   onAdventurerChange,
   hideActions = false,
 }: EquipmentCardProps) {
-  const [internalAdventurerId, setInternalAdventurerId] = useState(state.profile.leaderId);
+  const sensation = createEquipmentSensationModel(item, state.profile, GUILD_GAME_CONTENT);
+  const [internalAdventurerId, setInternalAdventurerId] = useState(sensation.bestAdventurer.id);
   const adventurerId = selectedAdventurerId ?? internalAdventurerId;
   const setAdventurerId = onAdventurerChange ?? setInternalAdventurerId;
-  const member = state.profile.party.find((candidate) => candidate.definitionId === adventurerId)!;
-  const equipped = member.equipment[item.slot];
-  const difference = equipmentPower(item) - equipmentPower(equipped);
+  const comparison = sensation.comparisons.find(
+    (candidate) => candidate.adventurerId === adventurerId,
+  )!;
+  const difference = comparison.powerDifference;
   const resolved = state.resolvedItemIds.includes(item.id);
+  const statDiff = Object.entries(comparison.statDiff) as readonly [GuildStatKey, number][];
 
   return (
     <article
@@ -53,10 +56,17 @@ export function EquipmentCard({
         <strong>+{item.mainStat.value}</strong>
       </div>
       {isHuntEquipment(item) && (
-        <p className="gr-reward-quality">
-          OVERKILL QUALITY {Math.round(item.qualityScore)}
-          {item.jackpot ? ' · ANNIHILATION CHEST' : ''}
-        </p>
+        <>
+          <p className="gr-reward-quality">
+            OVERKILL QUALITY {Math.round(item.qualityScore)}
+            {item.jackpot ? ' · ANNIHILATION CHEST' : ''}
+          </p>
+          <div className="gr-reward-linkage">
+            <span>來源敵人：{sensation.sourceEnemyName ?? item.sourceEnemyId}</span>
+            <span>適配 Build：{sensation.recommendedBuildNames.join('、') || '泛用引擎'}</span>
+            <strong>最佳裝備者：{sensation.bestAdventurer.name}</strong>
+          </div>
+        </>
       )}
       <ul>
         {item.affixes.length ? (
@@ -70,13 +80,15 @@ export function EquipmentCard({
           <li>無附加屬性</li>
         )}
       </ul>
-      {item.ruleIds && item.ruleIds.length > 0 && (
-        <p>
-          規則節點：
-          {item.ruleIds
-            .map((ruleId) => GUILD_GAME_CONTENT.rules[ruleId]?.name ?? ruleId)
-            .join(' · ')}
-        </p>
+      {sensation.rules.length > 0 && (
+        <div className="gr-reward-rules">
+          <strong>規則上線預覽</strong>
+          {sensation.rules.map((rule) => (
+            <span key={rule.id}>
+              <b>{rule.name}</b> · {rule.description}
+            </span>
+          ))}
+        </div>
       )}
       <label>
         比較對象
@@ -88,6 +100,7 @@ export function EquipmentCard({
             return (
               <option value={candidate.definitionId} key={candidate.definitionId}>
                 {hero.name}
+                {hero.id === sensation.bestAdventurer.id ? ' · BEST' : ''}
               </option>
             );
           })}
@@ -100,6 +113,17 @@ export function EquipmentCard({
           {difference} 綜合值
         </strong>
       </div>
+      <dl className="gr-stat-diff" aria-label="完整屬性差異">
+        {statDiff.map(([stat, value]) => (
+          <div key={stat}>
+            <dt>{STAT_LABEL[stat]}</dt>
+            <dd>
+              {value >= 0 ? '+' : ''}
+              {value}
+            </dd>
+          </div>
+        ))}
+      </dl>
       {!hideActions && (
         <div className="gr-reward-actions">
           <button

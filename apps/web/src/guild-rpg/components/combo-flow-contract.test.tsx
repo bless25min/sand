@@ -83,13 +83,16 @@ describe('complete combo hunt presentation', () => {
     const rewardMarkup = renderToStaticMarkup(
       <RewardScreen state={rewardsState} dispatch={dispatch} />,
     );
-    const guildState = guildRpgReducer(
-      {
-        ...rewardsState,
-        resolvedItemIds: rewards.items.map((item) => item.id),
-      },
-      { type: 'RETURN_GUILD' },
-    );
+    let resolvedState = rewardsState;
+    for (const [index, item] of rewards.items.entries()) {
+      resolvedState = guildRpgReducer(resolvedState, {
+        type: 'CHOOSE_ITEM',
+        itemId: item.id,
+        choice: index === 0 ? 'equip' : 'sell',
+        adventurerId: 'lyra',
+      });
+    }
+    const guildState = guildRpgReducer(resolvedState, { type: 'RETURN_GUILD' });
     const guildMarkup = renderToStaticMarkup(
       <GuildScreen state={guildState} dispatch={dispatch} />,
     );
@@ -98,9 +101,15 @@ describe('complete combo hunt presentation', () => {
     expect(rewardMarkup).toContain('BOSS + GUARDS CHEST');
     expect(rewardMarkup).toContain('data-escalation-stage="overflow"');
     expect(rewardMarkup).toContain('OVERKILL QUALITY');
+    expect(rewardMarkup).toContain('來源敵人：灰牙斥候');
+    expect(rewardMarkup).toContain('適配 Build：殲滅彈射');
+    expect(rewardMarkup).toContain('最佳裝備者：萊拉');
     expect(guildMarkup).toContain('最高溢傷');
     expect(guildMarkup).toContain('掉落效率');
     expect(guildMarkup).toContain('最高品質');
+    expect(guildMarkup).toContain('規則上線：長弓折射');
+    expect(guildMarkup).toContain('帶著新引擎重刷');
+    expect(guildMarkup).toContain('專屬掉落');
   });
 
   it('persists replay performance and provides reduced-motion mobile playback', () => {

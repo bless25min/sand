@@ -16,6 +16,7 @@ export interface HuntEquipmentDefinition {
   mainStat: GuildStatKey;
   baseValue: number;
   ruleIds?: readonly string[];
+  recommendedBuildIds: readonly string[];
 }
 
 export interface HuntEnemyTrait {
@@ -53,6 +54,7 @@ export interface HuntEquipmentItem extends EquipmentItem {
   qualityScore: number;
   jackpot: boolean;
   rarity: GuildItemRarity;
+  recommendedBuildIds: readonly string[];
 }
 
 export interface HuntRewardAxes {

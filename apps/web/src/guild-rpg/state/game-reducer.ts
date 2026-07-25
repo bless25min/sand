@@ -28,6 +28,7 @@ export interface GuildRpgState {
   playback?: ComboPlaybackState | undefined;
   speed: 1 | 2;
   resolvedItemIds: readonly string[];
+  activatedRuleIds: readonly string[];
   message: string;
 }
 
@@ -82,6 +83,7 @@ export function guildRpgReducer(state: GuildRpgState, action: GuildRpgAction): G
       rewards: undefined,
       playback: undefined,
       resolvedItemIds: [],
+      activatedRuleIds: [],
       message: '遠征開始，編排軍令時敵人仍會持續進攻。',
     };
   }
@@ -157,6 +159,9 @@ export function guildRpgReducer(state: GuildRpgState, action: GuildRpgAction): G
     return { ...state, profile: resolution.profile, message: resolution.message };
   }
   if (action.type === 'RETURN_GUILD') {
+    const activatedRuleNames = state.activatedRuleIds.map(
+      (ruleId) => GUILD_GAME_CONTENT.rules[ruleId]?.name ?? ruleId,
+    );
     return {
       ...state,
       screen: 'guild',
@@ -164,14 +169,23 @@ export function guildRpgReducer(state: GuildRpgState, action: GuildRpgAction): G
       rewards: undefined,
       playback: undefined,
       resolvedItemIds: [],
-      message: '隊伍已返回公會。',
+      message:
+        activatedRuleNames.length > 0
+          ? `規則上線：${activatedRuleNames.join('、')}。帶著新引擎重刷，讓下一次殲滅更誇張。`
+          : '狩獵紀錄已更新。帶著戰利品重刷，讓下一次殲滅更誇張。',
     };
   }
   if (action.type === 'CHOOSE_ITEM' && state.rewards) {
     if (state.resolvedItemIds.includes(action.itemId)) return state;
     const item = state.rewards.items.find((candidate) => candidate.id === action.itemId);
     if (!item) return state;
-    const resolution = resolveItemChoice(state.profile, item, action.choice, action.adventurerId);
+    const resolution = resolveItemChoice(
+      state.profile,
+      item,
+      action.choice,
+      action.adventurerId,
+      GUILD_GAME_CONTENT.rules,
+    );
     const rejectedKeep = action.choice === 'keep' && resolution.profile === state.profile;
     return {
       ...state,
@@ -179,6 +193,10 @@ export function guildRpgReducer(state: GuildRpgState, action: GuildRpgAction): G
       resolvedItemIds: rejectedKeep
         ? state.resolvedItemIds
         : [...state.resolvedItemIds, action.itemId],
+      activatedRuleIds:
+        action.choice === 'equip' && resolution.profile !== state.profile
+          ? [...new Set([...state.activatedRuleIds, ...(item.ruleIds ?? [])])]
+          : state.activatedRuleIds,
       message: resolution.message,
     };
   }

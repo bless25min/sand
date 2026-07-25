@@ -180,6 +180,7 @@ describe('free-form combo command', () => {
           slot: 'accessory',
           mainStat: 'attack',
           baseValue: 1,
+          recommendedBuildIds: ['retaliation'],
         },
       },
     });

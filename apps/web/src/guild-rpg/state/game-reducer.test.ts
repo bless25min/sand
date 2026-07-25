@@ -81,28 +81,33 @@ describe('guild RPG reducer', () => {
       },
     });
     const huntRewards = state.rewards as HuntRewards;
+    expect(huntRewards.items).toHaveLength(4);
     expect(huntRewards.axes.sharedOverflow).toBeGreaterThan(0);
     expect(
       huntRewards.items.every((item) => item.qualityScore >= huntRewards.axes.sharedOverflow),
     ).toBe(true);
     expect(state.profile.questRecords.border_pack?.clears).toBe(1);
 
-    const [kept, ...sold] = state.rewards!.items;
-    for (const [index, item] of [kept!, ...sold].entries()) {
+    const [equipped, ...sold] = state.rewards!.items;
+    for (const [index, item] of [equipped!, ...sold].entries()) {
       state = guildRpgReducer(state, {
         type: 'CHOOSE_ITEM',
         itemId: item.id,
-        choice: index === 0 ? 'keep' : 'sell',
+        choice: index === 0 ? 'equip' : 'sell',
         adventurerId: 'lyra',
       });
     }
 
     expect(state.resolvedItemIds).toHaveLength(state.rewards!.items.length);
-    expect(state.profile.inventory).toHaveLength(1);
+    expect(
+      state.profile.party.find((member) => member.definitionId === 'lyra')?.equipment.accessory?.id,
+    ).toBe(equipped?.id);
 
     state = guildRpgReducer(state, { type: 'RETURN_GUILD' });
     expect(state.screen).toBe('guild');
     expect(state.profile.unlockedQuestIds).toContain('abandoned_mine');
+    expect(state.message).toContain('規則上線');
+    expect(state.message).toContain('帶著新引擎重刷');
 
     const replay = guildRpgReducer(state, { type: 'START_QUEST', questId: 'border_pack' });
     expect(replay.screen).toBe('battle');

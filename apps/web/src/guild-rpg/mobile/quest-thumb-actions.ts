@@ -9,6 +9,7 @@ interface QuestActionsInput {
   quest: QuestDefinition;
   questCount: number;
   unlocked: boolean;
+  replay: boolean;
   dispatch: React.Dispatch<GuildRpgAction>;
   setQuestIndex: Dispatch<SetStateAction<number>>;
 }
@@ -17,6 +18,7 @@ export function createQuestThumbActions({
   quest,
   questCount,
   unlocked,
+  replay,
   dispatch,
   setQuestIndex,
 }: QuestActionsInput): readonly ThumbDeckAction[] {
@@ -35,7 +37,7 @@ export function createQuestThumbActions({
     },
     {
       id: 'start-quest',
-      label: unlocked ? '開始遠征' : '尚未解鎖',
+      label: unlocked ? (replay ? '帶新引擎重刷' : '開始遠征') : '尚未解鎖',
       detail: `建議 Lv.${quest.recommendedLevel}`,
       slot: 'primary',
       tone: 'primary',

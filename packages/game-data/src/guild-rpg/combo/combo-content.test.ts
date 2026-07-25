@@ -32,8 +32,19 @@ describe('combo content factory', () => {
       expect(hunt.annihilationChest, hunt.id).toBeDefined();
       expect(
         hunt.enemies.every(
-          (enemy) => (enemy.traits?.length ?? 0) > 0 && enemy.equipment.length > 0,
+          (enemy) =>
+            (enemy.traits?.length ?? 0) > 0 &&
+            enemy.equipment.length > 0 &&
+            enemy.equipment.every(
+              (item) =>
+                item.recommendedBuildIds.length > 0 &&
+                item.recommendedBuildIds.every((buildId) => buildIds.includes(buildId)),
+            ),
         ),
+        hunt.id,
+      ).toBe(true);
+      expect(
+        hunt.annihilationChest?.recommendedBuildIds.every((buildId) => buildIds.includes(buildId)),
         hunt.id,
       ).toBe(true);
       const favoredBuildIds = [

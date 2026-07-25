@@ -4,8 +4,10 @@ import type {
   GuildAdventurer,
   QuestDefinition,
 } from '@expedition/shared-types';
+import { GUILD_GAME_CONTENT } from '@expedition/game-data';
 
 import type { GuildMobilePage } from '../mobile/thumb-deck-model';
+import { createHuntSensationModel } from '../presentation/hunt-sensation-model';
 import type { GuildRpgAction } from '../state/game-reducer';
 import { AdventurerCard } from './AdventurerCard';
 import { InventoryItemCard } from './InventoryItemCard';
@@ -16,6 +18,7 @@ interface GuildMobileFocusProps {
   questUnlocked: boolean;
   member: GuildAdventurer;
   hero: AdventurerDefinition;
+  selectedBuildId: string;
   isLeader: boolean;
   visibleItems: readonly EquipmentItem[];
   selectedItemId?: string | undefined;
@@ -28,18 +31,23 @@ export function GuildMobileFocus({
   questUnlocked,
   member,
   hero,
+  selectedBuildId,
   isLeader,
   visibleItems,
   selectedItemId,
   dispatch,
 }: GuildMobileFocusProps) {
   if (page === 'quest') {
+    const sensation = createHuntSensationModel(quest.id, selectedBuildId, GUILD_GAME_CONTENT);
     return (
       <article className={`gr-card gr-quest ${questUnlocked ? '' : 'is-locked'}`}>
         <p>{questUnlocked ? `建議 Lv.${quest.recommendedLevel}` : '尚未解鎖'}</p>
         <h2>{quest.name}</h2>
         <p>{quest.description}</p>
         <strong>{quest.enemies.length} 隊敵軍</strong>
+        <span>
+          {sensation.build.payoffLabel} · 專屬掉落 {sensation.exclusiveDropNames.join('、')}
+        </span>
       </article>
     );
   }
