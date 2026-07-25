@@ -42,6 +42,43 @@
   gap: 8px;
 }
 
+.gr-engine-cockpit {
+  max-width: 520px;
+  padding: 10px 14px;
+  border: 1px solid #e0a84745;
+  border-left: 3px solid #e0a847;
+  background: linear-gradient(100deg, #e0a84718, transparent);
+}
+
+.gr-engine-cockpit[data-build-accent='storm'] {
+  border-left-color: #62b9e8;
+  background: linear-gradient(100deg, #3c9ed31b, transparent);
+}
+
+.gr-engine-cockpit[data-build-accent='radiance'] {
+  border-left-color: #f3ec98;
+  background: linear-gradient(100deg, #f3ec9818, transparent);
+}
+
+.gr-engine-cockpit p,
+.gr-engine-cockpit h2,
+.gr-engine-cockpit span {
+  margin: 0;
+}
+
+.gr-engine-cockpit h2 {
+  margin: 2px 0;
+  font-family: Georgia, 'Noto Serif TC', serif;
+  font-size: 1.05rem;
+}
+
+.gr-engine-cockpit span {
+  display: block;
+  color: #aeb7b4;
+  font-size: 0.68rem;
+  line-height: 1.45;
+}
+
 .gr-battle__controls div {
   display: flex;
 }
@@ -194,6 +231,30 @@ button.gr-unit:hover:not(:disabled),
   line-height: 1.35;
 }
 
+.gr-unit__intent {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 2px 8px;
+  margin-top: 8px;
+  padding: 7px 8px;
+  border: 1px solid #d55d4d36;
+  background: #6c24190f;
+  font-size: 0.62rem;
+}
+
+.gr-unit__intent strong {
+  color: #ff806b;
+}
+
+.gr-unit__intent span {
+  color: #a9b1af;
+}
+
+.gr-unit__intent b {
+  grid-column: 1 / -1;
+  color: #f2c66d;
+}
+
 .gr-meter {
   height: 5px;
   margin-top: 6px;
@@ -222,6 +283,10 @@ button.gr-unit:hover:not(:disabled),
 
   .gr-battle__header {
     flex-direction: column;
+  }
+
+  .gr-engine-cockpit {
+    max-width: none;
   }
 
   .gr-battlefield {

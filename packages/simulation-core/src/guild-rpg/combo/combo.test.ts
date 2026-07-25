@@ -10,6 +10,7 @@ import { describe, expect, it } from 'vitest';
 import { createGuildBattle } from '../battle/create-battle';
 import { advanceComposition } from './advance-composition';
 import { compileCommand } from './compile-command';
+import { previewComboCommand } from './preview-command';
 import { resolveCommand } from './resolve-command';
 
 const adventurers: readonly AdventurerDefinition[] = [
@@ -154,5 +155,41 @@ describe('free-form combo command', () => {
     expect(after.units.find((unit) => unit.side === 'heroes')!.currentHp).toBeLessThan(heroHp);
     expect(after.combo?.draft.cardIds).toEqual(['brace', 'riposte']);
     expect(after.combo?.events.at(-1)?.kind).toBe('enemy_pressure');
+  });
+
+  it('previews the complete release without mutating the live battle', () => {
+    const draft = { cardIds: ['brace', 'riposte', 'sweep'] };
+    const battle = createBattle(draft.cardIds);
+    const snapshot = structuredClone(battle);
+    const preview = previewComboCommand({
+      battle,
+      draft,
+      cards,
+      rules: {},
+      hunt: {
+        id: 'training-hunt',
+        questId: quest.id,
+        rewardExperience: 1,
+        rewardGold: 1,
+        bossEnemyId: 'target-a',
+        guardEnemyIds: ['target-b'],
+        enemies: [],
+        annihilationChest: {
+          id: 'training-chest',
+          name: '殲滅寶箱',
+          slot: 'accessory',
+          mainStat: 'attack',
+          baseValue: 1,
+        },
+      },
+    });
+
+    expect(battle).toEqual(snapshot);
+    expect(preview.diagnostics).toEqual([]);
+    expect(preview.totalDamage).toBeGreaterThan(0);
+    expect(preview.defeatedEnemyIds).toEqual(['target-a', 'target-b']);
+    expect(preview.overkill).toBeGreaterThan(0);
+    expect(preview.milestones).toEqual(['multi-kill', 'annihilation', 'chest']);
+    expect(preview.eventCount).toBeGreaterThan(0);
   });
 });

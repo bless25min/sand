@@ -7,6 +7,7 @@ export { advanceComposition } from './combo/advance-composition';
 export { compileBuild } from './combo/compile-build';
 export { compileCommand } from './combo/compile-command';
 export { COMBO_EFFECT_REGISTRY } from './combo/effect-registry';
+export { previewComboCommand } from './combo/preview-command';
 export { resolveCommand } from './combo/resolve-command';
 export { resolveTriggerQueue } from './combo/resolve-trigger-queue';
 export { equipmentPower, equipmentStatTotals } from './equipment/compare-equipment';

@@ -53,6 +53,11 @@ describe('complete combo hunt presentation', () => {
 
     expect(markup).toContain('狼群壁壘');
     expect(markup).toContain('提早釋放');
+    expect(markup).toContain('ENGINE ONLINE');
+    expect(markup).toContain('處刑目標');
+    expect(markup).toContain('預演事件');
+    expect(markup).toContain('下一張推薦：盾後反擊');
+    expect(markup).toContain('護衛連結 灰牙斥候、灰牙獵手');
     expect(markup).toContain('data-escalation-stage="stack"');
     expect(markup).toContain('role="status"');
     expect(markup).toContain('aria-label="戰鬥操作分頁"');

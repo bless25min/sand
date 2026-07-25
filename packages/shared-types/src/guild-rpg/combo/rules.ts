@@ -71,6 +71,10 @@ export interface BuildDefinition {
   id: string;
   name: string;
   description: string;
+  fantasy: string;
+  payoffLabel: string;
+  signatureCardIds: readonly string[];
+  accent: string;
   cardIds: readonly string[];
   ruleIds: readonly string[];
 }

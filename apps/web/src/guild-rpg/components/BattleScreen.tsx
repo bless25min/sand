@@ -1,6 +1,7 @@
 import { GUILD_GAME_CONTENT } from '@expedition/game-data';
 
 import { formatTime } from '../presenters';
+import { createBattleSensationModel } from '../presentation/battle-sensation-model';
 import type { GuildRpgAction, GuildRpgState } from '../state/game-reducer';
 import { BattleThumbControls } from './BattleThumbControls';
 import { BattleUnitCard } from './BattleUnitCard';
@@ -15,6 +16,7 @@ interface BattleScreenProps {
 export function BattleScreen({ state, dispatch }: BattleScreenProps) {
   const battle = state.battle!;
   const quest = GUILD_GAME_CONTENT.quests.find((candidate) => candidate.id === battle.questId)!;
+  const sensation = createBattleSensationModel(state, GUILD_GAME_CONTENT);
 
   return (
     <main className="gr-battle">
@@ -26,6 +28,15 @@ export function BattleScreen({ state, dispatch }: BattleScreenProps) {
             {formatTime(battle.elapsedMs)} · 固定戰鬥碼 {battle.seed}
           </span>
         </div>
+        <section
+          className="gr-engine-cockpit"
+          data-build-accent={sensation.build.accent}
+          aria-label="目前 Build"
+        >
+          <p>ENGINE ONLINE · {sensation.build.payoffLabel}</p>
+          <h2>{sensation.build.name}</h2>
+          <span>{sensation.build.fantasy}</span>
+        </section>
         <div className="gr-battle__controls">
           <div aria-label="戰鬥速度">
             {[1, 2].map((speed) => (
@@ -65,6 +76,7 @@ export function BattleScreen({ state, dispatch }: BattleScreenProps) {
                 key={unit.id}
                 unit={unit}
                 selected={unit.id === battle.selectedTargetId}
+                sensation={sensation.enemies.find((enemy) => enemy.id === unit.id)}
                 onSelect={() => dispatch({ type: 'SELECT_TARGET', targetId: unit.id })}
               />
             ))}

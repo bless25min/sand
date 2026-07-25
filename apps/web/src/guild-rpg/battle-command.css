@@ -79,6 +79,53 @@
   color: #dca447;
 }
 
+.gr-command__signature,
+.gr-command__milestones {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.gr-command__signature strong,
+.gr-command__milestones b {
+  padding: 3px 6px;
+  border: 1px solid #e1ad4b66;
+  color: #f0c66f;
+  background: #e1ad4b12;
+  font-size: 0.62rem;
+}
+
+.gr-command__signature span,
+.gr-command__milestones span {
+  color: #9ea8a5;
+  font-size: 0.65rem;
+}
+
+.gr-command__forecast {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 5px;
+  margin: 0;
+}
+
+.gr-command__forecast div {
+  padding: 6px;
+  border: 1px solid #ffffff12;
+  background: #ffffff05;
+}
+
+.gr-command__forecast dt {
+  color: #7f8a87;
+  font-size: 0.55rem;
+}
+
+.gr-command__forecast dd {
+  margin: 2px 0 0;
+  font-size: 0.9rem;
+  font-weight: 900;
+}
+
 .gr-combo-composer__commit {
   display: grid;
   grid-template-columns: 1fr 1.4fr;
@@ -108,6 +155,7 @@
 
 .gr-combo-composer__cards span,
 .gr-combo-composer__cards strong,
+.gr-combo-composer__cards em,
 .gr-combo-composer__cards small {
   display: block;
 }
@@ -120,6 +168,27 @@
 
 .gr-combo-composer__cards strong {
   margin: 3px 0;
+}
+
+.gr-combo-composer__cards em {
+  margin-bottom: 4px;
+  color: #e8bb64;
+  font-size: 0.58rem;
+  font-style: normal;
+}
+
+.gr-combo-composer__cards button.is-recommended {
+  border-color: #f2c76e;
+  box-shadow: inset 0 0 18px #e2a8431f;
+}
+
+.gr-combo-composer__cards button.is-recommended::before {
+  content: 'NEXT ROUTE';
+  display: block;
+  color: #f2c76e;
+  font-size: 0.5rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
 }
 
 .gr-combo-composer button:disabled {

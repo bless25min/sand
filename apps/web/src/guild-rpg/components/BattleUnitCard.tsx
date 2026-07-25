@@ -1,14 +1,16 @@
 import type { BattleUnit } from '@expedition/shared-types';
 
 import { ROLE_LABEL } from '../presenters';
+import type { EnemySensation } from '../presentation/battle-sensation-model';
 
 interface BattleUnitCardProps {
   unit: BattleUnit;
   selected: boolean;
   onSelect?: () => void;
+  sensation?: EnemySensation | undefined;
 }
 
-export function BattleUnitCard({ unit, selected, onSelect }: BattleUnitCardProps) {
+export function BattleUnitCard({ unit, selected, onSelect, sensation }: BattleUnitCardProps) {
   const hpRatio = Math.max(0, (unit.currentHp / unit.stats.hp) * 100);
   const content = (
     <>
@@ -17,7 +19,7 @@ export function BattleUnitCard({ unit, selected, onSelect }: BattleUnitCardProps
           <span>{unit.role ? ROLE_LABEL[unit.role] : '敵對軍勢'}</span>
           <h3>{unit.name}</h3>
         </div>
-        {unit.isLeader && <b>隊長</b>}
+        {selected ? <b>處刑目標</b> : unit.isLeader && <b>隊長</b>}
       </header>
       <div className="gr-unit__numbers">
         <span>
@@ -39,9 +41,23 @@ export function BattleUnitCard({ unit, selected, onSelect }: BattleUnitCardProps
           <span style={{ width: `${unit.gauge}%` }} />
         </div>
       )}
+      {unit.side === 'enemies' && sensation && (
+        <div className="gr-unit__intent">
+          <strong>{sensation.pressureLabel}</strong>
+          <span>預定攻擊 {sensation.predictedTargetName ?? '遠征隊'}</span>
+          {sensation.guardedByNames.length > 0 && (
+            <span>護衛連結 {sensation.guardedByNames.join('、')}</span>
+          )}
+          {sensation.counteredByCurrentBuild && <b>目前 Build 可破</b>}
+        </div>
+      )}
       {(unit.side === 'enemies' || unit.guarding || unit.currentHp <= 0) && (
         <footer>
-          {unit.side === 'enemies' && <span>壓力 {Math.floor(unit.gauge)}%</span>}
+          {unit.side === 'enemies' && (
+            <span>
+              壓力 {Math.floor(unit.gauge)}% · {sensation?.pressureLabel ?? '蓄勢'}
+            </span>
+          )}
           {unit.guarding && <strong>盾牆防禦</strong>}
           {unit.currentHp <= 0 && <strong>已擊倒</strong>}
         </footer>

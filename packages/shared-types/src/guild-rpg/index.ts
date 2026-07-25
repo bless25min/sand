@@ -3,6 +3,7 @@ export type * from './combo/content';
 export type * from './combo/runtime';
 export type * from './combo/rules';
 export type * from './combo/queue';
+export type * from './combo/preview';
 export {
   COMBO_EFFECT_KINDS,
   COMBO_SELECTOR_KINDS,

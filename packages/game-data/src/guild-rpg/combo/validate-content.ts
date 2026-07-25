@@ -78,6 +78,15 @@ export function validateComboContent(content: ComboContent): readonly ContentDia
         report('unknown_rule', `builds.${index}.ruleIds`, `${ruleId} 不存在`);
       }
     });
+    (build.signatureCardIds ?? []).forEach((cardId) => {
+      if (!content.cards[cardId] || !build.cardIds.includes(cardId)) {
+        report(
+          'unknown_signature_card',
+          `builds.${index}.signatureCardIds`,
+          `${cardId} 不在 Build 卡池中`,
+        );
+      }
+    });
   }
 
   return diagnostics;

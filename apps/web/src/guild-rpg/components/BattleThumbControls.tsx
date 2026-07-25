@@ -2,6 +2,7 @@ import { GUILD_GAME_CONTENT } from '@expedition/game-data';
 import { compileCommand } from '@expedition/simulation-core';
 import { useState } from 'react';
 
+import { createBattleSensationModel } from '../presentation/battle-sensation-model';
 import type { GuildRpgAction, GuildRpgState } from '../state/game-reducer';
 import { ThumbCommandDeck, type ThumbDeckAction } from './ThumbCommandDeck';
 
@@ -21,6 +22,7 @@ export function BattleThumbControls({ state, dispatch }: BattleThumbControlsProp
   const [cardPage, setCardPage] = useState(0);
   const selectedTarget = battle.units.find((unit) => unit.id === battle.selectedTargetId);
   const earlyRelease = runtime.draft.cardIds.length > 0 && runtime.draft.cardIds.length < 4;
+  const sensation = createBattleSensationModel(state, GUILD_GAME_CONTENT);
 
   let actions: readonly ThumbDeckAction[];
   let title: string;
@@ -31,6 +33,13 @@ export function BattleThumbControls({ state, dispatch }: BattleThumbControlsProp
         (card) =>
           compileCommand({ cardIds: [...runtime.draft.cardIds, card.id] }, GUILD_GAME_CONTENT.cards)
             .diagnostics.length === 0,
+      )
+      .sort((left, right) =>
+        left.id === sensation.signature.nextCard?.id
+          ? -1
+          : right.id === sensation.signature.nextCard?.id
+            ? 1
+            : 0,
       );
     const pageCount = Math.max(1, Math.ceil(cards.length / 2));
     const visibleCards = cards.slice((cardPage % pageCount) * 2, (cardPage % pageCount) * 2 + 2);
@@ -62,7 +71,7 @@ export function BattleThumbControls({ state, dispatch }: BattleThumbControlsProp
       {
         id: 'release',
         label: earlyRelease ? '提早釋放' : '釋放軍令',
-        detail: earlyRelease ? '保命並保留戰果' : '完整結算不中斷',
+        detail: `${sensation.preview.eventCount} 事件 · ${sensation.preview.defeatedEnemyIds.length} 擊殺`,
         slot: 'primary',
         tone: 'primary',
         disabled: runtime.draft.cardIds.length === 0,
@@ -79,7 +88,7 @@ export function BattleThumbControls({ state, dispatch }: BattleThumbControlsProp
       {
         id: 'release',
         label: earlyRelease ? '提早釋放' : '釋放軍令',
-        detail: earlyRelease ? '保命並保留戰果' : '完整結算不中斷',
+        detail: `${sensation.preview.eventCount} 事件 · ${sensation.preview.defeatedEnemyIds.length} 擊殺`,
         slot: 'primary',
         tone: 'primary',
         disabled: runtime.draft.cardIds.length === 0,
@@ -116,7 +125,7 @@ export function BattleThumbControls({ state, dispatch }: BattleThumbControlsProp
       ariaLabel="戰鬥操作"
       eyebrow="FREE-FORM COMMAND"
       title={title}
-      status={`敵軍 0.25x · 鎖定 ${selectedTarget?.name ?? '無'}`}
+      status={`${sensation.build.payoffLabel} · ${sensation.signature.nextCard ? `推薦 ${sensation.signature.nextCard.name}` : '招牌路線完成'} · 鎖定 ${selectedTarget?.name ?? '無'}`}
       feedback={state.message}
       tabs={[
         {

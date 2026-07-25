@@ -25,6 +25,23 @@
     font-size: 0.58rem;
   }
 
+  .gr-engine-cockpit {
+    min-width: 0;
+    max-width: 48vw;
+    padding: 5px 7px;
+  }
+
+  .gr-engine-cockpit h2 {
+    overflow: hidden;
+    font-size: 0.72rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .gr-engine-cockpit span {
+    display: none;
+  }
+
   .gr-battle__controls,
   .gr-command {
     display: none;
@@ -142,6 +159,17 @@
   }
 
   .gr-unit__trait span {
+    display: none;
+  }
+
+  .gr-unit__intent {
+    display: flex;
+    padding: 3px 4px;
+    font-size: 0.48rem;
+  }
+
+  .gr-unit__intent span,
+  .gr-unit__intent b {
     display: none;
   }
 

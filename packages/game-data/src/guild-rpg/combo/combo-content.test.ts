@@ -13,6 +13,16 @@ describe('combo content factory', () => {
       'ricochet',
       'healing_overflow',
     ]);
+    for (const build of GUILD_COMBO_CONTENT.builds) {
+      expect(build.fantasy, build.id).not.toBe('');
+      expect(build.payoffLabel, build.id).not.toBe('');
+      expect(build.accent, build.id).not.toBe('');
+      expect(build.signatureCardIds.length, build.id).toBeGreaterThanOrEqual(3);
+      expect(
+        build.signatureCardIds.every((cardId) => build.cardIds.includes(cardId)),
+        build.id,
+      ).toBe(true);
+    }
   });
 
   it('gives every hunt readable counters, exclusive equipment, and an annihilation chest', () => {
