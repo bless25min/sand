@@ -1,0 +1,116 @@
+import { GUILD_GAME_CONTENT } from '@expedition/game-data';
+
+import { formatTime } from '../presenters';
+import type { GuildRpgAction, GuildRpgState } from '../state/game-reducer';
+import { BattleCommand } from './BattleCommand';
+import { BattleUnitCard } from './BattleUnitCard';
+
+interface BattleScreenProps {
+  state: GuildRpgState;
+  dispatch: React.Dispatch<GuildRpgAction>;
+}
+
+export function BattleScreen({ state, dispatch }: BattleScreenProps) {
+  const battle = state.battle!;
+  const quest = GUILD_GAME_CONTENT.quests.find((candidate) => candidate.id === battle.questId)!;
+
+  return (
+    <main className="gr-battle">
+      <header className="gr-battle__header">
+        <div>
+          <p>QUEST 0{GUILD_GAME_CONTENT.quests.indexOf(quest) + 1}</p>
+          <h1>{quest.name}</h1>
+          <span>
+            {formatTime(battle.elapsedMs)} · 固定戰鬥碼 {battle.seed}
+          </span>
+        </div>
+        <div className="gr-battle__controls">
+          <div aria-label="戰鬥速度">
+            {[1, 2].map((speed) => (
+              <button
+                type="button"
+                className={state.speed === speed ? 'is-active' : ''}
+                key={speed}
+                onClick={() => dispatch({ type: 'SET_SPEED', speed: speed as 1 | 2 })}
+              >
+                {speed}x
+              </button>
+            ))}
+          </div>
+          <button
+            type="button"
+            className={battle.leaderAuto ? 'is-active' : ''}
+            onClick={() => dispatch({ type: 'TOGGLE_AUTO' })}
+          >
+            隊長 {battle.leaderAuto ? 'AUTO' : '手動'}
+          </button>
+        </div>
+      </header>
+
+      <section className="gr-battlefield" aria-label="戰場">
+        <div className="gr-line gr-line--heroes">
+          <p>遠征隊</p>
+          {battle.units
+            .filter((unit) => unit.side === 'heroes')
+            .map((unit) => (
+              <BattleUnitCard key={unit.id} unit={unit} selected={false} />
+            ))}
+        </div>
+        <div className="gr-versus" aria-hidden="true">
+          <span />
+          <b>VS</b>
+          <span />
+        </div>
+        <div className="gr-line gr-line--enemies">
+          <p>敵對軍勢 · 點選集火目標</p>
+          {battle.units
+            .filter((unit) => unit.side === 'enemies')
+            .map((unit) => (
+              <BattleUnitCard
+                key={unit.id}
+                unit={unit}
+                selected={unit.id === battle.selectedTargetId}
+                onSelect={() => dispatch({ type: 'SELECT_TARGET', targetId: unit.id })}
+              />
+            ))}
+        </div>
+      </section>
+
+      <BattleCommand state={state} dispatch={dispatch} />
+
+      <section className="gr-combat-log" aria-live="polite">
+        <header>
+          <h2>戰鬥紀錄</h2>
+          <span>所有結果皆可由戰鬥碼與指令重播</span>
+        </header>
+        <ol>
+          {battle.events
+            .slice(-8)
+            .reverse()
+            .map((event) => (
+              <li key={event.id} data-kind={event.kind}>
+                {event.message}
+              </li>
+            ))}
+        </ol>
+      </section>
+
+      {battle.status === 'defeat' && (
+        <div className="gr-result" role="dialog" aria-modal="true">
+          <div>
+            <p>EXPEDITION FAILED</p>
+            <h2>這次遠征沒有成功</h2>
+            <span>沒有損失。調整裝備、隊長或開啟自動模式後再次挑戰。</span>
+            <button
+              type="button"
+              className="gr-button gr-button--primary"
+              onClick={() => dispatch({ type: 'RETURN_GUILD' })}
+            >
+              返回公會整備
+            </button>
+          </div>
+        </div>
+      )}
+    </main>
+  );
+}

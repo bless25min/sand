@@ -1,0 +1,151 @@
+.gr-command {
+  display: grid;
+  grid-template-columns: minmax(220px, 0.55fr) 1.45fr;
+  gap: 18px;
+  padding: 18px;
+  border: 1px solid #ffffff18;
+  background: #111719;
+}
+
+.gr-command.is-ready {
+  border-color: #e0a84780;
+  box-shadow: inset 3px 0 #e0a847;
+}
+
+.gr-command p,
+.gr-command h2 {
+  margin: 0;
+}
+
+.gr-command p {
+  color: #dca447;
+  font-size: 0.65rem;
+  font-weight: 900;
+  letter-spacing: 0.15em;
+}
+
+.gr-command h2 {
+  margin-top: 5px;
+  font-family: Georgia, 'Noto Serif TC', serif;
+  font-size: 1.25rem;
+}
+
+.gr-command__actions {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 7px;
+}
+
+.gr-command__actions button {
+  padding: 10px;
+  border: 1px solid #dca4475c;
+  color: #f5e5c2;
+  background: #dca4470d;
+  text-align: left;
+}
+
+.gr-command__actions strong,
+.gr-command__actions span {
+  display: block;
+}
+
+.gr-command__actions span {
+  margin-top: 4px;
+  color: #9ca5a2;
+  font-size: 0.68rem;
+}
+
+.gr-combat-log {
+  padding: 16px 18px;
+  border: 1px solid #ffffff13;
+  background: #090d0eaa;
+}
+
+.gr-combat-log header {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+}
+
+.gr-combat-log h2 {
+  margin: 0;
+  font-size: 0.88rem;
+}
+
+.gr-combat-log header span {
+  color: #697371;
+  font-size: 0.66rem;
+}
+
+.gr-combat-log ol {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px 24px;
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.gr-combat-log li {
+  padding: 4px 0 4px 10px;
+  border-left: 2px solid #4f5a58;
+  color: #9ca6a4;
+  font-size: 0.72rem;
+}
+
+.gr-combat-log li[data-kind='damage'] {
+  border-color: #c85a49;
+}
+
+.gr-combat-log li[data-kind='healing'] {
+  border-color: #63c68a;
+}
+
+.gr-result {
+  position: fixed;
+  z-index: 20;
+  inset: 0;
+  display: grid;
+  padding: 20px;
+  place-items: center;
+  background: #030506d9;
+  backdrop-filter: blur(8px);
+}
+
+.gr-result > div {
+  width: min(480px, 100%);
+  padding: 36px;
+  border: 1px solid #c75e4c;
+  background: #15191a;
+  text-align: center;
+}
+
+.gr-result p {
+  color: #dd725d;
+  font-size: 0.7rem;
+  font-weight: 900;
+  letter-spacing: 0.16em;
+}
+
+.gr-result h2 {
+  font-family: Georgia, 'Noto Serif TC', serif;
+  font-size: 2rem;
+}
+
+.gr-result span {
+  display: block;
+  margin-bottom: 24px;
+  color: #9aa3a1;
+  line-height: 1.6;
+}
+
+@media (max-width: 800px) {
+  .gr-command {
+    align-items: stretch;
+    grid-template-columns: 1fr;
+  }
+
+  .gr-combat-log ol {
+    grid-template-columns: 1fr;
+  }
+}

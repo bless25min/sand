@@ -1,7 +1,7 @@
 # Knight & Dragon Inspired Guild RPG MVP
 
 Date: 2026-07-25
-Status: Approved direction; awaiting written-spec review.
+Status: Approved and implemented.
 
 ## Product Goal
 

@@ -69,4 +69,3 @@ Starting or replaying a run clears pending results, selected modules, visible ev
 - UI tests prove preview and localized event values use the canonical result.
 - A normal-value E2E run completes without rewriting all modules to 30 or threats to 1.
 - `pnpm check`, production build, and live AI/fallback smoke tests pass.
-

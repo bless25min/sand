@@ -70,4 +70,3 @@
 - [ ] Run production build and Playwright with normal-value fixtures.
 - [ ] Inspect the consolidated diff for boundaries, dead code, file size, and user-owned changes.
 - [ ] Commit the batch as one reviewable change.
-

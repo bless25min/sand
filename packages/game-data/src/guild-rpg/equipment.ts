@@ -1,0 +1,26 @@
+import type { EquipmentAffixDefinition, EquipmentBaseDefinition } from '@expedition/shared-types';
+
+export const GUILD_EQUIPMENT_BASES: readonly EquipmentBaseDefinition[] = [
+  { id: 'iron_blade', name: '巡境鐵刃', slot: 'weapon', mainStat: 'attack', baseValue: 7 },
+  { id: 'oak_staff', name: '祝禱橡木杖', slot: 'weapon', mainStat: 'healing', baseValue: 8 },
+  { id: 'long_bow', name: '灰羽長弓', slot: 'weapon', mainStat: 'attack', baseValue: 8 },
+  { id: 'guard_plate', name: '守望胸甲', slot: 'armor', mainStat: 'defense', baseValue: 6 },
+  { id: 'traveler_coat', name: '疾行皮衣', slot: 'armor', mainStat: 'hp', baseValue: 28 },
+  { id: 'wolf_charm', name: '狼牙護符', slot: 'accessory', mainStat: 'speed', baseValue: 2 },
+  { id: 'sun_emblem', name: '曦光徽記', slot: 'accessory', mainStat: 'healing', baseValue: 5 },
+];
+
+export const GUILD_EQUIPMENT_AFFIXES: readonly EquipmentAffixDefinition[] = [
+  { id: 'stout', name: '堅韌', stat: 'hp' },
+  { id: 'savage', name: '兇猛', stat: 'attack' },
+  { id: 'guarded', name: '守護', stat: 'defense' },
+  { id: 'swift', name: '迅捷', stat: 'speed' },
+  { id: 'blessed', name: '祝福', stat: 'healing' },
+  { id: 'vital', name: '活力', stat: 'hp' },
+  { id: 'piercing', name: '穿透', stat: 'attack' },
+  { id: 'fortified', name: '壁壘', stat: 'defense' },
+  { id: 'windborn', name: '風行', stat: 'speed' },
+  { id: 'merciful', name: '慈悲', stat: 'healing' },
+  { id: 'heroic', name: '英勇', stat: 'attack' },
+  { id: 'unyielding', name: '不屈', stat: 'hp' },
+];

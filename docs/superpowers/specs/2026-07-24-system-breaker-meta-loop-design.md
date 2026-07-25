@@ -73,4 +73,3 @@ The profile is persisted as one localStorage value. Existing `system-breaker-fra
 - A completed run followed by replay visibly applies the selected fragment.
 - Mobile entry and contract remain free of horizontal overflow.
 - `pnpm check`, production build, and live two-run smoke test pass.
-

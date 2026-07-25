@@ -69,4 +69,3 @@
 - [ ] Run production build and Playwright.
 - [ ] Inspect the consolidated diff and commit the batch.
 - [ ] Deploy the exact verified source and smoke-test generation, one run, replay, and persisted progression.
-

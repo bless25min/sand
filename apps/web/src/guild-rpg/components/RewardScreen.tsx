@@ -1,0 +1,83 @@
+import { GUILD_GAME_CONTENT } from '@expedition/game-data';
+
+import type { GuildRpgAction, GuildRpgState } from '../state/game-reducer';
+import { EquipmentCard } from './EquipmentCard';
+
+interface RewardScreenProps {
+  state: GuildRpgState;
+  dispatch: React.Dispatch<GuildRpgAction>;
+}
+
+export function RewardScreen({ state, dispatch }: RewardScreenProps) {
+  const rewards = state.rewards!;
+  const allResolved = state.resolvedItemIds.length === rewards.items.length;
+  const nextQuest = GUILD_GAME_CONTENT.quests.find(
+    (quest) =>
+      state.profile.unlockedQuestIds.includes(quest.id) && !state.profile.questRecords[quest.id],
+  );
+
+  return (
+    <main className="gr-rewards">
+      <header className="gr-rewards__hero">
+        <p>QUEST COMPLETE</p>
+        <h1>遠征勝利</h1>
+        <span>{state.message}</span>
+        <div>
+          <strong>+{rewards.experience} EXP</strong>
+          <strong>+{rewards.gold} GOLD</strong>
+          <strong>{(rewards.clearMs / 1_000).toFixed(1)} SEC</strong>
+        </div>
+      </header>
+
+      <section className="gr-reward-party" aria-label="隊伍成長">
+        {state.profile.party.map((member) => {
+          const definition = GUILD_GAME_CONTENT.adventurers.find(
+            (candidate) => candidate.id === member.definitionId,
+          )!;
+          return (
+            <div key={member.definitionId}>
+              <span>{definition.name}</span>
+              <strong>Lv.{member.level}</strong>
+              <small>
+                {member.experience}/{member.level * 80} EXP
+              </small>
+            </div>
+          );
+        })}
+      </section>
+
+      <section className="gr-reward-loot" aria-labelledby="loot-title">
+        <div className="gr-section__heading">
+          <div>
+            <p>LOOT DECISION</p>
+            <h2 id="loot-title">選擇戰利品去向</h2>
+          </div>
+          <span>每件都必須裝備、保留或出售</span>
+        </div>
+        <div className="gr-reward-grid">
+          {rewards.items.map((item) => (
+            <EquipmentCard item={item} state={state} dispatch={dispatch} key={item.id} />
+          ))}
+        </div>
+      </section>
+
+      <footer className="gr-rewards__footer">
+        <div>
+          <span>{state.message}</span>
+          {nextQuest && <strong>新委託已解鎖：{nextQuest.name}</strong>}
+        </div>
+        <button
+          type="button"
+          className="gr-button gr-button--primary"
+          disabled={!allResolved}
+          title={allResolved ? undefined : '先決定兩件戰利品的去向'}
+          onClick={() => dispatch({ type: 'RETURN_GUILD' })}
+        >
+          {allResolved
+            ? '返回公會，繼續遠征'
+            : `尚有 ${rewards.items.length - state.resolvedItemIds.length} 件待處理`}
+        </button>
+      </footer>
+    </main>
+  );
+}

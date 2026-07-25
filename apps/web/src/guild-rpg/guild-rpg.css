@@ -1,0 +1,219 @@
+:root {
+  color: #f5f1e7;
+  background: #0b0f12;
+  font-family: Inter, 'Noto Sans TC', 'PingFang TC', 'Microsoft JhengHei', system-ui, sans-serif;
+  font-synthesis: none;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  min-width: 320px;
+  min-height: 100vh;
+  margin: 0;
+  background:
+    radial-gradient(circle at 15% 0%, rgb(194 139 62 / 14%), transparent 31rem),
+    linear-gradient(135deg, #0a0d10, #11171a 52%, #090c0e);
+}
+
+button,
+select {
+  color: inherit;
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
+button:focus-visible,
+select:focus-visible,
+a:focus-visible {
+  outline: 3px solid #f1b85b;
+  outline-offset: 3px;
+}
+
+.gr-shell,
+.gr-battle,
+.gr-rewards {
+  width: min(1480px, 100%);
+  min-height: 100vh;
+  margin: 0 auto;
+  padding: 24px clamp(18px, 4vw, 64px) 72px;
+}
+
+.gr-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 72px;
+  border-bottom: 1px solid #ffffff20;
+}
+
+.gr-brand {
+  display: flex;
+  flex-direction: column;
+  color: inherit;
+  text-decoration: none;
+}
+
+.gr-brand span,
+.gr-eyebrow,
+.gr-section__heading p,
+.gr-quest > p:first-of-type {
+  color: #d7a654;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.17em;
+  text-transform: uppercase;
+}
+
+.gr-brand strong {
+  font-family: Georgia, 'Noto Serif TC', serif;
+  font-size: 1.28rem;
+  letter-spacing: 0.08em;
+}
+
+.gr-resources {
+  display: grid;
+  grid-template-columns: auto auto;
+  gap: 2px 12px;
+  text-align: right;
+}
+
+.gr-resources span {
+  color: #919b9b;
+  font-size: 0.72rem;
+}
+
+.gr-resources strong {
+  color: #f1c977;
+  font-variant-numeric: tabular-nums;
+}
+
+.gr-section {
+  margin-top: 64px;
+}
+
+.gr-section__heading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 20px;
+}
+
+.gr-section__heading p,
+.gr-section__heading h2 {
+  margin: 0;
+}
+
+.gr-section__heading h2 {
+  margin-top: 5px;
+  font-family: Georgia, 'Noto Serif TC', serif;
+  font-size: clamp(1.65rem, 3vw, 2.35rem);
+}
+
+.gr-section__heading > span {
+  max-width: 38rem;
+  color: #8f9998;
+  font-size: 0.85rem;
+  text-align: right;
+}
+
+.gr-card {
+  position: relative;
+  border: 1px solid #ffffff18;
+  border-radius: 3px;
+  background: linear-gradient(145deg, #ffffff08, transparent 42%), #12181b;
+  box-shadow: 0 18px 60px #00000025;
+}
+
+.gr-button {
+  min-height: 43px;
+  padding: 10px 16px;
+  border: 1px solid #ffffff28;
+  border-radius: 2px;
+  background: #ffffff08;
+  font-weight: 800;
+}
+
+.gr-button:hover:not(:disabled) {
+  border-color: #e4b157;
+  background: #e4b15715;
+}
+
+.gr-button--primary {
+  border-color: #dca447;
+  color: #13110c;
+  background: linear-gradient(135deg, #f2cf84, #c98b34);
+  box-shadow: 0 8px 24px #d69d3930;
+}
+
+.gr-button--primary:hover:not(:disabled) {
+  color: #0c0b08;
+  background: linear-gradient(135deg, #ffe2a2, #dfa34b);
+}
+
+.gr-button:disabled {
+  opacity: 0.48;
+}
+
+.gr-rarity--common {
+  --rarity: #a9b1af;
+}
+
+.gr-rarity--uncommon {
+  --rarity: #63d48a;
+}
+
+.gr-rarity--rare {
+  --rarity: #59a8ff;
+}
+
+.gr-rarity--epic {
+  --rarity: #bd7dff;
+}
+
+.gr-rarity--legendary {
+  --rarity: #ffb84f;
+}
+
+@media (max-width: 720px) {
+  .gr-shell,
+  .gr-battle,
+  .gr-rewards {
+    padding: 16px 14px 48px;
+  }
+
+  .gr-section {
+    margin-top: 44px;
+  }
+
+  .gr-section__heading {
+    align-items: start;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .gr-section__heading > span {
+    text-align: left;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}

@@ -16,3 +16,5 @@ export const LEGION_SKILLS: Readonly<Record<string, SkillDefinition>> = {
   [SHIELD_WALL_TRAINING.id]: SHIELD_WALL_TRAINING,
   [BEAST_HUNTING_MANUAL.id]: BEAST_HUNTING_MANUAL,
 };
+
+export * from './guild-rpg/index';

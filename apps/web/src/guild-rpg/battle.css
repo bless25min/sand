@@ -1,0 +1,219 @@
+.gr-battle {
+  display: grid;
+  align-content: start;
+  gap: 18px;
+}
+
+.gr-battle__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 14px 0 20px;
+  border-bottom: 1px solid #ffffff1b;
+}
+
+.gr-battle__header p,
+.gr-battle__header h1,
+.gr-battle__header span {
+  margin: 0;
+}
+
+.gr-battle__header p {
+  color: #dca447;
+  font-size: 0.68rem;
+  font-weight: 900;
+  letter-spacing: 0.16em;
+}
+
+.gr-battle__header h1 {
+  margin: 3px 0;
+  font-family: Georgia, 'Noto Serif TC', serif;
+  font-size: clamp(1.7rem, 4vw, 2.65rem);
+}
+
+.gr-battle__header span {
+  color: #84908d;
+  font-size: 0.75rem;
+}
+
+.gr-battle__controls {
+  display: flex;
+  gap: 8px;
+}
+
+.gr-battle__controls div {
+  display: flex;
+}
+
+.gr-battle__controls button {
+  min-width: 52px;
+  padding: 9px 12px;
+  border: 1px solid #ffffff24;
+  background: #ffffff07;
+  font-weight: 800;
+}
+
+.gr-battle__controls button.is-active {
+  border-color: #e3ad4f;
+  color: #f3c873;
+  background: #e3ad4f18;
+}
+
+.gr-battlefield {
+  display: grid;
+  grid-template-columns: 1fr 60px 1fr;
+  gap: 14px;
+  min-height: 420px;
+  padding: 20px;
+  border: 1px solid #ffffff13;
+  background:
+    linear-gradient(#ffffff07 1px, transparent 1px),
+    linear-gradient(90deg, #ffffff07 1px, transparent 1px),
+    radial-gradient(circle at center, #8b69341c, transparent 45%), #0d1214;
+  background-size:
+    32px 32px,
+    32px 32px,
+    auto,
+    auto;
+}
+
+.gr-line {
+  display: grid;
+  align-content: center;
+  gap: 10px;
+}
+
+.gr-line > p {
+  margin: 0 0 3px;
+  color: #788381;
+  font-size: 0.68rem;
+  font-weight: 900;
+  letter-spacing: 0.13em;
+}
+
+.gr-versus {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  justify-content: center;
+  gap: 12px;
+  color: #d9ad60;
+  font-family: Georgia, serif;
+}
+
+.gr-versus span {
+  width: 1px;
+  height: 100%;
+  background: linear-gradient(transparent, #d9ad6055, transparent);
+}
+
+.gr-unit {
+  width: 100%;
+  padding: 14px;
+  border: 1px solid #ffffff18;
+  border-left: 3px solid #5b6766;
+  color: inherit;
+  background: #151c1fcf;
+  text-align: left;
+}
+
+button.gr-unit:hover:not(:disabled),
+.gr-unit.is-selected {
+  border-color: #e2aa4b;
+  border-left-color: #e2aa4b;
+  background: #2a2216e8;
+}
+
+.gr-unit.is-selected {
+  box-shadow:
+    0 0 0 1px #e2aa4b55,
+    0 10px 30px #00000030;
+}
+
+.gr-unit.is-defeated,
+.gr-unit:disabled {
+  filter: grayscale(1);
+  opacity: 0.38;
+}
+
+.gr-unit header,
+.gr-unit footer,
+.gr-unit__numbers {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.gr-unit header span,
+.gr-unit header h3 {
+  margin: 0;
+}
+
+.gr-unit header span {
+  color: #87918f;
+  font-size: 0.65rem;
+}
+
+.gr-unit header h3 {
+  margin-top: 2px;
+  font-size: 1rem;
+}
+
+.gr-unit header b,
+.gr-unit footer strong {
+  color: #ebbd69;
+  font-size: 0.67rem;
+}
+
+.gr-unit__numbers,
+.gr-unit footer {
+  margin-top: 9px;
+  color: #919b99;
+  font-size: 0.68rem;
+}
+
+.gr-meter {
+  height: 5px;
+  margin-top: 6px;
+  overflow: hidden;
+  background: #ffffff12;
+}
+
+.gr-meter span {
+  display: block;
+  height: 100%;
+  transition: width 100ms linear;
+}
+
+.gr-meter--hp span {
+  background: linear-gradient(90deg, #b83d37, #ec7954);
+}
+
+.gr-meter--gauge span {
+  background: linear-gradient(90deg, #80601f, #f1ca65);
+}
+
+@media (max-width: 800px) {
+  .gr-battle__header {
+    align-items: stretch;
+  }
+
+  .gr-battle__header {
+    flex-direction: column;
+  }
+
+  .gr-battlefield {
+    grid-template-columns: 1fr;
+  }
+
+  .gr-versus {
+    flex-direction: row;
+  }
+
+  .gr-versus span {
+    width: 100%;
+    height: 1px;
+  }
+}

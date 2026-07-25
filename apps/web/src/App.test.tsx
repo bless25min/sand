@@ -4,17 +4,23 @@ import { describe, expect, it } from 'vitest';
 import { App } from './App';
 
 describe('App', () => {
-  it('uses SYSTEM BREAKER as the default playable product', () => {
-    const markup = renderToStaticMarkup(<App legacy={false} />);
+  it('uses the guild RPG as the default playable product', () => {
+    const markup = renderToStaticMarkup(<App />);
 
-    expect(markup).toContain('SYSTEM BREAKER');
-    expect(markup).toContain('輸入一個世界');
-    expect(markup).toContain('生成可破壞系統');
+    expect(markup).toContain('遠征者公會');
+    expect(markup).toContain('邊境狼群');
+    expect(markup).toContain('開始遠征');
     expect(markup).not.toContain('data-testid="playable-expedition"');
   });
 
-  it('keeps the former expedition available only through legacy mode', () => {
-    const markup = renderToStaticMarkup(<App legacy />);
+  it('keeps SYSTEM BREAKER behind an explicit prototype switch', () => {
+    const markup = renderToStaticMarkup(<App prototype="system-breaker" />);
+
+    expect(markup).toContain('SYSTEM BREAKER');
+  });
+
+  it('keeps the former expedition behind an explicit prototype switch', () => {
+    const markup = renderToStaticMarkup(<App prototype="expedition" />);
 
     expect(markup).toContain('Project Expedition');
     expect(markup).toContain('data-testid="playable-expedition"');
