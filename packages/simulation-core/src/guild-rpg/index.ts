@@ -9,6 +9,7 @@ export { compileCommand } from './combo/compile-command';
 export { COMBO_EFFECT_REGISTRY } from './combo/effect-registry';
 export { previewComboCommand } from './combo/preview-command';
 export { resolveCommand } from './combo/resolve-command';
+export { resolveBossPhase } from './combo/resolve-boss-phase';
 export { resolveTriggerQueue } from './combo/resolve-trigger-queue';
 export { equipmentPower, equipmentStatTotals } from './equipment/compare-equipment';
 export { equipStoredItem } from './equipment/equip-stored-item';

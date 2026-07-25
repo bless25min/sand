@@ -193,4 +193,36 @@ describe('free-form combo command', () => {
     expect(preview.milestones).toEqual(['multi-kill', 'annihilation', 'chest']);
     expect(preview.eventCount).toBeGreaterThan(0);
   });
+
+  it('previews a guard break as a boss execution milestone without mutating the battle', () => {
+    const draft = { cardIds: ['brace', 'riposte'] };
+    const battle = { ...createBattle(draft.cardIds), selectedTargetId: 'target-b' };
+    const snapshot = structuredClone(battle);
+    const preview = previewComboCommand({
+      battle,
+      draft,
+      cards,
+      rules: {},
+      hunt: {
+        id: 'training-hunt',
+        questId: quest.id,
+        rewardExperience: 1,
+        rewardGold: 1,
+        enemies: [],
+        bossPhases: [
+          {
+            id: 'training-execution',
+            bossEnemyId: 'target-a',
+            activateAfterEnemyIds: ['target-b'],
+            pressureLabel: '處刑窗開啟',
+            cueId: 'training-cue',
+          },
+        ],
+      },
+    });
+
+    expect(battle).toEqual(snapshot);
+    expect(preview.defeatedEnemyIds).toEqual(['target-b']);
+    expect(preview.milestones).toContain('boss-execution');
+  });
 });

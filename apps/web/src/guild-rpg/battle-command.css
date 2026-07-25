@@ -248,6 +248,7 @@
 
 .gr-combo-playback[data-escalation-stage='trigger'],
 .gr-combo-playback[data-escalation-stage='break'],
+.gr-combo-playback[data-escalation-stage='execution'],
 .gr-combo-playback[data-escalation-stage='overkill'],
 .gr-combo-playback[data-escalation-stage='annihilation'] {
   animation: gr-trace-pulse 480ms ease-out;
@@ -257,6 +258,20 @@
 .gr-combo-playback[data-escalation-stage='annihilation'] {
   border-color: #e1ad4b66;
   box-shadow: inset 3px 0 #e1ad4b;
+}
+
+.gr-combo-playback[data-escalation-stage='execution'] {
+  border-color: #ffb83f99;
+  color: #ffe4ae;
+  background: linear-gradient(100deg, #a83b2329, transparent 55%), #160f0c;
+  box-shadow:
+    inset 4px 0 #ffad32,
+    0 0 30px #ff8b2b24;
+}
+
+.gr-combo-playback[data-impact-kind='boss-execution'] .gr-playback-impact {
+  color: #ffb23e;
+  opacity: 0.22;
 }
 
 .gr-combo-playback[data-escalation-stage='annihilation'] {

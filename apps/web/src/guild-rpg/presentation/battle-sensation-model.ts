@@ -11,6 +11,7 @@ import type { GuildRpgState } from '../state/game-reducer';
 export interface EnemySensation {
   id: string;
   pressureLabel: '蓄勢' | '即將攻擊' | '攻勢爆發';
+  executionLabel?: string;
   predictedTargetName?: string;
   guardedByNames: readonly string[];
   counteredByCurrentBuild: boolean;
@@ -51,6 +52,12 @@ export function createBattleSensationModel(state: GuildRpgState, content: GuildG
     }),
   );
   const hunt = content.hunts.find((candidate) => candidate.questId === battle.questId);
+  const activatedPhaseIds = new Set(runtime.activatedBossPhaseIds ?? []);
+  const executionLabels = new Map(
+    hunt?.bossPhases
+      ?.filter((phase) => activatedPhaseIds.has(phase.id))
+      .map((phase) => [phase.bossEnemyId, phase.pressureLabel]) ?? [],
+  );
   const preview = (() => {
     try {
       return previewComboCommand({
@@ -79,6 +86,7 @@ export function createBattleSensationModel(state: GuildRpgState, content: GuildG
     .map((unit) => ({
       id: unit.id,
       pressureLabel: pressureLabel(unit.gauge),
+      ...(executionLabels.get(unit.id) ? { executionLabel: executionLabels.get(unit.id)! } : {}),
       ...(predictedTarget ? { predictedTargetName: predictedTarget.name } : {}),
       guardedByNames: guardedByNames(unit.huntTraits, battle.units),
       counteredByCurrentBuild: Boolean(

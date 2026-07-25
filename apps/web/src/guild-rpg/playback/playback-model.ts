@@ -23,7 +23,7 @@ interface PlaybackTickInput {
 }
 
 export interface PlaybackImpact {
-  kind: 'stack' | 'trigger' | 'hit' | 'kill' | 'overkill' | 'annihilation';
+  kind: 'stack' | 'trigger' | 'hit' | 'kill' | 'boss-execution' | 'overkill' | 'annihilation';
   label: string;
   targetId?: string;
   amount?: number;
@@ -94,6 +94,7 @@ function playbackStage(events: readonly ComboEvent[]): ComboEscalationStage {
   if (events.some((event) => ['overkill', 'infinite_engine'].includes(event.kind))) {
     return 'overkill';
   }
+  if (events.some((event) => event.kind === 'boss_phase')) return 'execution';
   if (events.some((event) => event.kind === 'unit_defeated')) return 'break';
   if (
     events.some((event) => event.kind === 'rule_triggered') ||
@@ -124,6 +125,13 @@ function playbackImpact(
       kind: 'kill',
       ...(latest.targetId ? { targetId: latest.targetId } : {}),
       label: 'EXECUTED',
+    };
+  }
+  if (latest.kind === 'boss_phase') {
+    return {
+      kind: 'boss-execution',
+      ...(latest.targetId ? { targetId: latest.targetId } : {}),
+      label: 'EXECUTION WINDOW',
     };
   }
   if (latest.kind === 'damage') {
@@ -169,7 +177,8 @@ function findLastEvent(events: readonly ComboEvent[], predicate: (event: ComboEv
 
 function isImpactEvent(event?: ComboEvent) {
   return Boolean(
-    event && ['unit_defeated', 'overkill', 'infinite_engine', 'victory'].includes(event.kind),
+    event &&
+    ['unit_defeated', 'boss_phase', 'overkill', 'infinite_engine', 'victory'].includes(event.kind),
   );
 }
 

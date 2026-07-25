@@ -23,6 +23,7 @@ const TAG_LABEL: Readonly<Record<string, string>> = {
 const MILESTONE_LABEL = {
   'multi-kill': 'MULTI KILL',
   'chain-wipe': 'CHAIN WIPE',
+  'boss-execution': 'EXECUTION WINDOW',
   annihilation: 'ANNIHILATION',
   chest: 'CHEST',
 } as const;

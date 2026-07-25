@@ -21,8 +21,16 @@ describe('battle sensation model', () => {
         ...state.battle!,
         selectedTargetId: 'wolf_alpha',
         units: state.battle!.units.map((unit) =>
-          unit.id === 'wolf_alpha' ? { ...unit, gauge: 90 } : unit,
+          unit.id === 'wolf_alpha'
+            ? { ...unit, gauge: 90 }
+            : unit.side === 'enemies'
+              ? { ...unit, currentHp: 0 }
+              : unit,
         ),
+        combo: {
+          ...state.battle!.combo!,
+          activatedBossPhaseIds: ['alpha-execution'],
+        },
       },
     };
 
@@ -37,6 +45,7 @@ describe('battle sensation model', () => {
     expect(boss.pressureLabel).toBe('攻勢爆發');
     expect(boss.predictedTargetName).toBe('布蘭');
     expect(boss.guardedByNames).toEqual(['灰牙斥候', '灰牙獵手']);
+    expect(boss.executionLabel).toBe('孤王處刑窗');
     expect(model.executionTarget?.label).toBe('處刑目標');
     expect(model.executionTarget?.name).toBe('灰牙首領');
   });

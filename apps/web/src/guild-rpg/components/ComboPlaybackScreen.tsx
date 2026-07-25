@@ -51,6 +51,15 @@ export function ComboPlaybackScreen({ state, dispatch }: ComboPlaybackScreenProp
           <button type="button" onClick={() => dispatch({ type: 'SKIP_PLAYBACK' })}>
             跳過播放
           </button>
+          <button
+            type="button"
+            onClick={() => dispatch({ type: 'SET_PAUSED', paused: !state.paused })}
+          >
+            {state.paused ? '繼續播放' : '暫停播放'}
+          </button>
+          <button type="button" onClick={() => dispatch({ type: 'SET_SETTINGS_OPEN', open: true })}>
+            開啟設定
+          </button>
         </div>
       </header>
 

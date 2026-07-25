@@ -33,6 +33,15 @@ export const GUILD_HUNTS: readonly HuntDefinition[] = [
     rewardGold: 28,
     bossEnemyId: 'wolf_alpha',
     guardEnemyIds: ['wolf_scout', 'wolf_hunter'],
+    bossPhases: [
+      {
+        id: 'alpha-execution',
+        bossEnemyId: 'wolf_alpha',
+        activateAfterEnemyIds: ['wolf_scout', 'wolf_hunter'],
+        pressureLabel: '孤王處刑窗',
+        cueId: 'wolf-alpha-execution',
+      },
+    ],
     enemies: [
       {
         enemyId: 'wolf_scout',

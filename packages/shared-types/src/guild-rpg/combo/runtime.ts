@@ -21,6 +21,7 @@ export type ComboEventKind =
   | 'shield'
   | 'unit_defeated'
   | 'overkill'
+  | 'boss_phase'
   | 'enemy_pressure'
   | 'rule_triggered'
   | 'infinite_engine'
@@ -36,6 +37,8 @@ export interface ComboEvent {
   actorId?: string;
   targetId?: string;
   amount?: number;
+  phaseId?: string;
+  cueId?: string;
 }
 
 export interface ComboMetrics {
@@ -52,6 +55,7 @@ export interface ComboRuntimeState {
   availableCardIds: readonly string[];
   events: readonly ComboEvent[];
   metrics: ComboMetrics;
+  activatedBossPhaseIds?: readonly string[];
   lastCommandEventStartIndex?: number;
   lastCommandEnemyStartHpRatios?: Readonly<Record<string, number>>;
 }

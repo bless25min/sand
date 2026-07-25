@@ -72,6 +72,8 @@ describe('complete combo hunt presentation', () => {
     expect(markup).toContain(`data-playback-progress="0/${eventCount}"`);
     expect(markup).toContain('播放連擊');
     expect(markup).toContain('跳過播放');
+    expect(markup).toContain('暫停播放');
+    expect(markup).toContain('開啟設定');
     expect(markup).toContain('data-impact-kind="stack"');
     expect(markup).toContain('aria-label="播放速度"');
     expect(markup).toContain('aria-live="polite"');

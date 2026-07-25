@@ -38,6 +38,14 @@ export interface HuntEnemyRewards {
   traits?: readonly HuntEnemyTrait[];
 }
 
+export interface HuntBossPhase {
+  id: string;
+  bossEnemyId: string;
+  activateAfterEnemyIds: readonly string[];
+  pressureLabel: string;
+  cueId: string;
+}
+
 export interface HuntDefinition {
   id: string;
   questId: string;
@@ -45,6 +53,7 @@ export interface HuntDefinition {
   rewardGold: number;
   bossEnemyId?: string;
   guardEnemyIds?: readonly string[];
+  bossPhases?: readonly HuntBossPhase[];
   enemies: readonly HuntEnemyRewards[];
   annihilationChest?: HuntEquipmentDefinition;
 }

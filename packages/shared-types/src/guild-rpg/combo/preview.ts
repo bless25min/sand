@@ -4,7 +4,8 @@ import type { CardCatalog } from './content';
 import type { CommandDraft } from './runtime';
 import type { RuleCatalog } from './rules';
 
-export type ComboPreviewMilestone = 'multi-kill' | 'chain-wipe' | 'annihilation' | 'chest';
+export type ComboPreviewMilestone =
+  'multi-kill' | 'chain-wipe' | 'boss-execution' | 'annihilation' | 'chest';
 
 export interface PreviewComboCommandInput {
   battle: GuildBattleState;

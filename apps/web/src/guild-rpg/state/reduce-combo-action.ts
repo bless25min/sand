@@ -1,5 +1,15 @@
-import type { CardCatalog, GuildBattleState, RuleCatalog } from '@expedition/shared-types';
-import { compileCommand, resolveCommand, resolveTriggerQueue } from '@expedition/simulation-core';
+import type {
+  CardCatalog,
+  GuildBattleState,
+  HuntDefinition,
+  RuleCatalog,
+} from '@expedition/shared-types';
+import {
+  compileCommand,
+  resolveBossPhase,
+  resolveCommand,
+  resolveTriggerQueue,
+} from '@expedition/simulation-core';
 
 export type ComboCommandAction =
   | { type: 'APPEND_COMBO_CARD'; cardId: string }
@@ -16,6 +26,7 @@ export function reduceComboAction(
   action: ComboCommandAction,
   cards: CardCatalog,
   rules: RuleCatalog = {},
+  hunt?: HuntDefinition,
 ): ComboActionResult {
   const runtime = battle.combo;
   if (!runtime || runtime.phase !== 'composing') {
@@ -72,8 +83,9 @@ export function reduceComboAction(
     },
   };
   const resolved = resolveCommand(battleAtRelease, command, cards);
+  const triggered = resolveTriggerQueue({ battle: resolved, command, rules }).battle;
   return {
-    battle: resolveTriggerQueue({ battle: resolved, command, rules }).battle,
+    battle: resolveBossPhase({ battle: triggered, hunt }),
     message: `軍令釋放：${command.cardIds.length} 張卡牌完整結算。`,
   };
 }

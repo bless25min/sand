@@ -6,6 +6,7 @@ import type {
 } from '@expedition/shared-types';
 
 import { compileCommand } from './compile-command';
+import { resolveBossPhase } from './resolve-boss-phase';
 import { resolveCommand } from './resolve-command';
 import { resolveTriggerQueue } from './resolve-trigger-queue';
 
@@ -30,6 +31,9 @@ function cloneBattle(battle: GuildBattleState): GuildBattleState {
       draft: { cardIds: [...battle.combo.draft.cardIds] },
       availableCardIds: [...battle.combo.availableCardIds],
       events: battle.combo.events.map((event) => ({ ...event })),
+      ...(battle.combo.activatedBossPhaseIds
+        ? { activatedBossPhaseIds: [...battle.combo.activatedBossPhaseIds] }
+        : {}),
       metrics: {
         ...battle.combo.metrics,
         defeatedEnemyIds: [...battle.combo.metrics.defeatedEnemyIds],
@@ -68,7 +72,8 @@ export function previewComboCommand(input: PreviewComboCommandInput): ComboComma
     command,
     rules: input.rules,
   }).battle;
-  const runtime = triggered.combo!;
+  const phased = resolveBossPhase({ battle: triggered, hunt: input.hunt });
+  const runtime = phased.combo!;
   const defeatedBefore = new Set(before.metrics.defeatedEnemyIds);
   const defeatedEnemyIds = runtime.metrics.defeatedEnemyIds.filter(
     (enemyId) => !defeatedBefore.has(enemyId),
@@ -78,6 +83,9 @@ export function previewComboCommand(input: PreviewComboCommandInput): ComboComma
   const milestones: ComboPreviewMilestone[] = [];
   if (defeatedEnemyIds.length >= 2) milestones.push('multi-kill');
   if (defeatedEnemyIds.length >= 3) milestones.push('chain-wipe');
+  if (runtime.events.slice(before.events.length).some((event) => event.kind === 'boss_phase')) {
+    milestones.push('boss-execution');
+  }
   if (annihilation) milestones.push('annihilation');
   if (annihilation && earnsChest(input, defeatedSet)) milestones.push('chest');
 

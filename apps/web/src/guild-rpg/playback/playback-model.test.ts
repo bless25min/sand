@@ -103,7 +103,7 @@ describe('combo playback model', () => {
     ).toEqual({ type: 'complete', delayMs: 700 });
   });
 
-  it('climbs through stack, trigger, break, overkill, and annihilation impacts', () => {
+  it('climbs through stack, trigger, break, boss execution, overkill, and annihilation impacts', () => {
     const events: readonly ComboEvent[] = [
       {
         id: 0,
@@ -126,6 +126,16 @@ describe('combo playback model', () => {
       },
       {
         id: 3,
+        causalId: 'boss-phase',
+        parentCausalId: 'kill',
+        kind: 'boss_phase',
+        message: '孤王處刑窗',
+        targetId: 'target-b',
+        phaseId: 'alpha-execution',
+        cueId: 'wolf-alpha-execution',
+      },
+      {
+        id: 4,
         causalId: 'overkill',
         kind: 'overkill',
         message: '溢傷',
@@ -133,7 +143,7 @@ describe('combo playback model', () => {
         amount: 99,
       },
       {
-        id: 4,
+        id: 5,
         causalId: 'victory',
         kind: 'victory',
         message: '全滅',
@@ -145,7 +155,7 @@ describe('combo playback model', () => {
       availableCardIds: [],
       events,
       metrics: {
-        comboCount: 5,
+        comboCount: 6,
         totalDamage: 99,
         totalOverkill: 99,
         defeatedEnemyIds: ['target-a'],
@@ -154,14 +164,19 @@ describe('combo playback model', () => {
     };
 
     expect(
-      [1, 2, 3, 4, 5].map((visible) => createPlaybackProjection(runtime, 0, visible).stage),
-    ).toEqual(['stack', 'trigger', 'break', 'overkill', 'annihilation']);
+      [1, 2, 3, 4, 5, 6].map((visible) => createPlaybackProjection(runtime, 0, visible).stage),
+    ).toEqual(['stack', 'trigger', 'break', 'execution', 'overkill', 'annihilation']);
     expect(createPlaybackProjection(runtime, 0, 3).currentImpact).toEqual({
       kind: 'kill',
       targetId: 'target-a',
       label: 'EXECUTED',
     });
     expect(createPlaybackProjection(runtime, 0, 4).currentImpact).toEqual({
+      kind: 'boss-execution',
+      targetId: 'target-b',
+      label: 'EXECUTION WINDOW',
+    });
+    expect(createPlaybackProjection(runtime, 0, 5).currentImpact).toEqual({
       kind: 'overkill',
       targetId: 'target-a',
       amount: 99,

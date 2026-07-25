@@ -72,12 +72,12 @@ type ComboEventKind = ExistingComboEventKind | "boss_phase";
 resolveBossPhase(input: BossPhaseInput): { event?: ComboEvent; selectedTargetId?: string };
 ```
 
-- [ ] Write tests for content references, exact one-time activation after the last guard, no event
+- [x] Write tests for content references, exact one-time activation after the last guard, no event
       after boss death, automatic boss target, cloned-preview parity, execution label, and stage cue.
-- [ ] Run focused core/data/web tests and verify RED for missing phase contracts and resolver.
-- [ ] Implement the declarative phase and invoke the pure resolver after each defeated guard; keep
+- [x] Run focused core/data/web tests and verify RED for missing phase contracts and resolver.
+- [x] Implement the declarative phase and invoke the pure resolver after each defeated guard; keep
       damage unchanged and include phase state in runtime so repeated commands cannot re-emit it.
-- [ ] Re-run focused tests, typecheck, and ESLint; verify GREEN and commit
+- [x] Re-run focused tests, typecheck, and ESLint; verify GREEN and commit
       `feat: open wolf execution phase`.
 
 ### Task 3: Hear and Feel the Causal Chain

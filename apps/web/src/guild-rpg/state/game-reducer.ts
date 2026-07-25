@@ -282,7 +282,16 @@ export function guildRpgReducer(state: GuildRpgState, action: GuildRpgAction): G
     const rules = Object.fromEntries(
       build.ruleIds.map((ruleId) => [ruleId, GUILD_GAME_CONTENT.rules[ruleId]!]),
     );
-    const resolution = reduceComboAction(state.battle, action, GUILD_GAME_CONTENT.cards, rules);
+    const hunt = GUILD_GAME_CONTENT.hunts.find(
+      (candidate) => candidate.questId === state.battle?.questId,
+    );
+    const resolution = reduceComboAction(
+      state.battle,
+      action,
+      GUILD_GAME_CONTENT.cards,
+      rules,
+      hunt,
+    );
     const next = { ...state, battle: resolution.battle, message: resolution.message };
     if (action.type !== 'RELEASE_COMBO') return next;
     return {

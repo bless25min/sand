@@ -50,13 +50,17 @@ export function BattleUnitCard({
         </div>
       )}
       {unit.side === 'enemies' && sensation && (
-        <div className="gr-unit__intent">
+        <div
+          className="gr-unit__intent"
+          data-execution-window={sensation.executionLabel ? 'true' : undefined}
+        >
           <strong>{sensation.pressureLabel}</strong>
           <span>預定攻擊 {sensation.predictedTargetName ?? '遠征隊'}</span>
           {sensation.guardedByNames.length > 0 && (
             <span>護衛連結 {sensation.guardedByNames.join('、')}</span>
           )}
           {sensation.counteredByCurrentBuild && <b>目前 Build 可破</b>}
+          {sensation.executionLabel && <b>{sensation.executionLabel}</b>}
         </div>
       )}
       {(unit.side === 'enemies' || unit.guarding || unit.currentHp <= 0) && (
@@ -64,6 +68,7 @@ export function BattleUnitCard({
           {unit.side === 'enemies' && (
             <span>
               壓力 {Math.floor(unit.gauge)}% · {sensation?.pressureLabel ?? '蓄勢'}
+              {sensation?.executionLabel ? ` · ${sensation.executionLabel}` : ''}
             </span>
           )}
           {unit.guarding && <strong>盾牆防禦</strong>}

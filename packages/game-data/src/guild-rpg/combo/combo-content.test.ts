@@ -58,6 +58,28 @@ describe('combo content factory', () => {
     }
   });
 
+  it('declares a traceable wolf execution phase with valid enemy references', () => {
+    const hunt = GUILD_HUNTS.find((candidate) => candidate.id === 'border-pack-hunt')!;
+    const enemyIds = new Set(hunt.enemies.map((enemy) => enemy.enemyId));
+
+    expect(hunt.bossPhases).toEqual([
+      {
+        id: 'alpha-execution',
+        bossEnemyId: 'wolf_alpha',
+        activateAfterEnemyIds: ['wolf_scout', 'wolf_hunter'],
+        pressureLabel: '孤王處刑窗',
+        cueId: 'wolf-alpha-execution',
+      },
+    ]);
+    expect(
+      hunt.bossPhases?.every(
+        (phase) =>
+          enemyIds.has(phase.bossEnemyId) &&
+          phase.activateAfterEnemyIds.every((enemyId) => enemyIds.has(enemyId)),
+      ),
+    ).toBe(true);
+  });
+
   it('diagnoses unsupported grammar and missing graph references', () => {
     const invalid = {
       cards: {

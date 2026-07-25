@@ -255,6 +255,19 @@ button.gr-unit:hover:not(:disabled),
   color: #f2c66d;
 }
 
+.gr-unit__intent[data-execution-window='true'] {
+  border-color: #ffbe4e;
+  background: linear-gradient(90deg, #ff9d2824, transparent), #6c241914;
+  box-shadow:
+    inset 3px 0 #ffb536,
+    0 0 22px #ff9f2924;
+}
+
+.gr-unit__intent[data-execution-window='true'] b:last-child {
+  color: #ffd88b;
+  letter-spacing: 0.08em;
+}
+
 .gr-meter {
   height: 5px;
   margin-top: 6px;

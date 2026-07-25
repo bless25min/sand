@@ -247,6 +247,32 @@ describe('guild RPG reducer', () => {
     });
   });
 
+  it('opens and retargets the wolf execution phase exactly once after both guards fall', () => {
+    let state = guildRpgReducer(createGuildRpgState(), {
+      type: 'START_QUEST',
+      questId: 'border_pack',
+    });
+    state = {
+      ...state,
+      battle: {
+        ...state.battle!,
+        selectedTargetId: 'wolf_scout',
+        units: state.battle!.units.map((unit) =>
+          ['wolf_scout', 'wolf_hunter'].includes(unit.id) ? { ...unit, currentHp: 1 } : unit,
+        ),
+      },
+    };
+    state = guildRpgReducer(state, { type: 'APPEND_COMBO_CARD', cardId: 'lyra_quickshot' });
+    state = guildRpgReducer(state, { type: 'APPEND_COMBO_CARD', cardId: 'lyra_ricochet' });
+    state = guildRpgReducer(state, { type: 'RELEASE_COMBO' });
+
+    expect(state.battle?.selectedTargetId).toBe('wolf_alpha');
+    expect(state.battle?.combo?.activatedBossPhaseIds).toEqual(['alpha-execution']);
+    expect(state.battle?.combo?.events.filter((event) => event.kind === 'boss_phase')).toHaveLength(
+      1,
+    );
+  });
+
   it('preserves the draft while enemies pressure composition and supports undo', () => {
     let state = guildRpgReducer(createGuildRpgState(), {
       type: 'START_QUEST',

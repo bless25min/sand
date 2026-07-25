@@ -63,6 +63,29 @@ function reachFailedRewards(): GuildRpgState {
   return guildRpgReducer(state, { type: 'TICK', elapsedMs: 0 });
 }
 
+function reachExecutionWindow(): GuildRpgState {
+  let state = guildRpgReducer(createGuildRpgState(), {
+    type: 'START_QUEST',
+    questId: 'border_pack',
+  });
+  state = {
+    ...state,
+    battle: {
+      ...state.battle!,
+      selectedTargetId: 'wolf_scout',
+      units: state.battle!.units.map((unit) =>
+        ['wolf_scout', 'wolf_hunter'].includes(unit.id) ? { ...unit, currentHp: 1 } : unit,
+      ),
+    },
+  };
+  for (const cardId of ['lyra_quickshot', 'lyra_ricochet']) {
+    state = guildRpgReducer(state, { type: 'APPEND_COMBO_CARD', cardId });
+  }
+  state = guildRpgReducer(state, { type: 'RELEASE_COMBO' });
+  state = guildRpgReducer(state, { type: 'ADVANCE_PLAYBACK', count: 1_000 });
+  return guildRpgReducer(state, { type: 'COMPLETE_PLAYBACK' });
+}
+
 describe('right-thumb mobile flow', () => {
   it('keeps guild navigation and the quest action in the thumb command deck', () => {
     const markup = renderToStaticMarkup(
@@ -172,6 +195,16 @@ describe('right-thumb mobile flow', () => {
     expect(markup).toContain('放入背包');
     expect(markup).toContain('出售');
     expect(resolvedMarkup).toContain('返回公會');
+  });
+
+  it('makes the opened wolf execution window unmistakable on the battlefield', () => {
+    const markup = renderToStaticMarkup(
+      <BattleScreen state={reachExecutionWindow()} dispatch={dispatch} />,
+    );
+
+    expect(markup).toContain('data-execution-window="true"');
+    expect(markup).toContain('孤王處刑窗');
+    expect(markup).toContain('處刑目標');
   });
 
   it('renders a material-only failed hunt with an immediate safe return', () => {
