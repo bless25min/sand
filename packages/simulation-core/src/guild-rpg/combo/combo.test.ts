@@ -51,6 +51,7 @@ const cards: Readonly<Record<string, ComboCardDefinition>> = {
     ownerId: 'guard',
     name: '架盾',
     description: '建立格擋起點。',
+    cueId: 'block',
     emitsTags: ['block'],
     effects: [{ kind: 'shield', target: 'self', amount: 30 }],
   },
@@ -59,6 +60,7 @@ const cards: Readonly<Record<string, ComboCardDefinition>> = {
     ownerId: 'guard',
     name: '反擊',
     description: '格擋後反擊。',
+    cueId: 'hit',
     requiresTags: ['block'],
     emitsTags: ['hit'],
     effects: [{ kind: 'damage', target: 'selected_enemy', amount: 60 }],
@@ -68,6 +70,7 @@ const cards: Readonly<Record<string, ComboCardDefinition>> = {
     ownerId: 'guard',
     name: '橫掃',
     description: '攻擊全體。',
+    cueId: 'ricochet',
     requiresTags: ['hit'],
     emitsTags: ['area'],
     effects: [{ kind: 'damage', target: 'all_enemies', amount: 50 }],
@@ -139,6 +142,11 @@ describe('free-form combo command', () => {
       expect.arrayContaining(['card_played', 'damage', 'unit_defeated', 'overkill']),
     );
     expect(first.combo?.events.every((event) => event.causalId.length > 0)).toBe(true);
+    expect(
+      first.combo?.events
+        .filter((event) => ['card_played', 'shield', 'damage'].includes(event.kind))
+        .map((event) => event.cueId),
+    ).toEqual(expect.arrayContaining(['block', 'hit', 'ricochet']));
     const seenCausalIds = new Set<string>();
     for (const event of first.combo!.events) {
       if (event.parentCausalId) expect(seenCausalIds.has(event.parentCausalId)).toBe(true);

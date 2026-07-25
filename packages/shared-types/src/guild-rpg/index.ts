@@ -1,4 +1,5 @@
 export type * from './game-state';
+export * from './spectacle';
 export type * from './combo/content';
 export type * from './combo/runtime';
 export type * from './combo/rules';

@@ -72,6 +72,7 @@ export function resolveTriggerQueue(input: TriggerQueueInput): TriggerQueueResul
         ...(source.hasParent ? { parentCausalId: source.causalId } : {}),
         kind: 'rule_triggered',
         message: `${rule.name}因 ${source.trigger} 觸發。`,
+        ...(rule.cueId ? { cueId: rule.cueId } : {}),
       };
       battle = {
         ...battle,

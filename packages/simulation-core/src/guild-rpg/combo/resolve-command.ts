@@ -48,6 +48,7 @@ export function resolveCommand(
       kind: 'card_played',
       message: `${card.name}加入連擊。`,
       actorId: card.ownerId,
+      ...(card.cueId ? { cueId: card.cueId } : {}),
     });
 
     card.effects.forEach((effect, effectIndex) => {
@@ -63,6 +64,7 @@ export function resolveCommand(
           actorId: card.ownerId,
           targetId: card.ownerId,
           amount: effect.amount,
+          ...(card.cueId ? { cueId: card.cueId } : {}),
         });
         return;
       }
@@ -85,6 +87,7 @@ export function resolveCommand(
           actorId: card.ownerId,
           targetId: target.id,
           amount,
+          ...(card.cueId ? { cueId: card.cueId } : {}),
         });
         return;
       }
@@ -107,6 +110,7 @@ export function resolveCommand(
           message: `ANNIHILATION OVERFLOW +${effect.amount}`,
           actorId: card.ownerId,
           amount: effect.amount,
+          cueId: 'overkill',
         });
         return;
       }
@@ -126,6 +130,7 @@ export function resolveCommand(
           actorId: card.ownerId,
           targetId: target.id,
           amount,
+          ...(card.cueId ? { cueId: card.cueId } : {}),
         });
         if (outcome.defeated) {
           pushEvent({
@@ -134,6 +139,7 @@ export function resolveCommand(
             kind: 'unit_defeated',
             message: `${target.name}被擊敗。`,
             targetId: target.id,
+            cueId: 'kill',
           });
         }
         if (outcome.overflow > 0) {
@@ -144,6 +150,7 @@ export function resolveCommand(
             message: `OVERKILL +${outcome.overflow}`,
             targetId: target.id,
             amount: outcome.overflow,
+            cueId: 'overkill',
           });
         }
       });
@@ -156,6 +163,7 @@ export function resolveCommand(
       causalId: `victory:${battle.sequence}`,
       kind: 'victory',
       message: '整條軍令結算完成，敵軍全滅。',
+      cueId: 'annihilation',
     });
   }
   return {

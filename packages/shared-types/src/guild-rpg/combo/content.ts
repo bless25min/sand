@@ -1,3 +1,5 @@
+import type { SpectacleCueId } from '../spectacle';
+
 export type ComboTag = string;
 export type ComboEffectTarget = 'self' | 'selected_enemy' | 'all_enemies' | 'lowest_hp_ally';
 
@@ -25,6 +27,7 @@ export interface ComboCardDefinition {
   ownerId: string;
   name: string;
   description: string;
+  cueId?: SpectacleCueId;
   requiresTags?: readonly ComboTag[];
   emitsTags: readonly ComboTag[];
   effects: readonly ComboEffectDefinition[];

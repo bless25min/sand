@@ -1,4 +1,5 @@
 import type { CardCatalog } from './content';
+import type { SpectacleCueId, SpectacleMotifId } from '../spectacle';
 
 export const COMBO_EFFECT_KINDS = [
   'damage',
@@ -58,6 +59,7 @@ export interface ComboRuleDefinition {
   id: string;
   name: string;
   description: string;
+  cueId?: SpectacleCueId;
   trigger: ComboTriggerKind;
   selector: ComboSelectorKind;
   effects: readonly ComboRuleEffect[];
@@ -74,7 +76,7 @@ export interface BuildDefinition {
   fantasy: string;
   payoffLabel: string;
   signatureCardIds: readonly string[];
-  accent: string;
+  accent: SpectacleMotifId;
   cardIds: readonly string[];
   ruleIds: readonly string[];
 }

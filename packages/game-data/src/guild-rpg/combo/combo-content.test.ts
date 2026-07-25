@@ -1,4 +1,9 @@
-import type { ComboContent } from '@expedition/shared-types';
+import {
+  SPECTACLE_CUE_IDS,
+  SPECTACLE_MOTIF_IDS,
+  type ComboContent,
+  type HuntDefinition,
+} from '@expedition/shared-types';
 import { describe, expect, it } from 'vitest';
 
 import { GUILD_COMBO_CONTENT } from './index';
@@ -17,11 +22,40 @@ describe('combo content factory', () => {
       expect(build.fantasy, build.id).not.toBe('');
       expect(build.payoffLabel, build.id).not.toBe('');
       expect(build.accent, build.id).not.toBe('');
+      expect(SPECTACLE_MOTIF_IDS, build.id).toContain(build.accent);
       expect(build.signatureCardIds.length, build.id).toBeGreaterThanOrEqual(3);
       expect(
         build.signatureCardIds.every((cardId) => build.cardIds.includes(cardId)),
         build.id,
       ).toBe(true);
+    }
+  });
+
+  it('authors traceable audiovisual identity for every card, rule, enemy, and hunt', () => {
+    for (const card of Object.values(GUILD_COMBO_CONTENT.cards)) {
+      expect(SPECTACLE_CUE_IDS, card.id).toContain(card.cueId);
+    }
+    for (const rule of Object.values(GUILD_COMBO_CONTENT.rules)) {
+      expect(SPECTACLE_CUE_IDS, rule.id).toContain(rule.cueId);
+    }
+    for (const hunt of GUILD_HUNTS) {
+      const spectacleCues = hunt.spectacleCues!;
+      expect(
+        spectacleCues.map((cue) => cue.beat),
+        hunt.id,
+      ).toEqual(['opening', 'execution', 'annihilation']);
+      expect(new Set(spectacleCues.map((cue) => cue.id)).size, hunt.id).toBe(3);
+      for (const cue of spectacleCues) {
+        expect(SPECTACLE_CUE_IDS, `${hunt.id}:${cue.id}`).toContain(cue.cueId);
+      }
+      for (const enemy of hunt.enemies) {
+        const identity = enemy.spectacle!;
+        expect(identity.family, enemy.enemyId).not.toBe('');
+        expect(identity.role, enemy.enemyId).not.toBe('');
+        expect(identity.palette, enemy.enemyId).not.toBe('');
+        expect(identity.aura, enemy.enemyId).not.toBe('');
+        expect(identity.defeat, enemy.enemyId).not.toBe('');
+      }
     }
   });
 
@@ -109,6 +143,19 @@ describe('combo content factory', () => {
         'unknown_phase_activator',
         'missing_boss_phase_cue',
       ]),
+    );
+  });
+
+  it('diagnoses missing enemy spectacle and incomplete hunt beats', () => {
+    const { spectacle: _spectacle, ...enemyWithoutSpectacle } = GUILD_HUNTS[0]!.enemies[0]!;
+    const invalidHunt: HuntDefinition = {
+      ...GUILD_HUNTS[0]!,
+      spectacleCues: GUILD_HUNTS[0]!.spectacleCues!.slice(0, 2),
+      enemies: [enemyWithoutSpectacle],
+    };
+
+    expect(validateHuntBossPhases([invalidHunt]).map((diagnostic) => diagnostic.code)).toEqual(
+      expect.arrayContaining(['missing_enemy_spectacle', 'incomplete_hunt_spectacle']),
     );
   });
 

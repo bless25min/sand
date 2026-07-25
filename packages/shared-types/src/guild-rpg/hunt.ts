@@ -2,6 +2,7 @@ import type { EquipmentItem, GuildEquipmentSlot, GuildItemRarity } from './equip
 import type { MaterialReward, QuestRewards } from './profile';
 import type { GuildStatKey } from './stats';
 import type { ComboTransformKind } from './combo/rules';
+import type { EnemySpectacleIdentity, HuntSpectacleCue } from './spectacle';
 
 export interface HuntMaterialDefinition {
   id: string;
@@ -33,6 +34,7 @@ export interface HuntEnemyTrait {
 
 export interface HuntEnemyRewards {
   enemyId: string;
+  spectacle?: EnemySpectacleIdentity;
   material: HuntMaterialDefinition;
   equipment: readonly HuntEquipmentDefinition[];
   traits?: readonly HuntEnemyTrait[];
@@ -54,6 +56,7 @@ export interface HuntDefinition {
   bossEnemyId?: string;
   guardEnemyIds?: readonly string[];
   bossPhases?: readonly HuntBossPhase[];
+  spectacleCues?: readonly HuntSpectacleCue[];
   enemies: readonly HuntEnemyRewards[];
   annihilationChest?: HuntEquipmentDefinition;
 }

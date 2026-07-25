@@ -42,9 +42,39 @@ export const GUILD_HUNTS: readonly HuntDefinition[] = [
         cueId: 'wolf-alpha-execution',
       },
     ],
+    spectacleCues: [
+      {
+        id: 'border-moon-howl',
+        beat: 'opening',
+        cueId: 'stack',
+        label: '月下圍獵',
+        palette: 'moon-iron',
+      },
+      {
+        id: 'border-lone-alpha',
+        beat: 'execution',
+        cueId: 'boss-execution',
+        label: '孤王處刑',
+        palette: 'blood-amber',
+      },
+      {
+        id: 'border-pack-erased',
+        beat: 'annihilation',
+        cueId: 'annihilation',
+        label: '狼群抹除',
+        palette: 'gold-fang',
+      },
+    ],
     enemies: [
       {
         enemyId: 'wolf_scout',
+        spectacle: {
+          family: 'greyfang',
+          role: 'skirmisher',
+          palette: 'moon-silver',
+          aura: 'wind-streak',
+          defeat: 'fang-scatter',
+        },
         traits: [
           {
             id: 'scatter_gap',
@@ -71,6 +101,13 @@ export const GUILD_HUNTS: readonly HuntDefinition[] = [
       },
       {
         enemyId: 'wolf_hunter',
+        spectacle: {
+          family: 'greyfang',
+          role: 'brute',
+          palette: 'rust-blood',
+          aura: 'hunt-mark',
+          defeat: 'claw-break',
+        },
         traits: [
           {
             id: 'riposte_gap',
@@ -97,6 +134,13 @@ export const GUILD_HUNTS: readonly HuntDefinition[] = [
       },
       {
         enemyId: 'wolf_alpha',
+        spectacle: {
+          family: 'greyfang',
+          role: 'boss',
+          palette: 'alpha-amber',
+          aura: 'pack-crown',
+          defeat: 'alpha-collapse',
+        },
         traits: [
           {
             id: 'pack_bulwark',
@@ -141,9 +185,39 @@ export const GUILD_HUNTS: readonly HuntDefinition[] = [
     rewardGold: 46,
     bossEnemyId: 'goblin_guard',
     guardEnemyIds: ['goblin_raider', 'goblin_slinger'],
+    spectacleCues: [
+      {
+        id: 'mine-iron-alarm',
+        beat: 'opening',
+        cueId: 'trigger',
+        label: '封礦警鐘',
+        palette: 'ore-green',
+      },
+      {
+        id: 'mine-bulwark-crack',
+        beat: 'execution',
+        cueId: 'break',
+        label: '盾芯破礦',
+        palette: 'forge-orange',
+      },
+      {
+        id: 'mine-gallery-collapse',
+        beat: 'annihilation',
+        cueId: 'annihilation',
+        label: '礦廊崩滅',
+        palette: 'molten-gold',
+      },
+    ],
     enemies: [
       {
         enemyId: 'goblin_guard',
+        spectacle: {
+          family: 'deepmine',
+          role: 'guardian',
+          palette: 'iron-green',
+          aura: 'shield-rivet',
+          defeat: 'armor-shatter',
+        },
         traits: [
           {
             id: 'sealed_bulwark',
@@ -172,6 +246,13 @@ export const GUILD_HUNTS: readonly HuntDefinition[] = [
       },
       {
         enemyId: 'goblin_raider',
+        spectacle: {
+          family: 'deepmine',
+          role: 'brute',
+          palette: 'rust-red',
+          aura: 'charge-sparks',
+          defeat: 'blade-tumble',
+        },
         traits: [
           {
             id: 'reckless_charge',
@@ -188,6 +269,13 @@ export const GUILD_HUNTS: readonly HuntDefinition[] = [
       },
       {
         enemyId: 'goblin_slinger',
+        spectacle: {
+          family: 'deepmine',
+          role: 'artillery',
+          palette: 'powder-yellow',
+          aura: 'stone-arc',
+          defeat: 'shrapnel-scatter',
+        },
         traits: [
           {
             id: 'echoing_gallery',
@@ -230,9 +318,39 @@ export const GUILD_HUNTS: readonly HuntDefinition[] = [
     rewardGold: 75,
     bossEnemyId: 'ember_whelp',
     guardEnemyIds: ['shrine_drake'],
+    spectacleCues: [
+      {
+        id: 'shrine-ember-awakening',
+        beat: 'opening',
+        cueId: 'trigger',
+        label: '燼心甦醒',
+        palette: 'ember-violet',
+      },
+      {
+        id: 'shrine-seal-rend',
+        beat: 'execution',
+        cueId: 'boss-execution',
+        label: '龍印撕裂',
+        palette: 'dragon-crimson',
+      },
+      {
+        id: 'shrine-sunfall',
+        beat: 'annihilation',
+        cueId: 'annihilation',
+        label: '聖祠日墜',
+        palette: 'sun-white',
+      },
+    ],
     enemies: [
       {
         enemyId: 'ember_whelp',
+        spectacle: {
+          family: 'ember-dragon',
+          role: 'boss',
+          palette: 'ember-violet',
+          aura: 'sealed-heart',
+          defeat: 'sunburst-collapse',
+        },
         traits: [
           {
             id: 'sealed_ember_heart',
@@ -261,6 +379,13 @@ export const GUILD_HUNTS: readonly HuntDefinition[] = [
       },
       {
         enemyId: 'shrine_drake',
+        spectacle: {
+          family: 'ember-dragon',
+          role: 'guardian',
+          palette: 'scale-cyan',
+          aura: 'resonant-scales',
+          defeat: 'scale-rain',
+        },
         traits: [
           {
             id: 'resonant_scale',

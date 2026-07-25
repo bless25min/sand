@@ -46,6 +46,7 @@ export function resolveDamageEffect(context: RuleEffectContext): RuleEffectResul
       kind: 'overkill',
       message: `${context.rule.name}轉為 Annihilation Overflow +${amount}。`,
       amount,
+      cueId: 'overkill',
     });
   } else {
     targets.forEach((target, index) => {
@@ -68,6 +69,7 @@ export function resolveDamageEffect(context: RuleEffectContext): RuleEffectResul
         message: `${context.rule.name}對${target.name}造成 ${adjustedAmount} 傷害。`,
         targetId: target.id,
         amount: adjustedAmount,
+        ...(context.rule.cueId ? { cueId: context.rule.cueId } : {}),
       });
       if (outcome.defeated) {
         events.push({
@@ -77,6 +79,7 @@ export function resolveDamageEffect(context: RuleEffectContext): RuleEffectResul
           kind: 'unit_defeated',
           message: `${target.name}被${context.rule.name}擊敗。`,
           targetId: target.id,
+          cueId: 'kill',
         });
       }
       if (outcome.overflow > 0) {
@@ -88,6 +91,7 @@ export function resolveDamageEffect(context: RuleEffectContext): RuleEffectResul
           message: `OVERKILL +${outcome.overflow}`,
           targetId: target.id,
           amount: outcome.overflow,
+          cueId: 'overkill',
         });
       }
     });

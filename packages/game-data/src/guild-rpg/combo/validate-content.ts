@@ -3,6 +3,8 @@ import {
   COMBO_SELECTOR_KINDS,
   COMBO_TRANSFORM_KINDS,
   COMBO_TRIGGER_KINDS,
+  SPECTACLE_CUE_IDS,
+  SPECTACLE_MOTIF_IDS,
   type ComboContent,
   type ContentDiagnostic,
   type HuntDefinition,
@@ -14,6 +16,8 @@ const RULE_EFFECTS = new Set<string>(COMBO_EFFECT_KINDS);
 const TRIGGERS = new Set<string>(COMBO_TRIGGER_KINDS);
 const SELECTORS = new Set<string>(COMBO_SELECTOR_KINDS);
 const TRANSFORMS = new Set<string>(COMBO_TRANSFORM_KINDS);
+const SPECTACLE_CUES = new Set<string>(SPECTACLE_CUE_IDS);
+const SPECTACLE_MOTIFS = new Set<string>(SPECTACLE_MOTIF_IDS);
 
 export function validateComboContent(content: ComboContent): readonly ContentDiagnostic[] {
   const diagnostics: ContentDiagnostic[] = [];
@@ -22,6 +26,13 @@ export function validateComboContent(content: ComboContent): readonly ContentDia
   };
 
   for (const [cardId, card] of Object.entries(content.cards)) {
+    if (!card.cueId || !SPECTACLE_CUES.has(card.cueId)) {
+      report(
+        'invalid_spectacle_cue',
+        `cards.${cardId}.cueId`,
+        `${card.cueId ?? 'missing'} 不受支援`,
+      );
+    }
     card.effects.forEach((effect, index) => {
       if (!CARD_EFFECTS.has(effect.kind)) {
         report(
@@ -41,6 +52,13 @@ export function validateComboContent(content: ComboContent): readonly ContentDia
   }
 
   for (const [ruleId, rule] of Object.entries(content.rules)) {
+    if (!rule.cueId || !SPECTACLE_CUES.has(rule.cueId)) {
+      report(
+        'invalid_spectacle_cue',
+        `rules.${ruleId}.cueId`,
+        `${rule.cueId ?? 'missing'} 不受支援`,
+      );
+    }
     if (!TRIGGERS.has(rule.trigger)) {
       report('invalid_trigger', `rules.${ruleId}.trigger`, `${rule.trigger} 不受支援`);
     }
@@ -69,6 +87,9 @@ export function validateComboContent(content: ComboContent): readonly ContentDia
   }
 
   for (const [index, build] of content.builds.entries()) {
+    if (!SPECTACLE_MOTIFS.has(build.accent)) {
+      report('invalid_spectacle_motif', `builds.${index}.accent`, `${build.accent} 不受支援`);
+    }
     build.cardIds.forEach((cardId) => {
       if (!content.cards[cardId]) {
         report('unknown_card', `builds.${index}.cardIds`, `${cardId} 不存在`);
@@ -104,6 +125,44 @@ export function validateHuntBossPhases(
   for (const [huntIndex, hunt] of hunts.entries()) {
     const enemyIds = new Set(hunt.enemies.map((enemy) => enemy.enemyId));
     const phaseIds = new Set<string>();
+    const spectacleCues = hunt.spectacleCues ?? [];
+    const beats = spectacleCues.map((cue) => cue.beat);
+    const requiredBeats = ['opening', 'execution', 'annihilation'] as const;
+    if (
+      spectacleCues.length !== 3 ||
+      new Set(beats).size !== 3 ||
+      !requiredBeats.every((beat) => beats.includes(beat))
+    ) {
+      report(
+        'incomplete_hunt_spectacle',
+        `hunts.${huntIndex}.spectacleCues`,
+        '狩獵必須有 opening、execution、annihilation 三個節拍',
+      );
+    }
+    for (const [cueIndex, cue] of spectacleCues.entries()) {
+      if (!SPECTACLE_CUES.has(cue.cueId)) {
+        report(
+          'invalid_spectacle_cue',
+          `hunts.${huntIndex}.spectacleCues.${cueIndex}.cueId`,
+          `${cue.cueId} 不受支援`,
+        );
+      }
+    }
+    for (const [enemyIndex, enemy] of hunt.enemies.entries()) {
+      const identity = enemy.spectacle;
+      if (
+        !identity ||
+        [identity.family, identity.role, identity.palette, identity.aura, identity.defeat].some(
+          (value) => value.trim() === '',
+        )
+      ) {
+        report(
+          'missing_enemy_spectacle',
+          `hunts.${huntIndex}.enemies.${enemyIndex}.spectacle`,
+          `${enemy.enemyId} 缺少完整奇觀身份`,
+        );
+      }
+    }
     for (const [phaseIndex, phase] of (hunt.bossPhases ?? []).entries()) {
       const path = `hunts.${huntIndex}.bossPhases.${phaseIndex}`;
       if (phaseIds.has(phase.id)) {

@@ -26,6 +26,7 @@ export type { UnitStatModifiers } from './units/unit-stat-modifiers';
 export type { SkillDefinition, SkillType } from './skills/skill-definition';
 export * from './system-breaker/index';
 export type * from './guild-rpg/index';
+export { SPECTACLE_CUE_IDS, SPECTACLE_MOTIF_IDS } from './guild-rpg/index';
 export {
   COMBO_EFFECT_KINDS,
   COMBO_SELECTOR_KINDS,
