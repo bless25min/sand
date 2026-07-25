@@ -122,5 +122,5 @@ assets.
 - [x] Build and serve the exact commit; inspect all three viewports and reduced motion through the
       complete hunt → release → loot → equip → replay flow.
 - [x] Fix only blocking chain regressions, rerun affected tests and `pnpm check` if source changed.
-- [ ] Push the branch, deploy the exact commit to Cloudflare Pages, and verify deployment ID, live
+- [x] Push the branch, deploy the exact commit to Cloudflare Pages, and verify deployment ID, live
       asset/hash, HTTP response, and the production player flow.

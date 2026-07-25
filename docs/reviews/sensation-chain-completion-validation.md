@@ -50,4 +50,26 @@ inspection.
 
 ## Deployment Evidence
 
-Pending the Cloudflare Pages deployment of the verified source.
+The verified source was fast-forwarded to the remote default branch and deployed to the existing
+Cloudflare Pages production project.
+
+- Deployment ID: `2f48c8e4-10c7-490d-bc54-4c53e6594d87`.
+- Deployment source: `d18c63e` on Pages production branch `main`.
+- Immutable URL: `https://2f48c8e4.ai-expedition-legion-rpg.pages.dev/` (`200`,
+  `text/html; charset=utf-8`).
+- Canonical URL: `https://ai-expedition-legion-rpg.pages.dev/` (`200`,
+  `text/html; charset=utf-8`).
+- The immutable and canonical HTML responses were identical.
+- Live JavaScript: `/assets/index-HUCNQoaU.js` (`200`, `application/javascript`);
+  SHA-256 `A71B138A882F9114CDE79B5D33EA69BA96892AE09A73E8DE8B97078D52656A57`, identical
+  to the local release build.
+- Live CSS: `/assets/index-s4ooWoL9.css` (`200`, `text/css; charset=utf-8`); SHA-256
+  `2852F29671C7DA9CE70AB4C879F8A85870477392A6BE7F564DB0F2C1C0196A4C`, identical to
+  the local release build.
+
+The canonical production URL completed a real 390 × 844 player flow: start the border hunt, compose
+the full signature route twice, observe staged playback, use skip for the final release, reach
+`MULTI KILL ×3`, `CHAIN WIPE`, `ANNIHILATION`, and `BOSS + GUARDS CHEST`, process all four exclusive
+loot decisions through recommended equip actions, and return to the guild with three rules online
+and `帶新引擎重刷` available. The final guild page had no horizontal overflow, and a fresh production
+navigation emitted no Runtime exceptions or browser Log entries.
