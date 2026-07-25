@@ -110,7 +110,7 @@ states what rule just joined the engine.
 - [x] Generate one item per eligible enemy and one annihilation chest, select affixes from the
       existing catalog deterministically, enrich equipment presentation, and close the guild loop.
 - [x] Re-run all Guild RPG tests and verify GREEN.
-- [ ] Perform one consolidated requirements review, fix findings, rerun focused verification,
+- [x] Perform one consolidated requirements review, fix findings, rerun focused verification,
       commit, then run `pnpm check` once.
 
 ### Task 4: Production Proof
@@ -119,8 +119,8 @@ states what rule just joined the engine.
 committed production build without dead ends, obscured controls, unclear next actions, or stale
 assets.
 
-- [ ] Build and serve the exact commit; inspect all three viewports and reduced motion through the
+- [x] Build and serve the exact commit; inspect all three viewports and reduced motion through the
       complete hunt → release → loot → equip → replay flow.
-- [ ] Fix only blocking chain regressions, rerun affected tests and `pnpm check` if source changed.
+- [x] Fix only blocking chain regressions, rerun affected tests and `pnpm check` if source changed.
 - [ ] Push the branch, deploy the exact commit to Cloudflare Pages, and verify deployment ID, live
       asset/hash, HTTP response, and the production player flow.
