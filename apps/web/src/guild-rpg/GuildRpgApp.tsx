@@ -3,12 +3,14 @@ import { useEffect, useReducer } from 'react';
 import { BattleScreen } from './components/BattleScreen';
 import { ComboPlaybackScreen } from './components/ComboPlaybackScreen';
 import { GuildScreen } from './components/GuildScreen';
+import { GuildSettingsPanel } from './components/GuildSettingsPanel';
 import { RewardScreen } from './components/RewardScreen';
 import { useBattleClock } from './hooks/use-battle-clock';
 import { useComboPlayback } from './hooks/use-combo-playback';
-import { createGuildRpgState } from './state/create-game-state';
+import { storeGuildPreferences } from './preferences/guild-preferences';
+import { createGuildRpgState, loadGuildRpgState } from './state/create-game-state';
 import { guildRpgReducer } from './state/game-reducer';
-import { loadGuildSave, storeGuildSave } from './storage/guild-save';
+import { storeGuildSave } from './storage/guild-save';
 import './guild-rpg.css';
 import './guild-screen.css';
 import './party.css';
@@ -23,14 +25,18 @@ import './mobile-battle.css';
 import './mobile-rewards.css';
 
 function initialState() {
-  const saved = typeof window === 'undefined' ? undefined : loadGuildSave(window.localStorage);
-  return createGuildRpgState(saved);
+  return typeof window === 'undefined'
+    ? createGuildRpgState()
+    : loadGuildRpgState(window.localStorage);
 }
 
 export function GuildRpgApp() {
   const [state, dispatch] = useReducer(guildRpgReducer, undefined, initialState);
   const battleRunning =
-    state.screen === 'battle' && state.battle?.status === 'active' && !state.battle.pendingLeaderId;
+    state.screen === 'battle' &&
+    state.battle?.status === 'active' &&
+    !state.battle.pendingLeaderId &&
+    !state.paused;
 
   useBattleClock(battleRunning, state.speed, dispatch);
   useComboPlayback(state, dispatch);
@@ -40,8 +46,26 @@ export function GuildRpgApp() {
     storeGuildSave(window.localStorage, state.profile);
   }, [state.profile, state.screen]);
 
-  if (state.screen === 'battle') return <BattleScreen state={state} dispatch={dispatch} />;
-  if (state.screen === 'playback') return <ComboPlaybackScreen state={state} dispatch={dispatch} />;
-  if (state.screen === 'rewards') return <RewardScreen state={state} dispatch={dispatch} />;
-  return <GuildScreen state={state} dispatch={dispatch} />;
+  useEffect(() => {
+    storeGuildPreferences(window.localStorage, state.preferences);
+    document.documentElement.dataset.guildMotion = state.preferences.motion;
+  }, [state.preferences]);
+
+  const screen =
+    state.screen === 'battle' ? (
+      <BattleScreen state={state} dispatch={dispatch} />
+    ) : state.screen === 'playback' ? (
+      <ComboPlaybackScreen state={state} dispatch={dispatch} />
+    ) : state.screen === 'rewards' ? (
+      <RewardScreen state={state} dispatch={dispatch} />
+    ) : (
+      <GuildScreen state={state} dispatch={dispatch} />
+    );
+
+  return (
+    <>
+      {screen}
+      {state.settingsOpen && <GuildSettingsPanel state={state} dispatch={dispatch} />}
+    </>
+  );
 }

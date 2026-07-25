@@ -2,6 +2,7 @@ import { GUILD_GAME_CONTENT } from '@expedition/game-data';
 import { compileCommand } from '@expedition/simulation-core';
 import { useState } from 'react';
 
+import { createFirstHuntCoach } from '../onboarding/first-hunt-coach';
 import { createBattleSensationModel } from '../presentation/battle-sensation-model';
 import type { GuildRpgAction, GuildRpgState } from '../state/game-reducer';
 import { ThumbCommandDeck, type ThumbDeckAction } from './ThumbCommandDeck';
@@ -11,7 +12,7 @@ interface BattleThumbControlsProps {
   dispatch: React.Dispatch<GuildRpgAction>;
 }
 
-type BattleThumbPage = 'cards' | 'command' | 'target';
+type BattleThumbPage = 'cards' | 'command' | 'target' | 'system';
 
 const CARD_SLOTS = ['choice-a', 'choice-b'] as const;
 
@@ -23,6 +24,18 @@ export function BattleThumbControls({ state, dispatch }: BattleThumbControlsProp
   const selectedTarget = battle.units.find((unit) => unit.id === battle.selectedTargetId);
   const earlyRelease = runtime.draft.cardIds.length > 0 && runtime.draft.cardIds.length < 4;
   const sensation = createBattleSensationModel(state, GUILD_GAME_CONTENT);
+  const coach = createFirstHuntCoach({
+    tutorial: state.preferences.tutorial,
+    screen: 'battle',
+    questId: battle.questId,
+    selectedBuildId: state.profile.selectedBuildId,
+    ...(battle.selectedTargetId ? { selectedTargetId: battle.selectedTargetId } : {}),
+    draftCardIds: runtime.draft.cardIds,
+    previewEventCount: sensation.preview.eventCount,
+    rewardItemCount: 0,
+    resolvedItemCount: 0,
+    hasBorderRecord: Boolean(state.profile.questRecords.border_pack),
+  });
 
   let actions: readonly ThumbDeckAction[];
   let title: string;
@@ -103,7 +116,7 @@ export function BattleThumbControls({ state, dispatch }: BattleThumbControlsProp
         onPress: () => dispatch({ type: 'UNDO_COMBO_CARD' }),
       },
     ];
-  } else {
+  } else if (page === 'target') {
     const targets = battle.units.filter((unit) => unit.side === 'enemies' && unit.currentHp > 0);
     title = `目標：${selectedTarget?.name ?? '未選擇'}`;
     actions = targets.map((target, index) => ({
@@ -118,6 +131,36 @@ export function BattleThumbControls({ state, dispatch }: BattleThumbControlsProp
         setPage('cards');
       },
     }));
+  } else {
+    title = state.paused ? '戰鬥時間已暫停' : '戰鬥時間流動中';
+    actions = [
+      {
+        id: 'toggle-pause',
+        label: state.paused ? '繼續時間' : '暫停戰鬥',
+        detail: '軍令輸入仍可操作',
+        slot: 'primary',
+        tone: 'primary',
+        onPress: () => dispatch({ type: 'SET_PAUSED', paused: !state.paused }),
+      },
+      {
+        id: 'settings',
+        label: '開啟設定',
+        detail: '音效 · 震動 · 動態',
+        slot: 'secondary',
+        onPress: () => dispatch({ type: 'SET_SETTINGS_OPEN', open: true }),
+      },
+      ...(coach
+        ? [
+            {
+              id: 'skip-tutorial',
+              label: '跳過教學',
+              detail: '保留目前遠征',
+              slot: 'utility' as const,
+              onPress: () => dispatch({ type: 'SET_TUTORIAL', tutorial: 'skipped' }),
+            },
+          ]
+        : []),
+    ];
   }
 
   return (
@@ -125,7 +168,10 @@ export function BattleThumbControls({ state, dispatch }: BattleThumbControlsProp
       ariaLabel="戰鬥操作"
       eyebrow="FREE-FORM COMMAND"
       title={title}
-      status={`${sensation.build.payoffLabel} · ${sensation.signature.nextCard ? `推薦 ${sensation.signature.nextCard.name}` : '招牌路線完成'} · 鎖定 ${selectedTarget?.name ?? '無'}`}
+      status={
+        coach?.message ??
+        `${sensation.build.payoffLabel} · ${sensation.signature.nextCard ? `推薦 ${sensation.signature.nextCard.name}` : '招牌路線完成'} · 鎖定 ${selectedTarget?.name ?? '無'}`
+      }
       feedback={state.message}
       tabs={[
         {
@@ -147,6 +193,12 @@ export function BattleThumbControls({ state, dispatch }: BattleThumbControlsProp
           onSelect: () => {
             setPage('target');
           },
+        },
+        {
+          id: 'system',
+          label: '系統',
+          selected: page === 'system',
+          onSelect: () => setPage('system'),
         },
       ]}
       actions={actions}

@@ -1,4 +1,4 @@
-export type GuildMobilePage = 'quest' | 'party' | 'inventory';
+export type GuildMobilePage = 'build' | 'quest' | 'party' | 'inventory';
 
 export function wrapThumbIndex(index: number, length: number, delta: -1 | 1): number {
   if (length <= 0) return 0;

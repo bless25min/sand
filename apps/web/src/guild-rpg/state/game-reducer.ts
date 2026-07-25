@@ -19,10 +19,14 @@ import {
 
 import { reduceComboAction, type ComboCommandAction } from './reduce-combo-action';
 import { reduceHuntResult } from './reduce-hunt-result';
+import type { GuildPreferences, TutorialState } from '../preferences/guild-preferences';
 
 export interface GuildRpgState {
   screen: 'guild' | 'battle' | 'playback' | 'rewards';
   profile: GuildProfile;
+  preferences: GuildPreferences;
+  paused: boolean;
+  settingsOpen: boolean;
   battle?: GuildBattleState | undefined;
   rewards?: QuestRewards | undefined;
   playback?: ComboPlaybackState | undefined;
@@ -49,6 +53,14 @@ export type GuildRpgAction =
   | { type: 'USE_SKILL'; skillId: string; targetId: string }
   | { type: 'TOGGLE_AUTO' }
   | { type: 'SET_SPEED'; speed: 1 | 2 }
+  | { type: 'SET_PAUSED'; paused: boolean }
+  | { type: 'SET_SETTINGS_OPEN'; open: boolean }
+  | { type: 'SET_TUTORIAL'; tutorial: TutorialState }
+  | {
+      type: 'UPDATE_PREFERENCES';
+      preferences: Partial<Omit<GuildPreferences, 'version' | 'tutorial'>>;
+    }
+  | { type: 'ABANDON_HUNT' }
   | { type: 'SET_BUILD'; buildId: string }
   | { type: 'SET_LEADER'; adventurerId: string }
   | { type: 'EQUIP_STORED'; itemId: string; adventurerId: string }
@@ -65,6 +77,8 @@ function finishBattle(state: GuildRpgState, battle: GuildBattleState): GuildRpgS
   return {
     ...state,
     screen: 'rewards',
+    paused: false,
+    settingsOpen: false,
     battle,
     rewards: result.rewards,
     playback: undefined,
@@ -76,9 +90,21 @@ function finishBattle(state: GuildRpgState, battle: GuildBattleState): GuildRpgS
 
 export function guildRpgReducer(state: GuildRpgState, action: GuildRpgAction): GuildRpgState {
   if (action.type === 'START_QUEST') {
+    const replayCompletesTutorial =
+      state.preferences.tutorial === 'active' &&
+      action.questId === 'border_pack' &&
+      Boolean(state.profile.questRecords.border_pack);
     return {
       ...state,
       screen: 'battle',
+      paused:
+        state.preferences.tutorial === 'active' &&
+        action.questId === 'border_pack' &&
+        !replayCompletesTutorial,
+      settingsOpen: false,
+      preferences: replayCompletesTutorial
+        ? { ...state.preferences, tutorial: 'complete' }
+        : state.preferences,
       battle: startGuildQuest(state.profile, action.questId, GUILD_GAME_CONTENT),
       rewards: undefined,
       playback: undefined,
@@ -87,8 +113,48 @@ export function guildRpgReducer(state: GuildRpgState, action: GuildRpgAction): G
       message: '遠征開始，編排軍令時敵人仍會持續進攻。',
     };
   }
+  if (action.type === 'SET_PAUSED') return { ...state, paused: action.paused };
+  if (action.type === 'SET_SETTINGS_OPEN') {
+    return {
+      ...state,
+      settingsOpen: action.open,
+      paused:
+        action.open && (state.screen === 'battle' || state.screen === 'playback')
+          ? true
+          : state.paused,
+    };
+  }
+  if (action.type === 'SET_TUTORIAL') {
+    return {
+      ...state,
+      paused: action.tutorial === 'active' ? state.paused : false,
+      preferences: { ...state.preferences, tutorial: action.tutorial },
+    };
+  }
+  if (action.type === 'UPDATE_PREFERENCES') {
+    return {
+      ...state,
+      preferences: { ...state.preferences, ...action.preferences, version: 1 },
+    };
+  }
+  if (
+    action.type === 'ABANDON_HUNT' &&
+    (state.screen === 'battle' || state.screen === 'playback')
+  ) {
+    return {
+      ...state,
+      screen: 'guild',
+      battle: undefined,
+      playback: undefined,
+      rewards: undefined,
+      paused: false,
+      settingsOpen: false,
+      message: '本次遠征已中止；公會與裝備進度保持不變。',
+    };
+  }
   if (action.type === 'SET_SPEED') return { ...state, speed: action.speed };
   if (action.type === 'ADVANCE_PLAYBACK' && state.screen === 'playback' && state.playback) {
+    if (state.paused) return state;
     const eventCount = Math.max(
       0,
       (state.battle?.combo?.events.length ?? 0) - state.playback.eventStartIndex,
@@ -110,6 +176,7 @@ export function guildRpgReducer(state: GuildRpgState, action: GuildRpgAction): G
     state.playback &&
     state.battle?.combo
   ) {
+    if (state.paused) return state;
     return {
       ...state,
       playback: {
@@ -125,12 +192,14 @@ export function guildRpgReducer(state: GuildRpgState, action: GuildRpgAction): G
     state.battle &&
     state.playback
   ) {
+    if (state.paused) return state;
     if (state.battle.status !== 'active') {
       return finishBattle(state, state.battle);
     }
     return {
       ...state,
       screen: 'battle',
+      paused: state.preferences.tutorial === 'active' && state.battle.questId === 'border_pack',
       playback: undefined,
       message: '軍令播放完成，可以繼續編排下一次釋放。',
     };
@@ -169,6 +238,8 @@ export function guildRpgReducer(state: GuildRpgState, action: GuildRpgAction): G
       rewards: undefined,
       playback: undefined,
       resolvedItemIds: [],
+      paused: false,
+      settingsOpen: false,
       message:
         activatedRuleNames.length > 0
           ? `規則上線：${activatedRuleNames.join('、')}。帶著新引擎重刷，讓下一次殲滅更誇張。`
@@ -217,6 +288,7 @@ export function guildRpgReducer(state: GuildRpgState, action: GuildRpgAction): G
     return {
       ...next,
       screen: 'playback',
+      paused: false,
       playback: {
         eventStartIndex:
           resolution.battle.combo?.lastCommandEventStartIndex ??
@@ -247,6 +319,7 @@ export function guildRpgReducer(state: GuildRpgState, action: GuildRpgAction): G
     };
   }
   if (action.type === 'TICK') {
+    if (state.paused && state.battle.status === 'active') return state;
     const battle = state.battle.combo
       ? advanceComposition(state.battle, action.elapsedMs)
       : advanceGuildBattle(

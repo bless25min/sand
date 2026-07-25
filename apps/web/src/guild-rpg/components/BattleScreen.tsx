@@ -1,6 +1,7 @@
 import { GUILD_GAME_CONTENT } from '@expedition/game-data';
 
 import { formatTime } from '../presenters';
+import { createFirstHuntCoach } from '../onboarding/first-hunt-coach';
 import { createBattleSensationModel } from '../presentation/battle-sensation-model';
 import type { GuildRpgAction, GuildRpgState } from '../state/game-reducer';
 import { BattleThumbControls } from './BattleThumbControls';
@@ -17,6 +18,18 @@ export function BattleScreen({ state, dispatch }: BattleScreenProps) {
   const battle = state.battle!;
   const quest = GUILD_GAME_CONTENT.quests.find((candidate) => candidate.id === battle.questId)!;
   const sensation = createBattleSensationModel(state, GUILD_GAME_CONTENT);
+  const coach = createFirstHuntCoach({
+    tutorial: state.preferences.tutorial,
+    screen: 'battle',
+    questId: battle.questId,
+    selectedBuildId: state.profile.selectedBuildId,
+    ...(battle.selectedTargetId ? { selectedTargetId: battle.selectedTargetId } : {}),
+    draftCardIds: battle.combo?.draft.cardIds ?? [],
+    previewEventCount: sensation.preview.eventCount,
+    rewardItemCount: 0,
+    resolvedItemCount: 0,
+    hasBorderRecord: Boolean(state.profile.questRecords.border_pack),
+  });
 
   return (
     <main className="gr-battle">
@@ -50,8 +63,32 @@ export function BattleScreen({ state, dispatch }: BattleScreenProps) {
               </button>
             ))}
           </div>
+          <button
+            type="button"
+            onClick={() => dispatch({ type: 'SET_PAUSED', paused: !state.paused })}
+          >
+            {state.paused ? '繼續時間' : '暫停戰鬥'}
+          </button>
+          <button type="button" onClick={() => dispatch({ type: 'SET_SETTINGS_OPEN', open: true })}>
+            開啟設定
+          </button>
         </div>
       </header>
+
+      {coach && (
+        <section className="gr-coach" data-coach-step={coach.step} aria-live="polite">
+          <div>
+            <p>GUIDED HUNT · {coach.step.toUpperCase()}</p>
+            <strong>{coach.message}</strong>
+          </div>
+          <button
+            type="button"
+            onClick={() => dispatch({ type: 'SET_TUTORIAL', tutorial: 'skipped' })}
+          >
+            跳過教學
+          </button>
+        </section>
+      )}
 
       <section className="gr-battlefield" aria-label="戰場">
         <div className="gr-line gr-line--heroes">

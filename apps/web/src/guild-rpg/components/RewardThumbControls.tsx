@@ -3,6 +3,7 @@ import type { ItemChoice } from '@expedition/shared-types';
 import { useState } from 'react';
 
 import { wrapThumbIndex } from '../mobile/thumb-deck-model';
+import { createFirstHuntCoach } from '../onboarding/first-hunt-coach';
 import { createEquipmentSensationModel } from '../presentation/equipment-sensation-model';
 import type { GuildRpgAction, GuildRpgState } from '../state/game-reducer';
 import { EquipmentCard } from './EquipmentCard';
@@ -35,6 +36,18 @@ export function RewardThumbControls({ state, dispatch }: RewardThumbControlsProp
   )!;
   const allResolved = state.resolvedItemIds.length === rewards.items.length;
   const resolved = item ? state.resolvedItemIds.includes(item.id) : false;
+  const coach = createFirstHuntCoach({
+    tutorial: state.preferences.tutorial,
+    screen: 'rewards',
+    selectedBuildId: state.profile.selectedBuildId,
+    ...(state.battle ? { questId: state.battle.questId } : {}),
+    ...(state.battle?.selectedTargetId ? { selectedTargetId: state.battle.selectedTargetId } : {}),
+    draftCardIds: [],
+    previewEventCount: 0,
+    rewardItemCount: rewards.items.length,
+    resolvedItemCount: state.resolvedItemIds.length,
+    hasBorderRecord: Boolean(state.profile.questRecords.border_pack),
+  });
 
   function nextItem() {
     if (rewards.items.length === 0) return;
@@ -147,7 +160,7 @@ export function RewardThumbControls({ state, dispatch }: RewardThumbControlsProp
         ariaLabel="戰利品操作"
         eyebrow={allResolved ? 'LOOT COMPLETE' : `LOOT ${itemIndex + 1}/${rewards.items.length}`}
         title={allResolved || !item ? '戰利品已處理完成' : item.name}
-        status={allResolved ? '可以返回公會' : `最佳裝備者：${hero.name}`}
+        status={coach?.message ?? (allResolved ? '可以返回公會' : `最佳裝備者：${hero.name}`)}
         feedback={state.message}
         actions={actions}
       />

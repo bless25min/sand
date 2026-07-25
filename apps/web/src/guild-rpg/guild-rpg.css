@@ -161,8 +161,99 @@ a:focus-visible {
   background: linear-gradient(135deg, #ffe2a2, #dfa34b);
 }
 
+.gr-button--danger {
+  border-color: #dd655b;
+  color: #ff9a8e;
+  background: #7e261d24;
+}
+
 .gr-button:disabled {
   opacity: 0.48;
+}
+
+.gr-settings {
+  position: fixed;
+  z-index: 100;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: #030607d9;
+  backdrop-filter: blur(12px);
+}
+
+.gr-settings__panel {
+  display: grid;
+  gap: 12px;
+  width: min(100%, 480px);
+  padding: 28px;
+  border: 1px solid #e8bb6675;
+  border-radius: 4px;
+  background: linear-gradient(145deg, #2b2115, #111719 38%);
+  box-shadow:
+    0 32px 100px #000000b8,
+    inset 0 1px #fff2bd1c;
+}
+
+.gr-settings__panel header {
+  margin-bottom: 8px;
+}
+
+.gr-settings__panel header p,
+.gr-settings__panel header h2 {
+  margin: 0;
+}
+
+.gr-settings__panel header p {
+  color: #e8b85f;
+  font-size: 0.66rem;
+  font-weight: 900;
+  letter-spacing: 0.16em;
+}
+
+.gr-settings__panel header h2 {
+  margin: 5px 0;
+  font-family: Georgia, 'Noto Serif TC', serif;
+}
+
+.gr-settings__panel header span,
+.gr-settings__panel label span {
+  color: #9ca5a3;
+  font-size: 0.75rem;
+}
+
+.gr-settings__panel label {
+  display: grid;
+  gap: 6px;
+}
+
+.gr-settings__panel input {
+  width: 100%;
+  accent-color: #e7ae51;
+}
+
+.gr-settings__panel > button,
+.gr-settings__actions button {
+  min-height: 42px;
+  border: 1px solid #ffffff20;
+  background: #ffffff08;
+  text-align: left;
+}
+
+.gr-settings__actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+html[data-guild-motion='reduced'] *,
+html[data-guild-motion='reduced'] *::before,
+html[data-guild-motion='reduced'] *::after {
+  scroll-behavior: auto !important;
+  transition-duration: 0.01ms !important;
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
 }
 
 .gr-rarity--common {
@@ -204,6 +295,18 @@ a:focus-visible {
 
   .gr-section__heading > span {
     text-align: left;
+  }
+
+  .gr-settings {
+    place-items: end center;
+    padding: 0;
+  }
+
+  .gr-settings__panel {
+    max-height: 92dvh;
+    overflow-y: auto;
+    padding: 22px 18px calc(22px + env(safe-area-inset-bottom));
+    border-width: 1px 0 0;
   }
 }
 

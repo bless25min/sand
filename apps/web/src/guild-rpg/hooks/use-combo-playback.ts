@@ -15,11 +15,13 @@ export function useComboPlayback(state: GuildRpgState, dispatch: React.Dispatch<
   }, []);
 
   useEffect(() => {
-    if (state.screen !== 'playback' || !state.playback || !state.battle?.combo) return;
+    if (state.screen !== 'playback' || !state.playback || !state.battle?.combo || state.paused) {
+      return;
+    }
     const events = state.battle.combo.events.slice(state.playback.eventStartIndex);
     const tick = nextPlaybackTick({
       events,
-      reducedMotion,
+      reducedMotion: state.preferences.motion === 'reduced' || reducedMotion,
       speed: state.speed,
       visibleEventCount: state.playback.visibleEventCount,
     });
@@ -31,5 +33,14 @@ export function useComboPlayback(state: GuildRpgState, dispatch: React.Dispatch<
       );
     }, tick.delayMs);
     return () => window.clearTimeout(timer);
-  }, [dispatch, reducedMotion, state.battle, state.playback, state.screen, state.speed]);
+  }, [
+    dispatch,
+    reducedMotion,
+    state.battle,
+    state.paused,
+    state.playback,
+    state.preferences.motion,
+    state.screen,
+    state.speed,
+  ]);
 }

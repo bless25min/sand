@@ -90,6 +90,26 @@ describe('right-thumb mobile flow', () => {
     expect(markup).toContain('目前規則');
   });
 
+  it('makes Build selection a first-class mobile thumb page', () => {
+    const markup = renderToStaticMarkup(
+      <GuildMobileStage state={createGuildRpgState()} dispatch={dispatch} initialPage="build" />,
+    );
+
+    expect(markup).toContain('>Build<');
+    expect(markup).toContain('目前 Build');
+    expect(markup).toContain('data-thumb-slot="primary"');
+    expect(markup).toContain('盾牆蓄爆');
+  });
+
+  it('starts a fresh first hunt on Build before showing the quest action', () => {
+    const markup = renderToStaticMarkup(
+      <GuildMobileStage state={createGuildRpgState()} dispatch={dispatch} />,
+    );
+
+    expect(markup).toContain('data-mobile-page="build"');
+    expect(markup).toContain('先確認反擊壁壘');
+  });
+
   it('offers party and inventory decisions without leaving the guild thumb zone', () => {
     const partyMarkup = renderToStaticMarkup(
       <GuildMobileStage state={createGuildRpgState()} dispatch={dispatch} initialPage="party" />,
@@ -119,6 +139,10 @@ describe('right-thumb mobile flow', () => {
     expect(markup).toContain('>卡牌<');
     expect(markup).toContain('>軍令<');
     expect(markup).toContain('>目標<');
+    expect(markup).toContain('>系統<');
+    expect(markup).toContain('GUIDED HUNT');
+    expect(markup).toContain('下一張選 盾後反擊');
+    expect(markup).toContain('開啟設定');
     expect(markup).toContain('撤銷上一步');
     expect(markup).toContain('提早釋放');
     expect(markup).not.toContain('行動 0%');
@@ -143,6 +167,7 @@ describe('right-thumb mobile flow', () => {
     expect(markup).toContain('CHAIN WIPE');
     expect(markup).toContain('ANNIHILATION');
     expect(markup).toContain('敵人材料');
+    expect(markup).toContain('使用推薦裝備者');
     expect(markup).toContain('立即裝備');
     expect(markup).toContain('放入背包');
     expect(markup).toContain('出售');

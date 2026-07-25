@@ -45,13 +45,13 @@ createFirstHuntCoach(input: CoachInput): { step: CoachStep; paused: boolean; mes
 createBuildThumbActions(input: BuildActionsInput): readonly ThumbDeckAction[];
 ```
 
-- [ ] Write tests asserting fresh/legacy/invalid preference defaults; Build tab selection; coach
+- [x] Write tests asserting fresh/legacy/invalid preference defaults; Build tab selection; coach
       steps `target → brace → riposte → sweep → preview → release → loot → replay`; pause clock and
       playback gating; settings, skip, replay, defeat, and abandon controls.
-- [ ] Run the focused files and verify RED for missing exports, `build` page, pause state, and coach.
-- [ ] Implement the parsers/projections first, then reducer actions `SET_PAUSED`,
+- [x] Run the focused files and verify RED for missing exports, `build` page, pause state, and coach.
+- [x] Implement the parsers/projections first, then reducer actions `SET_PAUSED`,
       `SET_TUTORIAL`, and `ABANDON_HUNT`; wire four Guild tabs and stable Battle primary action.
-- [ ] Re-run focused tests, typecheck, and ESLint on touched files; verify GREEN and commit
+- [x] Re-run focused tests, typecheck, and ESLint on touched files; verify GREEN and commit
       `feat: guide the first annihilation`.
 
 ### Task 2: Open the Wolf Execution Window

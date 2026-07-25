@@ -17,6 +17,61 @@ const FULL_WIPE_COMMAND = [
 ] as const;
 
 describe('guild RPG reducer', () => {
+  it('pauses the guided hunt clock, preserves player commands, and abandons safely', () => {
+    const profileBefore = createGuildRpgState().profile;
+    let state = guildRpgReducer(createGuildRpgState(), {
+      type: 'START_QUEST',
+      questId: 'border_pack',
+    });
+    const battleBefore = state.battle;
+
+    expect(state.paused).toBe(true);
+    expect(state.preferences.tutorial).toBe('active');
+    state = guildRpgReducer(state, { type: 'TICK', elapsedMs: 13_000 });
+    expect(state.battle).toBe(battleBefore);
+
+    state = guildRpgReducer(state, { type: 'APPEND_COMBO_CARD', cardId: 'brann_brace' });
+    expect(state.battle?.combo?.draft.cardIds).toEqual(['brann_brace']);
+    state = guildRpgReducer(state, { type: 'SET_TUTORIAL', tutorial: 'skipped' });
+    expect(state.paused).toBe(false);
+    expect(state.preferences.tutorial).toBe('skipped');
+
+    state = guildRpgReducer(state, { type: 'SET_PAUSED', paused: true });
+    state = guildRpgReducer(state, { type: 'ABANDON_HUNT' });
+    expect(state).toMatchObject({ screen: 'guild', paused: false });
+    expect(state.battle).toBeUndefined();
+    expect(state.profile).toEqual(profileBefore);
+  });
+
+  it('opens settings by pausing combat and updates only feature-local preferences', () => {
+    let state = guildRpgReducer(createGuildRpgState(), {
+      type: 'START_QUEST',
+      questId: 'border_pack',
+    });
+    state = guildRpgReducer(state, { type: 'SET_TUTORIAL', tutorial: 'skipped' });
+
+    state = guildRpgReducer(state, { type: 'SET_SETTINGS_OPEN', open: true });
+    expect(state).toMatchObject({ paused: true, settingsOpen: true });
+    state = guildRpgReducer(state, {
+      type: 'UPDATE_PREFERENCES',
+      preferences: {
+        masterVolume: 0.2,
+        musicEnabled: false,
+        hapticsEnabled: false,
+        motion: 'reduced',
+      },
+    });
+    expect(state.preferences).toMatchObject({
+      version: 1,
+      tutorial: 'skipped',
+      masterVolume: 0.2,
+      musicEnabled: false,
+      hapticsEnabled: false,
+      motion: 'reduced',
+    });
+    expect(state.profile.version).toBe(2);
+  });
+
   it('switches the active build only during guild preparation', () => {
     const initial = createGuildRpgState();
     const selected = guildRpgReducer(initial, {
@@ -155,11 +210,49 @@ describe('guild RPG reducer', () => {
     expect(state.message).toContain('完整高潮');
   });
 
+  it('freezes playback projection while settings are open', () => {
+    let state = guildRpgReducer(createGuildRpgState(), {
+      type: 'START_QUEST',
+      questId: 'border_pack',
+    });
+    state = guildRpgReducer(state, { type: 'APPEND_COMBO_CARD', cardId: 'brann_brace' });
+    state = guildRpgReducer(state, { type: 'RELEASE_COMBO' });
+    state = guildRpgReducer(state, { type: 'SET_SETTINGS_OPEN', open: true });
+    const paused = state;
+
+    state = guildRpgReducer(state, { type: 'ADVANCE_PLAYBACK', count: 5 });
+    expect(state).toBe(paused);
+    state = guildRpgReducer(state, { type: 'SKIP_PLAYBACK' });
+    expect(state).toBe(paused);
+    state = guildRpgReducer(state, { type: 'COMPLETE_PLAYBACK' });
+    expect(state).toBe(paused);
+  });
+
+  it('pauses again at the next guided decision after an unfinished command playback', () => {
+    let state = guildRpgReducer(createGuildRpgState(), {
+      type: 'START_QUEST',
+      questId: 'border_pack',
+    });
+    for (const cardId of ['brann_brace', 'brann_riposte', 'brann_sweep']) {
+      state = guildRpgReducer(state, { type: 'APPEND_COMBO_CARD', cardId });
+    }
+    state = guildRpgReducer(state, { type: 'RELEASE_COMBO' });
+    state = guildRpgReducer(state, { type: 'ADVANCE_PLAYBACK', count: 1_000 });
+    state = guildRpgReducer(state, { type: 'COMPLETE_PLAYBACK' });
+
+    expect(state).toMatchObject({
+      screen: 'battle',
+      paused: true,
+      preferences: { tutorial: 'active' },
+    });
+  });
+
   it('preserves the draft while enemies pressure composition and supports undo', () => {
     let state = guildRpgReducer(createGuildRpgState(), {
       type: 'START_QUEST',
       questId: 'border_pack',
     });
+    state = guildRpgReducer(state, { type: 'SET_TUTORIAL', tutorial: 'skipped' });
     const secondEnemy = state.battle!.units.filter((unit) => unit.side === 'enemies')[1]!;
     const heroHp = state.battle!.units.find((unit) => unit.side === 'heroes')!.currentHp;
 

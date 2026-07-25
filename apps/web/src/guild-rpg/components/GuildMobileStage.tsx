@@ -2,9 +2,11 @@ import { GUILD_GAME_CONTENT } from '@expedition/game-data';
 import { useState } from 'react';
 
 import { createInventoryThumbActions } from '../mobile/inventory-thumb-actions';
+import { createBuildThumbActions } from '../mobile/build-thumb-actions';
 import { createPartyThumbActions } from '../mobile/party-thumb-actions';
 import { createQuestThumbActions } from '../mobile/quest-thumb-actions';
 import { pageSlice, type GuildMobilePage } from '../mobile/thumb-deck-model';
+import { createFirstHuntCoach } from '../onboarding/first-hunt-coach';
 import type { GuildRpgAction, GuildRpgState } from '../state/game-reducer';
 import { GuildMobileFocus } from './GuildMobileFocus';
 import { ThumbCommandDeck } from './ThumbCommandDeck';
@@ -15,12 +17,16 @@ interface GuildMobileStageProps {
   initialPage?: GuildMobilePage;
 }
 
-export function GuildMobileStage({
-  state,
-  dispatch,
-  initialPage = 'quest',
-}: GuildMobileStageProps) {
-  const [page, setPage] = useState<GuildMobilePage>(initialPage);
+export function GuildMobileStage({ state, dispatch, initialPage }: GuildMobileStageProps) {
+  const [page, setPage] = useState<GuildMobilePage>(
+    initialPage ?? (state.preferences.tutorial === 'active' ? 'build' : 'quest'),
+  );
+  const [buildIndex, setBuildIndex] = useState(() =>
+    Math.max(
+      0,
+      GUILD_GAME_CONTENT.builds.findIndex((build) => build.id === state.profile.selectedBuildId),
+    ),
+  );
   const [questIndex, setQuestIndex] = useState(0);
   const [partyIndex, setPartyIndex] = useState(0);
   const [inventoryPage, setInventoryPage] = useState(0);
@@ -33,6 +39,7 @@ export function GuildMobileStage({
   );
 
   const quest = GUILD_GAME_CONTENT.quests[questIndex]!;
+  const build = GUILD_GAME_CONTENT.builds[buildIndex]!;
   const member = state.profile.party[partyIndex]!;
   const hero = GUILD_GAME_CONTENT.adventurers.find(
     (candidate) => candidate.id === member.definitionId,
@@ -46,52 +53,73 @@ export function GuildMobileStage({
   const visibleItems = pageSlice(state.profile.inventory, safeInventoryPage, 2);
   const selectedItem = visibleItems[itemIndex] ?? visibleItems[0];
   const unlocked = state.profile.unlockedQuestIds.includes(quest.id);
+  const coach = createFirstHuntCoach({
+    tutorial: state.preferences.tutorial,
+    screen: 'guild',
+    selectedBuildId: state.profile.selectedBuildId,
+    draftCardIds: [],
+    previewEventCount: 0,
+    rewardItemCount: 0,
+    resolvedItemCount: 0,
+    hasBorderRecord: Boolean(state.profile.questRecords.border_pack),
+  });
 
   const title =
-    page === 'quest'
-      ? quest.name
-      : page === 'party'
-        ? `${hero.name} · Lv.${member.level}`
-        : (selectedItem?.name ?? '背包是空的');
+    page === 'build'
+      ? build.name
+      : page === 'quest'
+        ? quest.name
+        : page === 'party'
+          ? `${hero.name} · Lv.${member.level}`
+          : (selectedItem?.name ?? '背包是空的');
   const actions =
-    page === 'quest'
-      ? createQuestThumbActions({
-          quest,
-          questCount: GUILD_GAME_CONTENT.quests.length,
-          unlocked,
-          replay: Boolean(state.profile.questRecords[quest.id]),
+    page === 'build'
+      ? createBuildThumbActions({
+          build,
+          buildCount: GUILD_GAME_CONTENT.builds.length,
+          activeBuildId: state.profile.selectedBuildId,
           dispatch,
-          setQuestIndex,
+          setBuildIndex,
         })
-      : page === 'party'
-        ? createPartyThumbActions({
-            memberId: member.definitionId,
-            heroName: hero.name,
-            isLeader: member.definitionId === state.profile.leaderId,
-            partyLength: state.profile.party.length,
+      : page === 'quest'
+        ? createQuestThumbActions({
+            quest,
+            questCount: GUILD_GAME_CONTENT.quests.length,
+            unlocked,
+            replay: Boolean(state.profile.questRecords[quest.id]),
             dispatch,
-            setPartyIndex,
+            setQuestIndex,
           })
-        : createInventoryThumbActions({
-            visibleItems,
-            selectedItem,
-            inventoryLength: state.profile.inventory.length,
-            inventoryPage: safeInventoryPage,
-            inventoryPageCount,
-            equipHeroName: equipHero.name,
-            equipMemberId: equipMember.definitionId,
-            partyLength: state.profile.party.length,
-            dispatch,
-            setItemIndex,
-            setInventoryPage,
-            setEquipHeroIndex,
-          });
+        : page === 'party'
+          ? createPartyThumbActions({
+              memberId: member.definitionId,
+              heroName: hero.name,
+              isLeader: member.definitionId === state.profile.leaderId,
+              partyLength: state.profile.party.length,
+              dispatch,
+              setPartyIndex,
+            })
+          : createInventoryThumbActions({
+              visibleItems,
+              selectedItem,
+              inventoryLength: state.profile.inventory.length,
+              inventoryPage: safeInventoryPage,
+              inventoryPageCount,
+              equipHeroName: equipHero.name,
+              equipMemberId: equipMember.definitionId,
+              partyLength: state.profile.party.length,
+              dispatch,
+              setItemIndex,
+              setInventoryPage,
+              setEquipHeroIndex,
+            });
 
   return (
     <section className="gr-mobile-guild-stage" data-mobile-page={page}>
       <div className="gr-mobile-guild-stage__focus">
         <GuildMobileFocus
           page={page}
+          build={build}
           quest={quest}
           questUnlocked={unlocked}
           member={member}
@@ -107,8 +135,14 @@ export function GuildMobileStage({
         ariaLabel="公會操作"
         eyebrow="RIGHT THUMB · GUILD"
         title={title}
-        status={state.message}
+        status={coach?.message ?? state.message}
         tabs={[
+          {
+            id: 'build',
+            label: 'Build',
+            selected: page === 'build',
+            onSelect: () => setPage('build'),
+          },
           {
             id: 'quest',
             label: '任務',

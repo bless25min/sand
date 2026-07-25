@@ -1,5 +1,6 @@
 import type {
   AdventurerDefinition,
+  BuildDefinition,
   EquipmentItem,
   GuildAdventurer,
   QuestDefinition,
@@ -14,6 +15,7 @@ import { InventoryItemCard } from './InventoryItemCard';
 
 interface GuildMobileFocusProps {
   page: GuildMobilePage;
+  build: BuildDefinition;
   quest: QuestDefinition;
   questUnlocked: boolean;
   member: GuildAdventurer;
@@ -27,6 +29,7 @@ interface GuildMobileFocusProps {
 
 export function GuildMobileFocus({
   page,
+  build,
   quest,
   questUnlocked,
   member,
@@ -37,6 +40,22 @@ export function GuildMobileFocus({
   selectedItemId,
   dispatch,
 }: GuildMobileFocusProps) {
+  if (page === 'build') {
+    return (
+      <article className="gr-card gr-mobile-build" data-build-accent={build.accent}>
+        <p>{build.payoffLabel}</p>
+        <h2>{build.name}</h2>
+        <strong>{build.fantasy}</strong>
+        <span>
+          招牌路線：
+          {build.signatureCardIds
+            .map((cardId) => GUILD_GAME_CONTENT.cards[cardId]?.name ?? cardId)
+            .join(' → ')}
+        </span>
+      </article>
+    );
+  }
+
   if (page === 'quest') {
     const sensation = createHuntSensationModel(quest.id, selectedBuildId, GUILD_GAME_CONTENT);
     return (
