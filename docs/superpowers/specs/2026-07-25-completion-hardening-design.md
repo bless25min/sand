@@ -61,4 +61,3 @@ removing the legacy query switches.
 - Production build proves no JavaScript chunk exceeds 500 kB.
 - `pnpm check`, browser desktop/mobile smoke tests, API health, Pages deployment state, and live bundle
   hashes gate the final deployment.
-

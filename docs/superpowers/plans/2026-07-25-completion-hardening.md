@@ -83,11 +83,11 @@ Hunts remain declarative data. Pages advanced mode reuses the existing hosting a
 - Uses: `API_BASE_URL` override or the production Worker URL.
 - Produces: explicit `react`, `pixi`, and `prototypes` code-splitting groups.
 
-- [ ] Add tests for the default API upstream, Pages `_worker.js`, Guild metadata, and chunk groups;
+- [x] Add tests for the default API upstream, Pages `_worker.js`, Guild metadata, and chunk groups;
       verify RED.
-- [ ] Implement the smallest hosting/build/config changes and verify focused GREEN.
-- [ ] Run the production build and assert every emitted JavaScript file is below 500 kB.
-- [ ] Commit `fix: harden production web delivery`.
+- [x] Implement the smallest hosting/build/config changes and verify focused GREEN.
+- [x] Run the production build and assert every emitted JavaScript file is below 500 kB.
+- [x] Commit `fix: harden production web delivery`.
 
 ### Task 4: Release Gate and Deployment
 

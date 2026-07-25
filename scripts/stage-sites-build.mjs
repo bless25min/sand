@@ -9,7 +9,7 @@ const sitesClientDirectory = join(sitesBuildDirectory, 'client');
 const sitesWorkerDirectory = join(sitesBuildDirectory, 'server');
 const hostingConfig = join(repositoryRoot, '.openai', 'hosting.json');
 const stagedHostingDirectory = join(sitesBuildDirectory, '.openai');
-const workerEntry = join(webBuildDirectory, 'server', 'index.js');
+const workerEntry = join(webBuildDirectory, '_worker.js');
 const stagedWorkerEntry = join(sitesWorkerDirectory, 'index.js');
 
 await Promise.all([access(hostingConfig), access(workerEntry)]);
@@ -19,5 +19,6 @@ await cp(webBuildDirectory, sitesClientDirectory, { recursive: true });
 await mkdir(sitesWorkerDirectory, { recursive: true });
 await copyFile(workerEntry, stagedWorkerEntry);
 await rm(join(sitesClientDirectory, 'server'), { force: true, recursive: true });
+await rm(join(sitesClientDirectory, '_worker.js'), { force: true });
 await mkdir(stagedHostingDirectory, { recursive: true });
 await copyFile(hostingConfig, join(stagedHostingDirectory, 'hosting.json'));
