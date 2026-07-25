@@ -1,7 +1,7 @@
 # Overkill Combo Rework
 
 Date: 2026-07-25
-Status: Approved concept; written specification awaiting review.
+Status: Approved concept and content architecture; written revision awaiting review.
 
 ## Product Goal
 
@@ -26,19 +26,16 @@ become overwhelmingly powerful while keeping every cause, trigger, and reward un
 - Failure grants enemy-specific materials but never equipment.
 - A kill unlocks that enemy's equipment table.
 - Individual Overkill and encounter-wide Annihilation are independent, stackable reward axes.
+- Use about 90% bounded grammar and 10% isolated legendary handlers; finish this architecture before counter-build enemies.
 - More ordinary quests, generic stat affixes, and visual polish are deferred until one hunt is fun.
 
 ## Free-Form Command Stack
 
 Each adventurer contributes cards. A card contains:
 
-- stable ID, owner, and readable name;
-- input triggers and emitted tags;
-- targeting rule and hit pattern;
-- immediate effect;
-- follow-up triggers;
-- support sockets and equipment modifiers;
-- trace text explaining why it activated.
+- identity, owner, readable name, input triggers, and emitted tags;
+- targeting, hit pattern, immediate effects, and follow-up effects;
+- support sockets, equipment modifiers, and trace text explaining every activation.
 
 Cards do not consume a universal resource. A combo exists when one result satisfies another card's
 trigger. Examples include Block, Hit, Critical, Marked, Burning, Healed, Killed, and Overkill.
@@ -47,33 +44,36 @@ One command begins when the player selects an initiator and arranges available c
 The command ends only when its trigger queue is empty. Every resolved action receives a causal ID so
 the battle report can reconstruct the entire chain.
 
-## Build System
+## Bounded Content Grammar
 
-Build depth comes from rule changes rather than more additive stats:
+The engine implements a small typed vocabulary:
 
-- Talents define starting triggers; skill cards define attacks, protection, healing, and finishers.
-- Supports alter targeting and routing; equipment adds conversions; attributes provide overflow fuel.
-- Party composition connects otherwise separate trigger families.
+- effects: Damage, Heal, Shield, Status, Repeat, Copy, Spread, Convert, Detonate, and Summon;
+- triggers: CommandStart, CardPlayed, Hit, Critical, Block, HealOverflow, Kill, and Overkill;
+- selectors: Self, Target, All, Marked, Adjacent, LowestHP, HighestHP, and LastKilled;
+- transforms: Repeat, Fork, Ricochet, Pierce, ConvertElement, CopyNext, Delay, and Multiply.
 
-Example rule changes include ricochet on Mark, healing overflow becoming holy damage, Block copying
-the next projectile, Critical above 100% becoming critical tiers, and kills spreading all debuffs.
+Talents provide starting triggers; cards define actions; supports alter routing; equipment adds
+conversions; attributes provide overflow fuel; party composition connects trigger families.
 
-The target is not equal build strength. The target is that boss burst, swarm chaining, retaliation,
-healing conversion, summoning, and status detonation can each become absurd in different hunts.
+New ordinary content is declarative data. A new primitive must serve at least three definitions.
+Rare legendary items may use one deterministic pure handler with an explicit contract and dedicated
+test; it cannot import UI, storage, HTTP, or mutate the combo kernel.
+
+AI may generate schema-valid content but never battle code. Validators reject invalid effects,
+targets, trigger paths, and cycles; a workbench compiles graphs and simulates a build, enemy, and seed.
+
+The target is not equal strength: boss burst, swarm chaining, retaliation, healing conversion,
+summoning, and status detonation may each become absurd in different hunts.
 
 ## Enemy and Hunt Contract
 
 Every hunt publishes enemy traits, resistances, break conditions, materials, equipment families,
 and exclusive jackpot items. Enemies must be powerful enough that delaying release creates risk.
 
-Enemy structures intentionally favor different engines:
-
-- a high-health boss rewards focused Overkill;
-- a swarm rewards area damage and kill chaining;
-- a boss with guards rewards spread and corpse explosions;
-- segmented monsters reward penetration and ricochet;
-- summoners reward reset-on-kill engines;
-- reviving groups reward synchronized delayed detonation.
+Enemy structures intentionally favor different engines: bosses reward focused Overkill; swarms
+reward area chains; guarded or segmented targets reward spread, corpse explosions, penetration, and
+ricochet; summoning or reviving groups reward resets and synchronized detonation.
 
 Players repeat a hunt to improve loot efficiency, not merely to prove they can win.
 
@@ -124,18 +124,19 @@ aggregate thousands of identical events into waves while preserving exact damage
 - `simulation-core`: command compilation, trigger resolution, Overkill, Annihilation, and loot math.
 - `game-data`: adventurers, cards, supports, equipment rules, enemies, and exclusive drop tables.
 - `web/guild-rpg`: right-thumb composition, playback, feedback, inspection, and persistence adapters.
+- `authoring`: schema validation, graph compilation, build simulation, and content diagnostics.
 
 The existing guild, profile, save, and responsive shell remain. The current gauge attack/heal/guard
 battle is replaced rather than wrapped in another layer.
 
-## First Playable Rework Boundary
+## Delivery Order and First Complete Rework
 
-The first rework proves one golden hunt with:
+Delivery order is strict:
 
-- three adventurers, at least twelve cards, and three distinct build engines;
-- one boss plus guards, exclusive drops, and material-only failure recovery;
-- kill-gated equipment plus Overkill, Chain Wipe, Annihilation, and Perfect Annihilation;
-- uninterrupted release, loot rain, and equipment that changes the next command graph.
+1. Finish the combo kernel, bounded grammar, validator, compiler, workbench, and generic feedback.
+2. Prove three anchor builds with three adventurers and at least twelve cards on training targets.
+3. Only then design counter-build enemies, beginning with one boss plus guards and exclusive drops.
+4. Complete kill gates, all reward axes, uninterrupted release, loot rain, persistence, and replay.
 
 Acceptance requires that the same hunt supports at least three visibly different successful engines,
 that a one-command full wipe is achievable, and that improving Overkill materially increases the
@@ -143,7 +144,6 @@ quantity or quality of the displayed loot.
 
 ## Verification
 
-- Pure and property tests prove trigger order, causality, loop conversion, invariants, and loot gates.
-- Contract tests prove simulation code does not import React, PixiJS, HTTP, or Workers.
-- Reducer and browser tests prove the full hunt loop, save, right-thumb control, and responsive playback.
-- Manual review verifies escalation, readable causality, one-shot annihilation, and loot rain.
+- Pure, property, and contract tests prove causality, loop conversion, invariants, loot gates, and boundaries.
+- Reducer and browser tests prove hunt, save, right-thumb control, and responsive uninterrupted playback.
+- Manual review verifies three distinct builds, readable escalation, annihilation, and loot rain.
