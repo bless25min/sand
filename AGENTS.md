@@ -32,6 +32,17 @@
 - Perform one consolidated review per batch, not one review or commit per helper.
 - Split files near 150 lines when they contain multiple change reasons; otherwise record why keeping the file whole is clearer.
 
+## Batch Execution Policy
+
+- Default to direct TDD or `executing-plans` for an approved batch.
+- Do not use `subagent-driven-development` unless the user explicitly requests per-task agent delegation.
+- A helper, file, pure function, or internal layer is not a separate task. Task boundaries must be player-visible outcomes.
+- Do not create separate briefs, reports, implementer agents, reviewer agents, or commits for each helper.
+- Use affected tests during implementation, then one consolidated batch review after the player-visible outcome works.
+- Fix consolidated review findings in the same batch and run one focused follow-up verification. Do not start recursive reviewer cycles unless a critical issue remains unresolved.
+- Prefer one implementation commit plus, when necessary, one review-fix commit per batch.
+- Avoid broad repository scans, generated bundles, and large external schemas when a targeted file or query can answer the question.
+
 ## Commands
 
 - `pnpm dev`
