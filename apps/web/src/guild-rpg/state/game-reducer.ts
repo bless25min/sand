@@ -26,7 +26,10 @@ export interface GuildRpgState {
   profile: GuildProfile;
   preferences: GuildPreferences;
   paused: boolean;
+  pausedBeforeSettings: boolean;
   settingsOpen: boolean;
+  tutorialReplay: boolean;
+  tutorialPreviewAcknowledged: boolean;
   battle?: GuildBattleState | undefined;
   rewards?: QuestRewards | undefined;
   playback?: ComboPlaybackState | undefined;
@@ -56,6 +59,7 @@ export type GuildRpgAction =
   | { type: 'SET_PAUSED'; paused: boolean }
   | { type: 'SET_SETTINGS_OPEN'; open: boolean }
   | { type: 'SET_TUTORIAL'; tutorial: TutorialState }
+  | { type: 'ACK_TUTORIAL_PREVIEW' }
   | {
       type: 'UPDATE_PREFERENCES';
       preferences: Partial<Omit<GuildPreferences, 'version' | 'tutorial'>>;
@@ -78,6 +82,7 @@ function finishBattle(state: GuildRpgState, battle: GuildBattleState): GuildRpgS
     ...state,
     screen: 'rewards',
     paused: false,
+    pausedBeforeSettings: false,
     settingsOpen: false,
     battle,
     rewards: result.rewards,
@@ -90,21 +95,18 @@ function finishBattle(state: GuildRpgState, battle: GuildBattleState): GuildRpgS
 
 export function guildRpgReducer(state: GuildRpgState, action: GuildRpgAction): GuildRpgState {
   if (action.type === 'START_QUEST') {
-    const replayCompletesTutorial =
-      state.preferences.tutorial === 'active' &&
-      action.questId === 'border_pack' &&
-      Boolean(state.profile.questRecords.border_pack);
+    const guidedBorderHunt =
+      state.preferences.tutorial === 'active' && action.questId === 'border_pack';
     return {
       ...state,
       screen: 'battle',
-      paused:
-        state.preferences.tutorial === 'active' &&
-        action.questId === 'border_pack' &&
-        !replayCompletesTutorial,
+      paused: guidedBorderHunt,
+      pausedBeforeSettings: false,
       settingsOpen: false,
-      preferences: replayCompletesTutorial
-        ? { ...state.preferences, tutorial: 'complete' }
-        : state.preferences,
+      tutorialReplay:
+        guidedBorderHunt &&
+        (state.tutorialReplay || Boolean(state.profile.questRecords.border_pack)),
+      tutorialPreviewAcknowledged: false,
       battle: startGuildQuest(state.profile, action.questId, GUILD_GAME_CONTENT),
       rewards: undefined,
       playback: undefined,
@@ -115,21 +117,57 @@ export function guildRpgReducer(state: GuildRpgState, action: GuildRpgAction): G
   }
   if (action.type === 'SET_PAUSED') return { ...state, paused: action.paused };
   if (action.type === 'SET_SETTINGS_OPEN') {
+    if (action.open) {
+      return {
+        ...state,
+        settingsOpen: true,
+        pausedBeforeSettings: state.settingsOpen ? state.pausedBeforeSettings : state.paused,
+        paused: state.screen === 'battle' || state.screen === 'playback' ? true : state.paused,
+      };
+    }
     return {
       ...state,
-      settingsOpen: action.open,
+      settingsOpen: false,
       paused:
-        action.open && (state.screen === 'battle' || state.screen === 'playback')
-          ? true
+        state.screen === 'battle' || state.screen === 'playback'
+          ? state.pausedBeforeSettings
           : state.paused,
+      pausedBeforeSettings: false,
     };
   }
   if (action.type === 'SET_TUTORIAL') {
+    const replayRequested =
+      action.tutorial === 'active' && Boolean(state.profile.questRecords.border_pack);
+    const pauseGuidedHunt =
+      action.tutorial === 'active' &&
+      (state.screen === 'battle' || state.screen === 'playback') &&
+      state.battle?.questId === 'border_pack';
     return {
       ...state,
-      paused: action.tutorial === 'active' ? state.paused : false,
+      paused: pauseGuidedHunt ? true : action.tutorial === 'active' ? state.paused : false,
+      pausedBeforeSettings:
+        pauseGuidedHunt && state.settingsOpen ? true : state.pausedBeforeSettings,
+      tutorialReplay: replayRequested,
+      tutorialPreviewAcknowledged: false,
       preferences: { ...state.preferences, tutorial: action.tutorial },
     };
+  }
+  if (action.type === 'ACK_TUTORIAL_PREVIEW') {
+    const bossExecutionOpen =
+      state.battle?.combo?.activatedBossPhaseIds?.includes('alpha-execution');
+    const signature = bossExecutionOpen
+      ? [
+          'lyra_mark',
+          'lyra_piercing_shot',
+          'lyra_ricochet',
+          'elin_prayer',
+          'elin_overflow_bolt',
+          'elin_radiant_burst',
+        ]
+      : ['brann_brace', 'brann_riposte', 'brann_sweep'];
+    const draft = state.battle?.combo?.draft.cardIds ?? [];
+    const hasSignature = signature.every((cardId, index) => draft[index] === cardId);
+    return hasSignature ? { ...state, tutorialPreviewAcknowledged: true } : state;
   }
   if (action.type === 'UPDATE_PREFERENCES') {
     return {
@@ -148,7 +186,9 @@ export function guildRpgReducer(state: GuildRpgState, action: GuildRpgAction): G
       playback: undefined,
       rewards: undefined,
       paused: false,
+      pausedBeforeSettings: false,
       settingsOpen: false,
+      tutorialPreviewAcknowledged: false,
       message: '本次遠征已中止；公會與裝備進度保持不變。',
     };
   }
@@ -200,6 +240,7 @@ export function guildRpgReducer(state: GuildRpgState, action: GuildRpgAction): G
       ...state,
       screen: 'battle',
       paused: state.preferences.tutorial === 'active' && state.battle.questId === 'border_pack',
+      pausedBeforeSettings: false,
       playback: undefined,
       message: '軍令播放完成，可以繼續編排下一次釋放。',
     };
@@ -228,6 +269,10 @@ export function guildRpgReducer(state: GuildRpgState, action: GuildRpgAction): G
     return { ...state, profile: resolution.profile, message: resolution.message };
   }
   if (action.type === 'RETURN_GUILD') {
+    const completedReplay =
+      state.tutorialReplay &&
+      state.battle?.questId === 'border_pack' &&
+      state.rewards?.successful === true;
     const activatedRuleNames = state.activatedRuleIds.map(
       (ruleId) => GUILD_GAME_CONTENT.rules[ruleId]?.name ?? ruleId,
     );
@@ -239,7 +284,13 @@ export function guildRpgReducer(state: GuildRpgState, action: GuildRpgAction): G
       playback: undefined,
       resolvedItemIds: [],
       paused: false,
+      pausedBeforeSettings: false,
       settingsOpen: false,
+      tutorialReplay: completedReplay ? false : state.tutorialReplay,
+      tutorialPreviewAcknowledged: false,
+      preferences: completedReplay
+        ? { ...state.preferences, tutorial: 'complete' }
+        : state.preferences,
       message:
         activatedRuleNames.length > 0
           ? `規則上線：${activatedRuleNames.join('、')}。帶著新引擎重刷，讓下一次殲滅更誇張。`
@@ -298,6 +349,7 @@ export function guildRpgReducer(state: GuildRpgState, action: GuildRpgAction): G
       ...next,
       screen: 'playback',
       paused: false,
+      tutorialPreviewAcknowledged: false,
       playback: {
         eventStartIndex:
           resolution.battle.combo?.lastCommandEventStartIndex ??

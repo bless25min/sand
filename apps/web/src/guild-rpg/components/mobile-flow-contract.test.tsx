@@ -173,6 +173,33 @@ describe('right-thumb mobile flow', () => {
     expect(markup).toContain('data-thumb-slot="primary"');
   });
 
+  it('turns the guided primary action into recovery, preview confirmation, then release', () => {
+    let wrong = guildRpgReducer(createGuildRpgState(), {
+      type: 'START_QUEST',
+      questId: 'border_pack',
+    });
+    wrong = guildRpgReducer(wrong, { type: 'APPEND_COMBO_CARD', cardId: 'lyra_quickshot' });
+    expect(renderToStaticMarkup(<BattleScreen state={wrong} dispatch={dispatch} />)).toContain(
+      '撤銷錯誤卡',
+    );
+
+    let preview = guildRpgReducer(createGuildRpgState(), {
+      type: 'START_QUEST',
+      questId: 'border_pack',
+    });
+    for (const cardId of ['brann_brace', 'brann_riposte', 'brann_sweep']) {
+      preview = guildRpgReducer(preview, { type: 'APPEND_COMBO_CARD', cardId });
+    }
+    expect(renderToStaticMarkup(<BattleScreen state={preview} dispatch={dispatch} />)).toContain(
+      '確認預演',
+    );
+
+    preview = guildRpgReducer(preview, { type: 'ACK_TUTORIAL_PREVIEW' });
+    expect(renderToStaticMarkup(<BattleScreen state={preview} dispatch={dispatch} />)).toContain(
+      '釋放軍令',
+    );
+  });
+
   it('keeps every loot decision and return state in the reward thumb deck', () => {
     const state = reachRewards();
     expect(state.screen).toBe('rewards');
@@ -205,6 +232,15 @@ describe('right-thumb mobile flow', () => {
     expect(markup).toContain('data-execution-window="true"');
     expect(markup).toContain('孤王處刑窗');
     expect(markup).toContain('處刑目標');
+  });
+
+  it('keeps the next boss-execution card in the visible thumb slots', () => {
+    let state = reachExecutionWindow();
+    state = guildRpgReducer(state, { type: 'APPEND_COMBO_CARD', cardId: 'lyra_mark' });
+
+    const markup = renderToStaticMarkup(<BattleScreen state={state} dispatch={dispatch} />);
+    expect(markup).toContain('處決鏈 2/6：選 貫心箭');
+    expect(markup).toContain('>貫心箭<');
   });
 
   it('renders a material-only failed hunt with an immediate safe return', () => {

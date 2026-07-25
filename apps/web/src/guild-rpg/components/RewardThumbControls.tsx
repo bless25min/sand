@@ -47,6 +47,11 @@ export function RewardThumbControls({ state, dispatch }: RewardThumbControlsProp
     rewardItemCount: rewards.items.length,
     resolvedItemCount: state.resolvedItemIds.length,
     hasBorderRecord: Boolean(state.profile.questRecords.border_pack),
+    replaying: state.tutorialReplay,
+    previewAcknowledged: state.tutorialPreviewAcknowledged,
+    bossExecutionOpen: Boolean(
+      state.battle?.combo?.activatedBossPhaseIds?.includes('alpha-execution'),
+    ),
   });
 
   function nextItem() {

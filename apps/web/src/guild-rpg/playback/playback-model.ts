@@ -91,11 +91,14 @@ export function projectPlaybackUnits(
 
 function playbackStage(events: readonly ComboEvent[]): ComboEscalationStage {
   if (events.some((event) => event.kind === 'victory')) return 'annihilation';
-  if (events.some((event) => ['overkill', 'infinite_engine'].includes(event.kind))) {
+  const latestMilestone = findLastEvent(events, (event) =>
+    ['unit_defeated', 'boss_phase', 'overkill', 'infinite_engine'].includes(event.kind),
+  );
+  if (latestMilestone?.kind === 'boss_phase') return 'execution';
+  if (latestMilestone && ['overkill', 'infinite_engine'].includes(latestMilestone.kind)) {
     return 'overkill';
   }
-  if (events.some((event) => event.kind === 'boss_phase')) return 'execution';
-  if (events.some((event) => event.kind === 'unit_defeated')) return 'break';
+  if (latestMilestone?.kind === 'unit_defeated') return 'break';
   if (
     events.some((event) => event.kind === 'rule_triggered') ||
     events.filter((event) => event.kind === 'card_played').length >= 2

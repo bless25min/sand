@@ -19,7 +19,7 @@ export interface CueProjectionInput {
   ruleOnline?: boolean;
 }
 
-export interface SensationCueSnapshot {
+interface SensationCueSnapshot {
   sessionId: string;
   screen: 'guild' | 'battle' | 'playback' | 'rewards';
   visibleEvents: readonly ComboEvent[];
@@ -62,7 +62,7 @@ export function projectSensationCues(input: CueProjectionInput): readonly Sensat
 export function createSensationCueTracker(): SensationCueTracker {
   let sessionId: string | undefined;
   let previousScreen: SensationCueSnapshot['screen'] | undefined;
-  let seenCausalIds = new Set<string>();
+  let seenEventIds = new Set<number>();
   let seenRuleIds = new Set<string>();
 
   return {
@@ -70,12 +70,12 @@ export function createSensationCueTracker(): SensationCueTracker {
       if (snapshot.sessionId !== sessionId) {
         sessionId = snapshot.sessionId;
         previousScreen = undefined;
-        seenCausalIds = new Set();
+        seenEventIds = new Set();
         seenRuleIds = new Set();
       }
       const events = snapshot.visibleEvents.filter((event) => {
-        if (seenCausalIds.has(event.causalId)) return false;
-        seenCausalIds.add(event.causalId);
+        if (seenEventIds.has(event.id)) return false;
+        seenEventIds.add(event.id);
         return true;
       });
       const ruleOnline = snapshot.activatedRuleIds.some((ruleId) => {

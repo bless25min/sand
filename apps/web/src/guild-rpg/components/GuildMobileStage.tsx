@@ -62,6 +62,9 @@ export function GuildMobileStage({ state, dispatch, initialPage }: GuildMobileSt
     rewardItemCount: 0,
     resolvedItemCount: 0,
     hasBorderRecord: Boolean(state.profile.questRecords.border_pack),
+    replaying: state.tutorialReplay,
+    previewAcknowledged: state.tutorialPreviewAcknowledged,
+    bossExecutionOpen: false,
   });
 
   const title =

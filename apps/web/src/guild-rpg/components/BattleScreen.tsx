@@ -29,6 +29,9 @@ export function BattleScreen({ state, dispatch }: BattleScreenProps) {
     rewardItemCount: 0,
     resolvedItemCount: 0,
     hasBorderRecord: Boolean(state.profile.questRecords.border_pack),
+    replaying: state.tutorialReplay,
+    previewAcknowledged: state.tutorialPreviewAcknowledged,
+    bossExecutionOpen: Boolean(battle.combo?.activatedBossPhaseIds?.includes('alpha-execution')),
   });
 
   return (
@@ -83,9 +86,15 @@ export function BattleScreen({ state, dispatch }: BattleScreenProps) {
           </div>
           <button
             type="button"
-            onClick={() => dispatch({ type: 'SET_TUTORIAL', tutorial: 'skipped' })}
+            onClick={() =>
+              dispatch(
+                coach.step === 'preview'
+                  ? { type: 'ACK_TUTORIAL_PREVIEW' }
+                  : { type: 'SET_TUTORIAL', tutorial: 'skipped' },
+              )
+            }
           >
-            跳過教學
+            {coach.step === 'preview' ? '確認預演' : '跳過教學'}
           </button>
         </section>
       )}

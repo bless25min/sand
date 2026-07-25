@@ -14,6 +14,9 @@ function input(overrides: Record<string, unknown> = {}) {
     rewardItemCount: 0,
     resolvedItemCount: 0,
     hasBorderRecord: false,
+    replaying: false,
+    previewAcknowledged: false,
+    bossExecutionOpen: false,
     ...overrides,
   };
 }
@@ -37,7 +40,19 @@ describe('first hunt coach', () => {
       createFirstHuntCoach(
         input({ draftCardIds: ['brann_brace', 'brann_riposte', 'brann_sweep'] }),
       ),
+    ).toMatchObject({ step: 'preview', paused: true });
+    expect(
+      createFirstHuntCoach(
+        input({
+          draftCardIds: ['brann_brace', 'brann_riposte', 'brann_sweep', 'lyra_mark'],
+          previewAcknowledged: true,
+        }),
+      ),
     ).toMatchObject({ step: 'release', paused: true });
+    expect(createFirstHuntCoach(input({ draftCardIds: ['lyra_quickshot'] }))).toMatchObject({
+      step: 'recover',
+      paused: true,
+    });
   });
 
   it('lets playback advance and then routes loot, return, and replay', () => {
@@ -52,11 +67,47 @@ describe('first hunt coach', () => {
       step: 'replay',
       paused: false,
     });
-    expect(createFirstHuntCoach(input({ screen: 'battle', hasBorderRecord: true }))).toMatchObject({
-      step: 'complete',
-      completeTutorial: true,
-      paused: false,
+    expect(
+      createFirstHuntCoach(input({ screen: 'battle', hasBorderRecord: true, replaying: true })),
+    ).toMatchObject({ step: 'brace', paused: true });
+  });
+
+  it('continues from the broken guards into a six-card boss execution route', () => {
+    expect(
+      createFirstHuntCoach(input({ bossExecutionOpen: true, selectedTargetId: 'wolf_scout' })),
+    ).toMatchObject({ step: 'target', paused: true });
+    expect(
+      createFirstHuntCoach(input({ bossExecutionOpen: true, selectedTargetId: 'wolf_alpha' })),
+    ).toMatchObject({
+      step: 'execution',
+      expectedCardId: 'lyra_mark',
+      paused: true,
     });
+    expect(
+      createFirstHuntCoach(
+        input({
+          bossExecutionOpen: true,
+          selectedTargetId: 'wolf_alpha',
+          draftCardIds: ['lyra_mark'],
+        }),
+      )?.message,
+    ).toContain('貫心箭');
+    expect(
+      createFirstHuntCoach(
+        input({
+          bossExecutionOpen: true,
+          selectedTargetId: 'wolf_alpha',
+          draftCardIds: [
+            'lyra_mark',
+            'lyra_piercing_shot',
+            'lyra_ricochet',
+            'elin_prayer',
+            'elin_overflow_bolt',
+            'elin_radiant_burst',
+          ],
+        }),
+      ),
+    ).toMatchObject({ step: 'preview', paused: true });
   });
 
   it('stays inactive for skipped guidance, other hunts, and completed guidance', () => {

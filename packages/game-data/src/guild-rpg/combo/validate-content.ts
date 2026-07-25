@@ -5,6 +5,7 @@ import {
   COMBO_TRIGGER_KINDS,
   type ComboContent,
   type ContentDiagnostic,
+  type HuntDefinition,
 } from '@expedition/shared-types';
 
 const CARD_EFFECTS = new Set(['damage', 'heal', 'shield']);
@@ -87,6 +88,40 @@ export function validateComboContent(content: ComboContent): readonly ContentDia
         );
       }
     });
+  }
+
+  return diagnostics;
+}
+
+export function validateHuntBossPhases(
+  hunts: readonly HuntDefinition[],
+): readonly ContentDiagnostic[] {
+  const diagnostics: ContentDiagnostic[] = [];
+  const report = (code: string, path: string, message: string) => {
+    diagnostics.push({ code, path, message });
+  };
+
+  for (const [huntIndex, hunt] of hunts.entries()) {
+    const enemyIds = new Set(hunt.enemies.map((enemy) => enemy.enemyId));
+    const phaseIds = new Set<string>();
+    for (const [phaseIndex, phase] of (hunt.bossPhases ?? []).entries()) {
+      const path = `hunts.${huntIndex}.bossPhases.${phaseIndex}`;
+      if (phaseIds.has(phase.id)) {
+        report('duplicate_boss_phase', `${path}.id`, `${phase.id} 重複`);
+      }
+      phaseIds.add(phase.id);
+      if (!enemyIds.has(phase.bossEnemyId)) {
+        report('unknown_boss_enemy', `${path}.bossEnemyId`, `${phase.bossEnemyId} 不存在`);
+      }
+      for (const enemyId of phase.activateAfterEnemyIds) {
+        if (!enemyIds.has(enemyId)) {
+          report('unknown_phase_activator', `${path}.activateAfterEnemyIds`, `${enemyId} 不存在`);
+        }
+      }
+      if (phase.cueId.trim() === '') {
+        report('missing_boss_phase_cue', `${path}.cueId`, '處決階段必須提供爽感提示');
+      }
+    }
   }
 
   return diagnostics;

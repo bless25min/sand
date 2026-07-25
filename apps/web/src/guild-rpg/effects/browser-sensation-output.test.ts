@@ -81,10 +81,14 @@ describe('browser sensation output', () => {
       createDefaultGuildPreferences(false),
     );
     output.unlock();
+    output.play('kill');
+    expect(audio.starts).toHaveLength(1);
     output.setPaused(true);
     output.play('hit');
     expect(audio.context.suspend).toHaveBeenCalledOnce();
-    expect(audio.starts).toEqual([]);
+    expect(audio.stops.at(-1)).toBe(audio.context.currentTime);
+    expect(vibrate).toHaveBeenLastCalledWith(0);
+    const vibrationCallsAfterPause = vibrate.mock.calls.length;
 
     output.setPaused(false);
     output.updatePreferences({
@@ -93,9 +97,10 @@ describe('browser sensation output', () => {
       hapticsEnabled: false,
     });
     output.play('kill');
-    expect(audio.starts).toEqual([]);
-    expect(vibrate).not.toHaveBeenCalled();
+    expect(audio.starts).toHaveLength(1);
+    expect(vibrate).toHaveBeenCalledTimes(vibrationCallsAfterPause);
     output.dispose();
+    expect(vibrate).toHaveBeenLastCalledWith(0);
     expect(audio.context.close).toHaveBeenCalledOnce();
 
     const unsupported = createBrowserSensationOutput({}, createDefaultGuildPreferences(false));

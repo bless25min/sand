@@ -104,5 +104,17 @@ describe('sensation cue projection', () => {
         activatedRuleIds: ['steel-echo'],
       }),
     ).toEqual([]);
+
+    expect(
+      tracker.next({
+        sessionId: 'hunt-a',
+        screen: 'playback',
+        visibleEvents: [
+          ...events,
+          { id: 3, causalId: 'hit', kind: 'damage', message: '第二次釋放仍然命中' },
+        ],
+        activatedRuleIds: [],
+      }),
+    ).toEqual(['hit']);
   });
 });

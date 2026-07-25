@@ -234,7 +234,7 @@ a:focus-visible {
 
 .gr-settings__panel > button,
 .gr-settings__actions button {
-  min-height: 42px;
+  min-height: 56px;
   border: 1px solid #ffffff20;
   background: #ffffff08;
   text-align: left;

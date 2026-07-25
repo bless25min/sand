@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 
 import { GUILD_COMBO_CONTENT } from './index';
 import { GUILD_HUNTS } from './hunts';
-import { validateComboContent } from './validate-content';
+import { validateComboContent, validateHuntBossPhases } from './validate-content';
 
 describe('combo content factory', () => {
   it('ships three valid anchor builds through the bounded vocabulary', () => {
@@ -78,6 +78,38 @@ describe('combo content factory', () => {
           phase.activateAfterEnemyIds.every((enemyId) => enemyIds.has(enemyId)),
       ),
     ).toBe(true);
+    expect(validateHuntBossPhases(GUILD_HUNTS)).toEqual([]);
+  });
+
+  it('diagnoses duplicate, dangling, and silent boss phases', () => {
+    const invalidHunt = {
+      ...GUILD_HUNTS[0]!,
+      bossPhases: [
+        {
+          id: 'broken',
+          bossEnemyId: 'missing-boss',
+          activateAfterEnemyIds: ['missing-guard'],
+          pressureLabel: '壞處決窗',
+          cueId: '',
+        },
+        {
+          id: 'broken',
+          bossEnemyId: GUILD_HUNTS[0]!.enemies[0]!.enemyId,
+          activateAfterEnemyIds: [],
+          pressureLabel: '重複處決窗',
+          cueId: 'duplicate',
+        },
+      ],
+    };
+
+    expect(validateHuntBossPhases([invalidHunt]).map((diagnostic) => diagnostic.code)).toEqual(
+      expect.arrayContaining([
+        'duplicate_boss_phase',
+        'unknown_boss_enemy',
+        'unknown_phase_activator',
+        'missing_boss_phase_cue',
+      ]),
+    );
   });
 
   it('diagnoses unsupported grammar and missing graph references', () => {

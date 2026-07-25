@@ -16,6 +16,7 @@ interface GainPort {
 
 interface OscillatorPort {
   type: string;
+  onended?: (() => void) | null;
   frequency: AudioParamPort;
   connect(destination: unknown): unknown;
   start(time: number): void;
@@ -68,6 +69,7 @@ function scheduleTone(context: AudioContextPort, spec: ToneSpec, masterVolume: n
   gain.connect(context.destination);
   oscillator.start(start);
   oscillator.stop(start + spec.duration);
+  return oscillator;
 }
 
 function browserPorts(): BrowserSensationPorts {
@@ -100,6 +102,7 @@ export function createBrowserSensationOutput(
   let unlocked = false;
   let paused = false;
   let disposed = false;
+  const activeOscillators = new Set<OscillatorPort>();
 
   const resume = () => {
     if (!context || context.state === 'running') return;
@@ -108,6 +111,27 @@ export function createBrowserSensationOutput(
   const suspend = () => {
     if (!context || context.state === 'suspended') return;
     void context.suspend().catch(() => undefined);
+  };
+  const schedule = (spec: ToneSpec) => {
+    if (!context) return;
+    const oscillator = scheduleTone(context, spec, preferences.masterVolume);
+    activeOscillators.add(oscillator);
+    oscillator.onended = () => activeOscillators.delete(oscillator);
+  };
+  const stopActive = () => {
+    try {
+      ports.vibrate?.(0);
+    } catch {
+      // Haptics are optional.
+    }
+    for (const oscillator of activeOscillators) {
+      try {
+        oscillator.stop(context?.currentTime ?? 0);
+      } catch {
+        // An oscillator may already have reached its scheduled end.
+      }
+    }
+    activeOscillators.clear();
   };
 
   return {
@@ -134,19 +158,15 @@ export function createBrowserSensationOutput(
       try {
         resume();
         const spec = toneForCue(cue);
-        scheduleTone(context, spec, preferences.masterVolume);
+        schedule(spec);
         if (spec.pulseBedFrequency) {
-          scheduleTone(
-            context,
-            {
-              ...spec,
-              frequency: spec.pulseBedFrequency,
-              endFrequency: Math.max(30, spec.pulseBedFrequency * 0.72),
-              gain: spec.gain * 0.28,
-              wave: 'sine',
-            },
-            preferences.masterVolume,
-          );
+          schedule({
+            ...spec,
+            frequency: spec.pulseBedFrequency,
+            endFrequency: Math.max(30, spec.pulseBedFrequency * 0.72),
+            gain: spec.gain * 0.28,
+            wave: 'sine',
+          });
         }
       } catch {
         // Unsupported or interrupted Web Audio must remain a silent fallback.
@@ -154,8 +174,10 @@ export function createBrowserSensationOutput(
     },
     setPaused(nextPaused) {
       paused = nextPaused;
-      if (paused) suspend();
-      else if (unlocked && preferences.musicEnabled) resume();
+      if (paused) {
+        stopActive();
+        suspend();
+      } else if (unlocked && preferences.musicEnabled) resume();
     },
     updatePreferences(nextPreferences) {
       preferences = normalizePreferences(nextPreferences);
@@ -166,6 +188,7 @@ export function createBrowserSensationOutput(
       if (disposed) return;
       disposed = true;
       try {
+        stopActive();
         if (context) void context.close().catch(() => undefined);
       } finally {
         context = undefined;

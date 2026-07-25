@@ -72,6 +72,113 @@ describe('guild RPG reducer', () => {
     expect(state.profile.version).toBe(2);
   });
 
+  it('restores the exact pre-settings pause state when settings close', () => {
+    let running = guildRpgReducer(createGuildRpgState(), {
+      type: 'START_QUEST',
+      questId: 'border_pack',
+    });
+    running = guildRpgReducer(running, { type: 'SET_TUTORIAL', tutorial: 'skipped' });
+    running = guildRpgReducer(running, { type: 'SET_SETTINGS_OPEN', open: true });
+    running = guildRpgReducer(running, { type: 'SET_SETTINGS_OPEN', open: false });
+    expect(running).toMatchObject({ settingsOpen: false, paused: false });
+
+    let manuallyPaused = guildRpgReducer(running, { type: 'SET_PAUSED', paused: true });
+    manuallyPaused = guildRpgReducer(manuallyPaused, { type: 'SET_SETTINGS_OPEN', open: true });
+    manuallyPaused = guildRpgReducer(manuallyPaused, { type: 'SET_SETTINGS_OPEN', open: false });
+    expect(manuallyPaused).toMatchObject({ settingsOpen: false, paused: true });
+  });
+
+  it('keeps a tutorial replay paused when it is enabled from battle settings', () => {
+    const initial = createGuildRpgState();
+    let state = guildRpgReducer(
+      {
+        ...initial,
+        profile: {
+          ...initial.profile,
+          questRecords: {
+            ...initial.profile.questRecords,
+            border_pack: { clears: 1, bestClearMs: 12_000 },
+          },
+        },
+        preferences: { ...initial.preferences, tutorial: 'skipped' },
+      },
+      { type: 'START_QUEST', questId: 'border_pack' },
+    );
+    state = guildRpgReducer(state, { type: 'SET_SETTINGS_OPEN', open: true });
+    state = guildRpgReducer(state, { type: 'SET_TUTORIAL', tutorial: 'active' });
+    state = guildRpgReducer(state, { type: 'SET_SETTINGS_OPEN', open: false });
+
+    expect(state).toMatchObject({
+      screen: 'battle',
+      paused: true,
+      tutorialReplay: true,
+      preferences: { tutorial: 'active' },
+    });
+  });
+
+  it('keeps replay guidance active until a successful replay returns to the guild', () => {
+    const recorded = {
+      ...createGuildRpgState(),
+      profile: {
+        ...createGuildRpgState().profile,
+        unlockedQuestIds: ['border_pack', 'abandoned_mine'],
+        questRecords: {
+          ...createGuildRpgState().profile.questRecords,
+          border_pack: { clears: 1, bestClearMs: 12_000 },
+        },
+      },
+    };
+    let state = guildRpgReducer(recorded, { type: 'SET_TUTORIAL', tutorial: 'active' });
+    state = guildRpgReducer(state, { type: 'START_QUEST', questId: 'border_pack' });
+    expect(state).toMatchObject({
+      screen: 'battle',
+      paused: true,
+      tutorialReplay: true,
+      preferences: { tutorial: 'active' },
+    });
+
+    state = {
+      ...state,
+      screen: 'rewards',
+      rewards: {
+        questId: 'border_pack',
+        clearMs: 12_000,
+        successful: true,
+        gold: 0,
+        experience: 0,
+        items: [],
+        materials: [],
+      },
+    };
+    state = guildRpgReducer(state, { type: 'RETURN_GUILD' });
+    expect(state).toMatchObject({
+      screen: 'guild',
+      tutorialReplay: false,
+      preferences: { tutorial: 'complete' },
+    });
+  });
+
+  it('does not attach border guidance to a different hunt during tutorial replay', () => {
+    const recorded = {
+      ...createGuildRpgState(),
+      profile: {
+        ...createGuildRpgState().profile,
+        unlockedQuestIds: ['border_pack', 'abandoned_mine'],
+        questRecords: {
+          ...createGuildRpgState().profile.questRecords,
+          border_pack: { clears: 1, bestClearMs: 12_000 },
+        },
+      },
+    };
+    let state = guildRpgReducer(recorded, { type: 'SET_TUTORIAL', tutorial: 'active' });
+    state = guildRpgReducer(state, { type: 'START_QUEST', questId: 'abandoned_mine' });
+    expect(state).toMatchObject({
+      screen: 'battle',
+      paused: false,
+      preferences: { tutorial: 'active' },
+    });
+  });
+
   it('switches the active build only during guild preparation', () => {
     const initial = createGuildRpgState();
     const selected = guildRpgReducer(initial, {
@@ -236,7 +343,10 @@ describe('guild RPG reducer', () => {
     for (const cardId of ['brann_brace', 'brann_riposte', 'brann_sweep']) {
       state = guildRpgReducer(state, { type: 'APPEND_COMBO_CARD', cardId });
     }
+    state = guildRpgReducer(state, { type: 'ACK_TUTORIAL_PREVIEW' });
+    expect(state.tutorialPreviewAcknowledged).toBe(true);
     state = guildRpgReducer(state, { type: 'RELEASE_COMBO' });
+    expect(state.tutorialPreviewAcknowledged).toBe(false);
     state = guildRpgReducer(state, { type: 'ADVANCE_PLAYBACK', count: 1_000 });
     state = guildRpgReducer(state, { type: 'COMPLETE_PLAYBACK' });
 
@@ -244,6 +354,42 @@ describe('guild RPG reducer', () => {
       screen: 'battle',
       paused: true,
       preferences: { tutorial: 'active' },
+    });
+  });
+
+  it('reaches annihilation through the guided guard-break and boss-execution waves', () => {
+    let state = guildRpgReducer(createGuildRpgState(), {
+      type: 'START_QUEST',
+      questId: 'border_pack',
+    });
+    for (const cardId of ['brann_brace', 'brann_riposte', 'brann_sweep']) {
+      state = guildRpgReducer(state, { type: 'APPEND_COMBO_CARD', cardId });
+    }
+    state = guildRpgReducer(state, { type: 'RELEASE_COMBO' });
+    state = guildRpgReducer(state, { type: 'ADVANCE_PLAYBACK', count: 1_000 });
+    state = guildRpgReducer(state, { type: 'COMPLETE_PLAYBACK' });
+    expect(state.battle?.combo?.activatedBossPhaseIds).toContain('alpha-execution');
+    expect(state.battle?.selectedTargetId).toBe('wolf_alpha');
+
+    for (const cardId of [
+      'lyra_mark',
+      'lyra_piercing_shot',
+      'lyra_ricochet',
+      'elin_prayer',
+      'elin_overflow_bolt',
+      'elin_radiant_burst',
+    ]) {
+      state = guildRpgReducer(state, { type: 'APPEND_COMBO_CARD', cardId });
+    }
+    state = guildRpgReducer(state, { type: 'ACK_TUTORIAL_PREVIEW' });
+    expect(state.tutorialPreviewAcknowledged).toBe(true);
+    state = guildRpgReducer(state, { type: 'RELEASE_COMBO' });
+    state = guildRpgReducer(state, { type: 'ADVANCE_PLAYBACK', count: 1_000 });
+    state = guildRpgReducer(state, { type: 'COMPLETE_PLAYBACK' });
+
+    expect(state).toMatchObject({
+      screen: 'rewards',
+      rewards: { successful: true, axes: { annihilation: true } },
     });
   });
 

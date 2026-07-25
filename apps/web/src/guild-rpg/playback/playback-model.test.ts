@@ -182,6 +182,19 @@ describe('combo playback model', () => {
       amount: 99,
       label: 'OVERKILL +99',
     });
+
+    const guardOverkillThenPhase: ComboRuntimeState = {
+      ...runtime,
+      phase: 'composing',
+      events: [events[2]!, events[4]!, events[3]!],
+    };
+    expect(createPlaybackProjection(guardOverkillThenPhase, 0, 3)).toMatchObject({
+      stage: 'execution',
+      currentImpact: {
+        kind: 'boss-execution',
+        label: 'EXECUTION WINDOW',
+      },
+    });
   });
 
   it('accelerates dense chains but pauses on impact events', () => {

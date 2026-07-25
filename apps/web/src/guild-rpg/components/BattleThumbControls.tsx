@@ -35,7 +35,29 @@ export function BattleThumbControls({ state, dispatch }: BattleThumbControlsProp
     rewardItemCount: 0,
     resolvedItemCount: 0,
     hasBorderRecord: Boolean(state.profile.questRecords.border_pack),
+    replaying: state.tutorialReplay,
+    previewAcknowledged: state.tutorialPreviewAcknowledged,
+    bossExecutionOpen: Boolean(battle.combo?.activatedBossPhaseIds?.includes('alpha-execution')),
   });
+  const releaseLabel =
+    coach?.step === 'recover'
+      ? '撤銷錯誤卡'
+      : coach?.step === 'preview'
+        ? '確認預演'
+        : coach?.step === 'release'
+          ? '釋放軍令'
+          : earlyRelease
+            ? '提早釋放'
+            : '釋放軍令';
+  const releaseAction = () =>
+    dispatch(
+      coach?.step === 'recover'
+        ? { type: 'UNDO_COMBO_CARD' }
+        : coach?.step === 'preview'
+          ? { type: 'ACK_TUTORIAL_PREVIEW' }
+          : { type: 'RELEASE_COMBO' },
+    );
+  const recommendedCardId = coach?.expectedCardId ?? sensation.signature.nextCard?.id;
 
   let actions: readonly ThumbDeckAction[];
   let title: string;
@@ -48,11 +70,7 @@ export function BattleThumbControls({ state, dispatch }: BattleThumbControlsProp
             .diagnostics.length === 0,
       )
       .sort((left, right) =>
-        left.id === sensation.signature.nextCard?.id
-          ? -1
-          : right.id === sensation.signature.nextCard?.id
-            ? 1
-            : 0,
+        left.id === recommendedCardId ? -1 : right.id === recommendedCardId ? 1 : 0,
       );
     const pageCount = Math.max(1, Math.ceil(cards.length / 2));
     const visibleCards = cards.slice((cardPage % pageCount) * 2, (cardPage % pageCount) * 2 + 2);
@@ -83,12 +101,12 @@ export function BattleThumbControls({ state, dispatch }: BattleThumbControlsProp
       },
       {
         id: 'release',
-        label: earlyRelease ? '提早釋放' : '釋放軍令',
+        label: releaseLabel,
         detail: `${sensation.preview.eventCount} 事件 · ${sensation.preview.defeatedEnemyIds.length} 擊殺`,
         slot: 'primary',
         tone: 'primary',
         disabled: runtime.draft.cardIds.length === 0,
-        onPress: () => dispatch({ type: 'RELEASE_COMBO' }),
+        onPress: releaseAction,
       },
     ];
   } else if (page === 'command') {
@@ -100,12 +118,12 @@ export function BattleThumbControls({ state, dispatch }: BattleThumbControlsProp
     actions = [
       {
         id: 'release',
-        label: earlyRelease ? '提早釋放' : '釋放軍令',
+        label: releaseLabel,
         detail: `${sensation.preview.eventCount} 事件 · ${sensation.preview.defeatedEnemyIds.length} 擊殺`,
         slot: 'primary',
         tone: 'primary',
         disabled: runtime.draft.cardIds.length === 0,
-        onPress: () => dispatch({ type: 'RELEASE_COMBO' }),
+        onPress: releaseAction,
       },
       {
         id: 'undo',

@@ -10,10 +10,7 @@ interface GuildSettingsPanelProps {
 export function GuildSettingsPanel({ state, dispatch }: GuildSettingsPanelProps) {
   const [confirmAbandon, setConfirmAbandon] = useState(false);
   const inHunt = state.screen === 'battle' || state.screen === 'playback';
-  const close = () => {
-    dispatch({ type: 'SET_SETTINGS_OPEN', open: false });
-    if (inHunt) dispatch({ type: 'SET_PAUSED', paused: false });
-  };
+  const close = () => dispatch({ type: 'SET_SETTINGS_OPEN', open: false });
 
   return (
     <section className="gr-settings" role="dialog" aria-modal="true" aria-label="遊戲設定">
