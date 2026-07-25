@@ -7,6 +7,7 @@ import { createGuildRpgState } from '../state/create-game-state';
 import { guildRpgReducer, type GuildRpgState } from '../state/game-reducer';
 import { parseGuildSave, serializeGuildSave } from '../storage/guild-save';
 import { BattleScreen } from './BattleScreen';
+import { ComboPlaybackScreen } from './ComboPlaybackScreen';
 import { GuildScreen } from './GuildScreen';
 import { RewardScreen } from './RewardScreen';
 
@@ -30,12 +31,18 @@ function start() {
   });
 }
 
-function reachRewards(): GuildRpgState {
+function releaseFullCommand(): GuildRpgState {
   let state = start();
   for (const cardId of FULL_WIPE_COMMAND) {
     state = guildRpgReducer(state, { type: 'APPEND_COMBO_CARD', cardId });
   }
   return guildRpgReducer(state, { type: 'RELEASE_COMBO' });
+}
+
+function reachRewards(): GuildRpgState {
+  let state = releaseFullCommand();
+  state = guildRpgReducer(state, { type: 'ADVANCE_PLAYBACK', count: 1_000 });
+  return guildRpgReducer(state, { type: 'COMPLETE_PLAYBACK' });
 }
 
 describe('complete combo hunt presentation', () => {
@@ -49,6 +56,19 @@ describe('complete combo hunt presentation', () => {
     expect(markup).toContain('data-escalation-stage="stack"');
     expect(markup).toContain('role="status"');
     expect(markup).toContain('aria-label="戰鬥操作分頁"');
+  });
+
+  it('renders a skippable staged playback before rewards', () => {
+    const state = releaseFullCommand();
+    const eventCount = state.battle!.combo!.events.length - state.playback!.eventStartIndex;
+    const markup = renderToStaticMarkup(<ComboPlaybackScreen state={state} dispatch={dispatch} />);
+
+    expect(state.screen).toBe('playback');
+    expect(markup).toContain(`data-playback-progress="0/${eventCount}"`);
+    expect(markup).toContain('播放連擊');
+    expect(markup).toContain('跳過播放');
+    expect(markup).toContain('aria-label="播放速度"');
+    expect(markup).toContain('aria-live="polite"');
   });
 
   it('presents annihilation escalation, exclusive loot, and replay records', () => {

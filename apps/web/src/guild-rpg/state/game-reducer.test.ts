@@ -38,7 +38,7 @@ describe('guild RPG reducer', () => {
     ).toBe('ricochet');
   });
 
-  it('composes and releases one complete command into rewards and replay', () => {
+  it('plays a complete command before applying rewards and replay records', () => {
     let state = guildRpgReducer(createGuildRpgState(), {
       type: 'START_QUEST',
       questId: 'border_pack',
@@ -54,6 +54,22 @@ describe('guild RPG reducer', () => {
     expect(state.battle?.combo?.draft.cardIds).toEqual(FULL_WIPE_COMMAND);
 
     state = guildRpgReducer(state, { type: 'RELEASE_COMBO' });
+    expect(state.screen).toBe('playback');
+    expect(state.playback).toMatchObject({
+      visibleEventCount: 0,
+    });
+    expect(state.rewards).toBeUndefined();
+    expect(state.profile.questRecords.border_pack).toBeUndefined();
+
+    state = guildRpgReducer(state, { type: 'ADVANCE_PLAYBACK', count: 1 });
+    expect(state.screen).toBe('playback');
+    expect(state.playback?.visibleEventCount).toBe(1);
+
+    state = guildRpgReducer(state, { type: 'ADVANCE_PLAYBACK', count: 1_000 });
+    expect(state.screen).toBe('playback');
+    expect(state.playback?.visibleEventCount).toBeGreaterThan(1);
+
+    state = guildRpgReducer(state, { type: 'COMPLETE_PLAYBACK' });
     expect(state.screen).toBe('rewards');
     expect(state.rewards?.items.length).toBeGreaterThan(2);
     expect(state.rewards).toMatchObject({
@@ -92,6 +108,28 @@ describe('guild RPG reducer', () => {
     expect(replay.screen).toBe('battle');
     expect(replay.battle?.seed).not.toBe('border_pack-1');
     expect(replay.battle?.combo?.draft.cardIds).toEqual([]);
+  });
+
+  it('returns an unfinished command to the same battle after playback', () => {
+    let state = guildRpgReducer(createGuildRpgState(), {
+      type: 'START_QUEST',
+      questId: 'border_pack',
+    });
+    state = guildRpgReducer(state, { type: 'APPEND_COMBO_CARD', cardId: 'brann_brace' });
+    state = guildRpgReducer(state, { type: 'RELEASE_COMBO' });
+
+    expect(state.screen).toBe('playback');
+    expect(state.battle?.status).toBe('active');
+    const resolvedBattle = state.battle;
+
+    state = guildRpgReducer(state, { type: 'ADVANCE_PLAYBACK', count: 1_000 });
+    state = guildRpgReducer(state, { type: 'COMPLETE_PLAYBACK' });
+
+    expect(state.screen).toBe('battle');
+    expect(state.battle).toBe(resolvedBattle);
+    expect(state.battle?.combo?.phase).toBe('composing');
+    expect(state.battle?.combo?.draft.cardIds).toEqual([]);
+    expect(state.rewards).toBeUndefined();
   });
 
   it('preserves the draft while enemies pressure composition and supports undo', () => {

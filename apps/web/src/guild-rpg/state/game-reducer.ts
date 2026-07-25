@@ -1,5 +1,6 @@
 import { GUILD_GAME_CONTENT } from '@expedition/game-data';
 import type {
+  BattleUnit,
   GuildBattleState,
   GuildProfile,
   ItemChoice,
@@ -20,17 +21,26 @@ import { reduceComboAction, type ComboCommandAction } from './reduce-combo-actio
 import { reduceHuntResult } from './reduce-hunt-result';
 
 export interface GuildRpgState {
-  screen: 'guild' | 'battle' | 'rewards';
+  screen: 'guild' | 'battle' | 'playback' | 'rewards';
   profile: GuildProfile;
   battle?: GuildBattleState | undefined;
   rewards?: QuestRewards | undefined;
+  playback?: ComboPlaybackState | undefined;
   speed: 1 | 2;
   resolvedItemIds: readonly string[];
   message: string;
 }
 
+export interface ComboPlaybackState {
+  eventStartIndex: number;
+  startingUnits: readonly BattleUnit[];
+  visibleEventCount: number;
+}
+
 export type GuildRpgAction =
   | ComboCommandAction
+  | { type: 'ADVANCE_PLAYBACK'; count: number }
+  | { type: 'COMPLETE_PLAYBACK' }
   | { type: 'START_QUEST'; questId: string }
   | { type: 'TICK'; elapsedMs: number }
   | { type: 'SELECT_TARGET'; targetId: string }
@@ -55,6 +65,7 @@ function finishBattle(state: GuildRpgState, battle: GuildBattleState): GuildRpgS
     screen: 'rewards',
     battle,
     rewards: result.rewards,
+    playback: undefined,
     resolvedItemIds: [],
     profile: result.profile,
     message: result.message,
@@ -68,11 +79,44 @@ export function guildRpgReducer(state: GuildRpgState, action: GuildRpgAction): G
       screen: 'battle',
       battle: startGuildQuest(state.profile, action.questId, GUILD_GAME_CONTENT),
       rewards: undefined,
+      playback: undefined,
       resolvedItemIds: [],
       message: '遠征開始，編排軍令時敵人仍會持續進攻。',
     };
   }
   if (action.type === 'SET_SPEED') return { ...state, speed: action.speed };
+  if (action.type === 'ADVANCE_PLAYBACK' && state.screen === 'playback' && state.playback) {
+    const eventCount = Math.max(
+      0,
+      (state.battle?.combo?.events.length ?? 0) - state.playback.eventStartIndex,
+    );
+    return {
+      ...state,
+      playback: {
+        ...state.playback,
+        visibleEventCount: Math.min(
+          eventCount,
+          state.playback.visibleEventCount + Math.max(0, action.count),
+        ),
+      },
+    };
+  }
+  if (
+    action.type === 'COMPLETE_PLAYBACK' &&
+    state.screen === 'playback' &&
+    state.battle &&
+    state.playback
+  ) {
+    if (state.battle.status !== 'active') {
+      return finishBattle(state, state.battle);
+    }
+    return {
+      ...state,
+      screen: 'battle',
+      playback: undefined,
+      message: '軍令播放完成，可以繼續編排下一次釋放。',
+    };
+  }
   if (action.type === 'SET_BUILD' && state.screen === 'guild') {
     const build = GUILD_GAME_CONTENT.builds.find((candidate) => candidate.id === action.buildId);
     if (!build || build.id === state.profile.selectedBuildId) return state;
@@ -102,6 +146,7 @@ export function guildRpgReducer(state: GuildRpgState, action: GuildRpgAction): G
       screen: 'guild',
       battle: undefined,
       rewards: undefined,
+      playback: undefined,
       resolvedItemIds: [],
       message: '隊伍已返回公會。',
     };
@@ -134,7 +179,19 @@ export function guildRpgReducer(state: GuildRpgState, action: GuildRpgAction): G
     );
     const resolution = reduceComboAction(state.battle, action, GUILD_GAME_CONTENT.cards, rules);
     const next = { ...state, battle: resolution.battle, message: resolution.message };
-    return action.type === 'RELEASE_COMBO' ? finishBattle(next, resolution.battle) : next;
+    if (action.type !== 'RELEASE_COMBO') return next;
+    return {
+      ...next,
+      screen: 'playback',
+      playback: {
+        eventStartIndex:
+          resolution.battle.combo?.lastCommandEventStartIndex ??
+          state.battle.combo?.events.length ??
+          0,
+        startingUnits: state.battle.units,
+        visibleEventCount: 0,
+      },
+    };
   }
   if (action.type === 'SELECT_TARGET') {
     const valid = state.battle.units.some(

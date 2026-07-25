@@ -132,6 +132,27 @@
   background: #090d0eaa;
 }
 
+.gr-playback__controls,
+.gr-playback__controls > div {
+  display: flex;
+  gap: 8px;
+}
+
+.gr-playback__controls button {
+  min-width: 72px;
+  padding: 10px 12px;
+  border: 1px solid #dca4475c;
+  color: #f5e5c2;
+  background: #dca4470d;
+  font-weight: 800;
+}
+
+.gr-playback__controls button.is-active {
+  border-color: #e8b95b;
+  color: #f3c873;
+  background: #9b5d19;
+}
+
 .gr-combo-playback[data-escalation-stage='break'],
 .gr-combo-playback[data-escalation-stage='overflow'] {
   animation: gr-trace-pulse 480ms ease-out;
@@ -295,6 +316,15 @@
 
   .gr-combat-log ol {
     grid-template-columns: 1fr;
+  }
+
+  .gr-playback__controls {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .gr-playback__controls button {
+    min-height: 44px;
   }
 }
 

@@ -29,7 +29,9 @@ function reachRewards(): GuildRpgState {
   for (const cardId of FULL_WIPE_COMMAND) {
     state = guildRpgReducer(state, { type: 'APPEND_COMBO_CARD', cardId });
   }
-  return guildRpgReducer(state, { type: 'RELEASE_COMBO' });
+  state = guildRpgReducer(state, { type: 'RELEASE_COMBO' });
+  state = guildRpgReducer(state, { type: 'ADVANCE_PLAYBACK', count: 1_000 });
+  return guildRpgReducer(state, { type: 'COMPLETE_PLAYBACK' });
 }
 
 function returnWithInventory(): GuildRpgState {

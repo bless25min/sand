@@ -36,13 +36,13 @@ Hunts remain declarative data. Pages advanced mode reuses the existing hosting a
 - Produces actions: `ADVANCE_PLAYBACK`, `COMPLETE_PLAYBACK`
 - Consumes: immutable `GuildComboRuntime.events`
 
-- [ ] Write reducer tests showing release enters playback, active completion returns to battle, and
+- [x] Write reducer tests showing release enters playback, active completion returns to battle, and
       terminal completion enters rewards without changing the resolved battle.
-- [ ] Run the focused reducer test and verify the new assertions fail because playback is absent.
-- [ ] Implement the playback state/actions and rerun the focused reducer test.
-- [ ] Write rendering and hook-contract tests for event cursor, skip, 2x, and reduced motion; verify RED.
-- [ ] Implement the playback screen, clock, cursor filtering, and CSS; verify focused GREEN.
-- [ ] Run the guild-rpg affected tests and commit `feat: play released combo events`.
+- [x] Run the focused reducer test and verify the new assertions fail because playback is absent.
+- [x] Implement the playback state/actions and rerun the focused reducer test.
+- [x] Write rendering and hook-contract tests for event cursor, skip, 2x, and reduced motion; verify RED.
+- [x] Implement the playback screen, clock, cursor filtering, and CSS; verify focused GREEN.
+- [x] Run the guild-rpg affected tests and commit `feat: play released combo events`.
 
 ### Task 2: Complete Mine and Shrine Hunts
 
