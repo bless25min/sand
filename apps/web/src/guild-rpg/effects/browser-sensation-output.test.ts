@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
+import { SPECTACLE_CUE_IDS } from '@expedition/shared-types';
 
 import { createDefaultGuildPreferences } from '../preferences/guild-preferences';
 import type { SensationCueId } from '../presentation/sensation-cues';
@@ -113,19 +114,7 @@ describe('browser sensation output', () => {
   });
 
   it('keeps every haptic cue short enough to preserve impact without buzzing continuously', () => {
-    const cues: readonly SensationCueId[] = [
-      'stack',
-      'trigger',
-      'block',
-      'break',
-      'hit',
-      'kill',
-      'overkill',
-      'boss-execution',
-      'annihilation',
-      'loot',
-      'rule-online',
-    ];
+    const cues: readonly SensationCueId[] = SPECTACLE_CUE_IDS;
 
     for (const cue of cues) {
       const pattern = hapticPatternForCue(cue);

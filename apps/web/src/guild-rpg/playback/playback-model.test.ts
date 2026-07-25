@@ -222,4 +222,65 @@ describe('combo playback model', () => {
       }),
     ).toEqual({ type: 'advance', count: 1, delayMs: 240 });
   });
+
+  it('preserves authored block, heal, and ricochet impact identities', () => {
+    const base: ComboRuntimeState = {
+      phase: 'composing',
+      draft: { cardIds: [] },
+      availableCardIds: [],
+      events: [],
+      metrics: {
+        comboCount: 0,
+        totalDamage: 0,
+        totalOverkill: 0,
+        defeatedEnemyIds: [],
+        annihilationOverflow: 0,
+      },
+    };
+    const events: readonly ComboEvent[] = [
+      {
+        id: 0,
+        causalId: 'guard',
+        kind: 'shield',
+        message: 'guard',
+        targetId: 'hero',
+        amount: 20,
+        cueId: 'block',
+      },
+      {
+        id: 1,
+        causalId: 'prayer',
+        kind: 'healing',
+        message: 'restore',
+        targetId: 'hero',
+        amount: 30,
+        cueId: 'heal',
+      },
+      {
+        id: 2,
+        causalId: 'bounce',
+        kind: 'damage',
+        message: 'bounce',
+        targetId: 'enemy',
+        amount: 40,
+        cueId: 'ricochet',
+      },
+    ];
+
+    expect(createPlaybackProjection({ ...base, events }, 0, 1).currentImpact).toMatchObject({
+      kind: 'block',
+      targetId: 'hero',
+      amount: 20,
+    });
+    expect(createPlaybackProjection({ ...base, events }, 0, 2).currentImpact).toMatchObject({
+      kind: 'heal',
+      targetId: 'hero',
+      amount: 30,
+    });
+    expect(createPlaybackProjection({ ...base, events }, 0, 3).currentImpact).toMatchObject({
+      kind: 'ricochet',
+      targetId: 'enemy',
+      amount: 40,
+    });
+  });
 });

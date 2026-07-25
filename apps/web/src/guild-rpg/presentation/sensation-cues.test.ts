@@ -117,4 +117,28 @@ describe('sensation cue projection', () => {
       }),
     ).toEqual(['hit']);
   });
+
+  it('uses authored ricochet and heal cues and reveals reward tiers once', () => {
+    expect(
+      projectSensationCues({
+        events: [
+          {
+            id: 0,
+            causalId: 'bounce',
+            kind: 'damage',
+            message: 'bounce',
+            cueId: 'ricochet',
+          },
+          {
+            id: 1,
+            causalId: 'restore',
+            kind: 'healing',
+            message: 'restore',
+            cueId: 'heal',
+          },
+        ],
+        rewardCues: ['loot', 'chest', 'legendary'],
+      }),
+    ).toEqual(['ricochet', 'heal', 'loot', 'chest', 'legendary']);
+  });
 });

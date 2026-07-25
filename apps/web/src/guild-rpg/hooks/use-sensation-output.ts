@@ -55,6 +55,7 @@ export function useSensationOutput(state: GuildRpgState) {
       screen: state.screen,
       visibleEvents,
       activatedRuleIds: state.screen === 'guild' ? [] : state.activatedRuleIds,
+      rewards: state.rewards,
     });
     for (const cue of cues) outputRef.current?.play(cue);
   }, [
@@ -62,6 +63,7 @@ export function useSensationOutput(state: GuildRpgState) {
     state.battle?.combo,
     state.battle?.seed,
     state.playback,
+    state.rewards,
     state.screen,
   ]);
 }

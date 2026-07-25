@@ -1,21 +1,13 @@
-import type { ComboEvent } from '@expedition/shared-types';
+import type { ComboEvent, QuestRewards, SpectacleCueId } from '@expedition/shared-types';
 
-export type SensationCueId =
-  | 'stack'
-  | 'trigger'
-  | 'block'
-  | 'break'
-  | 'hit'
-  | 'kill'
-  | 'overkill'
-  | 'boss-execution'
-  | 'annihilation'
-  | 'loot'
-  | 'rule-online';
+import { cueForComboEvent, rewardSpectacleCues } from './spectacle-registry';
+
+export type SensationCueId = SpectacleCueId;
 
 export interface CueProjectionInput {
   events: readonly ComboEvent[];
   lootRevealed?: boolean;
+  rewardCues?: readonly SpectacleCueId[];
   ruleOnline?: boolean;
 }
 
@@ -24,6 +16,7 @@ interface SensationCueSnapshot {
   screen: 'guild' | 'battle' | 'playback' | 'rewards';
   visibleEvents: readonly ComboEvent[];
   activatedRuleIds: readonly string[];
+  rewards?: QuestRewards | undefined;
 }
 
 export interface SensationCueTracker {
@@ -31,15 +24,9 @@ export interface SensationCueTracker {
 }
 
 function eventCues(event: ComboEvent): readonly SensationCueId[] {
-  if (event.kind === 'card_played') return ['stack'];
-  if (event.kind === 'rule_triggered') return ['trigger'];
-  if (event.kind === 'shield') return ['block'];
-  if (event.kind === 'damage') return ['hit'];
-  if (event.kind === 'unit_defeated') return ['break', 'kill'];
-  if (event.kind === 'boss_phase') return ['boss-execution'];
-  if (event.kind === 'overkill' || event.kind === 'infinite_engine') return ['overkill'];
-  if (event.kind === 'victory') return ['annihilation'];
-  return [];
+  const cue = cueForComboEvent(event);
+  if (!cue) return [];
+  return event.kind === 'unit_defeated' ? ['break', cue] : [cue];
 }
 
 export function projectSensationCues(input: CueProjectionInput): readonly SensationCueId[] {
@@ -55,6 +42,7 @@ export function projectSensationCues(input: CueProjectionInput): readonly Sensat
     for (const cue of eventCues(event)) append(cue);
   }
   if (input.lootRevealed) append('loot');
+  for (const cue of input.rewardCues ?? []) append(cue);
   if (input.ruleOnline) append('rule-online');
   return cues;
 }
@@ -83,9 +71,14 @@ export function createSensationCueTracker(): SensationCueTracker {
         seenRuleIds.add(ruleId);
         return true;
       });
-      const lootRevealed = snapshot.screen === 'rewards' && previousScreen !== 'rewards';
+      const rewardsRevealed = snapshot.screen === 'rewards' && previousScreen !== 'rewards';
+      const rewardCues = rewardsRevealed
+        ? snapshot.rewards
+          ? rewardSpectacleCues(snapshot.rewards)
+          : (['loot'] as const)
+        : [];
       previousScreen = snapshot.screen;
-      return projectSensationCues({ events, lootRevealed, ruleOnline });
+      return projectSensationCues({ events, rewardCues, ruleOnline });
     },
   };
 }

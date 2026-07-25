@@ -6,6 +6,7 @@ import type {
 } from '@expedition/shared-types';
 
 import type { ComboEscalationStage } from '../presenters';
+import { cueForComboEvent, SPECTACLE_CUE_REGISTRY } from '../presentation/spectacle-registry';
 
 export interface PlaybackProjection {
   events: readonly ComboEvent[];
@@ -23,7 +24,17 @@ interface PlaybackTickInput {
 }
 
 export interface PlaybackImpact {
-  kind: 'stack' | 'trigger' | 'hit' | 'kill' | 'boss-execution' | 'overkill' | 'annihilation';
+  kind:
+    | 'stack'
+    | 'trigger'
+    | 'block'
+    | 'hit'
+    | 'heal'
+    | 'ricochet'
+    | 'kill'
+    | 'boss-execution'
+    | 'overkill'
+    | 'annihilation';
   label: string;
   targetId?: string;
   amount?: number;
@@ -137,12 +148,22 @@ function playbackImpact(
       label: 'EXECUTION WINDOW',
     };
   }
-  if (latest.kind === 'damage') {
+  const eventCue = cueForComboEvent(latest);
+  if (
+    eventCue === 'block' ||
+    eventCue === 'heal' ||
+    eventCue === 'ricochet' ||
+    eventCue === 'hit'
+  ) {
+    const amount = latest.amount;
     return {
-      kind: 'hit',
+      kind: eventCue,
       ...(latest.targetId ? { targetId: latest.targetId } : {}),
-      ...(latest.amount !== undefined ? { amount: latest.amount } : {}),
-      label: latest.amount !== undefined ? `IMPACT ${latest.amount}` : 'IMPACT',
+      ...(amount !== undefined ? { amount } : {}),
+      label:
+        amount !== undefined
+          ? `${SPECTACLE_CUE_REGISTRY[eventCue].label} ${amount}`
+          : SPECTACLE_CUE_REGISTRY[eventCue].label,
     };
   }
   if (latest.kind === 'rule_triggered') return { kind: 'trigger', label: 'RULE TRIGGERED' };

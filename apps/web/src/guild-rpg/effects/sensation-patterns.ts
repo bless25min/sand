@@ -15,6 +15,14 @@ const TONES: Readonly<Record<SensationCueId, ToneSpec>> = {
   block: { frequency: 105, endFrequency: 78, duration: 0.12, gain: 0.34, wave: 'square' },
   break: { frequency: 190, endFrequency: 70, duration: 0.16, gain: 0.38, wave: 'sawtooth' },
   hit: { frequency: 130, endFrequency: 95, duration: 0.08, gain: 0.3, wave: 'square' },
+  heal: { frequency: 390, endFrequency: 610, duration: 0.14, gain: 0.26, wave: 'sine' },
+  ricochet: {
+    frequency: 310,
+    endFrequency: 720,
+    duration: 0.15,
+    gain: 0.36,
+    wave: 'triangle',
+  },
   kill: { frequency: 115, endFrequency: 52, duration: 0.2, gain: 0.44, wave: 'sawtooth' },
   overkill: { frequency: 210, endFrequency: 62, duration: 0.28, gain: 0.52, wave: 'sawtooth' },
   'boss-execution': {
@@ -34,6 +42,22 @@ const TONES: Readonly<Record<SensationCueId, ToneSpec>> = {
     pulseBedFrequency: 54,
   },
   loot: { frequency: 520, endFrequency: 840, duration: 0.2, gain: 0.34, wave: 'sine' },
+  chest: {
+    frequency: 180,
+    endFrequency: 620,
+    duration: 0.3,
+    gain: 0.48,
+    wave: 'triangle',
+    pulseBedFrequency: 90,
+  },
+  legendary: {
+    frequency: 460,
+    endFrequency: 980,
+    duration: 0.42,
+    gain: 0.58,
+    wave: 'sine',
+    pulseBedFrequency: 115,
+  },
   'rule-online': {
     frequency: 420,
     endFrequency: 690,
@@ -49,11 +73,15 @@ const HAPTICS: Readonly<Record<SensationCueId, readonly number[]>> = {
   block: [42],
   break: [28, 18, 58],
   hit: [22],
+  heal: [16, 18, 24],
+  ricochet: [20, 16, 28, 16, 42],
   kill: [35, 24, 72],
   overkill: [45, 22, 80, 24, 110],
   'boss-execution': [70, 30, 110, 35, 150],
   annihilation: [90, 35, 130, 40, 180],
   loot: [18, 28, 18, 28, 36],
+  chest: [38, 22, 78, 26, 110],
+  legendary: [52, 24, 84, 28, 130],
   'rule-online': [22, 20, 45, 20, 70],
 };
 
