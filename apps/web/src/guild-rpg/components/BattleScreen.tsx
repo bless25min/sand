@@ -3,6 +3,7 @@ import { GUILD_GAME_CONTENT } from '@expedition/game-data';
 import { formatTime } from '../presenters';
 import type { GuildRpgAction, GuildRpgState } from '../state/game-reducer';
 import { BattleCommand } from './BattleCommand';
+import { BattleThumbControls } from './BattleThumbControls';
 import { BattleUnitCard } from './BattleUnitCard';
 
 interface BattleScreenProps {
@@ -77,6 +78,7 @@ export function BattleScreen({ state, dispatch }: BattleScreenProps) {
       </section>
 
       <BattleCommand state={state} dispatch={dispatch} />
+      <BattleThumbControls state={state} dispatch={dispatch} />
 
       <section className="gr-combat-log" aria-live="polite">
         <header>

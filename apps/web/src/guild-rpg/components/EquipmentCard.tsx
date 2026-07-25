@@ -10,10 +10,22 @@ interface EquipmentCardProps {
   item: EquipmentItem;
   state: GuildRpgState;
   dispatch: React.Dispatch<GuildRpgAction>;
+  selectedAdventurerId?: string;
+  onAdventurerChange?: (adventurerId: string) => void;
+  hideActions?: boolean;
 }
 
-export function EquipmentCard({ item, state, dispatch }: EquipmentCardProps) {
-  const [adventurerId, setAdventurerId] = useState(state.profile.leaderId);
+export function EquipmentCard({
+  item,
+  state,
+  dispatch,
+  selectedAdventurerId,
+  onAdventurerChange,
+  hideActions = false,
+}: EquipmentCardProps) {
+  const [internalAdventurerId, setInternalAdventurerId] = useState(state.profile.leaderId);
+  const adventurerId = selectedAdventurerId ?? internalAdventurerId;
+  const setAdventurerId = onAdventurerChange ?? setInternalAdventurerId;
   const member = state.profile.party.find((candidate) => candidate.definitionId === adventurerId)!;
   const equipped = member.equipment[item.slot];
   const difference = equipmentPower(item) - equipmentPower(equipped);
@@ -70,36 +82,38 @@ export function EquipmentCard({ item, state, dispatch }: EquipmentCardProps) {
           {difference} 綜合值
         </strong>
       </div>
-      <div className="gr-reward-actions">
-        <button
-          type="button"
-          disabled={resolved}
-          onClick={() =>
-            dispatch({ type: 'CHOOSE_ITEM', itemId: item.id, choice: 'equip', adventurerId })
-          }
-        >
-          立即裝備
-        </button>
-        <button
-          type="button"
-          disabled={resolved || state.profile.inventory.length >= 20}
-          title={state.profile.inventory.length >= 20 ? '背包已滿' : undefined}
-          onClick={() =>
-            dispatch({ type: 'CHOOSE_ITEM', itemId: item.id, choice: 'keep', adventurerId })
-          }
-        >
-          放入背包
-        </button>
-        <button
-          type="button"
-          disabled={resolved}
-          onClick={() =>
-            dispatch({ type: 'CHOOSE_ITEM', itemId: item.id, choice: 'sell', adventurerId })
-          }
-        >
-          售出 +{item.sellValue}G
-        </button>
-      </div>
+      {!hideActions && (
+        <div className="gr-reward-actions">
+          <button
+            type="button"
+            disabled={resolved}
+            onClick={() =>
+              dispatch({ type: 'CHOOSE_ITEM', itemId: item.id, choice: 'equip', adventurerId })
+            }
+          >
+            立即裝備
+          </button>
+          <button
+            type="button"
+            disabled={resolved || state.profile.inventory.length >= 20}
+            title={state.profile.inventory.length >= 20 ? '背包已滿' : undefined}
+            onClick={() =>
+              dispatch({ type: 'CHOOSE_ITEM', itemId: item.id, choice: 'keep', adventurerId })
+            }
+          >
+            放入背包
+          </button>
+          <button
+            type="button"
+            disabled={resolved}
+            onClick={() =>
+              dispatch({ type: 'CHOOSE_ITEM', itemId: item.id, choice: 'sell', adventurerId })
+            }
+          >
+            售出 +{item.sellValue}G
+          </button>
+        </div>
+      )}
     </article>
   );
 }

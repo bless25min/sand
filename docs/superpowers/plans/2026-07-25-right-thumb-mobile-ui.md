@@ -27,18 +27,20 @@ tests.
 ### Task 1: Lock the Mobile Interaction Contract
 
 **Files:**
+
 - Create: `apps/web/src/guild-rpg/mobile/thumb-deck-model.ts`
 - Create: `apps/web/src/guild-rpg/mobile/thumb-deck-model.test.ts`
 - Create: `apps/web/src/guild-rpg/components/ThumbCommandDeck.tsx`
 - Create: `apps/web/src/guild-rpg/components/mobile-flow-contract.test.tsx`
 
 **Interfaces:**
+
 - Produces `wrapThumbIndex(index: number, length: number, delta: -1 | 1): number`.
 - Produces `pageSlice<T>(items: readonly T[], page: number, pageSize: number)`.
 - Produces `ThumbCommandDeck` with labelled tabs, slotted actions, status, and feedback.
 
-- [ ] Write failing tests for empty and wrapping indexes, paged inventory, primary slot, selected
-  tab, disabled semantics, and Guild/Battle/Reward deck labels.
+- [x] Write failing tests for empty and wrapping indexes, paged inventory, primary slot, selected
+      tab, disabled semantics, and Guild/Battle/Reward deck labels.
 
 ```tsx
 expect(markup).toContain('data-thumb-command-deck="true"');
@@ -46,16 +48,17 @@ expect(markup).toContain('data-thumb-slot="primary"');
 expect(markup).toContain('aria-current="page"');
 ```
 
-- [ ] Run
-  `pnpm exec vitest run apps/web/src/guild-rpg/mobile/thumb-deck-model.test.ts apps/web/src/guild-rpg/components/mobile-flow-contract.test.tsx`
-  and confirm failure is caused by the missing model and deck.
-- [ ] Implement the two pure helpers and semantic deck shell only; do not wire screen actions yet.
-- [ ] Run the same tests and keep screen-contract assertions failing while model and deck assertions
-  pass.
+- [x] Run
+      `pnpm exec vitest run apps/web/src/guild-rpg/mobile/thumb-deck-model.test.ts apps/web/src/guild-rpg/components/mobile-flow-contract.test.tsx`
+      and confirm failure is caused by the missing model and deck.
+- [x] Implement the two pure helpers and semantic deck shell only; do not wire screen actions yet.
+- [x] Run the same tests and keep screen-contract assertions failing while model and deck assertions
+      pass.
 
 ### Task 2: Wire the Complete Right-Thumb Loop
 
 **Files:**
+
 - Modify: `apps/web/src/guild-rpg/components/GuildScreen.tsx`
 - Modify: `apps/web/src/guild-rpg/components/Inventory.tsx`
 - Modify: `apps/web/src/guild-rpg/components/AdventurerCard.tsx`
@@ -66,23 +69,25 @@ expect(markup).toContain('aria-current="page"');
 - Modify: `apps/web/src/guild-rpg/components/RewardScreen.tsx`
 
 **Interfaces:**
+
 - Guild pages are `quest | party | inventory`.
 - Battle pages are `skill | target | tactics`.
 - Reward controls receive the focused item, selected adventurer, and existing reducer dispatch.
 - Screen components remain composition roots; the deck never imports game rules.
 
-- [ ] Make the Guild contract green with focused quest, party, and two-item inventory paging.
-  Required start, leader, item selection, target adventurer, and equip actions use the deck.
-- [ ] Make the Battle contract green. Skills retain fixed positions while disabled; target selection
-  returns to Skill; ally-target skills request a recipient inside Target; Auto and speed use Tactics.
-- [ ] Make the Reward contract green. Focus one item, cycle adventurer, equip or keep, confirm sell
-  twice, and return after all items resolve.
-- [ ] Run the two affected tests plus
-  `pnpm exec vitest run apps/web/src/guild-rpg/state/game-reducer.test.ts` and confirm all pass.
+- [x] Make the Guild contract green with focused quest, party, and two-item inventory paging.
+      Required start, leader, item selection, target adventurer, and equip actions use the deck.
+- [x] Make the Battle contract green. Skills retain fixed positions while disabled; target selection
+      returns to Skill; ally-target skills request a recipient inside Target; Auto and speed use Tactics.
+- [x] Make the Reward contract green. Focus one item, cycle adventurer, equip or keep, confirm sell
+      twice, and return after all items resolve.
+- [x] Run the two affected tests plus
+      `pnpm exec vitest run apps/web/src/guild-rpg/state/game-reducer.test.ts` and confirm all pass.
 
 ### Task 3: Mobile Layout, Accessibility, and Consolidated Verification
 
 **Files:**
+
 - Create: `apps/web/src/guild-rpg/thumb-command-deck.css`
 - Modify: `apps/web/src/guild-rpg/guild-rpg.css`
 - Modify: `apps/web/src/guild-rpg/guild-screen.css`
@@ -94,14 +99,14 @@ expect(markup).toContain('aria-current="page"');
 - Modify: `apps/web/src/guild-rpg/reward-items.css`
 - Modify: `apps/web/src/guild-rpg/GuildRpgApp.tsx`
 
-- [ ] Import the deck stylesheet and add mobile-only focused content. Use `100dvh`,
-  `env(safe-area-inset-bottom)`, a 12–16 pixel right inset, 56-pixel minimum targets, reserved
-  content space, visible pressed/focus/selected/disabled states, and reduced-motion handling.
-- [ ] Keep the existing desktop grids and command controls above 800 pixels.
-- [ ] Run one consolidated `pnpm check`; fix only batch-related findings and run one focused
-  follow-up for any fix.
-- [ ] Browser-test the complete loop at 375 by 812 and 390 by 844: start, select target, attack,
-  Auto, 2x, reward decisions, return, inventory equip, reload, and no console errors or overflow.
-- [ ] Perform one consolidated diff review against the spec, then commit the implementation once.
+- [x] Import the deck stylesheet and add mobile-only focused content. Use `100dvh`,
+      `env(safe-area-inset-bottom)`, a 12–16 pixel right inset, 56-pixel minimum targets, reserved
+      content space, visible pressed/focus/selected/disabled states, and reduced-motion handling.
+- [x] Keep the existing desktop grids and command controls above 800 pixels.
+- [x] Run one consolidated `pnpm check`; fix only batch-related findings and run one focused
+      follow-up for any fix.
+- [x] Browser-test the complete loop at 375 by 812 and 390 by 844: start, select target, attack,
+      Auto, 2x, reward decisions, return, inventory equip, reload, and no console errors or overflow.
+- [x] Perform one consolidated diff review against the spec, then commit the implementation once.
 - [ ] Build the exact commit, push it to the configured Sites source mirror, save a version, deploy
-  privately, poll to `succeeded`, and verify the live bundle hash matches the local build.
+      privately, poll to `succeeded`, and verify the live bundle hash matches the local build.

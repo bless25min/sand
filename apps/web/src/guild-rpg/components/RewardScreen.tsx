@@ -2,6 +2,7 @@ import { GUILD_GAME_CONTENT } from '@expedition/game-data';
 
 import type { GuildRpgAction, GuildRpgState } from '../state/game-reducer';
 import { EquipmentCard } from './EquipmentCard';
+import { RewardThumbControls } from './RewardThumbControls';
 
 interface RewardScreenProps {
   state: GuildRpgState;
@@ -59,6 +60,7 @@ export function RewardScreen({ state, dispatch }: RewardScreenProps) {
             <EquipmentCard item={item} state={state} dispatch={dispatch} key={item.id} />
           ))}
         </div>
+        <RewardThumbControls state={state} dispatch={dispatch} />
       </section>
 
       <footer className="gr-rewards__footer">

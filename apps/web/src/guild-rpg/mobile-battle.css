@@ -1,0 +1,130 @@
+@media (max-width: 800px) {
+  .gr-battle {
+    display: grid;
+    overflow: hidden;
+    grid-template-rows: auto minmax(230px, 1fr);
+    gap: 8px;
+    height: 100dvh;
+    align-content: stretch;
+  }
+
+  .gr-battle__header {
+    align-items: center;
+    flex-direction: row;
+    min-height: 54px;
+    padding: 4px 2px 8px;
+  }
+
+  .gr-battle__header h1 {
+    margin: 1px 0;
+    font-size: 1.12rem;
+  }
+
+  .gr-battle__header p,
+  .gr-battle__header span {
+    font-size: 0.58rem;
+  }
+
+  .gr-battle__controls,
+  .gr-command,
+  .gr-combat-log {
+    display: none;
+  }
+
+  .gr-battlefield {
+    display: grid;
+    overflow: hidden;
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr 18px 1fr;
+    gap: 4px;
+    min-height: 0;
+    padding: 8px;
+    background-size:
+      22px 22px,
+      22px 22px,
+      auto,
+      auto;
+  }
+
+  .gr-line {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 4px;
+    align-content: center;
+  }
+
+  .gr-line--enemies {
+    order: 1;
+  }
+
+  .gr-versus {
+    order: 2;
+  }
+
+  .gr-line--heroes {
+    order: 3;
+  }
+
+  .gr-line > p {
+    grid-column: 1 / -1;
+    margin: 0;
+    font-size: 0.52rem;
+  }
+
+  .gr-unit {
+    min-width: 0;
+    min-height: 88px;
+    padding: 7px 6px;
+    border-left-width: 2px;
+  }
+
+  .gr-unit header {
+    align-items: start;
+  }
+
+  .gr-unit header span {
+    font-size: 0.48rem;
+  }
+
+  .gr-unit header h3 {
+    overflow: hidden;
+    margin-top: 1px;
+    font-size: 0.72rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .gr-unit header b {
+    font-size: 0.48rem;
+  }
+
+  .gr-unit__numbers {
+    margin-top: 7px;
+    font-size: 0.54rem;
+  }
+
+  .gr-unit__numbers span:last-child,
+  .gr-unit footer {
+    display: none;
+  }
+
+  .gr-meter {
+    height: 4px;
+    margin-top: 5px;
+  }
+
+  .gr-versus {
+    flex-direction: row;
+    gap: 8px;
+    font-size: 0.62rem;
+  }
+
+  .gr-result {
+    z-index: 30;
+    padding: 14px;
+  }
+
+  .gr-result > div {
+    padding: 26px 20px;
+  }
+}

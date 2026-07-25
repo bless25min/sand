@@ -1,7 +1,7 @@
 import { GUILD_GAME_CONTENT } from '@expedition/game-data';
 
-import { RARITY_LABEL, SLOT_LABEL, STAT_LABEL } from '../presenters';
 import type { GuildRpgAction, GuildRpgState } from '../state/game-reducer';
+import { InventoryItemCard } from './InventoryItemCard';
 
 interface InventoryProps {
   state: GuildRpgState;
@@ -23,24 +23,7 @@ export function Inventory({ state, dispatch }: InventoryProps) {
       ) : (
         <div className="gr-inventory-grid">
           {state.profile.inventory.map((item) => (
-            <article className={`gr-item gr-rarity--${item.rarity}`} key={item.id}>
-              <p>
-                {RARITY_LABEL[item.rarity]} · {SLOT_LABEL[item.slot]}
-              </p>
-              <h3>{item.name}</h3>
-              <strong>
-                {STAT_LABEL[item.mainStat.stat]} +{item.mainStat.value}
-              </strong>
-              <span>
-                {item.affixes.length
-                  ? item.affixes
-                      .map(
-                        (affix) =>
-                          `${affix.label ? `${affix.label} · ` : ''}${STAT_LABEL[affix.stat]} +${affix.value}`,
-                      )
-                      .join(' · ')
-                  : '無附加屬性'}
-              </span>
+            <InventoryItemCard item={item} key={item.id}>
               <div className="gr-item__equip">
                 {state.profile.party.map((member) => {
                   const hero = GUILD_GAME_CONTENT.adventurers.find(
@@ -63,7 +46,7 @@ export function Inventory({ state, dispatch }: InventoryProps) {
                   );
                 })}
               </div>
-            </article>
+            </InventoryItemCard>
           ))}
         </div>
       )}

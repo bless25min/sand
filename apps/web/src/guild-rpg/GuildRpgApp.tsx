@@ -15,6 +15,10 @@ import './battle.css';
 import './battle-command.css';
 import './rewards.css';
 import './reward-items.css';
+import './thumb-command-deck.css';
+import './mobile-guild.css';
+import './mobile-battle.css';
+import './mobile-rewards.css';
 
 function initialState() {
   const saved = typeof window === 'undefined' ? undefined : loadGuildSave(window.localStorage);

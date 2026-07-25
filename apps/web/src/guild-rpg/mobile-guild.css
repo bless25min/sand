@@ -1,0 +1,90 @@
+@media (max-width: 800px) {
+  .gr-shell {
+    overflow-x: hidden;
+  }
+
+  .gr-topbar {
+    min-height: 54px;
+  }
+
+  .gr-brand span {
+    font-size: 0.55rem;
+  }
+
+  .gr-brand strong {
+    font-size: 0.95rem;
+  }
+
+  .gr-resources {
+    gap: 0 8px;
+  }
+
+  .gr-hero,
+  .gr-guild-desktop {
+    display: none;
+  }
+
+  .gr-mobile-guild-stage {
+    display: block;
+    padding-top: 12px;
+  }
+
+  .gr-mobile-guild-stage__focus {
+    display: grid;
+    min-height: min(360px, calc(100dvh - 420px));
+    align-items: start;
+  }
+
+  .gr-mobile-guild-stage .gr-quest {
+    min-height: 0;
+    padding: 22px 20px;
+  }
+
+  .gr-mobile-guild-stage .gr-quest h2 {
+    margin: 18px 0 10px;
+    color: #f4dfb5;
+    font-family: Georgia, 'Noto Serif TC', serif;
+    font-size: clamp(1.8rem, 9vw, 2.7rem);
+  }
+
+  .gr-mobile-guild-stage .gr-quest > p:last-of-type {
+    color: #a3adaa;
+    line-height: 1.65;
+  }
+
+  .gr-mobile-guild-stage .gr-quest > strong {
+    display: block;
+    margin-top: 24px;
+    color: #dcb05f;
+  }
+
+  .gr-mobile-guild-stage .gr-hero-card {
+    padding: 16px;
+  }
+
+  .gr-mobile-guild-stage .gr-hero-card > .gr-button {
+    display: none;
+  }
+
+  .gr-mobile-guild-stage .gr-stats {
+    margin-bottom: 12px;
+  }
+
+  .gr-mobile-guild-stage .gr-loadout {
+    margin-bottom: 0;
+  }
+
+  .gr-mobile-inventory-pair {
+    display: grid;
+    gap: 8px;
+  }
+
+  .gr-mobile-inventory-pair .gr-item {
+    padding: 13px 14px;
+  }
+
+  .gr-mobile-inventory-pair .gr-item.is-mobile-selected {
+    border-color: var(--rarity);
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--rarity) 48%, transparent);
+  }
+}

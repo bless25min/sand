@@ -3,6 +3,7 @@ import { GUILD_GAME_CONTENT } from '@expedition/game-data';
 import { formatTime } from '../presenters';
 import type { GuildRpgAction, GuildRpgState } from '../state/game-reducer';
 import { AdventurerCard } from './AdventurerCard';
+import { GuildMobileStage } from './GuildMobileStage';
 import { Inventory } from './Inventory';
 
 interface GuildScreenProps {
@@ -41,86 +42,93 @@ export function GuildScreen({ state, dispatch }: GuildScreenProps) {
         </aside>
       </section>
 
-      <section className="gr-section" aria-labelledby="party-title">
-        <div className="gr-section__heading">
-          <div>
-            <p>ACTIVE PARTY</p>
-            <h2 id="party-title">遠征隊伍</h2>
-          </div>
-          <span>點選角色即可切換手動隊長</span>
-        </div>
-        <div className="gr-party-grid">
-          {state.profile.party.map((member) => {
-            const definition = GUILD_GAME_CONTENT.adventurers.find(
-              (candidate) => candidate.id === member.definitionId,
-            )!;
-            return (
-              <AdventurerCard
-                key={member.definitionId}
-                adventurer={member}
-                definition={definition}
-                isLeader={state.profile.leaderId === member.definitionId}
-                onSetLeader={() =>
-                  dispatch({ type: 'SET_LEADER', adventurerId: member.definitionId })
-                }
-              />
-            );
-          })}
-        </div>
-      </section>
+      <GuildMobileStage state={state} dispatch={dispatch} />
 
-      <section className="gr-section" aria-labelledby="quest-title">
-        <div className="gr-section__heading">
-          <div>
-            <p>QUEST BOARD</p>
-            <h2 id="quest-title">遠征委託</h2>
+      <div className="gr-guild-desktop">
+        <section className="gr-section" aria-labelledby="party-title">
+          <div className="gr-section__heading">
+            <div>
+              <p>ACTIVE PARTY</p>
+              <h2 id="party-title">遠征隊伍</h2>
+            </div>
+            <span>點選角色即可切換手動隊長</span>
           </div>
-          <span>首勝解鎖下一關；重刷追求裝備與最佳時間</span>
-        </div>
-        <div className="gr-quest-grid">
-          {GUILD_GAME_CONTENT.quests.map((quest, index) => {
-            const unlocked = state.profile.unlockedQuestIds.includes(quest.id);
-            const record = state.profile.questRecords[quest.id];
-            return (
-              <article className={`gr-card gr-quest ${unlocked ? '' : 'is-locked'}`} key={quest.id}>
-                <span className="gr-quest__index">0{index + 1}</span>
-                <p>{unlocked ? `建議 Lv.${quest.recommendedLevel}` : '尚未解鎖'}</p>
-                <h3>{quest.name}</h3>
-                <p>{quest.description}</p>
-                <dl>
-                  <div>
-                    <dt>敵軍</dt>
-                    <dd>{quest.enemies.length} 隊</dd>
-                  </div>
-                  <div>
-                    <dt>獎勵</dt>
-                    <dd>{quest.rewardGold} G</dd>
-                  </div>
-                  <div>
-                    <dt>通關</dt>
-                    <dd>{record?.clears ?? 0}</dd>
-                  </div>
-                  <div>
-                    <dt>最佳</dt>
-                    <dd>{formatTime(record?.bestClearMs)}</dd>
-                  </div>
-                </dl>
-                <button
-                  type="button"
-                  className="gr-button gr-button--primary"
-                  disabled={!unlocked}
-                  title={unlocked ? undefined : '先完成上一個遠征委託'}
-                  onClick={() => dispatch({ type: 'START_QUEST', questId: quest.id })}
+          <div className="gr-party-grid">
+            {state.profile.party.map((member) => {
+              const definition = GUILD_GAME_CONTENT.adventurers.find(
+                (candidate) => candidate.id === member.definitionId,
+              )!;
+              return (
+                <AdventurerCard
+                  key={member.definitionId}
+                  adventurer={member}
+                  definition={definition}
+                  isLeader={state.profile.leaderId === member.definitionId}
+                  onSetLeader={() =>
+                    dispatch({ type: 'SET_LEADER', adventurerId: member.definitionId })
+                  }
+                />
+              );
+            })}
+          </div>
+        </section>
+
+        <section className="gr-section" aria-labelledby="quest-title">
+          <div className="gr-section__heading">
+            <div>
+              <p>QUEST BOARD</p>
+              <h2 id="quest-title">遠征委託</h2>
+            </div>
+            <span>首勝解鎖下一關；重刷追求裝備與最佳時間</span>
+          </div>
+          <div className="gr-quest-grid">
+            {GUILD_GAME_CONTENT.quests.map((quest, index) => {
+              const unlocked = state.profile.unlockedQuestIds.includes(quest.id);
+              const record = state.profile.questRecords[quest.id];
+              return (
+                <article
+                  className={`gr-card gr-quest ${unlocked ? '' : 'is-locked'}`}
+                  key={quest.id}
                 >
-                  {unlocked ? '開始遠征' : '需要前置勝利'}
-                </button>
-              </article>
-            );
-          })}
-        </div>
-      </section>
+                  <span className="gr-quest__index">0{index + 1}</span>
+                  <p>{unlocked ? `建議 Lv.${quest.recommendedLevel}` : '尚未解鎖'}</p>
+                  <h3>{quest.name}</h3>
+                  <p>{quest.description}</p>
+                  <dl>
+                    <div>
+                      <dt>敵軍</dt>
+                      <dd>{quest.enemies.length} 隊</dd>
+                    </div>
+                    <div>
+                      <dt>獎勵</dt>
+                      <dd>{quest.rewardGold} G</dd>
+                    </div>
+                    <div>
+                      <dt>通關</dt>
+                      <dd>{record?.clears ?? 0}</dd>
+                    </div>
+                    <div>
+                      <dt>最佳</dt>
+                      <dd>{formatTime(record?.bestClearMs)}</dd>
+                    </div>
+                  </dl>
+                  <button
+                    type="button"
+                    className="gr-button gr-button--primary"
+                    disabled={!unlocked}
+                    title={unlocked ? undefined : '先完成上一個遠征委託'}
+                    onClick={() => dispatch({ type: 'START_QUEST', questId: quest.id })}
+                  >
+                    {unlocked ? '開始遠征' : '需要前置勝利'}
+                  </button>
+                </article>
+              );
+            })}
+          </div>
+        </section>
 
-      <Inventory state={state} dispatch={dispatch} />
+        <Inventory state={state} dispatch={dispatch} />
+      </div>
     </main>
   );
 }

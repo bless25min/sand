@@ -1,0 +1,89 @@
+@media (max-width: 800px) {
+  .gr-rewards {
+    overflow-x: hidden;
+  }
+
+  .gr-rewards__hero {
+    padding: 12px 0 10px;
+  }
+
+  .gr-rewards__hero h1 {
+    margin: 2px 0 4px;
+    font-size: 2.15rem;
+  }
+
+  .gr-rewards__hero > span {
+    display: block;
+    overflow: hidden;
+    font-size: 0.66rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .gr-rewards__hero > div {
+    gap: 10px;
+    margin-top: 9px;
+    font-size: 0.7rem;
+  }
+
+  .gr-reward-party {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .gr-reward-party > div {
+    grid-template-columns: 1fr;
+    gap: 2px;
+    padding: 7px 6px;
+    text-align: center;
+  }
+
+  .gr-reward-party span,
+  .gr-reward-party strong,
+  .gr-reward-party small {
+    font-size: 0.58rem;
+  }
+
+  .gr-reward-loot {
+    margin-top: 10px;
+  }
+
+  .gr-reward-loot > .gr-section__heading,
+  .gr-reward-grid,
+  .gr-rewards__footer {
+    display: none;
+  }
+
+  .gr-mobile-reward-stage {
+    display: block;
+  }
+
+  .gr-mobile-reward-stage > .gr-reward-card {
+    padding: 14px;
+  }
+
+  .gr-mobile-reward-stage .gr-reward-card header h3 {
+    font-size: 1.25rem;
+  }
+
+  .gr-mobile-reward-stage .gr-reward-stat {
+    margin: 12px 0 8px;
+    padding: 9px;
+  }
+
+  .gr-mobile-reward-stage .gr-reward-stat strong {
+    font-size: 1.25rem;
+  }
+
+  .gr-mobile-reward-stage .gr-reward-card ul {
+    min-height: 0;
+    margin-bottom: 10px;
+  }
+
+  .gr-mobile-reward-stage .gr-reward-card label {
+    display: none;
+  }
+
+  .gr-mobile-reward-stage .gr-compare {
+    margin-top: 7px;
+  }
+}
