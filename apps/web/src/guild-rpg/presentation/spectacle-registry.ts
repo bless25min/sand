@@ -75,16 +75,16 @@ export const SPECTACLE_MOTIFS = {
 const CUE_IDS = new Set<string>(SPECTACLE_CUE_IDS);
 
 export function cueForComboEvent(event: ComboEvent): SpectacleCueId | undefined {
-  if (event.cueId && CUE_IDS.has(event.cueId)) return event.cueId as SpectacleCueId;
-  if (event.kind === 'card_played') return 'stack';
-  if (event.kind === 'rule_triggered') return 'trigger';
-  if (event.kind === 'shield') return 'block';
+  if (event.kind === 'damage') return event.cueId === 'ricochet' ? 'ricochet' : 'hit';
   if (event.kind === 'healing') return 'heal';
-  if (event.kind === 'damage') return 'hit';
+  if (event.kind === 'shield') return 'block';
   if (event.kind === 'unit_defeated') return 'kill';
   if (event.kind === 'boss_phase') return 'boss-execution';
   if (event.kind === 'overkill' || event.kind === 'infinite_engine') return 'overkill';
   if (event.kind === 'victory') return 'annihilation';
+  if (event.cueId && CUE_IDS.has(event.cueId)) return event.cueId as SpectacleCueId;
+  if (event.kind === 'card_played') return 'stack';
+  if (event.kind === 'rule_triggered') return 'trigger';
   return undefined;
 }
 

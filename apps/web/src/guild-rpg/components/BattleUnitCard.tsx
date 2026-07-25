@@ -98,6 +98,9 @@ export function BattleUnitCard({
       data-unit-state={unitState}
       data-enemy-family={sensation?.identity?.family}
       data-enemy-role={sensation?.identity?.role}
+      data-enemy-palette={sensation?.identity?.palette}
+      data-enemy-aura={sensation?.identity?.aura}
+      data-enemy-defeat={sensation?.identity?.defeat}
       style={identityStyle}
       onClick={onSelect}
       disabled={unit.currentHp <= 0}
@@ -112,6 +115,9 @@ export function BattleUnitCard({
       data-unit-state={unitState}
       data-enemy-family={sensation?.identity?.family}
       data-enemy-role={sensation?.identity?.role}
+      data-enemy-palette={sensation?.identity?.palette}
+      data-enemy-aura={sensation?.identity?.aura}
+      data-enemy-defeat={sensation?.identity?.defeat}
       style={identityStyle}
     >
       {content}

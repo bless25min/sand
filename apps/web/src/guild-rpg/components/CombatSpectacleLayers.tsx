@@ -9,6 +9,7 @@ import type { PlaybackImpact } from '../playback/playback-model';
 import { SPECTACLE_CUE_REGISTRY, SPECTACLE_MOTIFS } from '../presentation/spectacle-registry';
 
 interface CombatSpectacleLayersProps {
+  eventId: number | string;
   impact: PlaybackImpact;
   motif: SpectacleMotifId;
   enemyIdentity?: EnemySpectacleIdentity | undefined;
@@ -16,6 +17,7 @@ interface CombatSpectacleLayersProps {
 }
 
 export function CombatSpectacleLayers({
+  eventId,
   impact,
   motif,
   enemyIdentity,
@@ -23,7 +25,7 @@ export function CombatSpectacleLayers({
 }: CombatSpectacleLayersProps) {
   const cue = SPECTACLE_CUE_REGISTRY[impact.kind];
   const buildMotif = SPECTACLE_MOTIFS[motif];
-  const trailCount = cue.trail === 'none' ? 0 : Math.min(3, cue.intensity);
+  const trailCount = cue.trail === 'none' ? 0 : Math.min(6, cue.intensity + 1);
   const number =
     impact.amount === undefined || cue.numberTone === 'none'
       ? undefined
@@ -43,6 +45,7 @@ export function CombatSpectacleLayers({
   return (
     <div
       className="gr-combat-spectacle"
+      data-spectacle-event={eventId}
       data-spectacle-cue={cue.id}
       data-intensity={cue.intensity}
       data-backdrop={cue.backdrop}
@@ -73,6 +76,7 @@ export function CombatSpectacleLayers({
           {number}
         </strong>
       )}
+      {huntCue && <span className="gr-spectacle__hunt-beat">{huntCue.label}</span>}
       <b className="gr-spectacle__label">{impact.label}</b>
     </div>
   );

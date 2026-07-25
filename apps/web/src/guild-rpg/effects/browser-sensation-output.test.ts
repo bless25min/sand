@@ -47,7 +47,7 @@ function createAudioHarness() {
 describe('browser sensation output', () => {
   it('waits for a user unlock, clamps volume, plays a bounded tone and haptic identity', () => {
     const audio = createAudioHarness();
-    const vibrate = vi.fn(() => true);
+    const vibrate = vi.fn((pattern: number | readonly number[]) => pattern !== undefined);
     const output = createBrowserSensationOutput(
       {
         createAudioContext: () => audio.context,
@@ -122,5 +122,29 @@ describe('browser sensation output', () => {
       expect(Math.max(...pattern)).toBeLessThanOrEqual(180);
       expect(pattern.reduce((total, value) => total + value, 0)).toBeLessThanOrEqual(600);
     }
+  });
+
+  it('plays tiered reward cues as one ordered haptic and pitched audio sequence', () => {
+    const audio = createAudioHarness();
+    const vibrate = vi.fn((pattern: number | readonly number[]) => pattern !== undefined);
+    const output = createBrowserSensationOutput(
+      { createAudioContext: () => audio.context, vibrate },
+      createDefaultGuildPreferences(false),
+    );
+    output.unlock();
+
+    output.playSequence(['loot', 'chest', 'legendary'], 'storm');
+
+    expect(vibrate).toHaveBeenCalledOnce();
+    expect(vibrate.mock.calls[0]![0]).toEqual([
+      ...hapticPatternForCue('loot'),
+      90,
+      ...hapticPatternForCue('chest'),
+      90,
+      ...hapticPatternForCue('legendary'),
+    ]);
+    expect(audio.starts).toHaveLength(5);
+    expect(audio.starts).toEqual([...audio.starts].sort((left, right) => left - right));
+    expect(audio.frequencyValues[0]).toBeGreaterThan(520);
   });
 });

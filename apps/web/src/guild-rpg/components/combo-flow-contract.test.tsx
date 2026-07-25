@@ -119,10 +119,16 @@ describe('complete combo hunt presentation', () => {
     const restored = parseGuildSave(serializeGuildSave(state.profile));
     const mobileCss = readFileSync(new URL('../mobile-battle.css', import.meta.url), 'utf8');
     const commandCss = readFileSync(new URL('../battle-command.css', import.meta.url), 'utf8');
+    const spectacleCss = readFileSync(new URL('../combat-spectacle.css', import.meta.url), 'utf8');
 
     expect(restored?.questRecords.border_pack?.bestOverkill).toBeGreaterThan(0);
     expect(restored?.questRecords.border_pack?.bestLootMultiplier).toBeGreaterThan(1);
     expect(mobileCss).toContain('.gr-combo-playback');
     expect(commandCss).toContain('@media (prefers-reduced-motion: reduce)');
+    expect(spectacleCss).toContain('.gr-playback-screen .gr-battlefield[data-spectacle-cue]');
+    expect(spectacleCss).toContain('.gr-spectacle__trail:nth-child(n + 4)');
+    expect(spectacleCss).toMatch(
+      /html\[data-guild-motion='reduced'\] \.gr-reward-spectacle__cue \{\s+opacity: 1;/,
+    );
   });
 });

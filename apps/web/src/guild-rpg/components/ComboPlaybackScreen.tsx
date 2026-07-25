@@ -1,7 +1,9 @@
 import { GUILD_GAME_CONTENT } from '@expedition/game-data';
+import type { CSSProperties } from 'react';
 
 import { createPlaybackProjection, projectPlaybackUnits } from '../playback/playback-model';
 import { createBattleSensationModel } from '../presentation/battle-sensation-model';
+import { SPECTACLE_CUE_REGISTRY } from '../presentation/spectacle-registry';
 import type { GuildRpgAction, GuildRpgState } from '../state/game-reducer';
 import { BattleUnitCard } from './BattleUnitCard';
 import { ComboPlayback } from './ComboPlayback';
@@ -22,7 +24,12 @@ export function ComboPlaybackScreen({ state, dispatch }: ComboPlaybackScreenProp
     playback.visibleEventCount,
   );
   const visibleUnits = projectPlaybackUnits(playback.startingUnits, battle.units, projection);
-  const sensation = createBattleSensationModel(state, GUILD_GAME_CONTENT);
+  const visibleBossPhaseIds = projection.events.flatMap((event) =>
+    event.kind === 'boss_phase' && event.phaseId ? [event.phaseId] : [],
+  );
+  const sensation = createBattleSensationModel(state, GUILD_GAME_CONTENT, {
+    activatedBossPhaseIds: visibleBossPhaseIds,
+  });
   const targetSensation = sensation.enemies.find(
     (enemy) => enemy.id === projection.currentImpact.targetId,
   );
@@ -34,6 +41,8 @@ export function ComboPlaybackScreen({ state, dispatch }: ComboPlaybackScreenProp
         ? 'execution'
         : 'opening';
   const huntCue = hunt?.spectacleCues?.find((cue) => cue.beat === huntBeat);
+  const spectacleEventId = projection.events.at(-1)?.id ?? 'opening';
+  const spectacleSpec = SPECTACLE_CUE_REGISTRY[projection.currentImpact.kind];
 
   return (
     <main
@@ -77,8 +86,20 @@ export function ComboPlaybackScreen({ state, dispatch }: ComboPlaybackScreenProp
         </div>
       </header>
 
-      <section className="gr-battlefield" aria-label="軍令播放戰場">
+      <section
+        className="gr-battlefield"
+        data-spectacle-cue={projection.currentImpact.kind}
+        style={
+          {
+            '--battle-shake': `${spectacleSpec.shakePx}px`,
+            '--battle-hit-stop': `${spectacleSpec.hitStopMs}ms`,
+          } as CSSProperties
+        }
+        aria-label="軍令播放戰場"
+        key={spectacleEventId}
+      >
         <CombatSpectacleLayers
+          eventId={spectacleEventId}
           impact={projection.currentImpact}
           motif={sensation.build.accent}
           enemyIdentity={targetSensation?.identity}

@@ -4,6 +4,12 @@
   overflow: hidden;
 }
 
+.gr-playback-screen .gr-battlefield[data-spectacle-cue] {
+  animation:
+    gr-battle-hit-stop var(--battle-hit-stop) steps(2, end),
+    gr-battle-shake 340ms ease-out;
+}
+
 .gr-battlefield > :not(.gr-combat-spectacle),
 .gr-rewards > :not(.gr-reward-spectacle) {
   position: relative;
@@ -21,6 +27,7 @@
 
 .gr-combat-spectacle {
   --hunt-color: var(--spectacle-secondary);
+  z-index: auto;
   animation:
     gr-spectacle-hit-stop var(--spectacle-hit-stop) steps(2, end),
     gr-spectacle-shake 340ms ease-out;
@@ -47,6 +54,7 @@
 
 .gr-spectacle__backdrop {
   position: absolute;
+  z-index: 1;
   inset: 0;
   background:
     radial-gradient(circle at 35% 68%, var(--hunt-color), transparent 18%),
@@ -69,6 +77,7 @@
 
 .gr-spectacle__flash {
   position: absolute;
+  z-index: 4;
   inset: 0;
   background: var(--spectacle-secondary);
   mix-blend-mode: screen;
@@ -81,6 +90,7 @@
 
 .gr-spectacle__trails {
   position: absolute;
+  z-index: 4;
   inset: 0;
 }
 
@@ -113,8 +123,10 @@
 }
 
 .gr-spectacle__number,
-.gr-spectacle__label {
+.gr-spectacle__label,
+.gr-spectacle__hunt-beat {
   position: absolute;
+  z-index: 5;
   top: 37%;
   left: 66%;
   color: white;
@@ -128,6 +140,23 @@
     3px 4px 0 #150a07;
   transform: translate(-50%, -50%);
   animation: gr-spectacle-number 620ms cubic-bezier(0.2, 0.9, 0.2, 1) both;
+  white-space: nowrap;
+}
+
+.gr-spectacle__hunt-beat {
+  position: absolute;
+  z-index: 5;
+  top: auto;
+  bottom: 18px;
+  left: 50%;
+  color: var(--hunt-color);
+  font-size: clamp(0.65rem, 1.5vw, 0.9rem);
+  font-weight: 900;
+  letter-spacing: 0.16em;
+  opacity: 0.8;
+  text-shadow: 0 0 14px var(--hunt-color);
+  transform: translateX(-50%);
+  animation: gr-spectacle-number 620ms ease-out both;
   white-space: nowrap;
 }
 
@@ -150,7 +179,9 @@
 }
 
 .gr-unit[data-enemy-role] {
-  border-left-color: var(--spectacle-secondary, #dca447);
+  --enemy-accent: #dca447;
+  position: relative;
+  border-left-color: var(--enemy-accent);
   background:
     radial-gradient(
       circle at 95% 10%,
@@ -160,9 +191,103 @@
     #151c1fcf;
 }
 
+.gr-unit[data-enemy-family='greyfang'] {
+  --enemy-accent: #d6d1c4;
+}
+
+.gr-unit[data-enemy-family='deepmine'] {
+  --enemy-accent: #61cf93;
+}
+
+.gr-unit[data-enemy-family='ember-dragon'] {
+  --enemy-accent: #ff7659;
+}
+
+.gr-unit[data-enemy-palette='moon-silver'] {
+  --enemy-accent: #dce8ef;
+}
+
+.gr-unit[data-enemy-palette='rust-blood'] {
+  --enemy-accent: #d8664f;
+}
+
+.gr-unit[data-enemy-palette='alpha-amber'] {
+  --enemy-accent: #ffc45c;
+}
+
+.gr-unit[data-enemy-palette='iron-green'] {
+  --enemy-accent: #6fcb91;
+}
+
+.gr-unit[data-enemy-palette='rust-red'] {
+  --enemy-accent: #ef7959;
+}
+
+.gr-unit[data-enemy-palette='powder-yellow'] {
+  --enemy-accent: #e3d672;
+}
+
+.gr-unit[data-enemy-palette='ember-violet'] {
+  --enemy-accent: #d48cff;
+}
+
+.gr-unit[data-enemy-palette='scale-cyan'] {
+  --enemy-accent: #6fe5e8;
+}
+
+.gr-unit[data-enemy-role]::after {
+  content: attr(data-enemy-role);
+  position: absolute;
+  top: 7px;
+  right: 8px;
+  color: var(--enemy-accent);
+  font-size: 0.48rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  opacity: 0.5;
+  text-transform: uppercase;
+}
+
+.gr-unit[data-enemy-role='brute'] {
+  border-left-width: 6px;
+}
+
+.gr-unit[data-enemy-role='artillery'] {
+  border-top-color: var(--enemy-accent);
+}
+
+.gr-unit[data-enemy-role='guardian'] {
+  border-right: 3px double var(--enemy-accent);
+}
+
 .gr-unit[data-enemy-role='boss'] {
   border-width: 1px 1px 1px 5px;
   box-shadow: inset 0 0 24px #ffac3820;
+}
+
+.gr-unit[data-enemy-aura][data-unit-state='pressure'] {
+  animation: gr-enemy-aura 1.1s ease-in-out infinite alternate;
+}
+
+.gr-unit[data-enemy-defeat][data-unit-state='defeated'] {
+  background: linear-gradient(115deg, transparent 45%, #ffffff18 48%, transparent 52%), #0d1112;
+}
+
+.gr-unit[data-enemy-defeat='fang-scatter'][data-unit-state='defeated'],
+.gr-unit[data-enemy-defeat='claw-break'][data-unit-state='defeated'],
+.gr-unit[data-enemy-defeat='alpha-collapse'][data-unit-state='defeated'] {
+  rotate: -1deg;
+}
+
+.gr-unit[data-enemy-defeat='armor-shatter'][data-unit-state='defeated'],
+.gr-unit[data-enemy-defeat='blade-tumble'][data-unit-state='defeated'],
+.gr-unit[data-enemy-defeat='shrapnel-scatter'][data-unit-state='defeated'] {
+  clip-path: polygon(0 0, 100% 3%, 96% 100%, 4% 96%);
+}
+
+.gr-unit[data-enemy-defeat='sunburst-collapse'][data-unit-state='defeated'],
+.gr-unit[data-enemy-defeat='scale-rain'][data-unit-state='defeated'] {
+  box-shadow: inset 0 0 30px var(--enemy-accent);
 }
 
 .gr-unit[data-unit-state='pressure'] {
@@ -250,6 +375,26 @@
   }
 }
 
+@keyframes gr-battle-hit-stop {
+  50% {
+    filter: contrast(1.18) brightness(1.12);
+  }
+}
+
+@keyframes gr-battle-shake {
+  20% {
+    translate: var(--battle-shake) 0;
+  }
+
+  45% {
+    translate: calc(0px - var(--battle-shake)) 0;
+  }
+
+  70% {
+    translate: 2px 0;
+  }
+}
+
 @keyframes gr-spectacle-shake {
   20% {
     translate: var(--spectacle-shake) 0;
@@ -321,6 +466,14 @@
   }
 }
 
+@keyframes gr-enemy-aura {
+  to {
+    box-shadow:
+      inset 0 0 24px color-mix(in srgb, var(--enemy-accent) 18%, transparent),
+      0 0 14px color-mix(in srgb, var(--enemy-accent) 12%, transparent);
+  }
+}
+
 @keyframes gr-unit-block {
   45% {
     filter: brightness(1.8) saturate(0.7);
@@ -369,7 +522,7 @@
 }
 
 @media (max-width: 600px) {
-  .gr-spectacle__trail:nth-child(n + 3) {
+  .gr-spectacle__trail:nth-child(n + 4) {
     display: none;
   }
 
@@ -392,7 +545,8 @@
   .gr-combat-spectacle,
   .gr-combat-spectacle *,
   .gr-reward-spectacle *,
-  .gr-unit[data-unit-state] {
+  .gr-unit[data-unit-state],
+  .gr-playback-screen .gr-battlefield[data-spectacle-cue] {
     animation: none;
     transition: none;
     transform: none;
@@ -401,6 +555,14 @@
 
   .gr-spectacle__trail,
   .gr-spectacle__flash {
+    display: none;
+  }
+
+  .gr-reward-spectacle__cue {
+    opacity: 1;
+  }
+
+  .gr-reward-spectacle__burst {
     display: none;
   }
 }
@@ -415,7 +577,22 @@ html[data-guild-motion='reduced'] .gr-unit[data-unit-state] {
   translate: none;
 }
 
+html[data-guild-motion='reduced'] .gr-playback-screen .gr-battlefield[data-spectacle-cue] {
+  animation: none;
+  transition: none;
+  transform: none;
+  translate: none;
+}
+
 html[data-guild-motion='reduced'] .gr-spectacle__trail,
 html[data-guild-motion='reduced'] .gr-spectacle__flash {
+  display: none;
+}
+
+html[data-guild-motion='reduced'] .gr-reward-spectacle__cue {
+  opacity: 1;
+}
+
+html[data-guild-motion='reduced'] .gr-reward-spectacle__burst {
   display: none;
 }

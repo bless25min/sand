@@ -1,4 +1,7 @@
+import type { SpectacleMotifId } from '@expedition/shared-types';
+
 import type { SensationCueId } from '../presentation/sensation-cues';
+import { SPECTACLE_MOTIFS } from '../presentation/spectacle-registry';
 
 export interface ToneSpec {
   frequency: number;
@@ -85,8 +88,28 @@ const HAPTICS: Readonly<Record<SensationCueId, readonly number[]>> = {
   'rule-online': [22, 20, 45, 20, 70],
 };
 
-export function toneForCue(cue: SensationCueId): ToneSpec {
+function toneForCue(cue: SensationCueId): ToneSpec {
   return TONES[cue];
+}
+
+const AUDIO_PITCH_SCALE = {
+  low: 0.86,
+  mid: 1,
+  high: 1.18,
+};
+
+export function toneForCueAndMotif(
+  cue: SensationCueId,
+  motif: SpectacleMotifId | undefined,
+): ToneSpec {
+  const spec = toneForCue(cue);
+  const pitch = motif ? AUDIO_PITCH_SCALE[SPECTACLE_MOTIFS[motif].audioPitch] : 1;
+  return {
+    ...spec,
+    frequency: spec.frequency * pitch,
+    endFrequency: spec.endFrequency * pitch,
+    ...(spec.pulseBedFrequency ? { pulseBedFrequency: spec.pulseBedFrequency * pitch } : {}),
+  };
 }
 
 export function hapticPatternForCue(cue: SensationCueId): readonly number[] {

@@ -19,6 +19,10 @@ export interface EnemySensation {
   identity?: EnemySpectacleIdentity | undefined;
 }
 
+interface BattleSensationOptions {
+  activatedBossPhaseIds?: readonly string[] | undefined;
+}
+
 function pressureLabel(gauge: number): EnemySensation['pressureLabel'] {
   if (gauge >= 85) return '攻勢爆發';
   if (gauge >= 50) return '即將攻擊';
@@ -42,7 +46,11 @@ const EMPTY_PREVIEW: ComboCommandPreview = {
   milestones: [],
 };
 
-export function createBattleSensationModel(state: GuildRpgState, content: GuildGameContent) {
+export function createBattleSensationModel(
+  state: GuildRpgState,
+  content: GuildGameContent,
+  options?: BattleSensationOptions,
+) {
   const battle = state.battle!;
   const runtime = battle.combo!;
   const compiledBuild = compileBuild(state.profile, content);
@@ -54,7 +62,9 @@ export function createBattleSensationModel(state: GuildRpgState, content: GuildG
     }),
   );
   const hunt = content.hunts.find((candidate) => candidate.questId === battle.questId);
-  const activatedPhaseIds = new Set(runtime.activatedBossPhaseIds ?? []);
+  const activatedPhaseIds = new Set(
+    options?.activatedBossPhaseIds ?? runtime.activatedBossPhaseIds ?? [],
+  );
   const executionLabels = new Map(
     hunt?.bossPhases
       ?.filter((phase) => activatedPhaseIds.has(phase.id))

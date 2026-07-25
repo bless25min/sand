@@ -1,6 +1,8 @@
+import type { SpectacleMotifId } from '@expedition/shared-types';
+
 import type { GuildPreferences } from '../preferences/guild-preferences';
 import type { SensationCueId } from '../presentation/sensation-cues';
-import { hapticPatternForCue, toneForCue, type ToneSpec } from './sensation-patterns';
+import { hapticPatternForCue, toneForCueAndMotif, type ToneSpec } from './sensation-patterns';
 
 export { hapticPatternForCue } from './sensation-patterns';
 
@@ -41,7 +43,8 @@ export interface BrowserSensationPorts {
 
 export interface SensationOutput {
   unlock(): void;
-  play(cue: SensationCueId): void;
+  play(cue: SensationCueId, motif?: SpectacleMotifId): void;
+  playSequence(cues: readonly SensationCueId[], motif?: SpectacleMotifId): void;
   setPaused(paused: boolean): void;
   updatePreferences(preferences: GuildPreferences): void;
   dispose(): void;
@@ -54,8 +57,13 @@ function normalizePreferences(preferences: GuildPreferences): GuildPreferences {
   };
 }
 
-function scheduleTone(context: AudioContextPort, spec: ToneSpec, masterVolume: number) {
-  const start = context.currentTime;
+function scheduleTone(
+  context: AudioContextPort,
+  spec: ToneSpec,
+  masterVolume: number,
+  delayMs = 0,
+) {
+  const start = context.currentTime + delayMs / 1_000;
   const oscillator = context.createOscillator();
   const gain = context.createGain();
   const peak = Math.max(0.0001, Math.min(1, masterVolume * spec.gain));
@@ -112,9 +120,9 @@ export function createBrowserSensationOutput(
     if (!context || context.state === 'suspended') return;
     void context.suspend().catch(() => undefined);
   };
-  const schedule = (spec: ToneSpec) => {
+  const schedule = (spec: ToneSpec, delayMs = 0) => {
     if (!context) return;
-    const oscillator = scheduleTone(context, spec, preferences.masterVolume);
+    const oscillator = scheduleTone(context, spec, preferences.masterVolume, delayMs);
     activeOscillators.add(oscillator);
     oscillator.onended = () => activeOscillators.delete(oscillator);
   };
@@ -133,6 +141,43 @@ export function createBrowserSensationOutput(
     }
     activeOscillators.clear();
   };
+  const playSequence = (cues: readonly SensationCueId[], motif: SpectacleMotifId | undefined) => {
+    if (disposed || !unlocked || paused || cues.length === 0) return;
+    if (preferences.hapticsEnabled) {
+      try {
+        const pattern = cues.flatMap((cue, index) => [
+          ...(index === 0 ? [] : [90]),
+          ...hapticPatternForCue(cue),
+        ]);
+        ports.vibrate?.(pattern);
+      } catch {
+        // Sensation output is optional and never interrupts the game.
+      }
+    }
+    if (!preferences.musicEnabled || !context || preferences.masterVolume <= 0) return;
+    try {
+      resume();
+      cues.forEach((cue, index) => {
+        const delayMs = index * 180;
+        const spec = toneForCueAndMotif(cue, motif);
+        schedule(spec, delayMs);
+        if (spec.pulseBedFrequency) {
+          schedule(
+            {
+              ...spec,
+              frequency: spec.pulseBedFrequency,
+              endFrequency: Math.max(30, spec.pulseBedFrequency * 0.72),
+              gain: spec.gain * 0.28,
+              wave: 'sine',
+            },
+            delayMs,
+          );
+        }
+      });
+    } catch {
+      // Unsupported or interrupted Web Audio must remain a silent fallback.
+    }
+  };
 
   return {
     unlock() {
@@ -145,32 +190,11 @@ export function createBrowserSensationOutput(
         context = undefined;
       }
     },
-    play(cue) {
-      if (disposed || !unlocked || paused) return;
-      if (preferences.hapticsEnabled) {
-        try {
-          ports.vibrate?.(hapticPatternForCue(cue));
-        } catch {
-          // Sensation output is optional and never interrupts the game.
-        }
-      }
-      if (!preferences.musicEnabled || !context || preferences.masterVolume <= 0) return;
-      try {
-        resume();
-        const spec = toneForCue(cue);
-        schedule(spec);
-        if (spec.pulseBedFrequency) {
-          schedule({
-            ...spec,
-            frequency: spec.pulseBedFrequency,
-            endFrequency: Math.max(30, spec.pulseBedFrequency * 0.72),
-            gain: spec.gain * 0.28,
-            wave: 'sine',
-          });
-        }
-      } catch {
-        // Unsupported or interrupted Web Audio must remain a silent fallback.
-      }
+    play(cue, motif) {
+      playSequence([cue], motif);
+    },
+    playSequence(cues, motif) {
+      playSequence(cues, motif);
     },
     setPaused(nextPaused) {
       paused = nextPaused;

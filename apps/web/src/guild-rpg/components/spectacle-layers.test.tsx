@@ -23,6 +23,7 @@ describe('combat spectacle layers', () => {
   it('renders bounded hit-stop, flash, trails, numbers, and execution backdrop metadata', () => {
     const markup = renderToStaticMarkup(
       <CombatSpectacleLayers
+        eventId={42}
         impact={{ kind: 'overkill', label: 'OVERKILL +99', targetId: 'alpha', amount: 99 }}
         motif="ember"
         enemyIdentity={{
@@ -43,15 +44,17 @@ describe('combat spectacle layers', () => {
     );
 
     expect(markup).toContain('data-spectacle-cue="overkill"');
+    expect(markup).toContain('data-spectacle-event="42"');
     expect(markup).toContain('data-intensity="5"');
     expect(markup).toContain('gr-spectacle__backdrop');
     expect(markup).toContain('gr-spectacle__flash');
-    expect(markup.match(/class="gr-spectacle__trail"/g)).toHaveLength(3);
+    expect(markup.match(/class="gr-spectacle__trail"/g)).toHaveLength(6);
     expect(markup).toContain('gr-spectacle__number');
     expect(markup).toContain('OVERKILL +99');
     expect(markup).toContain('--spectacle-primary:#ff6b35');
     expect(markup).toContain('--enemy-palette:blood-amber');
     expect(markup).toContain('data-hunt-palette="gold-fang"');
+    expect(markup).toContain('Pack erased');
   });
 
   it('exposes unit state and enemy identity without changing battle ownership', () => {

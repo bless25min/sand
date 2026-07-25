@@ -48,6 +48,24 @@ describe('spectacle registry', () => {
         cueId: 'legacy-unknown-cue',
       }),
     ).toBe('hit');
+    expect(
+      cueForComboEvent({
+        id: 3,
+        causalId: 'overflow-rule-damage',
+        kind: 'damage',
+        message: 'overflow damage',
+        cueId: 'heal',
+      }),
+    ).toBe('hit');
+    expect(
+      cueForComboEvent({
+        id: 4,
+        causalId: 'authored-heal',
+        kind: 'healing',
+        message: 'restore',
+        cueId: 'hit',
+      }),
+    ).toBe('heal');
   });
 
   it('projects loot, chest, and legendary reveals from completed rewards', () => {

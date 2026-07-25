@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { GUILD_GAME_CONTENT } from '@expedition/game-data';
 
 import {
   createBrowserSensationOutput,
@@ -57,12 +58,17 @@ export function useSensationOutput(state: GuildRpgState) {
       activatedRuleIds: state.screen === 'guild' ? [] : state.activatedRuleIds,
       rewards: state.rewards,
     });
-    for (const cue of cues) outputRef.current?.play(cue);
+    const motif =
+      GUILD_GAME_CONTENT.builds.find((build) => build.id === state.profile.selectedBuildId)
+        ?.accent ?? 'command';
+    if (cues.length > 1) outputRef.current?.playSequence(cues, motif);
+    else if (cues[0]) outputRef.current?.play(cues[0], motif);
   }, [
     state.activatedRuleIds,
     state.battle?.combo,
     state.battle?.seed,
     state.playback,
+    state.profile.selectedBuildId,
     state.rewards,
     state.screen,
   ]);
