@@ -2,15 +2,23 @@ import type { BattleUnit } from '@expedition/shared-types';
 
 import { ROLE_LABEL } from '../presenters';
 import type { EnemySensation } from '../presentation/battle-sensation-model';
+import type { PlaybackImpact } from '../playback/playback-model';
 
 interface BattleUnitCardProps {
   unit: BattleUnit;
   selected: boolean;
   onSelect?: () => void;
   sensation?: EnemySensation | undefined;
+  impact?: PlaybackImpact | undefined;
 }
 
-export function BattleUnitCard({ unit, selected, onSelect, sensation }: BattleUnitCardProps) {
+export function BattleUnitCard({
+  unit,
+  selected,
+  onSelect,
+  sensation,
+  impact,
+}: BattleUnitCardProps) {
   const hpRatio = Math.max(0, (unit.currentHp / unit.stats.hp) * 100);
   const content = (
     <>
@@ -76,6 +84,11 @@ export function BattleUnitCard({ unit, selected, onSelect, sensation }: BattleUn
       {content}
     </button>
   ) : (
-    <article className={`gr-unit ${unit.currentHp <= 0 ? 'is-defeated' : ''}`}>{content}</article>
+    <article
+      className={`gr-unit ${unit.currentHp <= 0 ? 'is-defeated' : ''} ${impact?.targetId === unit.id ? 'is-impact' : ''}`}
+      data-impact-kind={impact?.targetId === unit.id ? impact.kind : undefined}
+    >
+      {content}
+    </article>
   );
 }

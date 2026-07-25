@@ -132,6 +132,24 @@ describe('guild RPG reducer', () => {
     expect(state.rewards).toBeUndefined();
   });
 
+  it('lands playback skip on the complete climax before rewards', () => {
+    let state = guildRpgReducer(createGuildRpgState(), {
+      type: 'START_QUEST',
+      questId: 'border_pack',
+    });
+    for (const cardId of FULL_WIPE_COMMAND) {
+      state = guildRpgReducer(state, { type: 'APPEND_COMBO_CARD', cardId });
+    }
+    state = guildRpgReducer(state, { type: 'RELEASE_COMBO' });
+    const eventCount = state.battle!.combo!.events.length - state.playback!.eventStartIndex;
+
+    state = guildRpgReducer(state, { type: 'SKIP_PLAYBACK' });
+
+    expect(state.screen).toBe('playback');
+    expect(state.playback?.visibleEventCount).toBe(eventCount);
+    expect(state.message).toContain('完整高潮');
+  });
+
   it('preserves the draft while enemies pressure composition and supports undo', () => {
     let state = guildRpgReducer(createGuildRpgState(), {
       type: 'START_QUEST',

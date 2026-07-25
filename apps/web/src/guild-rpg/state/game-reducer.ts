@@ -40,6 +40,7 @@ interface ComboPlaybackState {
 export type GuildRpgAction =
   | ComboCommandAction
   | { type: 'ADVANCE_PLAYBACK'; count: number }
+  | { type: 'SKIP_PLAYBACK' }
   | { type: 'COMPLETE_PLAYBACK' }
   | { type: 'START_QUEST'; questId: string }
   | { type: 'TICK'; elapsedMs: number }
@@ -99,6 +100,21 @@ export function guildRpgReducer(state: GuildRpgState, action: GuildRpgAction): G
           state.playback.visibleEventCount + Math.max(0, action.count),
         ),
       },
+    };
+  }
+  if (
+    action.type === 'SKIP_PLAYBACK' &&
+    state.screen === 'playback' &&
+    state.playback &&
+    state.battle?.combo
+  ) {
+    return {
+      ...state,
+      playback: {
+        ...state.playback,
+        visibleEventCount: state.battle.combo.events.length - state.playback.eventStartIndex,
+      },
+      message: '已跳至完整高潮，殲滅結果與所有事件完整保留。',
     };
   }
   if (

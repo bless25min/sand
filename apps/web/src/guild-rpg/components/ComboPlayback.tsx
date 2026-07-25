@@ -23,11 +23,15 @@ export function ComboPlayback({
     <section
       className="gr-combo-playback"
       data-escalation-stage={projection.stage}
+      data-impact-kind={projection.currentImpact.kind}
       data-playback-progress={`${projection.progress.visible}/${projection.progress.total}`}
       role="status"
       aria-live="polite"
       aria-atomic="true"
     >
+      <div className="gr-playback-impact" aria-hidden="true">
+        {projection.currentImpact.label}
+      </div>
       <header>
         <div>
           <p>{COMBO_STAGE_LABEL[projection.stage]}</p>

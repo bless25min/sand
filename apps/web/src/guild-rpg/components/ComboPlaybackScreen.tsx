@@ -22,7 +22,11 @@ export function ComboPlaybackScreen({ state, dispatch }: ComboPlaybackScreenProp
   const visibleUnits = projectPlaybackUnits(playback.startingUnits, battle.units, projection);
 
   return (
-    <main className="gr-battle gr-playback-screen">
+    <main
+      className="gr-battle gr-playback-screen"
+      data-escalation-stage={projection.stage}
+      data-impact-kind={projection.currentImpact.kind}
+    >
       <header className="gr-battle__header">
         <div>
           <p>PLAY RELEASE · QUEST {GUILD_GAME_CONTENT.quests.indexOf(quest) + 1}</p>
@@ -44,7 +48,7 @@ export function ComboPlaybackScreen({ state, dispatch }: ComboPlaybackScreenProp
               </button>
             ))}
           </div>
-          <button type="button" onClick={() => dispatch({ type: 'COMPLETE_PLAYBACK' })}>
+          <button type="button" onClick={() => dispatch({ type: 'SKIP_PLAYBACK' })}>
             跳過播放
           </button>
         </div>
@@ -56,7 +60,12 @@ export function ComboPlaybackScreen({ state, dispatch }: ComboPlaybackScreenProp
           {visibleUnits
             .filter((unit) => unit.side === 'heroes')
             .map((unit) => (
-              <BattleUnitCard key={unit.id} unit={unit} selected={false} />
+              <BattleUnitCard
+                key={unit.id}
+                unit={unit}
+                selected={false}
+                impact={projection.currentImpact}
+              />
             ))}
         </div>
         <div className="gr-versus" aria-hidden="true">
@@ -69,7 +78,12 @@ export function ComboPlaybackScreen({ state, dispatch }: ComboPlaybackScreenProp
           {visibleUnits
             .filter((unit) => unit.side === 'enemies')
             .map((unit) => (
-              <BattleUnitCard key={unit.id} unit={unit} selected={false} />
+              <BattleUnitCard
+                key={unit.id}
+                unit={unit}
+                selected={false}
+                impact={projection.currentImpact}
+              />
             ))}
         </div>
       </section>

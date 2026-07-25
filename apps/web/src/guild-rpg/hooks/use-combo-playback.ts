@@ -16,9 +16,9 @@ export function useComboPlayback(state: GuildRpgState, dispatch: React.Dispatch<
 
   useEffect(() => {
     if (state.screen !== 'playback' || !state.playback || !state.battle?.combo) return;
-    const eventCount = state.battle.combo.events.length - state.playback.eventStartIndex;
+    const events = state.battle.combo.events.slice(state.playback.eventStartIndex);
     const tick = nextPlaybackTick({
-      eventCount,
+      events,
       reducedMotion,
       speed: state.speed,
       visibleEventCount: state.playback.visibleEventCount,

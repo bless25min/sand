@@ -38,10 +38,12 @@ export function formatTime(milliseconds?: number) {
   return `${(milliseconds / 1_000).toFixed(1)} 秒`;
 }
 
-export type ComboEscalationStage = 'stack' | 'break' | 'overflow';
+export type ComboEscalationStage = 'stack' | 'trigger' | 'break' | 'overkill' | 'annihilation';
 
 export const COMBO_STAGE_LABEL: Readonly<Record<ComboEscalationStage, string>> = {
   stack: 'STACK & COMMIT',
-  break: 'ACCELERATE & BREAK',
-  overflow: 'OVERFLOW & LOOT',
+  trigger: 'ENGINE TRIGGERED',
+  break: 'BREAK THE LINE',
+  overkill: 'OVERKILL ASCENDING',
+  annihilation: 'ANNIHILATION',
 };
