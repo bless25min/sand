@@ -2,9 +2,10 @@ import { GUILD_GAME_CONTENT } from '@expedition/game-data';
 
 import { formatTime } from '../presenters';
 import type { GuildRpgAction, GuildRpgState } from '../state/game-reducer';
-import { BattleCommand } from './BattleCommand';
 import { BattleThumbControls } from './BattleThumbControls';
 import { BattleUnitCard } from './BattleUnitCard';
+import { ComboPlayback } from './ComboPlayback';
+import { CommandComposer } from './CommandComposer';
 
 interface BattleScreenProps {
   state: GuildRpgState;
@@ -38,13 +39,6 @@ export function BattleScreen({ state, dispatch }: BattleScreenProps) {
               </button>
             ))}
           </div>
-          <button
-            type="button"
-            className={battle.leaderAuto ? 'is-active' : ''}
-            onClick={() => dispatch({ type: 'TOGGLE_AUTO' })}
-          >
-            隊長 {battle.leaderAuto ? 'AUTO' : '手動'}
-          </button>
         </div>
       </header>
 
@@ -77,25 +71,9 @@ export function BattleScreen({ state, dispatch }: BattleScreenProps) {
         </div>
       </section>
 
-      <BattleCommand state={state} dispatch={dispatch} />
+      <CommandComposer state={state} dispatch={dispatch} />
       <BattleThumbControls state={state} dispatch={dispatch} />
-
-      <section className="gr-combat-log" aria-live="polite">
-        <header>
-          <h2>戰鬥紀錄</h2>
-          <span>所有結果皆可由戰鬥碼與指令重播</span>
-        </header>
-        <ol>
-          {battle.events
-            .slice(-8)
-            .reverse()
-            .map((event) => (
-              <li key={event.id} data-kind={event.kind}>
-                {event.message}
-              </li>
-            ))}
-        </ol>
-      </section>
+      <ComboPlayback state={state} />
 
       {battle.status === 'defeat' && (
         <div className="gr-result" role="dialog" aria-modal="true">

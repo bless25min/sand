@@ -7,6 +7,7 @@ import type {
 } from '@expedition/shared-types';
 import {
   advanceGuildBattle,
+  advanceComposition,
   applyQuestRewards,
   createSeededRandom,
   equipStoredItem,
@@ -15,6 +16,8 @@ import {
   startGuildQuest,
   submitLeaderAction,
 } from '@expedition/simulation-core';
+
+import { reduceComboAction, type ComboCommandAction } from './reduce-combo-action';
 
 export interface GuildRpgState {
   screen: 'guild' | 'battle' | 'rewards';
@@ -27,6 +30,7 @@ export interface GuildRpgState {
 }
 
 export type GuildRpgAction =
+  | ComboCommandAction
   | { type: 'START_QUEST'; questId: string }
   | { type: 'TICK'; elapsedMs: number }
   | { type: 'SELECT_TARGET'; targetId: string }
@@ -70,7 +74,7 @@ export function guildRpgReducer(state: GuildRpgState, action: GuildRpgAction): G
       battle: startGuildQuest(state.profile, action.questId, GUILD_GAME_CONTENT),
       rewards: undefined,
       resolvedItemIds: [],
-      message: '遠征開始，等待行動量表蓄滿。',
+      message: '遠征開始，編排軍令時敵人仍會持續進攻。',
     };
   }
   if (action.type === 'SET_SPEED') return { ...state, speed: action.speed };
@@ -115,6 +119,15 @@ export function guildRpgReducer(state: GuildRpgState, action: GuildRpgAction): G
   }
   if (!state.battle || state.screen !== 'battle') return state;
 
+  if (
+    action.type === 'APPEND_COMBO_CARD' ||
+    action.type === 'UNDO_COMBO_CARD' ||
+    action.type === 'RELEASE_COMBO'
+  ) {
+    const resolution = reduceComboAction(state.battle, action, GUILD_GAME_CONTENT.cards);
+    const next = { ...state, battle: resolution.battle, message: resolution.message };
+    return action.type === 'RELEASE_COMBO' ? finishBattle(next, resolution.battle) : next;
+  }
   if (action.type === 'SELECT_TARGET') {
     const valid = state.battle.units.some(
       (unit) => unit.id === action.targetId && unit.side === 'enemies' && unit.currentHp > 0,
@@ -135,12 +148,14 @@ export function guildRpgReducer(state: GuildRpgState, action: GuildRpgAction): G
     };
   }
   if (action.type === 'TICK') {
-    const battle = advanceGuildBattle(
-      state.battle,
-      action.elapsedMs,
-      GUILD_GAME_CONTENT.skills,
-      actionRandom(state.battle),
-    );
+    const battle = state.battle.combo
+      ? advanceComposition(state.battle, action.elapsedMs)
+      : advanceGuildBattle(
+          state.battle,
+          action.elapsedMs,
+          GUILD_GAME_CONTENT.skills,
+          actionRandom(state.battle),
+        );
     return finishBattle(state, battle);
   }
   if (action.type === 'USE_SKILL' && state.battle.pendingLeaderId) {

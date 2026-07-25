@@ -9,23 +9,27 @@ import { GuildScreen } from './GuildScreen';
 import { RewardScreen } from './RewardScreen';
 
 const dispatch = () => undefined;
+const FULL_WIPE_COMMAND = [
+  'brann_brace',
+  'brann_riposte',
+  'brann_sweep',
+  'lyra_mark',
+  'lyra_piercing_shot',
+  'lyra_ricochet',
+  'elin_prayer',
+  'elin_overflow_bolt',
+  'elin_radiant_burst',
+] as const;
 
 function reachRewards(): GuildRpgState {
   let state = guildRpgReducer(createGuildRpgState(), {
     type: 'START_QUEST',
     questId: 'border_pack',
   });
-  for (let index = 0; index < 2_000 && state.screen === 'battle'; index += 1) {
-    state = guildRpgReducer(state, { type: 'TICK', elapsedMs: 100 });
-    if (state.battle?.pendingLeaderId) {
-      state = guildRpgReducer(state, {
-        type: 'USE_SKILL',
-        skillId: 'focused_shot',
-        targetId: state.battle.selectedTargetId!,
-      });
-    }
+  for (const cardId of FULL_WIPE_COMMAND) {
+    state = guildRpgReducer(state, { type: 'APPEND_COMBO_CARD', cardId });
   }
-  return state;
+  return guildRpgReducer(state, { type: 'RELEASE_COMBO' });
 }
 
 function returnWithInventory(): GuildRpgState {
@@ -70,18 +74,23 @@ describe('right-thumb mobile flow', () => {
     expect(inventoryMarkup).toContain('下一頁');
   });
 
-  it('keeps target, skill, and tactics controls in the battle thumb deck', () => {
-    const state = guildRpgReducer(createGuildRpgState(), {
+  it('keeps card, command, target, undo, and release controls in the battle thumb deck', () => {
+    let state = guildRpgReducer(createGuildRpgState(), {
       type: 'START_QUEST',
       questId: 'border_pack',
     });
+    state = guildRpgReducer(state, { type: 'APPEND_COMBO_CARD', cardId: 'brann_brace' });
     const markup = renderToStaticMarkup(<BattleScreen state={state} dispatch={dispatch} />);
 
     expect(markup).toContain('data-thumb-command-deck="true"');
     expect(markup).toContain('aria-label="戰鬥操作分頁"');
-    expect(markup).toContain('>技能<');
+    expect(markup).toContain('>卡牌<');
+    expect(markup).toContain('>軍令<');
     expect(markup).toContain('>目標<');
-    expect(markup).toContain('>戰術<');
+    expect(markup).toContain('撤銷上一步');
+    expect(markup).toContain('釋放軍令');
+    expect(markup).not.toContain('行動 0%');
+    expect(markup).toContain('壓力 0%');
     expect(markup).toContain('data-thumb-slot="primary"');
   });
 

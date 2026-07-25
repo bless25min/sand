@@ -1,6 +1,6 @@
 import { GUILD_GAME_CONTENT } from '@expedition/game-data';
-import type { GuildSkillDefinition } from '@expedition/shared-types';
-import { useEffect, useState } from 'react';
+import { compileCommand } from '@expedition/simulation-core';
+import { useState } from 'react';
 
 import type { GuildRpgAction, GuildRpgState } from '../state/game-reducer';
 import { ThumbCommandDeck, type ThumbDeckAction } from './ThumbCommandDeck';
@@ -10,122 +10,133 @@ interface BattleThumbControlsProps {
   dispatch: React.Dispatch<GuildRpgAction>;
 }
 
-type BattleThumbPage = 'skill' | 'target' | 'tactics';
+type BattleThumbPage = 'cards' | 'command' | 'target';
 
-const ACTION_SLOTS = ['primary', 'secondary', 'choice-a'] as const;
+const CARD_SLOTS = ['choice-a', 'choice-b'] as const;
 
 export function BattleThumbControls({ state, dispatch }: BattleThumbControlsProps) {
   const battle = state.battle!;
-  const leader = battle.units.find((unit) => unit.isLeader)!;
-  const skills = leader.skillIds.map((id) => GUILD_GAME_CONTENT.skills[id]!);
-  const [page, setPage] = useState<BattleThumbPage>('skill');
-  const [allySkillId, setAllySkillId] = useState<string>();
-  const ready = battle.pendingLeaderId === leader.id;
+  const runtime = battle.combo!;
+  const [page, setPage] = useState<BattleThumbPage>('cards');
+  const [cardPage, setCardPage] = useState(0);
   const selectedTarget = battle.units.find((unit) => unit.id === battle.selectedTargetId);
-
-  useEffect(() => {
-    if (ready) setPage('skill');
-  }, [ready]);
-
-  function useSkill(skill: GuildSkillDefinition) {
-    if (!ready) return;
-    if (skill.target === 'ally') {
-      setAllySkillId(skill.id);
-      setPage('target');
-      return;
-    }
-    const targetId = skill.target === 'self' ? leader.id : battle.selectedTargetId;
-    if (targetId) dispatch({ type: 'USE_SKILL', skillId: skill.id, targetId });
-  }
 
   let actions: readonly ThumbDeckAction[];
   let title: string;
-  if (page === 'skill') {
-    title = ready ? `${leader.name}可以下令` : `${leader.name}蓄力中`;
-    actions = skills.map((skill, index) => ({
-      id: skill.id,
-      label: skill.name,
-      detail: skill.description,
-      slot: ACTION_SLOTS[index] ?? 'choice-b',
-      tone: index === 0 ? 'primary' : 'default',
-      disabled: !ready || battle.leaderAuto,
-      onPress: () => useSkill(skill),
-    }));
-  } else if (page === 'target') {
-    const targets = battle.units.filter((unit) =>
-      allySkillId
-        ? unit.side === 'heroes' && unit.currentHp > 0
-        : unit.side === 'enemies' && unit.currentHp > 0,
-    );
-    title = allySkillId ? '選擇治療對象' : `目標：${selectedTarget?.name ?? '未選擇'}`;
+  if (page === 'cards') {
+    const cards = runtime.availableCardIds
+      .map((cardId) => GUILD_GAME_CONTENT.cards[cardId]!)
+      .filter(
+        (card) =>
+          compileCommand({ cardIds: [...runtime.draft.cardIds, card.id] }, GUILD_GAME_CONTENT.cards)
+            .diagnostics.length === 0,
+      );
+    const pageCount = Math.max(1, Math.ceil(cards.length / 2));
+    const visibleCards = cards.slice((cardPage % pageCount) * 2, (cardPage % pageCount) * 2 + 2);
+    title =
+      runtime.draft.cardIds.length > 0 ? `軍令 ${runtime.draft.cardIds.length} 段` : '選擇起手卡';
+    actions = [
+      ...visibleCards.map((card, index) => ({
+        id: card.id,
+        label: card.name,
+        detail: GUILD_GAME_CONTENT.adventurers.find((hero) => hero.id === card.ownerId)?.name,
+        slot: CARD_SLOTS[index]!,
+        onPress: () => dispatch({ type: 'APPEND_COMBO_CARD', cardId: card.id }),
+      })),
+      {
+        id: 'next-cards',
+        label: '下一組',
+        detail: `${(cardPage % pageCount) + 1} / ${pageCount}`,
+        slot: 'utility',
+        onPress: () => setCardPage((current) => (current + 1) % pageCount),
+      },
+      {
+        id: 'undo',
+        label: '撤銷上一步',
+        detail: '移除最後一張',
+        slot: 'secondary',
+        disabled: runtime.draft.cardIds.length === 0,
+        onPress: () => dispatch({ type: 'UNDO_COMBO_CARD' }),
+      },
+      {
+        id: 'release',
+        label: '釋放軍令',
+        detail: '完整結算不中斷',
+        slot: 'primary',
+        tone: 'primary',
+        disabled: runtime.draft.cardIds.length === 0,
+        onPress: () => dispatch({ type: 'RELEASE_COMBO' }),
+      },
+    ];
+  } else if (page === 'command') {
+    const latestCardId = runtime.draft.cardIds.at(-1);
+    title =
+      runtime.draft.cardIds.length > 0
+        ? `${runtime.draft.cardIds.length} 段軍令待命`
+        : '軍令尚未開始';
+    actions = [
+      {
+        id: 'release',
+        label: '釋放軍令',
+        detail: '完整結算不中斷',
+        slot: 'primary',
+        tone: 'primary',
+        disabled: runtime.draft.cardIds.length === 0,
+        onPress: () => dispatch({ type: 'RELEASE_COMBO' }),
+      },
+      {
+        id: 'undo',
+        label: '撤銷上一步',
+        detail: latestCardId ? GUILD_GAME_CONTENT.cards[latestCardId]?.name : '沒有可撤銷卡牌',
+        slot: 'secondary',
+        disabled: runtime.draft.cardIds.length === 0,
+        onPress: () => dispatch({ type: 'UNDO_COMBO_CARD' }),
+      },
+    ];
+  } else {
+    const targets = battle.units.filter((unit) => unit.side === 'enemies' && unit.currentHp > 0);
+    title = `目標：${selectedTarget?.name ?? '未選擇'}`;
     actions = targets.map((target, index) => ({
       id: target.id,
       label: target.name,
       detail: `${Math.ceil(target.currentHp)} / ${target.stats.hp} HP`,
-      slot: ACTION_SLOTS[index] ?? 'choice-b',
-      selected: !allySkillId && target.id === battle.selectedTargetId,
+      slot: index === 0 ? 'primary' : index === 1 ? 'secondary' : 'choice-a',
+      selected: target.id === battle.selectedTargetId,
       tone: index === 0 ? 'primary' : 'default',
       onPress: () => {
-        if (allySkillId && ready) {
-          dispatch({ type: 'USE_SKILL', skillId: allySkillId, targetId: target.id });
-          setAllySkillId(undefined);
-        } else {
-          dispatch({ type: 'SELECT_TARGET', targetId: target.id });
-        }
-        setPage('skill');
+        dispatch({ type: 'SELECT_TARGET', targetId: target.id });
+        setPage('cards');
       },
     }));
-  } else {
-    title = battle.leaderAuto ? '隊長由 AI 自動下令' : '隊長由玩家手動下令';
-    actions = [
-      {
-        id: 'auto',
-        label: battle.leaderAuto ? '切回手動' : '開啟自動',
-        detail: '隊長指揮',
-        slot: 'primary',
-        tone: 'primary',
-        selected: battle.leaderAuto,
-        onPress: () => dispatch({ type: 'TOGGLE_AUTO' }),
-      },
-      ...([1, 2] as const).map((speed) => ({
-        id: `speed-${speed}`,
-        label: `${speed}x`,
-        detail: '戰鬥速度',
-        slot: speed === 1 ? ('secondary' as const) : ('choice-a' as const),
-        selected: state.speed === speed,
-        onPress: () => dispatch({ type: 'SET_SPEED', speed }),
-      })),
-    ];
   }
 
   return (
     <ThumbCommandDeck
       ariaLabel="戰鬥操作"
-      eyebrow={ready ? 'COMMAND READY' : 'ACTION GAUGE'}
+      eyebrow="FREE-FORM COMMAND"
       title={title}
-      status={selectedTarget ? `鎖定 ${selectedTarget.name}` : undefined}
+      status={`敵軍 0.25x · 鎖定 ${selectedTarget?.name ?? '無'}`}
       feedback={state.message}
       tabs={[
         {
-          id: 'skill',
-          label: '技能',
-          selected: page === 'skill',
-          onSelect: () => setPage('skill'),
+          id: 'cards',
+          label: '卡牌',
+          selected: page === 'cards',
+          onSelect: () => setPage('cards'),
+        },
+        {
+          id: 'command',
+          label: '軍令',
+          selected: page === 'command',
+          onSelect: () => setPage('command'),
         },
         {
           id: 'target',
           label: '目標',
           selected: page === 'target',
           onSelect: () => {
-            setAllySkillId(undefined);
             setPage('target');
           },
-        },
-        {
-          id: 'tactics',
-          label: '戰術',
-          selected: page === 'tactics',
-          onSelect: () => setPage('tactics'),
         },
       ]}
       actions={actions}

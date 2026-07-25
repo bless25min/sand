@@ -12,7 +12,7 @@ export function startGuildQuest(
   const quest = content.quests.find((candidate) => candidate.id === questId);
   if (!quest) throw new Error(`Unknown quest: ${questId}`);
 
-  return createGuildBattle({
+  const battle = createGuildBattle({
     adventurers: content.adventurers,
     quest,
     party: [...profile.party],
@@ -20,4 +20,23 @@ export function startGuildQuest(
     seed: `${questId}-${profile.nextLootSeed}`,
     leaderAuto,
   });
+  const partyIds = new Set(profile.party.map((member) => member.definitionId));
+  return {
+    ...battle,
+    combo: {
+      phase: 'composing' as const,
+      draft: { cardIds: [] },
+      availableCardIds: Object.values(content.cards)
+        .filter((card) => partyIds.has(card.ownerId))
+        .map((card) => card.id),
+      events: [],
+      metrics: {
+        comboCount: 0,
+        totalDamage: 0,
+        totalOverkill: 0,
+        defeatedEnemyIds: [],
+        annihilationOverflow: 0,
+      },
+    },
+  };
 }

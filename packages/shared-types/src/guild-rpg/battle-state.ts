@@ -1,4 +1,5 @@
 import type { AdventurerDefinition, GuildSkillDefinition, QuestDefinition } from './content';
+import type { ComboRuntimeState } from './combo/runtime';
 import type { GuildAdventurer } from './profile';
 import type { GuildStats } from './stats';
 
@@ -48,6 +49,7 @@ export interface GuildBattleState {
   pendingLeaderId?: string | undefined;
   leaderAuto: boolean;
   events: readonly GuildBattleEvent[];
+  combo?: ComboRuntimeState;
 }
 
 export interface StartBattleInput {

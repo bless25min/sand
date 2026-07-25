@@ -28,14 +28,18 @@ export function BattleUnitCard({ unit, selected, onSelect }: BattleUnitCardProps
       <div className="gr-meter gr-meter--hp">
         <span style={{ width: `${hpRatio}%` }} />
       </div>
-      <div className="gr-meter gr-meter--gauge">
-        <span style={{ width: `${unit.gauge}%` }} />
-      </div>
-      <footer>
-        <span>行動 {Math.floor(unit.gauge)}%</span>
-        {unit.guarding && <strong>盾牆防禦</strong>}
-        {unit.currentHp <= 0 && <strong>已擊倒</strong>}
-      </footer>
+      {unit.side === 'enemies' && (
+        <div className="gr-meter gr-meter--gauge">
+          <span style={{ width: `${unit.gauge}%` }} />
+        </div>
+      )}
+      {(unit.side === 'enemies' || unit.guarding || unit.currentHp <= 0) && (
+        <footer>
+          {unit.side === 'enemies' && <span>壓力 {Math.floor(unit.gauge)}%</span>}
+          {unit.guarding && <strong>盾牆防禦</strong>}
+          {unit.currentHp <= 0 && <strong>已擊倒</strong>}
+        </footer>
+      )}
     </>
   );
 
