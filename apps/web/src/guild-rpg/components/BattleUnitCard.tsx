@@ -1,7 +1,9 @@
 import type { BattleUnit } from '@expedition/shared-types';
+import type { CSSProperties } from 'react';
 
 import { ROLE_LABEL } from '../presenters';
 import type { EnemySensation } from '../presentation/battle-sensation-model';
+import { projectUnitSpectacleState } from '../presentation/unit-spectacle-state';
 import type { PlaybackImpact } from '../playback/playback-model';
 
 interface BattleUnitCardProps {
@@ -20,6 +22,17 @@ export function BattleUnitCard({
   impact,
 }: BattleUnitCardProps) {
   const hpRatio = Math.max(0, (unit.currentHp / unit.stats.hp) * 100);
+  const unitState = projectUnitSpectacleState({
+    unit,
+    impact,
+    executionOpen: Boolean(sensation?.executionLabel),
+  });
+  const identityStyle = sensation?.identity
+    ? ({
+        '--enemy-palette': sensation.identity.palette,
+        '--enemy-aura': sensation.identity.aura,
+      } as CSSProperties)
+    : undefined;
   const content = (
     <>
       <header>
@@ -82,6 +95,10 @@ export function BattleUnitCard({
     <button
       type="button"
       className={`gr-unit ${selected ? 'is-selected' : ''}`}
+      data-unit-state={unitState}
+      data-enemy-family={sensation?.identity?.family}
+      data-enemy-role={sensation?.identity?.role}
+      style={identityStyle}
       onClick={onSelect}
       disabled={unit.currentHp <= 0}
       aria-pressed={selected}
@@ -92,6 +109,10 @@ export function BattleUnitCard({
     <article
       className={`gr-unit ${unit.currentHp <= 0 ? 'is-defeated' : ''} ${impact?.targetId === unit.id ? 'is-impact' : ''}`}
       data-impact-kind={impact?.targetId === unit.id ? impact.kind : undefined}
+      data-unit-state={unitState}
+      data-enemy-family={sensation?.identity?.family}
+      data-enemy-role={sensation?.identity?.role}
+      style={identityStyle}
     >
       {content}
     </article>

@@ -147,7 +147,13 @@ describe('combo content factory', () => {
   });
 
   it('diagnoses missing enemy spectacle and incomplete hunt beats', () => {
-    const { spectacle: _spectacle, ...enemyWithoutSpectacle } = GUILD_HUNTS[0]!.enemies[0]!;
+    const enemyWithSpectacle = GUILD_HUNTS[0]!.enemies[0]!;
+    const enemyWithoutSpectacle = {
+      enemyId: enemyWithSpectacle.enemyId,
+      material: enemyWithSpectacle.material,
+      equipment: enemyWithSpectacle.equipment,
+      ...(enemyWithSpectacle.traits ? { traits: enemyWithSpectacle.traits } : {}),
+    };
     const invalidHunt: HuntDefinition = {
       ...GUILD_HUNTS[0]!,
       spectacleCues: GUILD_HUNTS[0]!.spectacleCues!.slice(0, 2),

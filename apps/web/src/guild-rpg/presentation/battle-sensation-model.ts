@@ -1,6 +1,7 @@
 import type {
   BattleUnit,
   ComboCommandPreview,
+  EnemySpectacleIdentity,
   GuildGameContent,
   HuntEnemyTrait,
 } from '@expedition/shared-types';
@@ -15,6 +16,7 @@ export interface EnemySensation {
   predictedTargetName?: string;
   guardedByNames: readonly string[];
   counteredByCurrentBuild: boolean;
+  identity?: EnemySpectacleIdentity | undefined;
 }
 
 function pressureLabel(gauge: number): EnemySensation['pressureLabel'] {
@@ -83,16 +85,20 @@ export function createBattleSensationModel(state: GuildRpgState, content: GuildG
     .sort((left, right) => right.threat - left.threat)[0];
   const enemies: readonly EnemySensation[] = battle.units
     .filter((unit) => unit.side === 'enemies')
-    .map((unit) => ({
-      id: unit.id,
-      pressureLabel: pressureLabel(unit.gauge),
-      ...(executionLabels.get(unit.id) ? { executionLabel: executionLabels.get(unit.id)! } : {}),
-      ...(predictedTarget ? { predictedTargetName: predictedTarget.name } : {}),
-      guardedByNames: guardedByNames(unit.huntTraits, battle.units),
-      counteredByCurrentBuild: Boolean(
-        unit.huntTraits?.some((trait) => trait.counterBuildIds.includes(build.id)),
-      ),
-    }));
+    .map((unit) => {
+      const identity = hunt?.enemies.find((enemy) => enemy.enemyId === unit.id)?.spectacle;
+      return {
+        id: unit.id,
+        pressureLabel: pressureLabel(unit.gauge),
+        ...(executionLabels.get(unit.id) ? { executionLabel: executionLabels.get(unit.id)! } : {}),
+        ...(predictedTarget ? { predictedTargetName: predictedTarget.name } : {}),
+        guardedByNames: guardedByNames(unit.huntTraits, battle.units),
+        counteredByCurrentBuild: Boolean(
+          unit.huntTraits?.some((trait) => trait.counterBuildIds.includes(build.id)),
+        ),
+        ...(identity ? { identity } : {}),
+      };
+    });
   const selected = battle.units.find(
     (unit) => unit.id === battle.selectedTargetId && unit.currentHp > 0,
   );

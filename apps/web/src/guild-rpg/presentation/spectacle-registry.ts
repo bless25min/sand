@@ -1,6 +1,5 @@
 import {
   SPECTACLE_CUE_IDS,
-  SPECTACLE_MOTIF_IDS,
   type ComboEvent,
   type HuntRewards,
   type QuestRewards,

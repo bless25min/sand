@@ -4,6 +4,7 @@ import type { GuildRpgAction, GuildRpgState } from '../state/game-reducer';
 import { EquipmentCard } from './EquipmentCard';
 import { HuntResultSummary } from './HuntResultSummary';
 import { LootRain } from './LootRain';
+import { RewardSpectacleLayers } from './RewardSpectacleLayers';
 import { RewardThumbControls } from './RewardThumbControls';
 
 interface RewardScreenProps {
@@ -25,6 +26,7 @@ export function RewardScreen({ state, dispatch }: RewardScreenProps) {
 
   return (
     <main className="gr-rewards">
+      <RewardSpectacleLayers rewards={rewards} />
       <header className="gr-rewards__hero">
         <p>{successful ? 'QUEST COMPLETE' : 'HUNT RECOVERY'}</p>
         <h1>{successful ? '遠征勝利' : '撤退結算'}</h1>

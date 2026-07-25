@@ -1,9 +1,11 @@
 import { GUILD_GAME_CONTENT } from '@expedition/game-data';
 
 import { createPlaybackProjection, projectPlaybackUnits } from '../playback/playback-model';
+import { createBattleSensationModel } from '../presentation/battle-sensation-model';
 import type { GuildRpgAction, GuildRpgState } from '../state/game-reducer';
 import { BattleUnitCard } from './BattleUnitCard';
 import { ComboPlayback } from './ComboPlayback';
+import { CombatSpectacleLayers } from './CombatSpectacleLayers';
 
 interface ComboPlaybackScreenProps {
   state: GuildRpgState;
@@ -20,6 +22,18 @@ export function ComboPlaybackScreen({ state, dispatch }: ComboPlaybackScreenProp
     playback.visibleEventCount,
   );
   const visibleUnits = projectPlaybackUnits(playback.startingUnits, battle.units, projection);
+  const sensation = createBattleSensationModel(state, GUILD_GAME_CONTENT);
+  const targetSensation = sensation.enemies.find(
+    (enemy) => enemy.id === projection.currentImpact.targetId,
+  );
+  const hunt = GUILD_GAME_CONTENT.hunts.find((candidate) => candidate.questId === battle.questId);
+  const huntBeat =
+    projection.stage === 'annihilation'
+      ? 'annihilation'
+      : projection.stage === 'execution'
+        ? 'execution'
+        : 'opening';
+  const huntCue = hunt?.spectacleCues?.find((cue) => cue.beat === huntBeat);
 
   return (
     <main
@@ -64,6 +78,12 @@ export function ComboPlaybackScreen({ state, dispatch }: ComboPlaybackScreenProp
       </header>
 
       <section className="gr-battlefield" aria-label="軍令播放戰場">
+        <CombatSpectacleLayers
+          impact={projection.currentImpact}
+          motif={sensation.build.accent}
+          enemyIdentity={targetSensation?.identity}
+          huntCue={huntCue}
+        />
         <div className="gr-line gr-line--heroes">
           <p>遠征隊</p>
           {visibleUnits
@@ -74,6 +94,7 @@ export function ComboPlaybackScreen({ state, dispatch }: ComboPlaybackScreenProp
                 unit={unit}
                 selected={false}
                 impact={projection.currentImpact}
+                sensation={sensation.enemies.find((enemy) => enemy.id === unit.id)}
               />
             ))}
         </div>
@@ -92,6 +113,7 @@ export function ComboPlaybackScreen({ state, dispatch }: ComboPlaybackScreenProp
                 unit={unit}
                 selected={false}
                 impact={projection.currentImpact}
+                sensation={sensation.enemies.find((enemy) => enemy.id === unit.id)}
               />
             ))}
         </div>
