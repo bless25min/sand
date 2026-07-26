@@ -1,0 +1,217 @@
+.gr-battlefield > .gr-tactical-battlefield {
+  --tactical-primary: #ff9858;
+  --tactical-secondary: #ffe4aa;
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.gr-tactical-battlefield[data-motif='storm'] {
+  --tactical-primary: #62ddff;
+  --tactical-secondary: #d9faff;
+}
+
+.gr-tactical-battlefield[data-motif='radiance'] {
+  --tactical-primary: #ffe36e;
+  --tactical-secondary: #fffbe0;
+}
+
+.gr-tactical-battlefield[data-motif='command'] {
+  --tactical-primary: #d59cff;
+  --tactical-secondary: #f3e2ff;
+}
+
+.gr-tactical-battlefield__routes {
+  position: absolute;
+  inset: 7% 5%;
+  width: 90%;
+  height: 86%;
+  overflow: visible;
+  filter: drop-shadow(0 0 6px var(--tactical-primary));
+}
+
+.gr-tactical-route {
+  fill: none;
+  stroke: var(--tactical-primary);
+  stroke-width: 0.7;
+  stroke-dasharray: 4 3;
+  vector-effect: non-scaling-stroke;
+  opacity: 0.28;
+}
+
+.gr-tactical-route--branch {
+  display: none;
+}
+
+.gr-tactical-battlefield[data-tactical-route='ricochet'] .gr-tactical-route--branch,
+.gr-tactical-battlefield[data-tactical-route='status-storm'] .gr-tactical-route--branch {
+  display: block;
+}
+
+.gr-tactical-formation {
+  position: absolute;
+  width: 78px;
+  height: 58px;
+  opacity: 0.46;
+  transition:
+    filter 180ms ease,
+    opacity 180ms ease,
+    transform 180ms ease;
+}
+
+.gr-tactical-formation[data-side='heroes'] {
+  color: var(--tactical-secondary);
+  transform: rotate(-7deg);
+}
+
+.gr-tactical-formation[data-side='enemies'] {
+  color: #ff9b83;
+  transform: rotate(173deg);
+}
+
+.gr-tactical-formation[data-side='heroes'][data-slot='0'] {
+  bottom: 11%;
+  left: 8%;
+}
+
+.gr-tactical-formation[data-side='heroes'][data-slot='1'] {
+  bottom: 24%;
+  left: 20%;
+}
+
+.gr-tactical-formation[data-side='heroes'][data-slot='2'] {
+  bottom: 37%;
+  left: 32%;
+}
+
+.gr-tactical-formation[data-side='enemies'][data-slot='0'] {
+  top: 9%;
+  right: 8%;
+}
+
+.gr-tactical-formation[data-side='enemies'][data-slot='1'] {
+  top: 22%;
+  right: 20%;
+}
+
+.gr-tactical-formation[data-side='enemies'][data-slot='2'] {
+  top: 35%;
+  right: 32%;
+}
+
+.gr-tactical-formation__soldiers {
+  position: absolute;
+  inset: 8px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px 7px;
+}
+
+.gr-tactical-formation__soldiers i {
+  width: 6px;
+  height: 6px;
+  align-self: center;
+  justify-self: center;
+  border: 1px solid currentColor;
+  border-radius: 50% 50% 42% 42%;
+  background: color-mix(in srgb, currentColor 72%, #17100d);
+  box-shadow: 0 0 5px currentColor;
+}
+
+.gr-tactical-formation__core,
+.gr-tactical-formation__reticle {
+  position: absolute;
+  z-index: 2;
+  top: 50%;
+  left: 50%;
+  width: 20px;
+  height: 20px;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.gr-tactical-formation__core {
+  background: radial-gradient(circle, currentColor 0 18%, transparent 22%);
+  opacity: 0.5;
+}
+
+.gr-tactical-formation__reticle {
+  display: none;
+  width: 66px;
+  height: 66px;
+  border: 2px dashed var(--tactical-primary);
+  box-shadow: 0 0 18px var(--tactical-primary);
+}
+
+.gr-tactical-formation[data-selected='true'] {
+  opacity: 0.9;
+  filter: brightness(1.35);
+}
+
+.gr-tactical-formation[data-selected='true'] .gr-tactical-formation__reticle {
+  display: block;
+  animation: gr-tactical-reticle 2s linear infinite;
+}
+
+.gr-tactical-formation[data-impacted='true'] {
+  opacity: 1;
+  filter: brightness(1.8) drop-shadow(0 0 12px var(--tactical-primary));
+}
+
+.gr-tactical-formation[data-side='heroes'][data-impacted='true'] {
+  transform: rotate(-7deg) scale(1.14);
+}
+
+.gr-tactical-formation[data-side='enemies'][data-impacted='true'] {
+  transform: rotate(173deg) scale(1.14);
+}
+
+.gr-tactical-formation[data-defeated='true'] .gr-tactical-formation__soldiers i {
+  opacity: 0.16;
+  transform: translateY(12px) rotate(65deg);
+}
+
+.gr-tactical-battlefield[data-mode='playback'] .gr-tactical-route {
+  opacity: 0.72;
+  animation: gr-tactical-route 520ms linear infinite;
+}
+
+@keyframes gr-tactical-reticle {
+  to {
+    rotate: 360deg;
+  }
+}
+
+@keyframes gr-tactical-route {
+  to {
+    stroke-dashoffset: -14;
+  }
+}
+
+@media (max-width: 720px) {
+  .gr-tactical-formation {
+    width: 58px;
+    height: 44px;
+  }
+
+  .gr-tactical-formation__soldiers {
+    gap: 2px 4px;
+  }
+
+  .gr-tactical-formation__soldiers i {
+    width: 4px;
+    height: 4px;
+  }
+
+  .gr-tactical-formation__soldiers i:nth-child(2n) {
+    opacity: 0.25;
+  }
+}
+
+html[data-guild-motion='reduced'] .gr-tactical-battlefield * {
+  animation: none !important;
+  transition: none !important;
+}

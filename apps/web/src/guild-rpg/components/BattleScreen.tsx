@@ -4,6 +4,7 @@ import { formatTime } from '../presenters';
 import { createFirstHuntCoach } from '../onboarding/first-hunt-coach';
 import { createBattleSensationModel } from '../presentation/battle-sensation-model';
 import type { GuildRpgAction, GuildRpgState } from '../state/game-reducer';
+import { BattlefieldTacticalLayer } from './BattlefieldTacticalLayer';
 import { BattleThumbControls } from './BattleThumbControls';
 import { BattleUnitCard } from './BattleUnitCard';
 import { ComboPlayback } from './ComboPlayback';
@@ -18,6 +19,10 @@ export function BattleScreen({ state, dispatch }: BattleScreenProps) {
   const battle = state.battle!;
   const quest = GUILD_GAME_CONTENT.quests.find((candidate) => candidate.id === battle.questId)!;
   const sensation = createBattleSensationModel(state, GUILD_GAME_CONTENT);
+  const tacticalTargetPending =
+    state.preferences.tutorial === 'active' &&
+    battle.questId === 'border_pack' &&
+    state.tutorialAcknowledgedTargetId !== battle.selectedTargetId;
   const coach = createFirstHuntCoach({
     tutorial: state.preferences.tutorial,
     screen: 'battle',
@@ -115,6 +120,12 @@ export function BattleScreen({ state, dispatch }: BattleScreenProps) {
       )}
 
       <section className="gr-battlefield" aria-label="戰場">
+        <BattlefieldTacticalLayer
+          units={battle.units}
+          selectedTargetId={tacticalTargetPending ? undefined : battle.selectedTargetId}
+          motif={sensation.build.accent}
+          mode="command"
+        />
         <div className="gr-line gr-line--heroes">
           <p>遠征隊</p>
           {battle.units

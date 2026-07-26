@@ -5,6 +5,7 @@ import { createPlaybackProjection, projectPlaybackUnits } from '../playback/play
 import { createBattleSensationModel } from '../presentation/battle-sensation-model';
 import { SPECTACLE_CUE_REGISTRY } from '../presentation/spectacle-registry';
 import type { GuildRpgAction, GuildRpgState } from '../state/game-reducer';
+import { BattlefieldTacticalLayer } from './BattlefieldTacticalLayer';
 import { BattleUnitCard } from './BattleUnitCard';
 import { ComboPlayback } from './ComboPlayback';
 import { CombatSpectacleLayers } from './CombatSpectacleLayers';
@@ -98,6 +99,13 @@ export function ComboPlaybackScreen({ state, dispatch }: ComboPlaybackScreenProp
         aria-label="軍令播放戰場"
         key={spectacleEventId}
       >
+        <BattlefieldTacticalLayer
+          units={visibleUnits}
+          selectedTargetId={battle.selectedTargetId}
+          impact={projection.currentImpact}
+          motif={sensation.build.accent}
+          mode="playback"
+        />
         <CombatSpectacleLayers
           eventId={spectacleEventId}
           impact={projection.currentImpact}

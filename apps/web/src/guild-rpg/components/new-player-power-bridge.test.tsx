@@ -60,8 +60,10 @@ describe('new player power bridge', () => {
 
     expect(beforeTarget).toContain('打開目標選單');
     expect(beforeTarget).toContain('data-guide-id="tab:target" data-guide-focus="true"');
+    expect(beforeTarget).not.toContain('data-selected="true" data-unit-id="wolf_scout"');
     expect(afterTarget).toContain('打出架盾');
     expect(afterTarget).toContain('data-guide-id="action:brann_brace" data-guide-focus="true"');
+    expect(afterTarget).toContain('data-selected="true" data-unit-id="wolf_scout"');
   });
 
   it('turns preview into a readable cause and payoff summary', () => {

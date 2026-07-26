@@ -19,6 +19,7 @@ import './quest-board.css';
 import './battle.css';
 import './battle-command.css';
 import './combat-spectacle.css';
+import './tactical-battlefield.css';
 import './rewards.css';
 import './reward-items.css';
 import './thumb-command-deck.css';
