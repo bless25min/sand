@@ -1,100 +1,130 @@
 import { GUILD_GAME_CONTENT } from '@expedition/game-data';
 
+import {
+  elementName,
+  equipmentSlotName,
+  rarityName,
+  specializationName,
+  triggerName,
+} from '../content-labels';
+import { isFirstHuntCoachFocus } from '../onboarding/first-hunt-coach';
+import { createFirstHuntCoach } from '../onboarding/first-hunt-coach';
 import type { GuildRpgAction, GuildRpgState } from '../state/game-reducer';
-import { EquipmentCard } from './EquipmentCard';
-import { HuntResultSummary } from './HuntResultSummary';
-import { LootRain } from './LootRain';
-import { RewardSpectacleLayers } from './RewardSpectacleLayers';
-import { RewardThumbControls } from './RewardThumbControls';
 
-interface RewardScreenProps {
+export function RewardScreen({
+  state,
+  dispatch,
+}: {
   state: GuildRpgState;
   dispatch: React.Dispatch<GuildRpgAction>;
-}
-
-export function RewardScreen({ state, dispatch }: RewardScreenProps) {
+}) {
   const rewards = state.rewards!;
-  const successful = rewards.successful !== false;
-  const allResolved = state.resolvedItemIds.length === rewards.items.length;
-  const nextQuest = successful
-    ? GUILD_GAME_CONTENT.quests.find(
-        (quest) =>
-          state.profile.unlockedQuestIds.includes(quest.id) &&
-          !state.profile.questRecords[quest.id],
-      )
-    : undefined;
-
+  const coach = createFirstHuntCoach(state.preferences.tutorial, state.tutorialStep);
   return (
     <main className="gr-rewards">
-      <RewardSpectacleLayers rewards={rewards} />
-      <header className="gr-rewards__hero">
-        <p>{successful ? 'QUEST COMPLETE' : 'HUNT RECOVERY'}</p>
-        <h1>{successful ? '遠征勝利' : '撤退結算'}</h1>
-        <span>{state.message}</span>
-        <div>
-          <strong>+{rewards.experience} EXP</strong>
-          <strong>+{rewards.gold} GOLD</strong>
-          <strong>
-            {rewards.clearMs > 0 ? `${(rewards.clearMs / 1_000).toFixed(1)} SEC` : '殲滅完成'}
-          </strong>
-        </div>
+      <header className="gr-reward-hero">
+        <span>HUNT COMPLETE · ALL LOOT SECURED</span>
+        <h1>接力殲滅完成</h1>
+        <p>
+          {rewards.items.length + rewards.skillDrops.length} 份主要掉落已自動安全收入，
+          沒有背包滿而自動出售。
+        </p>
       </header>
-
-      <RewardThumbControls state={state} dispatch={dispatch} />
-      <HuntResultSummary rewards={rewards} />
-      <LootRain rewards={rewards} />
-
-      <section className="gr-reward-party" aria-label="隊伍成長">
-        {state.profile.party.map((member) => {
-          const definition = GUILD_GAME_CONTENT.adventurers.find(
-            (candidate) => candidate.id === member.definitionId,
-          )!;
-          return (
-            <div key={member.definitionId}>
-              <span>{definition.name}</span>
-              <strong>Lv.{member.level}</strong>
-              <small>
-                {member.experience}/{member.level * 80} EXP
-              </small>
-            </div>
-          );
-        })}
-      </section>
-
-      <section className="gr-reward-loot" aria-labelledby="loot-title">
-        <div className="gr-section__heading">
+      {coach && (
+        <aside className="gr-coach" role="status">
           <div>
-            <p>LOOT DECISION</p>
-            <h2 id="loot-title">{rewards.items.length ? '選擇戰利品去向' : '本次沒有裝備掉落'}</h2>
+            <span>
+              實戰引導 {coach.stepNumber}/{coach.stepTotal}
+            </span>
+            <strong>{coach.title}</strong>
+            <p>{coach.message}</p>
           </div>
-          <span>
-            {rewards.items.length ? '每件都必須裝備、保留或出售' : '材料已直接存入公會倉庫'}
-          </span>
+        </aside>
+      )}
+      <section className="gr-reward-grid" aria-label="本次戰利品">
+        <div>
+          <h2>技能掉落</h2>
+          {rewards.skillDrops.map((skill) => (
+            <article data-element={skill.components[0].element} key={skill.id}>
+              <span>
+                {skill.stars}★ · {elementName(skill.components[0].element)}
+              </span>
+              <strong>{skill.name}</strong>
+              <small>
+                {specializationName(skill.components[0].specializationId)} ·
+                {triggerName(skill.components[0].triggerId)} · 傷害 +{skill.components[0].power}
+              </small>
+            </article>
+          ))}
         </div>
-        <div className="gr-reward-grid">
-          {rewards.items.map((item) => (
-            <EquipmentCard item={item} state={state} dispatch={dispatch} key={item.id} />
+        <div>
+          <h2>屬性裝備與核心</h2>
+          {rewards.items.map((item) => {
+            const base = GUILD_GAME_CONTENT.equipmentBases.find(({ id }) => id === item.baseId);
+            const coreRolls = item.cores?.length
+              ? item.cores
+              : item.coreId
+                ? [{ id: item.coreId, strength: item.coreStrength ?? 0 }]
+                : [];
+            return (
+              <article key={item.id}>
+                <span>
+                  {rarityName(item.rarity)} · {equipmentSlotName(item.slot)}
+                </span>
+                <strong>{item.name}</strong>
+                <small>
+                  {item.mainStat.stat} +{item.mainStat.value}
+                  {base ? `（${base.mainStatRoll.min}–${base.mainStatRoll.max}）` : ''}
+                </small>
+                {coreRolls.map(({ id, strength }) => {
+                  const core = GUILD_GAME_CONTENT.equipmentCores.find(
+                    (candidate) => candidate.id === id,
+                  );
+                  return (
+                    <small key={id}>
+                      {core?.name ?? id} +{strength}
+                      {base
+                        ? `（${base.coreStrengthRoll.min}–${base.coreStrengthRoll.max}）`
+                        : ''}{' '}
+                      ·{core?.description}
+                    </small>
+                  );
+                })}
+              </article>
+            );
+          })}
+        </div>
+        <div>
+          <h2>素材</h2>
+          {rewards.materials.map((material) => (
+            <article key={material.id}>
+              <strong>{material.name}</strong>
+              <small>+{material.quantity}</small>
+            </article>
           ))}
         </div>
       </section>
-
-      <footer className="gr-rewards__footer">
-        <div>
-          <span>{state.message}</span>
-          {nextQuest && <strong>新委託已解鎖：{nextQuest.name}</strong>}
-        </div>
+      <div className="gr-reward-actions">
         <button
           type="button"
-          className="gr-button gr-button--primary"
-          disabled={!allResolved}
-          title={allResolved ? undefined : '先決定所有戰利品的去向'}
-          onClick={() => dispatch({ type: 'RETURN_GUILD' })}
+          className="gr-primary-action"
+          data-guide-id="reward:equipment"
+          data-guide-active={isFirstHuntCoachFocus(
+            state.preferences.tutorial,
+            state.tutorialStep,
+            'reward:equipment',
+          )}
+          onClick={() => dispatch({ type: 'GO_TO_EQUIPMENT' })}
         >
-          {allResolved
-            ? '返回公會，繼續遠征'
-            : `尚有 ${rewards.items.length - state.resolvedItemIds.length} 件待處理`}
+          先穿上新裝備
         </button>
-      </footer>
+        <button type="button" onClick={() => dispatch({ type: 'GO_TO_FUSION' })}>
+          直接前往技能融合
+        </button>
+      </div>
+      <p className="gr-status-line" role="status">
+        {state.message}
+      </p>
     </main>
   );
 }

@@ -1,21 +1,10 @@
 import type {
-  GuildAdventurer,
   GuildProfile,
   HuntRewards,
   QuestDefinition,
   QuestRecord,
   QuestRewards,
 } from '@expedition/shared-types';
-
-function awardExperience(member: GuildAdventurer, amount: number): GuildAdventurer {
-  let level = member.level;
-  let experience = member.experience + amount;
-  while (experience >= level * 80) {
-    experience -= level * 80;
-    level += 1;
-  }
-  return { ...member, level, experience };
-}
 
 function performanceRecord(rewards: QuestRewards, previous: QuestRecord | undefined) {
   if (!('axes' in rewards)) return {};
@@ -57,7 +46,8 @@ export function applyQuestRewards(
   return {
     ...profile,
     materials,
-    party: profile.party.map((member) => awardExperience(member, rewards.experience)),
+    inventory: [...profile.inventory, ...rewards.items],
+    skillInventory: [...profile.skillInventory, ...rewards.skillDrops],
     gold: profile.gold + rewards.gold,
     unlockedQuestIds: quests.filter((quest) => unlocked.has(quest.id)).map((quest) => quest.id),
     questRecords: {

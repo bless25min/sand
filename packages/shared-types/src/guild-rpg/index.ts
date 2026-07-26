@@ -1,4 +1,5 @@
 export type * from './game-state';
+export type * from './skill-build';
 export type * from './progression';
 export * from './spectacle';
 export type * from './combo/content';

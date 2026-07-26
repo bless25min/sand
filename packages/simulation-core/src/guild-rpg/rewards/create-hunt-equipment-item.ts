@@ -40,10 +40,51 @@ export function createHuntEquipmentItem(
   random: RandomSource,
 ): HuntEquipmentItem {
   const rarity = rarityFor(random.next(), qualityScore);
-  const mainValue = Math.max(
-    1,
-    Math.round(definition.baseValue * RARITY_SCALE[rarity] + qualityScore / 40),
-  );
+  const exactCandidates =
+    input.content?.equipmentBases.filter(
+      (base) => base.slot === definition.slot && base.mainStat === definition.mainStat,
+    ) ?? [];
+  const slotCandidates =
+    input.content?.equipmentBases.filter((base) => base.slot === definition.slot) ?? [];
+  const baseCandidates =
+    exactCandidates.length > 0
+      ? exactCandidates
+      : slotCandidates.length > 0
+        ? slotCandidates
+        : (input.content?.equipmentBases ?? []);
+  const base =
+    input.content?.equipmentBases.find(({ id }) => id === definition.id) ??
+    (baseCandidates.length > 0
+      ? baseCandidates[random.nextInt(0, baseCandidates.length - 1)]
+      : undefined);
+  const mainValue = base
+    ? random.nextInt(base.mainStatRoll.min, base.mainStatRoll.max)
+    : Math.max(1, Math.round(definition.baseValue * RARITY_SCALE[rarity] + qualityScore / 40));
+  const coreId =
+    base && (input.hunt.coreDropIds?.length ?? base.coreIds.length) > 0
+      ? (input.hunt.coreDropIds ?? base.coreIds)[
+          random.nextInt(0, (input.hunt.coreDropIds ?? base.coreIds).length - 1)
+        ]
+      : undefined;
+  const coreStrength = base
+    ? random.nextInt(base.coreStrengthRoll.min, base.coreStrengthRoll.max)
+    : undefined;
+  const corePool = [...new Set(input.hunt.coreDropIds ?? base?.coreIds ?? [])];
+  const remainingCoreIds = corePool.filter((candidate) => candidate !== coreId);
+  const secondCoreId =
+    rarity === 'legendary' && remainingCoreIds.length > 0
+      ? remainingCoreIds[random.nextInt(0, remainingCoreIds.length - 1)]
+      : undefined;
+  const secondCoreStrength =
+    secondCoreId && base
+      ? random.nextInt(base.coreStrengthRoll.min, base.coreStrengthRoll.max)
+      : undefined;
+  const cores = [
+    ...(coreId && coreStrength !== undefined ? [{ id: coreId, strength: coreStrength }] : []),
+    ...(secondCoreId && secondCoreStrength !== undefined
+      ? [{ id: secondCoreId, strength: secondCoreStrength }]
+      : []),
+  ];
   const affixStart =
     input.equipmentAffixes.length > 0 ? random.nextInt(0, input.equipmentAffixes.length - 1) : 0;
   const affixes = Array.from(
@@ -68,7 +109,7 @@ export function createHuntEquipmentItem(
   );
   return {
     id: itemId,
-    baseId: definition.id,
+    baseId: base?.id ?? definition.id,
     name: definition.name,
     slot: definition.slot,
     rarity,
@@ -80,6 +121,10 @@ export function createHuntEquipmentItem(
     },
     affixes,
     sellValue: Math.round(mainValue * (jackpot ? 3 : 1.8)),
+    ...(base?.forgeMaterialId ? { forgeMaterialId: base.forgeMaterialId } : {}),
+    ...(coreId ? { coreId } : {}),
+    ...(coreStrength !== undefined ? { coreStrength } : {}),
+    ...(cores.length > 0 ? { cores } : {}),
     ...(definition.ruleIds ? { ruleIds: definition.ruleIds } : {}),
     sourceEnemyId,
     qualityScore,

@@ -373,7 +373,11 @@ export function validateCampaignContent(content: GuildGameContent): readonly Con
       if (challenge.questId !== hunt.questId) {
         report('mismatched_challenge_quest', `challenges.${challenge.id}`, challenge.questId);
       }
-      if (challenge.kind === 'build_route' && !buildIds.has(challenge.requiredBuildId ?? '')) {
+      if (
+        challenge.kind === 'build_route' &&
+        challenge.requiredBuildId !== undefined &&
+        !buildIds.has(challenge.requiredBuildId)
+      ) {
         report('unknown_challenge_build', `challenges.${challenge.id}`, 'Build 路線不存在');
       }
       if (

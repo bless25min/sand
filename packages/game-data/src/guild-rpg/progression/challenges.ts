@@ -1,16 +1,14 @@
 import type { HuntChallengeDefinition } from '@expedition/shared-types';
 
-import { GUILD_COMBO_BUILDS } from '../combo/builds';
 import { GUILD_HUNTS } from '../combo/hunts';
 import { GUILD_QUESTS } from '../quests';
 
-const ROUTE_BUILD_IDS = GUILD_COMBO_BUILDS.map((build) => build.id);
+const ROUTE_NAMES = ['三相接力', '反應連鎖', '層數爆發'] as const;
 
 export const GUILD_HUNT_CHALLENGES: readonly HuntChallengeDefinition[] = GUILD_HUNTS.flatMap(
   (hunt, index) => {
     const quest = GUILD_QUESTS.find((candidate) => candidate.id === hunt.questId)!;
-    const routeBuildId = ROUTE_BUILD_IDS[index % ROUTE_BUILD_IDS.length]!;
-    const routeBuild = GUILD_COMBO_BUILDS.find((build) => build.id === routeBuildId)!;
+    const routeName = ROUTE_NAMES[index % ROUTE_NAMES.length]!;
     const executionEnemyId = hunt.bossEnemyId ?? hunt.enemies.at(-1)!.enemyId;
     const overkillThreshold = 180 + index * 60;
     return [
@@ -18,8 +16,8 @@ export const GUILD_HUNT_CHALLENGES: readonly HuntChallengeDefinition[] = GUILD_H
         id: `${hunt.id}-one-command`,
         huntId: hunt.id,
         questId: hunt.questId,
-        name: `${quest.name} · 一令全滅`,
-        description: '只釋放一次完整軍令就讓整場敵軍歸零。',
+        name: `${quest.name} · 一輪全滅`,
+        description: '在六人第一輪接力結束前讓整場敵軍歸零。',
         kind: 'one_command',
         cueId: 'annihilation',
         rewardLabel: 'ONE COMMAND WIPE',
@@ -39,12 +37,11 @@ export const GUILD_HUNT_CHALLENGES: readonly HuntChallengeDefinition[] = GUILD_H
         id: `${hunt.id}-build-route`,
         huntId: hunt.id,
         questId: hunt.questId,
-        name: `${quest.name} · ${routeBuild.name}`,
-        description: `以「${routeBuild.name}」規則路線完成狩獵。`,
+        name: `${quest.name} · ${routeName}`,
+        description: '在同一場狩獵中實際打出火、草、水三種屬性。',
         kind: 'build_route',
-        requiredBuildId: routeBuildId,
         cueId: 'rule-online',
-        rewardLabel: routeBuild.payoffLabel,
+        rewardLabel: routeName,
       },
       {
         id: `${hunt.id}-execution`,

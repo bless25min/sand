@@ -14,13 +14,15 @@ export function calculateHuntDamage(
   baseAmount: number,
   transforms: readonly ComboTransformKind[] = [],
 ) {
-  const multiplier = (target.huntTraits ?? []).reduce((current, trait) => {
-    const guardMultiplier = isGuardActive(trait, units) ? (trait.guardedDamageMultiplier ?? 1) : 1;
-    const vulnerabilityMultiplier =
-      trait.vulnerableTransform && transforms.includes(trait.vulnerableTransform)
-        ? (trait.vulnerabilityMultiplier ?? 1)
-        : 1;
-    return current * guardMultiplier * vulnerabilityMultiplier;
-  }, 1);
-  return Math.max(0, Math.round(baseAmount * multiplier));
+  const activeTraits = target.huntTraits ?? [];
+  const guardReduction = activeTraits
+    .filter((trait) => isGuardActive(trait, units))
+    .reduce((total) => total + target.stats.defense, 0);
+  const vulnerabilityAddition = activeTraits
+    .filter(
+      (trait) =>
+        Boolean(trait.vulnerableTransform) && transforms.includes(trait.vulnerableTransform!),
+    )
+    .reduce((total) => total + target.stats.attack, 0);
+  return Math.max(0, Math.round(baseAmount - guardReduction + vulnerabilityAddition));
 }

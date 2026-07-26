@@ -9,6 +9,9 @@ export const GUILD_EQUIPMENT_BASES: readonly EquipmentBaseDefinition[] = [
     baseValue: 7,
     forgeMaterialId: 'hunter_sinew',
     ruleIds: ['steel_echo'],
+    mainStatRoll: { min: 7, max: 12 },
+    coreStrengthRoll: { min: 2, max: 5 },
+    coreIds: ['molten-armor', 'burn-burst', 'relay-prism'],
   },
   {
     id: 'oak_staff',
@@ -18,6 +21,9 @@ export const GUILD_EQUIPMENT_BASES: readonly EquipmentBaseDefinition[] = [
     baseValue: 8,
     forgeMaterialId: 'alpha_core',
     ruleIds: ['overflow_reserve'],
+    mainStatRoll: { min: 8, max: 14 },
+    coreStrengthRoll: { min: 2, max: 5 },
+    coreIds: ['healing-echo', 'tide-relay', 'relay-prism'],
   },
   {
     id: 'long_bow',
@@ -27,6 +33,9 @@ export const GUILD_EQUIPMENT_BASES: readonly EquipmentBaseDefinition[] = [
     baseValue: 8,
     forgeMaterialId: 'hunter_sinew',
     ruleIds: ['ricochet_focus'],
+    mainStatRoll: { min: 8, max: 13 },
+    coreStrengthRoll: { min: 2, max: 6 },
+    coreIds: ['toxic-mist', 'lone-king-loop', 'venom-depth'],
   },
   {
     id: 'guard_plate',
@@ -35,6 +44,9 @@ export const GUILD_EQUIPMENT_BASES: readonly EquipmentBaseDefinition[] = [
     mainStat: 'defense',
     baseValue: 6,
     forgeMaterialId: 'alpha_core',
+    mainStatRoll: { min: 6, max: 11 },
+    coreStrengthRoll: { min: 2, max: 5 },
+    coreIds: ['molten-armor', 'tide-relay', 'relay-prism'],
   },
   {
     id: 'traveler_coat',
@@ -43,6 +55,9 @@ export const GUILD_EQUIPMENT_BASES: readonly EquipmentBaseDefinition[] = [
     mainStat: 'hp',
     baseValue: 28,
     forgeMaterialId: 'scout_fang',
+    mainStatRoll: { min: 28, max: 44 },
+    coreStrengthRoll: { min: 2, max: 5 },
+    coreIds: ['venom-depth', 'healing-echo', 'lone-king-loop'],
   },
   {
     id: 'wolf_charm',
@@ -51,6 +66,9 @@ export const GUILD_EQUIPMENT_BASES: readonly EquipmentBaseDefinition[] = [
     mainStat: 'speed',
     baseValue: 2,
     forgeMaterialId: 'scout_fang',
+    mainStatRoll: { min: 2, max: 5 },
+    coreStrengthRoll: { min: 2, max: 6 },
+    coreIds: ['toxic-mist', 'lone-king-loop', 'relay-prism'],
   },
   {
     id: 'sun_emblem',
@@ -59,6 +77,9 @@ export const GUILD_EQUIPMENT_BASES: readonly EquipmentBaseDefinition[] = [
     mainStat: 'healing',
     baseValue: 5,
     forgeMaterialId: 'alpha_core',
+    mainStatRoll: { min: 5, max: 10 },
+    coreStrengthRoll: { min: 2, max: 6 },
+    coreIds: ['healing-echo', 'tide-relay', 'burn-burst'],
   },
 ];
 

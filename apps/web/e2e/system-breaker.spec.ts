@@ -10,6 +10,9 @@ test('completes a seven-round system breaker run and reloads its run code', asyn
       module.effect = 'ADD_PROGRESS';
       module.baseValue = 30;
       module.cost = 1;
+      module.trigger = 'ROUND_START';
+      module.target = 'SELF';
+      module.cooldown = 0;
     });
     genome.modules[9]!.effect = 'REVIVE';
     genome.threats.forEach((threat) => {
@@ -23,7 +26,7 @@ test('completes a seven-round system breaker run and reloads its run code', asyn
     });
   });
 
-  await page.goto('/');
+  await page.goto('/?prototype=system-breaker');
   await expect(page).toHaveTitle(/SYSTEM BREAKER/);
   await page.getByRole('button', { name: '會吞噬記憶的午夜圖書館' }).click();
   await page.getByRole('button', { name: /生成可破壞系統/ }).click();
@@ -63,13 +66,13 @@ test('completes a seven-round system breaker run and reloads its run code', asyn
 
 test('keeps mobile entry usable and expedition behind the legacy route', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto('/');
+  await page.goto('/?prototype=system-breaker');
   await expect(page.getByRole('heading', { name: /輸入一個世界/ })).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(
     true,
   );
 
-  await page.goto('/?legacy=1');
+  await page.goto('/?prototype=expedition');
   await expect(page.getByRole('heading', { name: 'Project Expedition' })).toBeVisible();
   await expect(page.getByTestId('playable-expedition')).toBeVisible();
 });

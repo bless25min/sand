@@ -1,10 +1,10 @@
 import type { EquipmentItem, EquipmentLoadout } from './equipment';
+import type { GuildSkillItem } from './skill-build';
 
 export interface GuildAdventurer {
   definitionId: string;
-  level: number;
-  experience: number;
   equipment: EquipmentLoadout;
+  skillIds: readonly string[];
 }
 
 export interface QuestRecord {
@@ -19,36 +19,37 @@ export interface QuestRecord {
 
 export interface GuildProgressionEvent {
   id: string;
-  kind: 'forge' | 'challenge' | 'ascension';
+  kind: 'forge' | 'fusion' | 'challenge' | 'ascension';
   label: string;
   detail: string;
 }
 
 export interface GuildProfile {
-  version: 3;
+  version: 4;
   leaderId: string;
   party: readonly GuildAdventurer[];
+  defaultOrder: readonly string[];
+  skillInventory: readonly GuildSkillItem[];
   inventory: readonly EquipmentItem[];
   materials: Readonly<Record<string, number>>;
   gold: number;
   unlockedQuestIds: readonly string[];
   questRecords: Readonly<Record<string, QuestRecord>>;
   nextLootSeed: number;
-  selectedBuildId: string;
-  loadouts: Readonly<Record<string, readonly string[]>>;
   completedChallengeIds: readonly string[];
   discoveredEquipmentIds: readonly string[];
-  discoveredRuleIds: readonly string[];
+  discoveredCoreIds: readonly string[];
   forgeSequence: number;
+  forgeLocks: Readonly<Record<string, readonly string[]>>;
   progressionEvents: readonly GuildProgressionEvent[];
 }
 
 export interface QuestRewards {
   questId: string;
-  experience: number;
   gold: number;
   clearMs: number;
   items: readonly EquipmentItem[];
+  skillDrops: readonly GuildSkillItem[];
   successful?: boolean;
   materials?: readonly MaterialReward[];
 }

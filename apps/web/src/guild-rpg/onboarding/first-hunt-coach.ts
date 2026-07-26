@@ -1,280 +1,141 @@
 import type { TutorialState } from '../preferences/guild-preferences';
 
-type FirstHuntCoachStep =
-  | 'build'
-  | 'quest'
-  | 'start'
-  | 'target'
-  | 'brace'
-  | 'riposte'
-  | 'sweep'
-  | 'recover'
-  | 'execution'
-  | 'preview'
-  | 'release'
-  | 'playback'
-  | 'loot'
-  | 'return'
-  | 'power-build'
-  | 'forge'
-  | 'next-hunt'
-  | 'replay'
-  | 'complete';
+export const TUTORIAL_STEPS = [
+  'inspect_party',
+  'select_hero',
+  'inspect_skills',
+  'equip_skill',
+  'inspect_equipment',
+  'start_hunt',
+  'select_target',
+  'use_skill',
+  'reorder',
+  'collect_reward',
+  'equip_loot',
+  'forge_loot',
+  'fuse_skill',
+  'equip_fused',
+  'replay',
+  'complete',
+] as const;
 
-export interface CoachInput {
-  tutorial: TutorialState;
-  screen: 'guild' | 'battle' | 'playback' | 'rewards';
-  questId?: string;
-  selectedBuildId: string;
-  selectedTargetId?: string;
-  acknowledgedTargetId?: string;
-  focusedBuildId?: string;
-  forgeSequence?: number;
-  draftCardIds: readonly string[];
-  previewEventCount: number;
-  rewardItemCount: number;
-  resolvedItemCount: number;
-  hasBorderRecord: boolean;
-  replaying: boolean;
-  previewAcknowledged: boolean;
-  bossExecutionOpen: boolean;
-  mobilePage?: 'build' | 'quest' | 'party' | 'inventory';
-}
+export type FirstHuntCoachStep = (typeof TUTORIAL_STEPS)[number];
 
 export interface FirstHuntCoach {
   step: FirstHuntCoachStep;
-  paused: boolean;
-  phaseLabel: string;
   stepNumber: number;
   stepTotal: number;
   title: string;
   message: string;
-  focusId?: string;
-  expectedCardId?: string;
+  focusId: string;
 }
 
-const OPENING_SIGNATURE = ['brann_brace', 'brann_riposte', 'brann_sweep'] as const;
-const EXECUTION_SIGNATURE = [
-  'brann_brace',
-  'brann_riposte',
-  'brann_shield_crash',
-  'brann_sweep',
-  'brann_fortress_breaker',
-] as const;
+const COPY: Readonly<
+  Record<
+    Exclude<FirstHuntCoachStep, 'complete'>,
+    Omit<FirstHuntCoach, 'step' | 'stepNumber' | 'stepTotal'>
+  >
+> = {
+  inspect_party: {
+    title: '先看完整隊伍',
+    message: '點「隊伍」，確認六名角色與預設出手順序。',
+    focusId: 'nav:party',
+  },
+  select_hero: {
+    title: '選一名角色',
+    message: '點任一角色；目前操作角色會持續高亮並顯示名字。',
+    focusId: 'hero:first',
+  },
+  inspect_skills: {
+    title: '打開技能頁',
+    message: '點「技能」，查看目前角色的六格技能與所有可選技能。',
+    focusId: 'nav:skills',
+  },
+  equip_skill: {
+    title: '選擇技能',
+    message: '先點六格中的一格，再從技能庫裝備一招；完成後會自動切到下一位角色。',
+    focusId: 'skill:equip',
+  },
+  inspect_equipment: {
+    title: '打開裝備頁',
+    message: '點「裝備」，查看武器、護甲、飾品、內嵌核心與鍛造。',
+    focusId: 'nav:equipment',
+  },
+  start_hunt: {
+    title: '進入第一場狩獵',
+    message: '回到「任務」，閱讀公開掉落池後開始邊境狼群。',
+    focusId: 'hunt:start',
+  },
+  select_target: {
+    title: '選擇攻擊目標',
+    message: '點一張仍存活的敵人卡；金框會顯示目前鎖定目標。',
+    focusId: 'target:first',
+  },
+  use_skill: {
+    title: '讓當前角色立即出招',
+    message: '下方六招全部可用。點一招就立刻結算，不必等全隊設定完成。',
+    focusId: 'battle:skill',
+  },
+  reorder: {
+    title: '改變本回合下一位',
+    message: '點一名尚未行動的角色，把他調到下一位並立即看見接力變化。',
+    focusId: 'order:next',
+  },
+  collect_reward: {
+    title: '讀完這次掉落',
+    message: '勝利會同時取得素材、帶核心裝備與技能；先穿上其中一件裝備。',
+    focusId: 'reward:equipment',
+  },
+  equip_loot: {
+    title: '穿上第一件屬性裝備',
+    message: '點戰利品的「裝備給角色」；原裝備會安全回到背包，不會消失。',
+    focusId: 'equipment:equip',
+  },
+  forge_loot: {
+    title: '做一次範圍內校準',
+    message: '點已裝備物品的「校準」；只會在公開範圍內重骰，不會無限線性升級。',
+    focusId: 'equipment:forge',
+  },
+  fuse_skill: {
+    title: '融合相同屬性技能',
+    message: '選兩張同屬性一星技能融合；每個元件的數值與觸發都會保留。',
+    focusId: 'fusion:create',
+  },
+  equip_fused: {
+    title: '裝備融合技能',
+    message: '把剛融合的技能放進目前角色六格之一，讓組合正式進入戰場。',
+    focusId: 'skill:equip-fused',
+  },
+  replay: {
+    title: '帶新組合重刷',
+    message: '回任務重刷第一關，驗證新技能與裝備核心形成更長接力。',
+    focusId: 'hunt:replay',
+  },
+};
 
-function signatureStep(input: CoachInput): FirstHuntCoach {
-  const signature = input.bossExecutionOpen ? EXECUTION_SIGNATURE : OPENING_SIGNATURE;
-  const stepTotal = signature.length + 3;
-  const expectedTargetId = input.bossExecutionOpen ? 'wolf_alpha' : 'wolf_scout';
-  if (
-    input.selectedTargetId !== expectedTargetId ||
-    input.acknowledgedTargetId !== expectedTargetId
-  ) {
-    return {
-      step: 'target',
-      paused: true,
-      phaseLabel: '軍令引導',
-      stepNumber: 1,
-      stepTotal,
-      title: input.bossExecutionOpen ? '鎖定灰牙首領' : '鎖定灰牙斥候',
-      message: input.bossExecutionOpen
-        ? '護衛已倒。鎖定灰牙首領，進入孤王處決窗。'
-        : '先鎖定灰牙斥候，打開狼群的第一個缺口。',
-      focusId: `action:${expectedTargetId}`,
-    };
-  }
-  const divergentIndex = input.draftCardIds
-    .slice(0, signature.length)
-    .findIndex((cardId, index) => cardId !== signature[index]);
-  if (divergentIndex >= 0) {
-    return {
-      step: 'recover',
-      paused: true,
-      phaseLabel: '軍令引導',
-      stepNumber: Math.min(input.draftCardIds.length + 1, stepTotal),
-      stepTotal,
-      title: '撤銷錯誤卡',
-      message: '這張卡偏離盾牆蓄爆。先撤銷到上一步，推薦卡就會重新回到主操作位。',
-      focusId: 'action:undo',
-    };
-  }
-  const nextIndex = input.draftCardIds.length;
-  if (nextIndex < signature.length) {
-    const expectedCardId = signature[nextIndex]!;
-    const names = input.bossExecutionOpen
-      ? ['架盾', '盾後反擊', '盾擊破勢', '破陣橫掃', '城塞粉碎']
-      : ['架盾', '盾後反擊', '破陣橫掃'];
-    return {
-      step: input.bossExecutionOpen
-        ? 'execution'
-        : nextIndex === 0
-          ? 'brace'
-          : nextIndex === 1
-            ? 'riposte'
-            : 'sweep',
-      paused: true,
-      phaseLabel: '軍令引導',
-      stepNumber: nextIndex + 2,
-      stepTotal,
-      title: `打出${names[nextIndex]}`,
-      expectedCardId,
-      message: input.bossExecutionOpen
-        ? `處決鏈 ${nextIndex + 1}/${signature.length}：選 ${names[nextIndex]}，把孤王一路壓進最終爆發。`
-        : `下一張選 ${names[nextIndex]}，讓盾牆蓄爆沿著因果鏈接起來。`,
-      focusId: `action:${expectedCardId}`,
-    };
-  }
-  if (!input.previewAcknowledged) {
-    return {
-      step: 'preview',
-      paused: true,
-      phaseLabel: '軍令引導',
-      stepNumber: stepTotal - 1,
-      stepTotal,
-      title: '確認軍令預演',
-      message: `先讀一次預演：${input.previewEventCount} 個事件會依序堆疊、觸發、擊破。確認後再釋放。`,
-      focusId: 'action:release',
-    };
-  }
+export function createFirstHuntCoach(
+  tutorial: TutorialState,
+  step: FirstHuntCoachStep,
+  context: { heroName?: string } = {},
+): FirstHuntCoach | undefined {
+  if (tutorial !== 'active' || step === 'complete') return undefined;
+  const copy = COPY[step];
   return {
-    step: 'release',
-    paused: true,
-    phaseLabel: '軍令引導',
-    stepNumber: stepTotal,
-    stepTotal,
-    title: '釋放完整軍令',
-    message: `預演已展開 ${input.previewEventCount} 個事件。釋放軍令，讓整條引擎一次爆完。`,
-    focusId: 'action:release',
+    step,
+    stepNumber: TUTORIAL_STEPS.indexOf(step) + 1,
+    stepTotal: TUTORIAL_STEPS.length - 1,
+    ...copy,
+    ...(step === 'equip_skill' && context.heroName
+      ? {
+          title: `替${context.heroName}選擇技能`,
+          message: `先點${context.heroName}的六格之一，再從技能庫裝備一招；完成後會自動切到下一位角色。`,
+        }
+      : {}),
   };
 }
 
-export function createFirstHuntCoach(input: CoachInput): FirstHuntCoach | undefined {
-  if (input.tutorial !== 'active') return undefined;
-  if (input.screen !== 'guild' && input.questId !== 'border_pack') {
-    return undefined;
-  }
-  if (input.screen === 'guild') {
-    if (input.hasBorderRecord) {
-      if (!input.replaying) {
-        if (input.selectedBuildId !== 'ricochet') {
-          const onBuildPage = input.mobilePage === 'build';
-          const focusedOnRicochet = input.focusedBuildId === 'ricochet';
-          return {
-            step: 'power-build',
-            paused: false,
-            phaseLabel: '力量成長',
-            stepNumber: 1,
-            stepTotal: 3,
-            title: focusedOnRicochet ? '啟動殲滅彈射' : '找到殲滅彈射',
-            message: focusedOnRicochet
-              ? '啟動殲滅彈射，讓每次命中分岔成覆蓋全場的追擊。'
-              : '切到殲滅彈射；剛取得的規則會讓下一場的命中一路跳遍敵群。',
-            focusId: !onBuildPage
-              ? 'tab:build'
-              : focusedOnRicochet
-                ? 'action:activate-build'
-                : 'action:next-build',
-          };
-        }
-        if ((input.forgeSequence ?? 0) === 0) {
-          const onInventoryPage = input.mobilePage === 'inventory';
-          return {
-            step: 'forge',
-            paused: false,
-            phaseLabel: '力量成長',
-            stepNumber: 2,
-            stepTotal: 3,
-            title: onInventoryPage ? '點燃第一次鍛造' : '前往鍛造工坊',
-            message: '完成一次結果可預見的力量強化，把剛拿到的戰利品再推高一階。',
-            focusId: onInventoryPage ? 'action:open-forge' : 'tab:inventory',
-          };
-        }
-        const onQuestPage = input.mobilePage === 'quest';
-        return {
-          step: 'next-hunt',
-          paused: false,
-          phaseLabel: '力量成長',
-          stepNumber: 3,
-          stepTotal: 3,
-          title: onQuestPage ? '帶新引擎出發' : '前往下一場狩獵',
-          message: 'Build 與裝備都已升級。出發下一戰，親眼看見力量成長。',
-          focusId: onQuestPage ? 'action:start-quest' : 'tab:quest',
-        };
-      }
-      const onQuestPage = input.mobilePage === 'quest';
-      return {
-        step: 'replay',
-        paused: false,
-        phaseLabel: '教學重播',
-        stepNumber: 1,
-        stepTotal: 1,
-        title: input.replaying ? '再次進入邊境狼群' : '首次狩獵已完成',
-        message: input.replaying
-          ? '教學重播已待命。再次進入邊境狼群，完成整條殲滅鏈。'
-          : '你可以隨時從設定重播完整教學。',
-        ...(input.replaying ? { focusId: onQuestPage ? 'action:start-quest' : 'tab:quest' } : {}),
-      };
-    }
-    if (input.selectedBuildId !== 'retaliation') {
-      return {
-        step: 'build',
-        paused: false,
-        phaseLabel: '新手引導',
-        stepNumber: 1,
-        stepTotal: 2,
-        title: '切回反擊壁壘',
-        message: '切回反擊壁壘，完成第一條盾牆蓄爆路線。',
-        focusId: input.mobilePage === 'build' ? 'action:activate-build' : 'tab:build',
-      };
-    }
-    const onQuestPage = input.mobilePage === 'quest';
-    return {
-      step: onQuestPage ? 'start' : 'quest',
-      paused: false,
-      phaseLabel: '新手引導',
-      stepNumber: onQuestPage ? 2 : 1,
-      stepTotal: 2,
-      title: onQuestPage ? '出發邊境狼群' : '前往第一個任務',
-      message: onQuestPage
-        ? '情報先放一邊，按下開始遠征就會進入停時教學戰。'
-        : '反擊壁壘已就緒。現在只要切到任務分頁。',
-      focusId: onQuestPage ? 'action:start-quest' : 'tab:quest',
-    };
-  }
-  if (input.screen === 'playback') {
-    return {
-      step: 'playback',
-      paused: false,
-      phaseLabel: '軍令演出',
-      stepNumber: 1,
-      stepTotal: 1,
-      title: '觀看因果鏈爆發',
-      message: '觀看因果鏈逐段升級；也可以跳過並直接落在完整高潮。',
-    };
-  }
-  if (input.screen === 'rewards') {
-    const stepTotal = input.rewardItemCount + 1;
-    return input.resolvedItemCount < input.rewardItemCount
-      ? {
-          step: 'loot',
-          paused: false,
-          phaseLabel: '戰利品引導',
-          stepNumber: input.resolvedItemCount + 1,
-          stepTotal,
-          title: `處理第 ${input.resolvedItemCount + 1} 件戰利品`,
-          message: '先使用推薦裝備者，讓新規則立刻加入 Build。',
-          focusId: 'action:equip',
-        }
-      : {
-          step: 'return',
-          paused: false,
-          phaseLabel: '戰利品引導',
-          stepNumber: stepTotal,
-          stepTotal,
-          title: '返回公會',
-          message: '戰利品已處理完成，返回公會準備重刷。',
-          focusId: 'action:return-guild',
-        };
-  }
-  return signatureStep(input);
-}
+export const isFirstHuntCoachFocus = (
+  tutorial: TutorialState,
+  step: FirstHuntCoachStep,
+  focusId: string,
+) => createFirstHuntCoach(tutorial, step)?.focusId === focusId;

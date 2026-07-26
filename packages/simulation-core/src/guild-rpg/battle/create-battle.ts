@@ -1,6 +1,7 @@
 import type { BattleUnit, GuildBattleState, StartBattleInput } from '@expedition/shared-types';
 
 import { calculateAdventurerStats } from './calculate-stats';
+import { createRoundOrder } from '../round-order/create-round-order';
 
 export function createGuildBattle(input: StartBattleInput): GuildBattleState {
   const heroes: BattleUnit[] = input.party.map((adventurer) => {
@@ -10,6 +11,13 @@ export function createGuildBattle(input: StartBattleInput): GuildBattleState {
     if (!definition) throw new Error(`Unknown adventurer: ${adventurer.definitionId}`);
 
     const stats = calculateAdventurerStats(adventurer, definition);
+    const equippedCores = Object.values(adventurer.equipment).flatMap((item) =>
+      item?.cores?.length
+        ? item.cores
+        : item?.coreId
+          ? [{ id: item.coreId, strength: item.coreStrength ?? 1 }]
+          : [],
+    );
     return {
       id: definition.id,
       name: definition.name,
@@ -22,6 +30,11 @@ export function createGuildBattle(input: StartBattleInput): GuildBattleState {
       guarding: false,
       isLeader: definition.id === input.leaderId,
       skillIds: definition.skillIds,
+      statusLayers: { burn: 0, poison: 0, tide: 0 },
+      defenseReduction: 0,
+      strengthened: 0,
+      equippedCores,
+      deliveryPassiveId: definition.deliveryPassive.id,
     };
   });
 
@@ -40,6 +53,9 @@ export function createGuildBattle(input: StartBattleInput): GuildBattleState {
     guarding: false,
     isLeader: false,
     skillIds: ['basic_attack'],
+    statusLayers: { burn: 0, poison: 0, tide: 0 },
+    defenseReduction: 0,
+    strengthened: 0,
   }));
 
   return {
@@ -58,5 +74,12 @@ export function createGuildBattle(input: StartBattleInput): GuildBattleState {
         message: `${input.quest.name}戰鬥開始。`,
       },
     ],
+    ...(heroes.length === 6
+      ? {
+          roundOrder: createRoundOrder(heroes.map(({ id }) => id)),
+          skillHistory: [],
+          roundIndex: 1,
+        }
+      : {}),
   };
 }

@@ -1,3 +1,4 @@
+import { GUILD_GAME_CONTENT } from '@expedition/game-data';
 import type {
   ComboRuntimeState,
   GuildBattleState,
@@ -8,6 +9,7 @@ import type {
 import { describe, expect, it } from 'vitest';
 
 import type { RandomSource } from '../../rng/random-source';
+import { createGuildProfile } from '../profile/create-profile';
 import { calculateHuntRewards } from './calculate-hunt-rewards';
 
 class FixedRandom implements RandomSource {
@@ -91,22 +93,9 @@ const equipmentAffixes: readonly EquipmentAffixDefinition[] = [
 ];
 
 const profile: GuildProfile = {
-  version: 3,
-  leaderId: 'hero',
-  party: [],
-  inventory: [],
-  materials: {},
-  gold: 0,
+  ...createGuildProfile(GUILD_GAME_CONTENT),
   unlockedQuestIds: ['training'],
-  questRecords: {},
   nextLootSeed: 7,
-  selectedBuildId: 'retaliation',
-  loadouts: {},
-  completedChallengeIds: [],
-  discoveredEquipmentIds: [],
-  discoveredRuleIds: [],
-  forgeSequence: 0,
-  progressionEvents: [],
 };
 
 function combo(
@@ -173,7 +162,13 @@ function battle(
 describe('hunt reward calculation', () => {
   it('awards enemy materials but never equipment on failure', () => {
     const rewards = calculateHuntRewards(
-      { profile, battle: battle('defeat', []), hunt, equipmentAffixes },
+      {
+        profile,
+        battle: battle('defeat', []),
+        hunt,
+        equipmentAffixes,
+        content: GUILD_GAME_CONTENT,
+      },
       new FixedRandom(0.5),
     );
 
@@ -192,6 +187,7 @@ describe('hunt reward calculation', () => {
       battle: battle('victory', ['guard-a'], { 'guard-a': 1 }),
       hunt,
       equipmentAffixes,
+      content: GUILD_GAME_CONTENT,
     };
     const first = calculateHuntRewards(input, new FixedRandom(0.8));
     const second = calculateHuntRewards(input, new FixedRandom(0.8));
@@ -199,9 +195,13 @@ describe('hunt reward calculation', () => {
     expect(first).toEqual(second);
     expect(first.items).toHaveLength(1);
     expect(first.items[0]).toMatchObject({
-      baseId: 'guard-a-blade',
       sourceEnemyId: 'guard-a',
     });
+    expect(first.items[0]?.coreId).toBeTruthy();
+    expect(first.items[0]?.forgeMaterialId).toBeTruthy();
+    const base = GUILD_GAME_CONTENT.equipmentBases.find(({ id }) => id === first.items[0]?.baseId)!;
+    expect(first.items[0]?.mainStat.value).toBeGreaterThanOrEqual(base.mainStatRoll.min);
+    expect(first.items[0]?.mainStat.value).toBeLessThanOrEqual(base.mainStatRoll.max);
   });
 
   it('stacks every annihilation axis and preserves shared overflow in all item quality', () => {
@@ -212,6 +212,7 @@ describe('hunt reward calculation', () => {
         battle: battle('victory', Object.keys(startRatios), startRatios, 180),
         hunt,
         equipmentAffixes,
+        content: GUILD_GAME_CONTENT,
       },
       new FixedRandom(0.4),
     );
@@ -231,6 +232,7 @@ describe('hunt reward calculation', () => {
     );
     expect(rewards.items.some((item) => item.jackpot)).toBe(true);
     expect(rewards.items.every((item) => item.qualityScore >= 180)).toBe(true);
+    expect(rewards.items.every((item) => item.coreId && item.forgeMaterialId)).toBe(true);
   });
 
   it('awards the authored annihilation chest even when the hunt has no boss', () => {
@@ -247,6 +249,7 @@ describe('hunt reward calculation', () => {
         battle: battle('victory', Object.keys(startRatios), startRatios, 120),
         hunt: noBossHunt,
         equipmentAffixes,
+        content: GUILD_GAME_CONTENT,
       },
       new FixedRandom(0.4),
     );
@@ -254,10 +257,11 @@ describe('hunt reward calculation', () => {
     expect(rewards.axes.bossChest).toBe(true);
     expect(rewards.items).toHaveLength(4);
     expect(rewards.items.at(-1)).toMatchObject({
-      baseId: 'annihilation-chest',
       sourceEnemyId: 'boss',
       jackpot: true,
     });
+    expect(rewards.items.at(-1)?.coreId).toBeTruthy();
+    expect(rewards.items.at(-1)?.forgeMaterialId).toBeTruthy();
   });
 
   it.each([
@@ -273,6 +277,7 @@ describe('hunt reward calculation', () => {
         battle: battle('victory', ['guard-a'], { 'guard-a': 1 }),
         hunt,
         equipmentAffixes,
+        content: GUILD_GAME_CONTENT,
       },
       new FixedRandom(roll),
     );
@@ -281,6 +286,27 @@ describe('hunt reward calculation', () => {
     expect(rewards.items[0]?.affixes).toHaveLength(count);
     expect(rewards.items[0]?.recommendedBuildIds).toEqual(['retaliation']);
     expect(rewards.items[0]?.affixes.every((affix) => affix.sourceId)).toBe(true);
+    expect(rewards.items[0]?.cores).toHaveLength(rarity === 'legendary' ? 2 : 1);
+  });
+
+  it('reads v4 additive Overkill events without depending on the retired combo runtime', () => {
+    const { combo: retiredCombo, ...baseBattle } = battle('victory', ['guard-a'], { 'guard-a': 1 });
+    void retiredCombo;
+    const v4Battle = {
+      ...baseBattle,
+      events: [
+        { id: 1, kind: 'unit_defeated' as const, message: '擊破', targetId: 'guard-a' },
+        { id: 2, kind: 'overkill' as const, message: 'OVERKILL', targetId: 'guard-a', amount: 240 },
+      ],
+    };
+    const rewards = calculateHuntRewards(
+      { profile, battle: v4Battle, hunt, equipmentAffixes, content: GUILD_GAME_CONTENT },
+      new FixedRandom(0.4),
+    );
+
+    expect(rewards.axes.totalOverkill).toBe(240);
+    expect(rewards.axes.individualOverkill).toEqual({ 'guard-a': 240 });
+    expect(rewards.items[0]?.qualityScore).toBe(240);
   });
 
   it('does not award Perfect Annihilation when one enemy started below ninety percent', () => {
@@ -291,6 +317,7 @@ describe('hunt reward calculation', () => {
         battle: battle('victory', Object.keys(startRatios), startRatios),
         hunt,
         equipmentAffixes,
+        content: GUILD_GAME_CONTENT,
       },
       new FixedRandom(0),
     );

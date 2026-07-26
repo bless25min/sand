@@ -3,9 +3,17 @@ import type { HuntDefinition } from './hunt';
 import type { CardCatalog } from './combo/content';
 import type { BuildDefinition, RuleCatalog } from './combo/rules';
 import type { GuildStats } from './stats';
+import type {
+  EquipmentCoreDefinition,
+  GuildElementDefinition,
+  SkillFormDefinition,
+  SkillSpecializationDefinition,
+  TriggerConditionDefinition,
+} from './skill-build';
 import type { AscensionDefinition, GuildCodexEntry, HuntChallengeDefinition } from './progression';
 
-export type AdventurerRole = 'vanguard' | 'ranger' | 'cleric';
+export type AdventurerRole =
+  'vanguard' | 'ranger' | 'cleric' | 'alchemist' | 'tactician' | 'duelist';
 export type SkillKind = 'attack' | 'heal' | 'guard';
 export type SkillTarget = 'enemy' | 'ally' | 'self';
 
@@ -16,6 +24,12 @@ export interface AdventurerDefinition {
   role: AdventurerRole;
   baseStats: GuildStats;
   skillIds: readonly string[];
+  starterSkillIds: readonly string[];
+  deliveryPassive: {
+    id: string;
+    name: string;
+    description: string;
+  };
 }
 
 export interface GuildSkillDefinition {
@@ -69,4 +83,9 @@ export interface GuildGameContent {
   challenges: readonly HuntChallengeDefinition[];
   ascensions: readonly AscensionDefinition[];
   codexEntries: readonly GuildCodexEntry[];
+  skillForms: readonly SkillFormDefinition[];
+  equipmentCores: readonly EquipmentCoreDefinition[];
+  elements: readonly GuildElementDefinition[];
+  skillSpecializations: readonly SkillSpecializationDefinition[];
+  triggerConditions: readonly TriggerConditionDefinition[];
 }

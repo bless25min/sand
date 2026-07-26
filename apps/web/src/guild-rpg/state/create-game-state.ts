@@ -14,24 +14,25 @@ export function createGuildRpgState(
   profile?: GuildProfile,
   preferences: GuildPreferences = createDefaultGuildPreferences(Boolean(profile)),
 ): GuildRpgState {
+  const activeProfile = profile ?? createGuildProfile(GUILD_GAME_CONTENT);
   return {
     screen: 'guild',
-    profile: profile ?? createGuildProfile(GUILD_GAME_CONTENT),
+    page: 'quest',
+    profile: activeProfile,
     preferences,
-    paused: false,
-    pausedBeforeSettings: false,
-    settingsOpen: false,
-    tutorialReplay: false,
-    tutorialAcknowledgedTargetId: undefined,
-    tutorialPreviewAcknowledged: false,
-    speed: 1,
-    resolvedItemIds: [],
-    activatedRuleIds: [],
+    tutorialStep: preferences.tutorial === 'active' ? 'inspect_party' : 'complete',
+    selectedHeroId: activeProfile.defaultOrder[0]!,
+    selectedSkillSlot: 0,
+    selectedFusionIds: [],
+    selectedSalvageIds: [],
+    recentEvents: [],
     message: profile ? '公會紀錄已載入。' : '新的遠征公會已成立。',
   };
 }
 
-export function loadGuildRpgState(storage: Pick<Storage, 'getItem'>): GuildRpgState {
+export function loadGuildRpgState(
+  storage: Pick<Storage, 'getItem'> & Partial<Pick<Storage, 'setItem'>>,
+): GuildRpgState {
   const profile = loadGuildSave(storage);
   return createGuildRpgState(profile, loadGuildPreferences(storage, Boolean(profile)));
 }

@@ -7,91 +7,80 @@ import type {
 
 import type { RandomSource } from '../../rng/random-source';
 
-export type ForgeAction = 'upgrade' | 'infuse' | 'reroll';
+export type ForgeAction = 'calibrate' | 'reforge' | 'lock' | 'transplant' | 'salvage';
+type ForgeLockField = 'main' | 'affix' | 'core';
+export interface ForgeOptions {
+  lockField?: ForgeLockField;
+  sourceItemId?: string;
+}
 
 export const FORGE_COSTS: Readonly<Record<ForgeAction, number>> = {
-  upgrade: 30,
-  infuse: 45,
-  reroll: 25,
+  calibrate: 30,
+  reforge: 25,
+  lock: 15,
+  transplant: 45,
+  salvage: 0,
 };
 
-function findOwnedItem(profile: GuildProfile, itemId: string): EquipmentItem | undefined {
-  return (
-    profile.inventory.find((item) => item.id === itemId) ??
-    profile.party
-      .flatMap((member) => Object.values(member.equipment))
-      .find((item) => item?.id === itemId)
-  );
-}
+const findItem = (profile: GuildProfile, itemId: string) =>
+  profile.inventory.find(({ id }) => id === itemId) ??
+  profile.party
+    .flatMap(({ equipment }) => Object.values(equipment))
+    .find((item) => item?.id === itemId);
 
-function replaceOwnedItem(profile: GuildProfile, nextItem: EquipmentItem): GuildProfile {
-  return {
-    ...profile,
-    inventory: profile.inventory.map((item) => (item.id === nextItem.id ? nextItem : item)),
-    party: profile.party.map((member) => ({
-      ...member,
-      equipment: Object.fromEntries(
-        Object.entries(member.equipment).map(([slot, item]) => [
-          slot,
-          item?.id === nextItem.id ? nextItem : item,
-        ]),
-      ),
-    })),
-  };
-}
+const replaceItem = (profile: GuildProfile, next: EquipmentItem): GuildProfile => ({
+  ...profile,
+  inventory: profile.inventory.map((item) => (item.id === next.id ? next : item)),
+  party: profile.party.map((member) => ({
+    ...member,
+    equipment: Object.fromEntries(
+      Object.entries(member.equipment).map(([slot, item]) => [
+        slot,
+        item?.id === next.id ? next : item,
+      ]),
+    ),
+  })),
+});
 
-function materialForItem(item: EquipmentItem, content: GuildGameContent) {
-  const enemies = content.hunts.flatMap((hunt) => hunt.enemies);
-  if (item.forgeMaterialId) {
-    return enemies.find((enemy) => enemy.material.id === item.forgeMaterialId)?.material;
-  }
-  for (const hunt of content.hunts) {
-    for (const enemy of hunt.enemies) {
-      const authoredByEnemy =
-        enemy.enemyId === item.sourceEnemyId ||
-        enemy.equipment.some((definition) => definition.id === item.baseId);
-      if (authoredByEnemy) return enemy.material;
-    }
-  }
-  return undefined;
-}
+const removeItem = (profile: GuildProfile, itemId: string): GuildProfile => ({
+  ...profile,
+  inventory: profile.inventory.filter(({ id }) => id !== itemId),
+  party: profile.party.map((member) => ({
+    ...member,
+    equipment: Object.fromEntries(
+      Object.entries(member.equipment).filter(([, item]) => item?.id !== itemId),
+    ),
+  })),
+});
 
-function upgradedItem(item: EquipmentItem): EquipmentItem {
-  const surge = Math.max(2, Math.ceil(Math.abs(item.mainStat.value) * 0.5));
-  return {
-    ...item,
-    forgeRank: (item.forgeRank ?? 0) + 1,
-    mainStat: { ...item.mainStat, value: item.mainStat.value + surge },
-    sellValue: item.sellValue + surge * 2,
-  };
-}
+const materialFor = (item: EquipmentItem, content: GuildGameContent) =>
+  item.forgeMaterialId ??
+  content.equipmentBases.find(({ id }) => id === item.baseId)?.forgeMaterialId;
 
-function infusedItem(item: EquipmentItem, content: GuildGameContent) {
-  const current = new Set(item.ruleIds ?? []);
-  const ruleId = Object.keys(content.rules).find((candidate) => !current.has(candidate));
-  if (!ruleId) return undefined;
-  return { item: { ...item, ruleIds: [...current, ruleId] }, ruleId };
-}
+const materialName = (materialId: string | undefined, content: GuildGameContent) =>
+  content.hunts.flatMap(({ enemies }) => enemies).find(({ material }) => material.id === materialId)
+    ?.material.name;
 
-function rerolledItem(item: EquipmentItem, content: GuildGameContent, random: RandomSource) {
-  const currentIds = new Set(item.affixes.map((affix) => affix.sourceId).filter(Boolean));
-  const candidates = content.equipmentAffixes.filter((affix) => !currentIds.has(affix.id));
-  const pool = candidates.length > 0 ? candidates : content.equipmentAffixes;
-  const definition = pool[random.nextInt(0, pool.length - 1)];
-  if (!definition) return undefined;
-  const rank = item.forgeRank ?? 0;
-  const statScale = definition.stat === 'hp' ? 4 : definition.stat === 'speed' ? 0.5 : 1;
-  const affix = {
-    stat: definition.stat,
-    value: Math.max(1, Math.round((6 + rank * 2) * statScale)),
-    sourceId: definition.id,
-    label: definition.name,
-  };
+const reforgeAffix = (item: EquipmentItem, content: GuildGameContent, random: RandomSource) => {
+  const current = new Set(item.affixes.map(({ sourceId }) => sourceId).filter(Boolean));
+  const pool = content.equipmentAffixes.filter(({ id }) => !current.has(id));
+  const definition = (pool.length ? pool : content.equipmentAffixes)[
+    random.nextInt(0, (pool.length ? pool : content.equipmentAffixes).length - 1)
+  ]!;
+  const value = definition.stat === 'hp' ? random.nextInt(8, 16) : random.nextInt(2, 6);
   return {
     ...item,
-    affixes: item.affixes.length > 0 ? [affix, ...item.affixes.slice(1)] : [affix],
+    affixes: [
+      {
+        stat: definition.stat,
+        value,
+        sourceId: definition.id,
+        label: definition.name,
+      },
+      ...item.affixes.slice(1),
+    ],
   };
-}
+};
 
 export interface ForgePreview {
   cost: number;
@@ -105,30 +94,27 @@ export function previewForgeEquipmentItem(
   itemId: string,
   action: ForgeAction,
   content: GuildGameContent,
+  options: ForgeOptions = {},
 ): ForgePreview | undefined {
-  const item = findOwnedItem(profile, itemId);
+  const item = findItem(profile, itemId);
   if (!item) return undefined;
-  const material = materialForItem(item, content);
-  let resultLabel: string;
-  if (action === 'upgrade') {
-    const next = upgradedItem(item);
-    resultLabel = `主屬性 ${item.mainStat.value} → ${next.mainStat.value} · 強化 +${next.forgeRank}`;
-  } else if (action === 'infuse') {
-    const ruleId = infusedItem(item, content)?.ruleId;
-    resultLabel = ruleId ? `獲得規則「${content.rules[ruleId]!.name}」` : '已承載全部規則';
-  } else {
-    const currentIds = new Set(item.affixes.map((affix) => affix.sourceId).filter(Boolean));
-    const candidateCount = content.equipmentAffixes.filter(
-      (affix) => !currentIds.has(affix.id),
-    ).length;
-    resultLabel = `重鑄第一詞綴 · ${
-      candidateCount > 0 ? candidateCount : content.equipmentAffixes.length
-    } 種候選`;
-  }
+  const materialId = materialFor(item, content);
+  const base = content.equipmentBases.find(({ id }) => id === item.baseId);
+  const source = options.sourceItemId ? findItem(profile, options.sourceItemId) : undefined;
+  const core = content.equipmentCores.find(({ id }) => id === source?.coreId);
+  const labels: Readonly<Record<ForgeAction, string>> = {
+    calibrate: `主屬性重新校準至 ${base?.mainStatRoll.min ?? '?'}–${base?.mainStatRoll.max ?? '?'}`,
+    reforge: `重鑄第一詞綴 · ${content.equipmentAffixes.length} 種候選`,
+    lock: `鎖定${options.lockField ?? 'core'}欄位`,
+    transplant: core ? `移植「${core.name}」` : '請選擇帶有核心的來源裝備',
+    salvage: `拆解並回收 1 份${materialName(materialId, content) ?? '素材'}`,
+  };
+  const resolvedMaterialName = materialName(materialId, content);
   return {
     cost: FORGE_COSTS[action],
-    ...(material ? { materialId: material.id, materialName: material.name } : {}),
-    resultLabel,
+    ...(materialId ? { materialId } : {}),
+    ...(resolvedMaterialName ? { materialName: resolvedMaterialName } : {}),
+    resultLabel: labels[action],
   };
 }
 
@@ -138,67 +124,93 @@ export function forgeEquipmentItem(
   action: ForgeAction,
   content: GuildGameContent,
   random: RandomSource,
+  options: ForgeOptions = {},
 ): RewardResolution {
-  const item = findOwnedItem(profile, itemId);
+  const item = findItem(profile, itemId);
   if (!item) return { profile, message: '找不到這件可鍛造裝備。' };
-  const material = materialForItem(item, content);
+  const materialId = materialFor(item, content);
+  if (!materialId) return { profile, message: '這件裝備沒有對應素材。' };
+
+  if (action === 'salvage') {
+    if (item.locked || item.favorite) {
+      return { profile, message: `${item.name}已鎖定或收藏，未進行分解。` };
+    }
+    const removed = removeItem(profile, itemId);
+    return {
+      profile: {
+        ...removed,
+        materials: { ...removed.materials, [materialId]: (removed.materials[materialId] ?? 0) + 1 },
+      },
+      message: `${item.name}已拆解，沒有自動處理其他裝備。`,
+    };
+  }
   const cost = FORGE_COSTS[action];
-  if (!material) {
-    return { profile, message: '這件裝備沒有對應素材，請先取得新版掉落或完成存檔轉換。' };
-  }
-  if ((profile.materials[material.id] ?? 0) < 1) {
-    return { profile, message: '需要一份對應敵人材料才能點燃鍛爐。' };
-  }
-  if (profile.gold < cost) {
-    return { profile, message: `需要 ${cost} 金幣才能完成這次鍛造。` };
+  if ((profile.materials[materialId] ?? 0) < 1 || profile.gold < cost) {
+    return {
+      profile,
+      message: `需要 1 份${materialName(materialId, content) ?? '素材'}與 ${cost} 金幣。`,
+    };
   }
 
-  let nextItem: EquipmentItem | undefined;
-  let resultLabel: string;
-  let discoveredRuleId: string | undefined;
-  if (action === 'upgrade') {
-    nextItem = upgradedItem(item);
-    resultLabel = `強化 +${nextItem.forgeRank}`;
-  } else if (action === 'infuse') {
-    const result = infusedItem(item, content);
-    nextItem = result?.item;
-    discoveredRuleId = result?.ruleId;
-    resultLabel = discoveredRuleId ? `規則灌注：${content.rules[discoveredRuleId]!.name}` : '';
+  let nextProfile = profile;
+  let nextItem = item;
+  let label: string;
+  if (action === 'calibrate') {
+    const base = content.equipmentBases.find(({ id }) => id === item.baseId);
+    if (!base) return { profile, message: '找不到裝備的校準範圍。' };
+    nextItem = {
+      ...item,
+      mainStat: {
+        ...item.mainStat,
+        value: random.nextInt(base.mainStatRoll.min, base.mainStatRoll.max),
+      },
+    };
+    label = '主屬性校準';
+  } else if (action === 'reforge') {
+    nextItem = reforgeAffix(item, content, random);
+    label = '詞綴重鑄';
+  } else if (action === 'lock') {
+    const field = options.lockField ?? 'core';
+    nextProfile = {
+      ...profile,
+      forgeLocks: {
+        ...profile.forgeLocks,
+        [item.id]: [...new Set([...(profile.forgeLocks[item.id] ?? []), field])],
+      },
+    };
+    label = `鎖定${field}`;
   } else {
-    nextItem = rerolledItem(item, content, random);
-    resultLabel = nextItem?.affixes[0]?.label ? `詞綴重鑄：${nextItem.affixes[0].label}` : '';
+    const source = options.sourceItemId ? findItem(profile, options.sourceItemId) : undefined;
+    if (!source?.coreId) return { profile, message: '來源裝備沒有可移植核心。' };
+    nextItem = { ...item, coreId: source.coreId, coreStrength: source.coreStrength };
+    nextProfile = removeItem(profile, source.id);
+    label = `移植${content.equipmentCores.find(({ id }) => id === source.coreId)?.name ?? source.coreId}`;
   }
-  if (!nextItem || !resultLabel) {
-    return { profile, message: '這件裝備已承載所有可用規則，鍛造能量完整保留。' };
-  }
-
+  nextProfile = replaceItem(nextProfile, nextItem);
   const sequence = profile.forgeSequence + 1;
-  const replaced = replaceOwnedItem(profile, nextItem);
-  const nextMaterials = {
-    ...replaced.materials,
-    [material.id]: (replaced.materials[material.id] ?? 0) - 1,
-  };
-  const discoveredRuleIds = discoveredRuleId
-    ? [...new Set([...replaced.discoveredRuleIds, discoveredRuleId])]
-    : replaced.discoveredRuleIds;
+  const coreIds = nextItem.coreId
+    ? [...new Set([...profile.discoveredCoreIds, nextItem.coreId])]
+    : profile.discoveredCoreIds;
   return {
     profile: {
-      ...replaced,
-      gold: replaced.gold - cost,
-      materials: nextMaterials,
+      ...nextProfile,
+      gold: nextProfile.gold - cost,
+      materials: {
+        ...nextProfile.materials,
+        [materialId]: (nextProfile.materials[materialId] ?? 0) - 1,
+      },
+      discoveredCoreIds: coreIds,
       forgeSequence: sequence,
-      discoveredEquipmentIds: [...new Set([...replaced.discoveredEquipmentIds, nextItem.baseId])],
-      discoveredRuleIds,
       progressionEvents: [
-        ...replaced.progressionEvents,
+        ...nextProfile.progressionEvents,
         {
           id: `forge-${sequence}`,
           kind: 'forge' as const,
-          label: `${nextItem.name} · ${resultLabel}`,
-          detail: `${cost} 金幣 + 1 ${material.name}`,
+          label: `${nextItem.name} · ${label}`,
+          detail: `${cost} 金幣 + 1 素材`,
         },
       ].slice(-20),
     },
-    message: `${nextItem.name}鍛造完成——${resultLabel}！`,
+    message: `${nextItem.name}完成${label}。`,
   };
 }

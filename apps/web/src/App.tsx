@@ -1,4 +1,4 @@
-import { lazy, Suspense, type ComponentType } from 'react';
+import { lazy, Suspense, useEffect, type ComponentType } from 'react';
 
 import { GuildRpgApp } from './guild-rpg/GuildRpgApp';
 
@@ -23,6 +23,14 @@ export function App(props: { prototype?: Prototype }) {
   const query =
     typeof window === 'undefined' ? undefined : new URLSearchParams(window.location.search);
   const requested = props.prototype ?? query?.get('prototype');
+  useEffect(() => {
+    document.title =
+      requested === 'system-breaker'
+        ? 'SYSTEM BREAKER'
+        : requested === 'expedition' || query?.get('legacy') === '1'
+          ? 'Project Expedition'
+          : '遠征者公會 · 六人接力刷寶 RPG';
+  }, [query, requested]);
   if (requested === 'expedition' || query?.get('legacy') === '1') {
     return (
       <Suspense fallback={<PrototypeLoading />}>

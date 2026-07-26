@@ -7,9 +7,9 @@ describe('App', () => {
   it('uses the guild RPG as the default playable product', () => {
     const markup = renderToStaticMarkup(<App />);
 
-    expect(markup).toContain('遠征者公會');
+    expect(markup).toContain('六人接力刷寶遠征');
     expect(markup).toContain('邊境狼群');
-    expect(markup).toContain('開始遠征');
+    expect(markup).toContain('開始狩獵');
     expect(markup).not.toContain('data-testid="playable-expedition"');
   });
 

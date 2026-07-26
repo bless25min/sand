@@ -110,7 +110,7 @@ const rewards = {
       {
         id: 'arc_rewrite',
         name: '雷律改寫',
-        description: '魔導複寫上一道軍令；Repeat 與 CopyNext 可反過來劫持雷律。',
+        description: '魔導複寫上一棒技能；多段與接力觸發可反過來劫持雷律。',
         counterBuildIds: ['retaliation', 'command_storm'],
         pressureMultiplier: 2.35,
         vulnerableTransform: 'copy_next',

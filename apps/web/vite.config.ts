@@ -13,7 +13,7 @@ export const webCodeSplitting = {
       name: 'pixi',
       test: /[\\/]node_modules[\\/](?:@pixi|pixi\.js)[\\/]/,
       priority: 20,
-      entriesAware: true,
+      entriesAware: false,
       includeDependenciesRecursively: false,
     },
     {

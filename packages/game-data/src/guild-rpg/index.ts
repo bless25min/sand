@@ -13,6 +13,11 @@ import { GUILD_QUESTS } from './quests';
 import { GUILD_SKILLS } from './skills';
 import { GUILD_ZONES } from './campaign/zones';
 import { GUILD_ASCENSIONS, GUILD_CODEX_ENTRIES, GUILD_HUNT_CHALLENGES } from './progression';
+import { GUILD_ELEMENTS } from './skill-build/attributes';
+import { GUILD_EQUIPMENT_CORES } from './skill-build/equipment-cores';
+import { GUILD_SKILL_FORMS } from './skill-build/skill-forms';
+import { GUILD_SKILL_SPECIALIZATIONS } from './skill-build/specializations';
+import { GUILD_TRIGGER_CONDITIONS } from './skill-build/triggers';
 
 export {
   GUILD_ADVENTURERS,
@@ -29,6 +34,11 @@ export {
   GUILD_ASCENSIONS,
   GUILD_CODEX_ENTRIES,
   GUILD_HUNT_CHALLENGES,
+  GUILD_ELEMENTS,
+  GUILD_EQUIPMENT_CORES,
+  GUILD_SKILL_FORMS,
+  GUILD_SKILL_SPECIALIZATIONS,
+  GUILD_TRIGGER_CONDITIONS,
 };
 
 export const GUILD_GAME_CONTENT: GuildGameContent = {
@@ -45,4 +55,11 @@ export const GUILD_GAME_CONTENT: GuildGameContent = {
   challenges: GUILD_HUNT_CHALLENGES,
   ascensions: GUILD_ASCENSIONS,
   codexEntries: GUILD_CODEX_ENTRIES,
+  skillForms: GUILD_SKILL_FORMS,
+  equipmentCores: GUILD_EQUIPMENT_CORES,
+  elements: GUILD_ELEMENTS,
+  skillSpecializations: GUILD_SKILL_SPECIALIZATIONS,
+  triggerConditions: GUILD_TRIGGER_CONDITIONS,
 };
+
+export { validateSkillBuildContent } from './skill-build/validate';

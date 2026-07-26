@@ -7,8 +7,8 @@ describe('Guild RPG release configuration', () => {
   it('uses Guild RPG document metadata', () => {
     const html = readFileSync(new URL('../../index.html', import.meta.url), 'utf8');
 
-    expect(html).toContain('<title>遠征者公會 · 自由軍令狩獵 RPG</title>');
-    expect(html).toContain('組建三人小隊、編排自由軍令');
+    expect(html).toContain('<title>遠征者公會 · 六人接力刷寶 RPG</title>');
+    expect(html).toContain('配置六人固定技能與接力順序');
     expect(html).not.toContain('SYSTEM BREAKER 是一款');
   });
 

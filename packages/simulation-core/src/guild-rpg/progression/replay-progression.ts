@@ -10,17 +10,20 @@ import { applyQuestRewards } from '../rewards/apply-rewards';
 
 function executionCompleted(battle: GuildBattleState, hunt: HuntDefinition, enemyId?: string) {
   if (!enemyId) return false;
-  const defeatEvent = battle.combo?.events.find(
+  const events = battle.combo?.events ?? battle.events;
+  const defeatEvent = events.find(
     (event) => event.kind === 'unit_defeated' && event.targetId === enemyId,
   );
-  const overkillEvent = battle.combo?.events.find(
+  const overkillEvent = events.find(
     (event) =>
       event.kind === 'overkill' &&
       event.targetId === enemyId &&
-      event.parentCausalId !== undefined &&
-      event.parentCausalId === defeatEvent?.parentCausalId,
+      (battle.combo === undefined ||
+        (event.parentCausalId !== undefined &&
+          event.parentCausalId === defeatEvent?.parentCausalId)),
   );
   if (!defeatEvent || !overkillEvent) return false;
+  if (!battle.combo) return true;
   if (!hunt.bossEnemyId) return true;
   const phaseIds = hunt.bossPhases?.map((phase) => phase.id) ?? [];
   const activeIds = new Set(battle.combo?.activatedBossPhaseIds ?? []);
@@ -28,32 +31,30 @@ function executionCompleted(battle: GuildBattleState, hunt: HuntDefinition, enem
 }
 
 export function evaluateHuntChallenges(
-  profile: GuildProfile,
+  _profile: GuildProfile,
   battle: GuildBattleState,
   hunt: HuntDefinition,
   content: GuildGameContent,
 ) {
   if (battle.status !== 'victory') return [];
   const metrics = battle.combo?.metrics;
-  const playedCardIds = new Set(
-    battle.combo?.events
-      .filter((event) => event.kind === 'card_played')
-      .map((event) => event.cardId)
-      .filter((cardId): cardId is string => Boolean(cardId)) ?? [],
+  const v4Overkill = battle.events
+    .filter(({ kind }) => kind === 'overkill')
+    .reduce((sum, { amount }) => sum + (amount ?? 0), 0);
+  const maxSkillRound = Math.max(
+    0,
+    ...(battle.skillHistory?.map(({ roundIndex }) => roundIndex) ?? []),
   );
   return content.challenges.filter((challenge) => {
     if (challenge.huntId !== hunt.id) return false;
-    if (challenge.kind === 'one_command') return (metrics?.commandCount ?? 0) === 1;
+    if (challenge.kind === 'one_command') {
+      return battle.combo ? (metrics?.commandCount ?? 0) === 1 : maxSkillRound === 1;
+    }
     if (challenge.kind === 'overkill') {
-      return (metrics?.totalOverkill ?? 0) >= (challenge.overkillThreshold ?? Infinity);
+      return (metrics?.totalOverkill ?? v4Overkill) >= (challenge.overkillThreshold ?? Infinity);
     }
     if (challenge.kind === 'build_route') {
-      const build = content.builds.find((candidate) => candidate.id === challenge.requiredBuildId);
-      return (
-        profile.selectedBuildId === challenge.requiredBuildId &&
-        Boolean(build) &&
-        build!.signatureCardIds.every((cardId) => playedCardIds.has(cardId))
-      );
+      return new Set(battle.skillHistory?.map(({ element }) => element) ?? []).size === 3;
     }
     return executionCompleted(battle, hunt, challenge.executionEnemyId);
   });
@@ -78,12 +79,12 @@ export function applyHuntProgression(
     ...new Set([...profile.completedChallengeIds, ...completed.map((challenge) => challenge.id)]),
   ];
   const record = rewarded.questRecords[rewards.questId]!;
-  const build = content.builds.find((candidate) => candidate.id === profile.selectedBuildId);
-  const discoveredRuleIds = [
+  const discoveredCoreIds = [
     ...new Set([
-      ...profile.discoveredRuleIds,
-      ...(build?.ruleIds ?? []),
-      ...rewards.items.flatMap((item) => item.ruleIds ?? []),
+      ...profile.discoveredCoreIds,
+      ...rewards.items.flatMap((item) =>
+        item.cores?.length ? item.cores.map(({ id }) => id) : item.coreId ? [item.coreId] : [],
+      ),
     ]),
   ];
   const discoveredEquipmentIds = [
@@ -114,7 +115,7 @@ export function applyHuntProgression(
       ...rewarded,
       completedChallengeIds,
       discoveredEquipmentIds,
-      discoveredRuleIds,
+      discoveredCoreIds,
       progressionEvents,
       questRecords: {
         ...rewarded.questRecords,
@@ -122,7 +123,13 @@ export function applyHuntProgression(
           ...record,
           bestChain: Math.max(
             record.bestChain ?? 0,
-            battle.combo?.metrics.bestCommandCardCount ?? 0,
+            battle.combo?.metrics.bestCommandCardCount ??
+              Math.max(
+                0,
+                ...battle.events
+                  .filter(({ kind }) => kind === 'relay')
+                  .map(({ amount }) => amount ?? 0),
+              ),
           ),
           ascendedClears: (record.ascendedClears ?? 0) + (battle.ascension ? 1 : 0),
         },

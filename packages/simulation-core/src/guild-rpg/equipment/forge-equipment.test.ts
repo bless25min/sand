@@ -3,141 +3,132 @@ import type { EquipmentItem, GuildProfile } from '@expedition/shared-types';
 import { describe, expect, it } from 'vitest';
 
 import { createSeededRandom } from '../../rng/seeded-random';
-import { compileBuild } from '../combo/compile-build';
-import { compileCommand } from '../combo/compile-command';
-import { resolveCommand } from '../combo/resolve-command';
-import { resolveTriggerQueue } from '../combo/resolve-trigger-queue';
 import { createGuildProfile } from '../profile/create-profile';
-import { startGuildQuest } from '../profile/start-quest';
 import { forgeEquipmentItem, previewForgeEquipmentItem } from './forge-equipment';
+import { salvageSelectedEquipment, toggleEquipmentItemFlag } from './inventory-safety';
 
-const item: EquipmentItem = {
-  id: 'forge-scout-charm',
-  baseId: 'scout_charm',
-  name: '斥候追風符',
+const item = (id: string, coreId = 'toxic-mist'): EquipmentItem => ({
+  id,
+  baseId: 'wolf_charm',
+  name: `測試狼牙護符 ${id}`,
   slot: 'accessory',
   rarity: 'rare',
-  mainStat: { stat: 'speed', value: 5, sourceId: 'scout_charm', label: '斥候追風符' },
+  mainStat: { stat: 'speed', value: 3, sourceId: 'wolf_charm', label: '狼牙護符' },
   affixes: [{ stat: 'attack', value: 4, sourceId: 'savage', label: '兇猛' }],
   sellValue: 40,
-  sourceEnemyId: 'wolf_scout',
-};
+  forgeMaterialId: 'scout_fang',
+  coreId,
+  coreStrength: 3,
+});
 
-function equippedProfile() {
+function forgeProfile() {
   const base = createGuildProfile(GUILD_GAME_CONTENT);
   return {
     ...base,
-    gold: 200,
-    materials: { scout_fang: 3 },
-    party: base.party.map((member, index) =>
-      index === 0 ? { ...member, equipment: { accessory: item } } : member,
-    ),
+    gold: 500,
+    materials: { scout_fang: 10 },
+    inventory: [item('target'), item('donor', 'lone-king-loop')],
   };
 }
 
-function equippedItem(profile: GuildProfile) {
-  return profile.party[0]!.equipment.accessory!;
-}
+const stored = (profile: GuildProfile, id = 'target') =>
+  profile.inventory.find((entry) => entry.id === id)!;
 
-describe('equipment forge', () => {
-  it('upgrades, infuses, and rerolls an equipped item through deterministic costs', () => {
-    const upgraded = forgeEquipmentItem(
-      equippedProfile(),
-      item.id,
-      'upgrade',
-      GUILD_GAME_CONTENT,
-      createSeededRandom('forge-upgrade'),
-    );
-    expect(upgraded.profile.gold).toBe(170);
-    expect(upgraded.profile.materials.scout_fang).toBe(2);
-    expect(equippedItem(upgraded.profile).forgeRank).toBe(1);
-    expect(equippedItem(upgraded.profile).mainStat.value).toBeGreaterThan(5);
-
-    const infused = forgeEquipmentItem(
-      upgraded.profile,
-      item.id,
-      'infuse',
-      GUILD_GAME_CONTENT,
-      createSeededRandom('forge-infuse'),
-    );
-    expect(infused.profile.gold).toBe(125);
-    expect(infused.profile.materials.scout_fang).toBe(1);
-    expect(equippedItem(infused.profile).ruleIds).toContain('retaliation_bash');
-    expect(infused.profile.discoveredRuleIds).toContain('retaliation_bash');
-
-    const rerolled = forgeEquipmentItem(
-      infused.profile,
-      item.id,
-      'reroll',
-      GUILD_GAME_CONTENT,
-      createSeededRandom('forge-reroll'),
-    );
-    expect(rerolled.profile.gold).toBe(100);
-    expect(rerolled.profile.materials.scout_fang).toBe(0);
-    expect(equippedItem(rerolled.profile).affixes[0]?.sourceId).not.toBe('savage');
-    expect(rerolled.profile.forgeSequence).toBe(3);
-    expect(rerolled.profile.progressionEvents).toHaveLength(3);
-  });
-
-  it('routes an infused equipment rule into causal battle events and spectacle cues', () => {
-    const infused = forgeEquipmentItem(
-      equippedProfile(),
-      item.id,
-      'infuse',
-      GUILD_GAME_CONTENT,
-      createSeededRandom('causal-infusion'),
-    ).profile;
-    const compiled = compileBuild(infused, GUILD_GAME_CONTENT);
-    const battle = startGuildQuest(infused, 'border_pack', GUILD_GAME_CONTENT);
-    const command = compileCommand({ cardIds: ['brann_brace'] }, GUILD_GAME_CONTENT.cards);
-    const resolved = resolveCommand(battle, command, GUILD_GAME_CONTENT.cards);
-    const rules = Object.fromEntries(
-      compiled.ruleIds.map((ruleId) => [ruleId, GUILD_GAME_CONTENT.rules[ruleId]!]),
-    );
-    const result = resolveTriggerQueue({ battle: resolved, command, rules });
-    const infusedEvent = result.events.find(
-      (event) =>
-        event.kind === 'rule_triggered' &&
-        event.message.includes(GUILD_GAME_CONTENT.rules.retaliation_bash!.name),
-    );
-
-    expect(infusedEvent).toMatchObject({ cueId: 'block' });
-  });
-
-  it('previews the exact material and rejects equipment without an authored forge binding', () => {
-    const profile = equippedProfile();
-    const preview = previewForgeEquipmentItem(profile, item.id, 'infuse', GUILD_GAME_CONTENT);
-    expect(preview).toMatchObject({
-      materialId: 'scout_fang',
-      materialName: '斥候狼牙',
-      resultLabel: expect.stringContaining('格擋反震'),
-    });
-
-    const unbound: EquipmentItem = {
-      id: 'unbound',
-      baseId: 'unknown',
-      name: item.name,
-      slot: item.slot,
-      rarity: item.rarity,
-      mainStat: item.mainStat,
-      affixes: item.affixes,
-      sellValue: item.sellValue,
-    };
-    const unboundProfile = {
-      ...profile,
-      inventory: [unbound],
-      materials: { scout_fang: 99 },
-      party: profile.party.map((member) => ({ ...member, equipment: {} })),
-    };
+describe('v4 equipment forge', () => {
+  it('calibrates within authored ranges instead of applying infinite linear upgrades', () => {
     const result = forgeEquipmentItem(
-      unboundProfile,
-      unbound.id,
-      'upgrade',
+      forgeProfile(),
+      'target',
+      'calibrate',
       GUILD_GAME_CONTENT,
-      createSeededRandom('unbound'),
+      createSeededRandom('calibrate'),
+    );
+    const range = GUILD_GAME_CONTENT.equipmentBases.find(
+      ({ id }) => id === 'wolf_charm',
+    )!.mainStatRoll;
+
+    expect(stored(result.profile).mainStat.value).toBeGreaterThanOrEqual(range.min);
+    expect(stored(result.profile).mainStat.value).toBeLessThanOrEqual(range.max);
+    expect(stored(result.profile).forgeRank).toBeUndefined();
+  });
+
+  it('reforges an affix, locks a field, and transplants an authored core', () => {
+    const reforged = forgeEquipmentItem(
+      forgeProfile(),
+      'target',
+      'reforge',
+      GUILD_GAME_CONTENT,
+      createSeededRandom('reforge'),
+    );
+    expect(stored(reforged.profile).affixes[0]?.sourceId).not.toBe('savage');
+
+    const locked = forgeEquipmentItem(
+      reforged.profile,
+      'target',
+      'lock',
+      GUILD_GAME_CONTENT,
+      createSeededRandom('lock'),
+      { lockField: 'core' },
+    );
+    expect(locked.profile.forgeLocks.target).toContain('core');
+
+    const transplanted = forgeEquipmentItem(
+      locked.profile,
+      'target',
+      'transplant',
+      GUILD_GAME_CONTENT,
+      createSeededRandom('transplant'),
+      { sourceItemId: 'donor' },
+    );
+    expect(stored(transplanted.profile).coreId).toBe('lone-king-loop');
+    expect(transplanted.profile.inventory.some(({ id }) => id === 'donor')).toBe(false);
+    expect(transplanted.profile.discoveredCoreIds).toContain('lone-king-loop');
+  });
+
+  it('salvages deliberately without auto-selling a full inventory', () => {
+    const profile = {
+      ...forgeProfile(),
+      inventory: Array.from({ length: 30 }, (_, index) => item(`kept-${index}`)),
+    };
+    expect(profile.inventory).toHaveLength(30);
+
+    const salvaged = forgeEquipmentItem(
+      profile,
+      'kept-0',
+      'salvage',
+      GUILD_GAME_CONTENT,
+      createSeededRandom('salvage'),
+    );
+    expect(salvaged.profile.inventory).toHaveLength(29);
+    expect(salvaged.profile.materials.scout_fang).toBe(11);
+  });
+
+  it('previews exact costs, material, and action results', () => {
+    expect(
+      previewForgeEquipmentItem(forgeProfile(), 'target', 'transplant', GUILD_GAME_CONTENT, {
+        sourceItemId: 'donor',
+      }),
+    ).toMatchObject({
+      materialId: 'scout_fang',
+      resultLabel: expect.stringContaining('孤王迴路核心'),
+    });
+  });
+
+  it('locks, favorites, and batch-salvages only explicitly safe inventory items', () => {
+    const profile = {
+      ...forgeProfile(),
+      inventory: [item('locked'), item('favorite'), item('safe')],
+    };
+    const locked = toggleEquipmentItemFlag(profile, 'locked', 'locked').profile;
+    const protectedProfile = toggleEquipmentItemFlag(locked, 'favorite', 'favorite').profile;
+    const salvaged = salvageSelectedEquipment(
+      protectedProfile,
+      ['locked', 'favorite', 'safe'],
+      GUILD_GAME_CONTENT,
     );
 
-    expect(result.profile).toBe(unboundProfile);
-    expect(result.message).toContain('沒有對應素材');
+    expect(salvaged.profile.inventory.map(({ id }) => id)).toEqual(['locked', 'favorite']);
+    expect(salvaged.profile.materials.scout_fang).toBe(11);
+    expect(salvaged.message).toContain('略過 2 件');
   });
 });

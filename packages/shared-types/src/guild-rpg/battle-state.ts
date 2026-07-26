@@ -1,9 +1,22 @@
-import type { AdventurerDefinition, GuildSkillDefinition, QuestDefinition } from './content';
+import type {
+  AdventurerDefinition,
+  AdventurerRole,
+  GuildSkillDefinition,
+  QuestDefinition,
+} from './content';
 import type { ComboRuntimeState } from './combo/runtime';
 import type { GuildAdventurer } from './profile';
 import type { HuntEnemyTrait } from './hunt';
 import type { GuildStats } from './stats';
 import type { AscensionDefinition } from './progression';
+import type {
+  GuildElement,
+  RoundOrder,
+  SkillHistoryEntry,
+  SkillSpecialization,
+  StatusLayers,
+  TriggerCondition,
+} from './skill-build';
 
 export type BattleStatus = 'active' | 'victory' | 'defeat';
 export type BattleSide = 'heroes' | 'enemies';
@@ -12,7 +25,7 @@ export interface BattleUnit {
   id: string;
   name: string;
   side: BattleSide;
-  role?: 'vanguard' | 'ranger' | 'cleric';
+  role?: AdventurerRole;
   stats: GuildStats;
   currentHp: number;
   gauge: number;
@@ -21,6 +34,14 @@ export interface BattleUnit {
   isLeader: boolean;
   skillIds: readonly string[];
   huntTraits?: readonly HuntEnemyTrait[];
+  statusLayers?: StatusLayers;
+  defenseReduction?: number;
+  strengthened?: number;
+  equippedCores?: readonly {
+    id: string;
+    strength: number;
+  }[];
+  deliveryPassiveId?: string;
 }
 
 export interface BattleAction {
@@ -30,7 +51,27 @@ export interface BattleAction {
 }
 
 export type BattleEventKind =
-  'battle_started' | 'damage' | 'healing' | 'guard' | 'unit_defeated' | 'victory' | 'defeat';
+  | 'battle_started'
+  | 'skill_cast'
+  | 'damage'
+  | 'healing'
+  | 'guard'
+  | 'status_applied'
+  | 'reaction'
+  | 'weaken'
+  | 'strengthen'
+  | 'triggered'
+  | 'bounce'
+  | 'echo'
+  | 'relay'
+  | 'core_triggered'
+  | 'passive'
+  | 'finisher'
+  | 'overkill'
+  | 'infinite_engine'
+  | 'unit_defeated'
+  | 'victory'
+  | 'defeat';
 
 export interface GuildBattleEvent {
   id: number;
@@ -39,6 +80,13 @@ export interface GuildBattleEvent {
   actorId?: string;
   targetId?: string;
   amount?: number;
+  causalId?: string;
+  parentCausalId?: string;
+  skillId?: string;
+  componentId?: string;
+  element?: GuildElement;
+  specializationId?: SkillSpecialization;
+  triggerId?: TriggerCondition;
 }
 
 export interface GuildBattleState {
@@ -54,6 +102,9 @@ export interface GuildBattleState {
   events: readonly GuildBattleEvent[];
   combo?: ComboRuntimeState;
   ascension?: AscensionDefinition;
+  roundOrder?: RoundOrder;
+  skillHistory?: readonly SkillHistoryEntry[];
+  roundIndex?: number;
 }
 
 export interface StartBattleInput {

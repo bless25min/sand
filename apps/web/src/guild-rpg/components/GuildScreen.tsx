@@ -1,125 +1,207 @@
 import { GUILD_GAME_CONTENT } from '@expedition/game-data';
 
-import { createCampaignProgressModel } from '../presentation/campaign-progress-model';
-import type { GuildRpgAction, GuildRpgState } from '../state/game-reducer';
-import { BuildWorkbench } from '../dev/BuildWorkbench';
-import { AdventurerCard } from './AdventurerCard';
-import { GuildMobileStage } from './GuildMobileStage';
-import { Inventory } from './Inventory';
-import { CampaignZonePanel } from './CampaignZonePanel';
-import { ArchiveCommandCenter } from './ArchiveCommandCenter';
+import { createFirstHuntCoach, isFirstHuntCoachFocus } from '../onboarding/first-hunt-coach';
+import { elementName, specializationName, triggerName } from '../content-labels';
+import type { GuildPage, GuildRpgAction, GuildRpgState } from '../state/game-reducer';
+import { EquipmentWorkbench } from './EquipmentWorkbench';
+import { SkillFusionWorkbench } from './SkillFusionWorkbench';
+import { SkillLoadoutPanel } from './SkillLoadoutPanel';
+import { TeamOrderPanel } from './TeamOrderPanel';
 
-interface GuildScreenProps {
+const NAV: readonly { id: GuildPage; label: string }[] = [
+  { id: 'quest', label: '任務' },
+  { id: 'party', label: '隊伍' },
+  { id: 'skills', label: '技能' },
+  { id: 'equipment', label: '裝備' },
+];
+
+function Coach({
+  state,
+  dispatch,
+}: {
   state: GuildRpgState;
   dispatch: React.Dispatch<GuildRpgAction>;
+}) {
+  const hero = GUILD_GAME_CONTENT.adventurers.find(({ id }) => id === state.selectedHeroId);
+  const coach = createFirstHuntCoach(
+    state.preferences.tutorial,
+    state.tutorialStep,
+    hero ? { heroName: hero.name } : {},
+  );
+  if (!coach) return null;
+  return (
+    <aside className="gr-coach" role="status" data-guide-step={coach.step}>
+      <div>
+        <span>
+          實戰引導 {coach.stepNumber}/{coach.stepTotal}
+        </span>
+        <strong>{coach.title}</strong>
+        <p>{coach.message}</p>
+      </div>
+      <button type="button" onClick={() => dispatch({ type: 'SET_TUTORIAL', tutorial: 'skipped' })}>
+        略過引導
+      </button>
+    </aside>
+  );
 }
 
-export function GuildScreen({ state, dispatch }: GuildScreenProps) {
+function QuestBoard({
+  state,
+  dispatch,
+}: {
+  state: GuildRpgState;
+  dispatch: React.Dispatch<GuildRpgAction>;
+}) {
+  return (
+    <section className="gr-panel" aria-labelledby="quest-board-title">
+      <header className="gr-panel__header">
+        <div>
+          <p>TARGET FARM · 12 HUNTS</p>
+          <h2 id="quest-board-title">任務與公開掉落池</h2>
+        </div>
+        <span>火 4 關 · 草 4 關 · 水 4 關；依想刷的組合直接選擇</span>
+      </header>
+      <div className="gr-hunt-grid">
+        {GUILD_GAME_CONTENT.hunts.map((hunt, index) => {
+          const quest = GUILD_GAME_CONTENT.quests.find(({ id }) => id === hunt.questId)!;
+          const unlocked = state.profile.unlockedQuestIds.includes(quest.id);
+          const cleared = (state.profile.questRecords[quest.id]?.clears ?? 0) > 0;
+          return (
+            <article data-element={hunt.element} key={hunt.id}>
+              <span>
+                HUNT {String(index + 1).padStart(2, '0')} · {hunt.element?.toUpperCase()}
+              </span>
+              <h3>{quest.name}</h3>
+              <p>{quest.description}</p>
+              <div className="gr-hunt-summary-tags">
+                <span>{hunt.skillDropPool?.elements.map(elementName).join(' / ')}屬性</span>
+                <span>{hunt.guaranteedBossDrops ?? 1} 張技能保證</span>
+                <span>{hunt.coreDropIds?.length ?? 0} 種專屬核心</span>
+              </div>
+              <details>
+                <summary>查看敵人、規則與完整掉落池</summary>
+                <dl>
+                  <div>
+                    <dt>敵人</dt>
+                    <dd>{quest.enemies.map(({ name }) => name).join('、')}</dd>
+                  </div>
+                  <div>
+                    <dt>規則</dt>
+                    <dd>{hunt.counterBrief}</dd>
+                  </div>
+                  <div>
+                    <dt>特化</dt>
+                    <dd>
+                      {hunt.skillDropPool?.specializationIds.map(specializationName).join('、')}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>觸發</dt>
+                    <dd>{hunt.skillDropPool?.triggerIds.map(triggerName).join('、')}</dd>
+                  </div>
+                  <div>
+                    <dt>專屬核心</dt>
+                    <dd>
+                      {hunt.coreDropIds
+                        ?.map(
+                          (coreId) =>
+                            GUILD_GAME_CONTENT.equipmentCores.find(({ id }) => id === coreId)?.name,
+                        )
+                        .join('、')}
+                    </dd>
+                  </div>
+                </dl>
+              </details>
+              <button
+                type="button"
+                className="gr-primary-action"
+                data-guide-id={index === 0 ? (cleared ? 'hunt:replay' : 'hunt:start') : undefined}
+                data-guide-active={
+                  index === 0
+                    ? isFirstHuntCoachFocus(
+                        state.preferences.tutorial,
+                        state.tutorialStep,
+                        cleared ? 'hunt:replay' : 'hunt:start',
+                      )
+                    : undefined
+                }
+                disabled={!unlocked}
+                onClick={() => dispatch({ type: 'START_QUEST', questId: quest.id })}
+              >
+                {!unlocked ? '尚未解鎖' : cleared ? '再次狩獵' : '開始狩獵'}
+              </button>
+            </article>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
+export function GuildScreen({
+  state,
+  dispatch,
+}: {
+  state: GuildRpgState;
+  dispatch: React.Dispatch<GuildRpgAction>;
+}) {
   const materialCount = Object.values(state.profile.materials).reduce(
-    (total, quantity) => total + quantity,
+    (sum, value) => sum + value,
     0,
   );
-  const campaign = createCampaignProgressModel({
-    content: GUILD_GAME_CONTENT,
-    unlockedQuestIds: state.profile.unlockedQuestIds,
-    questRecords: state.profile.questRecords,
-  });
   return (
     <main className="gr-shell">
       <header className="gr-topbar">
-        <a className="gr-brand" href="/" aria-label="遠征者公會首頁">
-          <span>EXPEDITION GUILD</span>
-          <strong>遠征者公會</strong>
-        </a>
+        <div className="gr-brand">
+          <span>EXPEDITION GUILD · V4</span>
+          <strong>六人接力刷寶遠征</strong>
+        </div>
         <div className="gr-resources">
-          <span>金幣</span>
-          <strong>{state.profile.gold}</strong>
-          <span>背包</span>
-          <strong>{state.profile.inventory.length}/20</strong>
-          <span>材料</span>
-          <strong>{materialCount}</strong>
+          <span>
+            金幣 <strong>{state.profile.gold}</strong>
+          </span>
+          <span>
+            裝備 <strong>{state.profile.inventory.length}</strong>
+          </span>
+          <span>
+            技能 <strong>{state.profile.skillInventory.length}</strong>
+          </span>
+          <span>
+            素材 <strong>{materialCount}</strong>
+          </span>
         </div>
       </header>
-
-      <section className="gr-hero" aria-labelledby="guild-title">
-        <div>
-          <p className="gr-eyebrow">PREPARE · QUEST · LOOT · REPEAT</p>
-          <h1 id="guild-title">三人小隊，一次更好的遠征。</h1>
-          <p>
-            切換軍令引擎，讓三名冒險者的卡牌與裝備規則連成同一條因果鏈。
-            反覆攻略、換裝重組，讓下一次釋放更快進入 Overkill。
-          </p>
-        </div>
-        <aside>
-          <span>公會戰報</span>
-          <strong>{state.message}</strong>
-        </aside>
-      </section>
-
-      <GuildMobileStage state={state} dispatch={dispatch} />
-
-      <div className="gr-guild-desktop">
-        <BuildWorkbench state={state} dispatch={dispatch} />
-        <section className="gr-section" aria-labelledby="party-title">
-          <div className="gr-section__heading">
-            <div>
-              <p>ACTIVE PARTY</p>
-              <h2 id="party-title">遠征隊伍</h2>
-            </div>
-            <span>裝備可加入新的規則節點；隊長仍代表隊伍視角</span>
-          </div>
-          <div className="gr-party-grid">
-            {state.profile.party.map((member) => {
-              const definition = GUILD_GAME_CONTENT.adventurers.find(
-                (candidate) => candidate.id === member.definitionId,
-              )!;
-              return (
-                <AdventurerCard
-                  key={member.definitionId}
-                  adventurer={member}
-                  definition={definition}
-                  isLeader={state.profile.leaderId === member.definitionId}
-                  onSetLeader={() =>
-                    dispatch({ type: 'SET_LEADER', adventurerId: member.definitionId })
-                  }
-                />
-              );
-            })}
-          </div>
-        </section>
-
-        <section className="gr-section" aria-labelledby="quest-title">
-          <div className="gr-section__heading">
-            <div>
-              <p>QUEST BOARD</p>
-              <h2 id="quest-title">遠征委託</h2>
-            </div>
-            <span>{campaign.headline}</span>
-          </div>
-          {campaign.transitionLabel && (
-            <div className="gr-campaign-transition" role="status">
-              <span>{campaign.complete ? 'CAMPAIGN CONQUERED' : 'NEW WARFRONT OPEN'}</span>
-              <strong>{campaign.transitionLabel}</strong>
-            </div>
-          )}
-          <div className="gr-campaign-map">
-            {GUILD_GAME_CONTENT.zones.map((zone, zoneIndex) => (
-              <CampaignZonePanel
-                zone={zone}
-                zoneIndex={zoneIndex}
-                progress={campaign.zones[zoneIndex]!}
-                campaignComplete={campaign.complete}
-                profile={state.profile}
-                dispatch={dispatch}
-                key={zone.id}
-              />
-            ))}
-          </div>
-        </section>
-
-        <ArchiveCommandCenter state={state} dispatch={dispatch} />
-        <Inventory state={state} dispatch={dispatch} />
-      </div>
+      <nav className="gr-main-nav" aria-label="主要遊戲介面">
+        {NAV.map((item) => (
+          <button
+            type="button"
+            aria-current={state.page === item.id ? 'page' : undefined}
+            data-guide-id={`nav:${item.id}`}
+            data-guide-active={isFirstHuntCoachFocus(
+              state.preferences.tutorial,
+              state.tutorialStep,
+              `nav:${item.id}`,
+            )}
+            key={item.id}
+            onClick={() => dispatch({ type: 'NAVIGATE', page: item.id })}
+          >
+            {item.label}
+          </button>
+        ))}
+      </nav>
+      <Coach state={state} dispatch={dispatch} />
+      <p className="gr-status-line" role="status">
+        {state.message}
+      </p>
+      {state.page === 'quest' && <QuestBoard state={state} dispatch={dispatch} />}
+      {state.page === 'party' && <TeamOrderPanel state={state} dispatch={dispatch} />}
+      {state.page === 'skills' && (
+        <>
+          <SkillLoadoutPanel state={state} dispatch={dispatch} />
+          <SkillFusionWorkbench state={state} dispatch={dispatch} />
+        </>
+      )}
+      {state.page === 'equipment' && <EquipmentWorkbench state={state} dispatch={dispatch} />}
     </main>
   );
 }

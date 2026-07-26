@@ -3,6 +3,7 @@ import type { MaterialReward, QuestRewards } from './profile';
 import type { GuildStatKey } from './stats';
 import type { ComboTransformKind } from './combo/rules';
 import type { EnemySpectacleIdentity, HuntSpectacleCue } from './spectacle';
+import type { GuildElement, SkillDropPool } from './skill-build';
 
 export interface HuntMaterialDefinition {
   id: string;
@@ -61,6 +62,10 @@ export interface HuntDefinition {
   spectacleCues?: readonly HuntSpectacleCue[];
   enemies: readonly HuntEnemyRewards[];
   annihilationChest?: HuntEquipmentDefinition;
+  element?: GuildElement;
+  skillDropPool?: SkillDropPool;
+  coreDropIds?: readonly string[];
+  guaranteedBossDrops?: number;
 }
 
 export interface HuntEquipmentItem extends EquipmentItem {

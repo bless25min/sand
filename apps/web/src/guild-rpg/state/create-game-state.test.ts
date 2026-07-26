@@ -8,7 +8,18 @@ import { storeGuildSave } from '../storage/guild-save';
 import { createGuildRpgState, loadGuildRpgState } from './create-game-state';
 
 describe('guild RPG initial state', () => {
-  it('hydrates the profile and separate presentation preferences together', () => {
+  it('starts a fresh six-hero profile on the real-action onboarding path', () => {
+    const state = createGuildRpgState();
+
+    expect(state.profile.version).toBe(4);
+    expect(state.profile.party).toHaveLength(6);
+    expect(state.profile.party.every(({ skillIds }) => skillIds.length === 6)).toBe(true);
+    expect(state.profile.skillInventory).toHaveLength(36);
+    expect(state.page).toBe('quest');
+    expect(state.tutorialStep).toBe('inspect_party');
+  });
+
+  it('hydrates v4 progression and presentation preferences together', () => {
     const values = new Map<string, string>();
     const storage = {
       getItem: (key: string) => values.get(key) ?? null,
@@ -26,8 +37,9 @@ describe('guild RPG initial state', () => {
     expect(loadGuildRpgState(storage)).toMatchObject({
       profile,
       preferences,
-      paused: false,
-      settingsOpen: false,
+      screen: 'guild',
+      page: 'quest',
+      tutorialStep: 'complete',
     });
   });
 });

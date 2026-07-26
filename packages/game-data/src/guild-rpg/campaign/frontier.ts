@@ -214,7 +214,7 @@ export const FRONTIER_QUESTS: readonly QuestDefinition[] = [
     id: 'moonroad_pursuit',
     zoneId: 'greyfang_frontier',
     name: '月路追獵',
-    description: '追進月影伏擊圈，用連鎖軍令把獵殺者逼出黑暗。',
+    description: '追進月影伏擊圈，用連鎖接力把獵殺者逼出黑暗。',
     recommendedLevel: 2,
     rewardExperience: 72,
     rewardGold: 52,

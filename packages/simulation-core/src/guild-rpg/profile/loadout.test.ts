@@ -1,74 +1,39 @@
 import { GUILD_GAME_CONTENT } from '@expedition/game-data';
 import { describe, expect, it } from 'vitest';
 
-import { compileBuild } from '../combo/compile-build';
-import { compileCommand } from '../combo/compile-command';
 import { createGuildProfile } from './create-profile';
-import { swapBuildLoadoutCard } from './swap-build-loadout-card';
+import { equipAdventurerSkill } from './equip-adventurer-skill';
 
-describe('guild Build loadouts', () => {
-  it('starts every Build with a legal eight-card signature loadout', () => {
+describe('six-skill adventurer loadouts', () => {
+  it('starts all six heroes with six owned and always-available skills', () => {
     const profile = createGuildProfile(GUILD_GAME_CONTENT);
+    const ownedIds = new Set(profile.skillInventory.map(({ id }) => id));
 
-    for (const build of GUILD_GAME_CONTENT.builds) {
-      const selected = { ...profile, selectedBuildId: build.id };
-      const compiled = compileBuild(selected, GUILD_GAME_CONTENT);
-      expect(compiled.cardIds, build.id).toEqual(build.defaultCardIds);
-      expect(compiled.cardIds, build.id).toHaveLength(8);
-      expect(
-        compileCommand({ cardIds: build.signatureCardIds }, GUILD_GAME_CONTENT.cards).diagnostics,
-        build.id,
-      ).toEqual([]);
-      expect(
-        compileCommand({ cardIds: compiled.cardIds }, GUILD_GAME_CONTENT.cards).diagnostics,
-        `${build.id}:full-loadout`,
-      ).toEqual([]);
+    expect(profile.party).toHaveLength(6);
+    for (const hero of profile.party) {
+      expect(hero.skillIds).toHaveLength(6);
+      expect(new Set(hero.skillIds).size).toBe(6);
+      expect(hero.skillIds.every((skillId) => ownedIds.has(skillId))).toBe(true);
     }
   });
 
-  it('swaps one reserve card without shrinking or duplicating the active loadout', () => {
+  it('lets any hero replace one of six slots with any owned skill', () => {
     const profile = createGuildProfile(GUILD_GAME_CONTENT);
-    const build = GUILD_GAME_CONTENT.builds[0]!;
-    const removedCardId = build.defaultCardIds[7]!;
-    const addedCardId = build.cardIds.find((cardId) => !build.defaultCardIds.includes(cardId))!;
+    const lyraSkill = profile.party.find(({ definitionId }) => definitionId === 'lyra')!
+      .skillIds[0]!;
+    const result = equipAdventurerSkill(profile, 'brann', 2, lyraSkill);
+    const brann = result.profile.party.find(({ definitionId }) => definitionId === 'brann')!;
 
-    const result = swapBuildLoadoutCard(
-      profile,
-      build.id,
-      removedCardId,
-      addedCardId,
-      GUILD_GAME_CONTENT,
-    );
-
-    expect(result.profile.loadouts[build.id]).toHaveLength(8);
-    expect(new Set(result.profile.loadouts[build.id]).size).toBe(8);
-    expect(result.profile.loadouts[build.id]).toContain(addedCardId);
-    expect(result.profile.loadouts[build.id]).not.toContain(removedCardId);
-    expect(result.message).toContain(GUILD_GAME_CONTENT.cards[addedCardId]!.name);
+    expect(brann.skillIds).toHaveLength(6);
+    expect(brann.skillIds[2]).toBe(lyraSkill);
+    expect(result.message).toContain('布蘭');
   });
 
-  it('rejects swaps that remove a signature card or strand cards behind missing tags', () => {
+  it('rejects unknown skills and invalid slots without mutating the profile', () => {
     const profile = createGuildProfile(GUILD_GAME_CONTENT);
-    const build = GUILD_GAME_CONTENT.builds.find((candidate) => candidate.id === 'command_storm')!;
-
-    const missingSignature = swapBuildLoadoutCard(
+    expect(equipAdventurerSkill(profile, 'brann', 6, profile.skillInventory[0]!.id).profile).toBe(
       profile,
-      build.id,
-      'lyra_quickshot',
-      'lyra_killshot',
-      GUILD_GAME_CONTENT,
     );
-    const missingTagSource = swapBuildLoadoutCard(
-      profile,
-      build.id,
-      'lyra_mark',
-      'lyra_killshot',
-      GUILD_GAME_CONTENT,
-    );
-
-    expect(missingSignature.profile).toBe(profile);
-    expect(missingSignature.message).toContain('招牌');
-    expect(missingTagSource.profile).toBe(profile);
-    expect(missingTagSource.message).toContain('斷鏈');
+    expect(equipAdventurerSkill(profile, 'brann', 0, 'missing').profile).toBe(profile);
   });
 });

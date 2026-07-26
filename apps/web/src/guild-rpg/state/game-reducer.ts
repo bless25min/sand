@@ -1,320 +1,493 @@
 import { GUILD_GAME_CONTENT } from '@expedition/game-data';
 import type {
-  BattleUnit,
+  GuildBattleEvent,
   GuildBattleState,
   GuildProfile,
-  ItemChoice,
-  QuestRewards,
+  HuntRewards,
 } from '@expedition/shared-types';
 import {
-  advanceGuildBattle,
-  advanceComposition,
-  compileBuild,
+  chooseNextAdventurer,
   createSeededRandom,
+  dismantleSkill,
+  equipAdventurerSkill,
   equipStoredItem,
   forgeEquipmentItem,
-  resolveItemChoice,
+  fuseSkills,
+  replaceFusedComponent,
+  resetCurrentRoundOrder,
+  resolveSkill,
+  salvageSelectedEquipment,
   startGuildQuest,
-  submitLeaderAction,
-  swapBuildLoadoutCard,
+  setRoundOrderCarry,
+  toggleEquipmentItemFlag,
+  type EquipmentItemFlag,
   type ForgeAction,
+  type ForgeOptions,
 } from '@expedition/simulation-core';
 
-import { reduceComboAction, type ComboCommandAction } from './reduce-combo-action';
-import { reduceHuntResult } from './reduce-hunt-result';
+import type { FirstHuntCoachStep } from '../onboarding/first-hunt-coach';
 import type { GuildPreferences, TutorialState } from '../preferences/guild-preferences';
+import { reduceHuntResult } from './reduce-hunt-result';
 
+export type GuildPage = 'quest' | 'party' | 'skills' | 'equipment';
 export interface GuildRpgState {
-  screen: 'guild' | 'battle' | 'playback' | 'rewards';
+  screen: 'guild' | 'battle' | 'rewards';
+  page: GuildPage;
   profile: GuildProfile;
   preferences: GuildPreferences;
-  paused: boolean;
-  pausedBeforeSettings: boolean;
-  settingsOpen: boolean;
-  tutorialReplay: boolean;
-  tutorialAcknowledgedTargetId?: string | undefined;
-  tutorialPreviewAcknowledged: boolean;
+  tutorialStep: FirstHuntCoachStep;
+  selectedHeroId: string;
+  selectedSkillSlot: number;
+  selectedFusionIds: readonly string[];
+  selectedSalvageIds: readonly string[];
+  lastFusedSkillId?: string;
   battle?: GuildBattleState | undefined;
-  rewards?: QuestRewards | undefined;
-  playback?: ComboPlaybackState | undefined;
-  speed: 1 | 2;
-  resolvedItemIds: readonly string[];
-  activatedRuleIds: readonly string[];
+  rewards?: HuntRewards | undefined;
+  recentEvents: readonly GuildBattleEvent[];
   message: string;
 }
 
-interface ComboPlaybackState {
-  eventStartIndex: number;
-  startingUnits: readonly BattleUnit[];
-  visibleEventCount: number;
-}
-
 export type GuildRpgAction =
-  | ComboCommandAction
-  | { type: 'ADVANCE_PLAYBACK'; count: number }
-  | { type: 'SKIP_PLAYBACK' }
-  | { type: 'COMPLETE_PLAYBACK' }
-  | { type: 'START_QUEST'; questId: string; ascensionId?: string }
-  | { type: 'TICK'; elapsedMs: number }
+  | { type: 'NAVIGATE'; page: GuildPage }
+  | { type: 'SELECT_HERO'; adventurerId: string }
+  | { type: 'SELECT_SKILL_SLOT'; slotIndex: number }
+  | { type: 'EQUIP_SKILL'; skillId: string }
+  | { type: 'MOVE_DEFAULT_HERO'; adventurerId: string; direction: -1 | 1 }
+  | { type: 'TOGGLE_FUSION_SKILL'; skillId: string }
+  | { type: 'FUSE_SELECTED' }
+  | {
+      type: 'REPLACE_FUSED_COMPONENT';
+      fusedSkillId: string;
+      componentIndex: number;
+      replacementSkillId: string;
+    }
+  | {
+      type: 'MOVE_FUSED_COMPONENT';
+      fusedSkillId: string;
+      componentIndex: number;
+      direction: -1 | 1;
+    }
+  | { type: 'DISMANTLE_SKILL'; skillId: string }
+  | { type: 'START_QUEST'; questId: string }
   | { type: 'SELECT_TARGET'; targetId: string }
+  | { type: 'CHOOSE_NEXT_HERO'; adventurerId: string }
+  | { type: 'RESET_CURRENT_ORDER' }
+  | { type: 'SET_CARRY_ORDER'; enabled: boolean }
   | { type: 'USE_SKILL'; skillId: string; targetId: string }
-  | { type: 'TOGGLE_AUTO' }
-  | { type: 'SET_SPEED'; speed: 1 | 2 }
-  | { type: 'SET_PAUSED'; paused: boolean }
-  | { type: 'SET_SETTINGS_OPEN'; open: boolean }
-  | { type: 'SET_TUTORIAL'; tutorial: TutorialState }
-  | { type: 'ACK_TUTORIAL_PREVIEW' }
-  | {
-      type: 'UPDATE_PREFERENCES';
-      preferences: Partial<Omit<GuildPreferences, 'version' | 'tutorial'>>;
-    }
-  | { type: 'ABANDON_HUNT' }
-  | { type: 'SET_BUILD'; buildId: string }
-  | { type: 'SET_LEADER'; adventurerId: string }
+  | { type: 'COLLECT_VICTORY' }
   | { type: 'EQUIP_STORED'; itemId: string; adventurerId: string }
-  | {
-      type: 'SWAP_LOADOUT_CARD';
-      buildId: string;
-      removedCardId: string;
-      addedCardId: string;
-    }
-  | { type: 'FORGE_ITEM'; itemId: string; forgeAction: ForgeAction }
-  | { type: 'CHOOSE_ITEM'; itemId: string; choice: ItemChoice; adventurerId: string }
-  | { type: 'RETURN_GUILD' };
+  | { type: 'FORGE_ITEM'; itemId: string; forgeAction: ForgeAction; options?: ForgeOptions }
+  | { type: 'TOGGLE_ITEM_FLAG'; itemId: string; flag: EquipmentItemFlag }
+  | { type: 'TOGGLE_SALVAGE_SELECTION'; itemId: string }
+  | { type: 'SALVAGE_SELECTED' }
+  | { type: 'GO_TO_EQUIPMENT' }
+  | { type: 'GO_TO_FUSION' }
+  | { type: 'RETURN_GUILD'; page?: GuildPage }
+  | { type: 'ABANDON_HUNT' }
+  | { type: 'SET_TUTORIAL'; tutorial: TutorialState };
 
-function actionRandom(battle: GuildBattleState) {
-  return createSeededRandom(`${battle.seed}:${battle.sequence}`);
-}
+const heroName = (id: string) =>
+  GUILD_GAME_CONTENT.adventurers.find((hero) => hero.id === id)?.name ?? id;
 
-function finishBattle(state: GuildRpgState, battle: GuildBattleState): GuildRpgState {
+const withTutorial = (
+  state: GuildRpgState,
+  expected: FirstHuntCoachStep,
+  next: FirstHuntCoachStep,
+) =>
+  state.preferences.tutorial === 'active' && state.tutorialStep === expected
+    ? { ...state, tutorialStep: next }
+    : state;
+
+const engineContent = (profile: GuildProfile) => ({
+  skills: Object.fromEntries(profile.skillInventory.map((skill) => [skill.id, skill])),
+  elements: GUILD_GAME_CONTENT.elements,
+  specializations: GUILD_GAME_CONTENT.skillSpecializations,
+  triggers: GUILD_GAME_CONTENT.triggerConditions,
+  forms: GUILD_GAME_CONTENT.skillForms,
+});
+
+const finishBattle = (state: GuildRpgState, battle: GuildBattleState): GuildRpgState => {
   const result = reduceHuntResult(state.profile, battle, GUILD_GAME_CONTENT);
   if (!result) return { ...state, battle };
   return {
     ...state,
     screen: 'rewards',
-    paused: false,
-    pausedBeforeSettings: false,
-    settingsOpen: false,
     battle,
     rewards: result.rewards,
-    playback: undefined,
-    resolvedItemIds: [],
     profile: result.profile,
+    tutorialStep: state.preferences.tutorial === 'active' ? 'collect_reward' : state.tutorialStep,
     message: result.message,
   };
-}
+};
 
 export function guildRpgReducer(state: GuildRpgState, action: GuildRpgAction): GuildRpgState {
-  if (action.type === 'START_QUEST') {
-    const guidedBorderHunt =
-      state.preferences.tutorial === 'active' && action.questId === 'border_pack';
-    const completedPowerBridge =
-      state.preferences.tutorial === 'active' &&
-      !state.tutorialReplay &&
-      Boolean(state.profile.questRecords.border_pack) &&
-      state.profile.selectedBuildId === 'ricochet' &&
-      state.profile.forgeSequence > 0 &&
-      action.questId !== 'border_pack';
+  if (action.type === 'SET_TUTORIAL') {
     return {
       ...state,
-      screen: 'battle',
-      paused: true,
-      pausedBeforeSettings: false,
-      settingsOpen: false,
-      tutorialReplay:
-        guidedBorderHunt &&
-        (state.tutorialReplay || Boolean(state.profile.questRecords.border_pack)),
-      tutorialAcknowledgedTargetId: undefined,
-      tutorialPreviewAcknowledged: false,
-      preferences: completedPowerBridge
-        ? { ...state.preferences, tutorial: 'complete' }
-        : state.preferences,
-      battle: startGuildQuest(
-        state.profile,
-        action.questId,
-        GUILD_GAME_CONTENT,
-        false,
-        action.ascensionId,
-      ),
-      rewards: undefined,
-      playback: undefined,
-      resolvedItemIds: [],
-      activatedRuleIds: [],
-      message: action.ascensionId
-        ? `${GUILD_GAME_CONTENT.ascensions.find((ascension) => ascension.id === action.ascensionId)!.name}啟動——壓力、路線與奇觀全面升階。`
-        : '遠征開始，戰場已停時；只有你明確繼續時間時敵軍才會推進。',
+      preferences: { ...state.preferences, tutorial: action.tutorial },
+      tutorialStep: action.tutorial === 'active' ? 'inspect_party' : 'complete',
     };
   }
-  if (action.type === 'SET_PAUSED') return { ...state, paused: action.paused };
-  if (action.type === 'SET_SETTINGS_OPEN') {
-    if (action.open) {
+  if (action.type === 'NAVIGATE' && state.screen === 'guild') {
+    let next = { ...state, page: action.page };
+    if (action.page === 'party') next = withTutorial(next, 'inspect_party', 'select_hero');
+    if (action.page === 'skills') next = withTutorial(next, 'inspect_skills', 'equip_skill');
+    if (action.page === 'equipment') next = withTutorial(next, 'inspect_equipment', 'start_hunt');
+    return next;
+  }
+  if (action.type === 'SELECT_HERO' && state.screen === 'guild') {
+    if (!state.profile.party.some(({ definitionId }) => definitionId === action.adventurerId)) {
+      return state;
+    }
+    return withTutorial(
+      { ...state, selectedHeroId: action.adventurerId, selectedSkillSlot: 0 },
+      'select_hero',
+      'inspect_skills',
+    );
+  }
+  if (action.type === 'SELECT_SKILL_SLOT' && action.slotIndex >= 0 && action.slotIndex < 6) {
+    return { ...state, selectedSkillSlot: action.slotIndex };
+  }
+  if (action.type === 'EQUIP_SKILL' && state.screen === 'guild') {
+    const resolution = equipAdventurerSkill(
+      state.profile,
+      state.selectedHeroId,
+      state.selectedSkillSlot,
+      action.skillId,
+      GUILD_GAME_CONTENT,
+    );
+    if (resolution.profile === state.profile) return { ...state, message: resolution.message };
+    const index = state.profile.defaultOrder.indexOf(state.selectedHeroId);
+    const nextHeroId = state.profile.defaultOrder[(index + 1) % state.profile.defaultOrder.length]!;
+    const tutorialStep =
+      state.tutorialStep === 'equip_skill'
+        ? 'inspect_equipment'
+        : state.tutorialStep === 'equip_fused' && action.skillId === state.lastFusedSkillId
+          ? 'replay'
+          : state.tutorialStep;
+    return {
+      ...state,
+      profile: resolution.profile,
+      selectedHeroId: nextHeroId,
+      selectedSkillSlot: 0,
+      tutorialStep,
+      message: `${resolution.message} 下一位：${heroName(nextHeroId)}。`,
+    };
+  }
+  if (action.type === 'MOVE_DEFAULT_HERO' && state.screen === 'guild') {
+    const current = [...state.profile.defaultOrder];
+    const from = current.indexOf(action.adventurerId);
+    const to = from + action.direction;
+    if (from < 0 || to < 0 || to >= current.length) return state;
+    [current[from], current[to]] = [current[to]!, current[from]!];
+    return {
+      ...state,
+      profile: { ...state.profile, defaultOrder: current },
+      message: `預設順序已更新：${current.map(heroName).join(' → ')}。`,
+    };
+  }
+  if (action.type === 'TOGGLE_FUSION_SKILL' && state.screen === 'guild') {
+    const selected = state.selectedFusionIds.includes(action.skillId)
+      ? state.selectedFusionIds.filter((id) => id !== action.skillId)
+      : [...state.selectedFusionIds, action.skillId].slice(-3);
+    return { ...state, selectedFusionIds: selected };
+  }
+  if (action.type === 'FUSE_SELECTED' && state.screen === 'guild') {
+    const source = state.selectedFusionIds.map((id) =>
+      state.profile.skillInventory.find((skill) => skill.id === id),
+    );
+    if (
+      source.some((skill) => !skill || skill.stars !== 1) ||
+      source.length < 2 ||
+      source.length > 3
+    ) {
+      return { ...state, message: '請選擇兩或三張同屬性的一星技能。' };
+    }
+    const owned = source as Extract<(typeof source)[number], { stars: 1 }>[];
+    try {
+      const id = `fused:${state.profile.nextLootSeed}:${state.profile.progressionEvents.length + 1}`;
+      const fused = fuseSkills(owned, id, `${heroName(state.selectedHeroId)}的融合技`);
+      const sourceIds = new Set(owned.map((skill) => skill.id));
       return {
         ...state,
-        settingsOpen: true,
-        pausedBeforeSettings: state.settingsOpen ? state.pausedBeforeSettings : state.paused,
-        paused: state.screen === 'battle' || state.screen === 'playback' ? true : state.paused,
+        profile: {
+          ...state.profile,
+          skillInventory: [
+            ...state.profile.skillInventory.filter((skill) => !sourceIds.has(skill.id)),
+            fused,
+          ],
+          progressionEvents: [
+            ...state.profile.progressionEvents,
+            {
+              id: `fusion-${id}`,
+              kind: 'fusion' as const,
+              label: fused.name,
+              detail: `${fused.stars} 星 · ${fused.components.map(({ triggerId }) => triggerId).join(' → ')}`,
+            },
+          ].slice(-20),
+        },
+        selectedFusionIds: [],
+        lastFusedSkillId: fused.id,
+        tutorialStep: state.tutorialStep === 'fuse_skill' ? 'equip_fused' : state.tutorialStep,
+        message: `${fused.name}融合完成；現在把它裝進角色的六格技能。`,
       };
+    } catch (error) {
+      return { ...state, message: error instanceof Error ? error.message : '融合失敗。' };
     }
-    return {
-      ...state,
-      settingsOpen: false,
-      paused:
-        state.screen === 'battle' || state.screen === 'playback'
-          ? state.pausedBeforeSettings
-          : state.paused,
-      pausedBeforeSettings: false,
-    };
   }
-  if (action.type === 'SET_TUTORIAL') {
-    const replayRequested =
-      action.tutorial === 'active' && Boolean(state.profile.questRecords.border_pack);
-    const pauseGuidedHunt =
-      action.tutorial === 'active' &&
-      (state.screen === 'battle' || state.screen === 'playback') &&
-      state.battle?.questId === 'border_pack';
-    return {
-      ...state,
-      paused: pauseGuidedHunt ? true : state.paused,
-      pausedBeforeSettings:
-        pauseGuidedHunt && state.settingsOpen ? true : state.pausedBeforeSettings,
-      tutorialReplay: replayRequested,
-      tutorialAcknowledgedTargetId: undefined,
-      tutorialPreviewAcknowledged: false,
-      preferences: { ...state.preferences, tutorial: action.tutorial },
-    };
-  }
-  if (action.type === 'ACK_TUTORIAL_PREVIEW') {
-    const bossExecutionOpen =
-      state.battle?.combo?.activatedBossPhaseIds?.includes('alpha-execution');
-    const signature = bossExecutionOpen
-      ? [
-          'brann_brace',
-          'brann_riposte',
-          'brann_shield_crash',
-          'brann_sweep',
-          'brann_fortress_breaker',
-        ]
-      : ['brann_brace', 'brann_riposte', 'brann_sweep'];
-    const draft = state.battle?.combo?.draft.cardIds ?? [];
-    const hasSignature = signature.every((cardId, index) => draft[index] === cardId);
-    return hasSignature ? { ...state, tutorialPreviewAcknowledged: true } : state;
-  }
-  if (action.type === 'UPDATE_PREFERENCES') {
-    return {
-      ...state,
-      preferences: { ...state.preferences, ...action.preferences, version: 1 },
-    };
-  }
-  if (
-    action.type === 'ABANDON_HUNT' &&
-    (state.screen === 'battle' || state.screen === 'playback')
-  ) {
-    return {
-      ...state,
-      screen: 'guild',
-      battle: undefined,
-      playback: undefined,
-      rewards: undefined,
-      paused: false,
-      pausedBeforeSettings: false,
-      settingsOpen: false,
-      tutorialAcknowledgedTargetId: undefined,
-      tutorialPreviewAcknowledged: false,
-      message: '本次遠征已中止；公會與裝備進度保持不變。',
-    };
-  }
-  if (action.type === 'SET_SPEED') return { ...state, speed: action.speed };
-  if (action.type === 'ADVANCE_PLAYBACK' && state.screen === 'playback' && state.playback) {
-    if (state.paused) return state;
-    const eventCount = Math.max(
-      0,
-      (state.battle?.combo?.events.length ?? 0) - state.playback.eventStartIndex,
+  if (action.type === 'DISMANTLE_SKILL' && state.screen === 'guild') {
+    const fused = state.profile.skillInventory.find(
+      (skill) => skill.id === action.skillId && skill.stars > 1,
     );
-    return {
-      ...state,
-      playback: {
-        ...state.playback,
-        visibleEventCount: Math.min(
-          eventCount,
-          state.playback.visibleEventCount + Math.max(0, action.count),
-        ),
-      },
-    };
-  }
-  if (
-    action.type === 'SKIP_PLAYBACK' &&
-    state.screen === 'playback' &&
-    state.playback &&
-    state.battle?.combo
-  ) {
-    if (state.paused) return state;
-    return {
-      ...state,
-      playback: {
-        ...state.playback,
-        visibleEventCount: state.battle.combo.events.length - state.playback.eventStartIndex,
-      },
-      message: '已跳至完整高潮，殲滅結果與所有事件完整保留。',
-    };
-  }
-  if (
-    action.type === 'COMPLETE_PLAYBACK' &&
-    state.screen === 'playback' &&
-    state.battle &&
-    state.playback
-  ) {
-    if (state.paused) return state;
-    if (state.battle.status !== 'active') {
-      return finishBattle(state, state.battle);
-    }
-    return {
-      ...state,
-      screen: 'battle',
-      paused: true,
-      pausedBeforeSettings: false,
-      playback: undefined,
-      message: '軍令播放完成，可以繼續編排下一次釋放。',
-    };
-  }
-  if (action.type === 'SET_BUILD' && state.screen === 'guild') {
-    const build = GUILD_GAME_CONTENT.builds.find((candidate) => candidate.id === action.buildId);
-    if (!build || build.id === state.profile.selectedBuildId) return state;
+    if (!fused || fused.stars === 1) return state;
+    const restored = dismantleSkill(fused);
     return {
       ...state,
       profile: {
         ...state.profile,
-        selectedBuildId: build.id,
-        discoveredRuleIds: [...new Set([...state.profile.discoveredRuleIds, ...build.ruleIds])],
+        skillInventory: [
+          ...state.profile.skillInventory.filter(({ id }) => id !== fused.id),
+          ...restored,
+        ],
       },
-      message: `已切換為「${build.name}」。下一次軍令將套用新的規則圖。`,
+      message: `${fused.name}已無損拆解為 ${restored.length} 張一星技能。`,
     };
   }
-  if (action.type === 'SET_LEADER' && state.screen === 'guild') {
-    if (!state.profile.party.some((member) => member.definitionId === action.adventurerId)) {
-      return state;
+  if (action.type === 'REPLACE_FUSED_COMPONENT' && state.screen === 'guild') {
+    const fused = state.profile.skillInventory.find(
+      (skill) => skill.id === action.fusedSkillId && skill.stars > 1,
+    );
+    const replacement = state.profile.skillInventory.find(
+      (skill) => skill.id === action.replacementSkillId && skill.stars === 1,
+    );
+    if (!fused || fused.stars === 1 || !replacement || replacement.stars !== 1) {
+      return { ...state, message: '找不到可替換的融合元件。' };
     }
+    try {
+      const result = replaceFusedComponent(fused, action.componentIndex, replacement);
+      return {
+        ...state,
+        profile: {
+          ...state.profile,
+          skillInventory: [
+            ...state.profile.skillInventory.filter(
+              ({ id }) => id !== fused.id && id !== replacement.id,
+            ),
+            result.skill,
+            result.removedSkill,
+          ],
+        },
+        message: `${fused.name}第 ${action.componentIndex + 1} 段已替換；原技能完整退回技能庫。`,
+      };
+    } catch (error) {
+      return { ...state, message: error instanceof Error ? error.message : '元件替換失敗。' };
+    }
+  }
+  if (action.type === 'MOVE_FUSED_COMPONENT' && state.screen === 'guild') {
+    const fused = state.profile.skillInventory.find(
+      (skill) => skill.id === action.fusedSkillId && skill.stars > 1,
+    );
+    if (!fused || fused.stars === 1) return state;
+    const to = action.componentIndex + action.direction;
+    if (to < 0 || to >= fused.sourceSkills.length) return state;
+    const sources = [...fused.sourceSkills];
+    [sources[action.componentIndex], sources[to]] = [sources[to]!, sources[action.componentIndex]!];
+    const reordered = fuseSkills(sources, fused.id, fused.name);
     return {
       ...state,
-      profile: { ...state.profile, leaderId: action.adventurerId },
-      message: '隊長已變更。',
+      profile: {
+        ...state.profile,
+        skillInventory: state.profile.skillInventory.map((skill) =>
+          skill.id === fused.id ? reordered : skill,
+        ),
+      },
+      message: `${fused.name}的結算順序已更新。`,
     };
   }
-  if (action.type === 'EQUIP_STORED' && state.screen === 'guild') {
-    const resolution = equipStoredItem(state.profile, action.itemId, action.adventurerId);
-    return { ...state, profile: resolution.profile, message: resolution.message };
+  if (action.type === 'START_QUEST' && state.screen === 'guild') {
+    try {
+      const battle = startGuildQuest(state.profile, action.questId, GUILD_GAME_CONTENT);
+      const completingReplay = state.tutorialStep === 'replay';
+      return {
+        ...state,
+        screen: 'battle',
+        battle: {
+          ...battle,
+          roundOrder: {
+            ...battle.roundOrder!,
+            defaultOrder: state.profile.defaultOrder,
+            currentOrder: state.profile.defaultOrder,
+          },
+        },
+        rewards: undefined,
+        recentEvents: [],
+        tutorialStep:
+          state.tutorialStep === 'start_hunt'
+            ? 'select_target'
+            : completingReplay
+              ? 'complete'
+              : state.tutorialStep,
+        preferences: completingReplay
+          ? { ...state.preferences, tutorial: 'complete' }
+          : state.preferences,
+        message: `進入${GUILD_GAME_CONTENT.quests.find(({ id }) => id === action.questId)?.name ?? action.questId}；選目標後由${heroName(state.profile.defaultOrder[0]!)}出招。`,
+      };
+    } catch (error) {
+      return { ...state, message: error instanceof Error ? error.message : '無法開始任務。' };
+    }
   }
-  if (action.type === 'SWAP_LOADOUT_CARD' && state.screen === 'guild') {
-    const resolution = swapBuildLoadoutCard(
+  if (action.type === 'SELECT_TARGET' && state.screen === 'battle' && state.battle) {
+    const valid = state.battle.units.some(
+      (unit) => unit.id === action.targetId && unit.side === 'enemies' && unit.currentHp > 0,
+    );
+    return valid
+      ? withTutorial(
+          { ...state, battle: { ...state.battle, selectedTargetId: action.targetId } },
+          'select_target',
+          'use_skill',
+        )
+      : state;
+  }
+  if (action.type === 'CHOOSE_NEXT_HERO' && state.screen === 'battle' && state.battle?.roundOrder) {
+    try {
+      const living = state.battle.units
+        .filter((unit) => unit.side === 'heroes' && unit.currentHp > 0)
+        .map(({ id }) => id);
+      return withTutorial(
+        {
+          ...state,
+          battle: {
+            ...state.battle,
+            roundOrder: chooseNextAdventurer(state.battle.roundOrder, action.adventurerId, living),
+          },
+          message: `${heroName(action.adventurerId)}已調整為本回合下一位。`,
+        },
+        'reorder',
+        'collect_reward',
+      );
+    } catch (error) {
+      return { ...state, message: error instanceof Error ? error.message : '無法調整順序。' };
+    }
+  }
+  if (
+    action.type === 'RESET_CURRENT_ORDER' &&
+    state.screen === 'battle' &&
+    state.battle?.roundOrder
+  ) {
+    const living = state.battle.units
+      .filter((unit) => unit.side === 'heroes' && unit.currentHp > 0)
+      .map(({ id }) => id);
+    return {
+      ...state,
+      battle: {
+        ...state.battle,
+        roundOrder: resetCurrentRoundOrder(state.battle.roundOrder, living),
+      },
+      message: '本回合剩餘角色已恢復預設接力順序。',
+    };
+  }
+  if (action.type === 'SET_CARRY_ORDER' && state.screen === 'battle' && state.battle?.roundOrder) {
+    return {
+      ...state,
+      battle: {
+        ...state.battle,
+        roundOrder: setRoundOrderCarry(state.battle.roundOrder, action.enabled),
+      },
+      message: action.enabled ? '目前接力順序會沿用到下一回合。' : '下一回合會恢復戰前預設順序。',
+    };
+  }
+  if (action.type === 'USE_SKILL' && state.screen === 'battle' && state.battle) {
+    try {
+      const actorId = state.battle.roundOrder?.activeAdventurerId;
+      if (!actorId) return state;
+      const result = resolveSkill({
+        battle: state.battle,
+        actorId,
+        skillId: action.skillId,
+        targetId: action.targetId,
+        content: engineContent(state.profile),
+      });
+      const next = withTutorial(
+        {
+          ...state,
+          battle: result.battle,
+          recentEvents: result.events,
+          message: result.events.at(-1)?.message ?? '技能已結算。',
+        },
+        'use_skill',
+        'reorder',
+      );
+      return result.battle.status === 'victory'
+        ? {
+            ...next,
+            message: '第六棒終結完成。確認戰果後，收下全部戰利品。',
+          }
+        : next;
+    } catch (error) {
+      return { ...state, message: error instanceof Error ? error.message : '技能無法施放。' };
+    }
+  }
+  if (
+    action.type === 'COLLECT_VICTORY' &&
+    state.screen === 'battle' &&
+    state.battle?.status === 'victory'
+  ) {
+    return finishBattle(state, state.battle);
+  }
+  if (action.type === 'EQUIP_STORED' && state.screen === 'guild') {
+    const result = equipStoredItem(state.profile, action.itemId, action.adventurerId);
+    return {
+      ...state,
+      profile: result.profile,
+      selectedSalvageIds: state.selectedSalvageIds.filter((id) => id !== action.itemId),
+      tutorialStep:
+        result.profile !== state.profile && state.tutorialStep === 'equip_loot'
+          ? 'forge_loot'
+          : state.tutorialStep,
+      message: result.message,
+    };
+  }
+  if (action.type === 'TOGGLE_ITEM_FLAG' && state.screen === 'guild') {
+    const result = toggleEquipmentItemFlag(state.profile, action.itemId, action.flag);
+    return {
+      ...state,
+      profile: result.profile,
+      selectedSalvageIds:
+        result.profile !== state.profile
+          ? state.selectedSalvageIds.filter((id) => id !== action.itemId)
+          : state.selectedSalvageIds,
+      message: result.message,
+    };
+  }
+  if (action.type === 'TOGGLE_SALVAGE_SELECTION' && state.screen === 'guild') {
+    const item = state.profile.inventory.find(({ id }) => id === action.itemId);
+    if (!item || item.locked || item.favorite) {
+      return { ...state, message: '鎖定或收藏裝備不會加入分解清單。' };
+    }
+    const selected = state.selectedSalvageIds.includes(action.itemId);
+    return {
+      ...state,
+      selectedSalvageIds: selected
+        ? state.selectedSalvageIds.filter((id) => id !== action.itemId)
+        : [...state.selectedSalvageIds, action.itemId],
+      message: `${item.name}${selected ? '移出' : '加入'}批次分解清單。`,
+    };
+  }
+  if (action.type === 'SALVAGE_SELECTED' && state.screen === 'guild') {
+    const result = salvageSelectedEquipment(
       state.profile,
-      action.buildId,
-      action.removedCardId,
-      action.addedCardId,
+      state.selectedSalvageIds,
       GUILD_GAME_CONTENT,
     );
-    return { ...state, profile: resolution.profile, message: resolution.message };
+    return {
+      ...state,
+      profile: result.profile,
+      selectedSalvageIds: [],
+      message: result.message,
+    };
   }
   if (action.type === 'FORGE_ITEM' && state.screen === 'guild') {
-    const resolution = forgeEquipmentItem(
+    const result = forgeEquipmentItem(
       state.profile,
       action.itemId,
       action.forgeAction,
@@ -322,155 +495,59 @@ export function guildRpgReducer(state: GuildRpgState, action: GuildRpgAction): G
       createSeededRandom(
         `forge:${state.profile.forgeSequence}:${action.itemId}:${action.forgeAction}`,
       ),
+      action.options,
     );
-    return { ...state, profile: resolution.profile, message: resolution.message };
+    const completedCoachForge =
+      result.profile !== state.profile && state.tutorialStep === 'forge_loot';
+    return {
+      ...state,
+      profile: result.profile,
+      page: completedCoachForge ? 'skills' : state.page,
+      tutorialStep: completedCoachForge ? 'fuse_skill' : state.tutorialStep,
+      message: completedCoachForge
+        ? `${result.message} 接著選兩張同屬性技能進行融合。`
+        : result.message,
+    };
+  }
+  if (action.type === 'GO_TO_EQUIPMENT' && state.screen === 'rewards') {
+    return {
+      ...state,
+      screen: 'guild',
+      page: 'equipment',
+      rewards: undefined,
+      tutorialStep: state.tutorialStep === 'collect_reward' ? 'equip_loot' : state.tutorialStep,
+      message: '所有掉落已收入背包；先把一件新裝備穿到目前角色身上。',
+    };
+  }
+  if (action.type === 'GO_TO_FUSION' && state.screen === 'rewards') {
+    return {
+      ...state,
+      screen: 'guild',
+      page: 'skills',
+      rewards: undefined,
+      tutorialStep: state.tutorialStep === 'collect_reward' ? 'fuse_skill' : state.tutorialStep,
+      message: '戰利品已全部收入背包與技能庫；選兩張同屬性一星技能融合。',
+    };
   }
   if (action.type === 'RETURN_GUILD') {
-    const completedReplay =
-      state.preferences.tutorial === 'active' &&
-      state.tutorialReplay &&
-      state.battle?.questId === 'border_pack' &&
-      state.rewards?.successful === true;
-    const returnedSuccessfulBorder =
-      state.battle?.questId === 'border_pack' && state.rewards?.successful === true;
-    const activatedRuleNames = state.activatedRuleIds.map(
-      (ruleId) => GUILD_GAME_CONTENT.rules[ruleId]?.name ?? ruleId,
-    );
+    return {
+      ...state,
+      screen: 'guild',
+      page: action.page ?? 'quest',
+      battle: undefined,
+      rewards: undefined,
+      recentEvents: [],
+      message: '已返回整備介面，所有掉落均已保留。',
+    };
+  }
+  if (action.type === 'ABANDON_HUNT' && state.screen === 'battle') {
     return {
       ...state,
       screen: 'guild',
       battle: undefined,
-      rewards: undefined,
-      playback: undefined,
-      resolvedItemIds: [],
-      paused: false,
-      pausedBeforeSettings: false,
-      settingsOpen: false,
-      tutorialReplay: returnedSuccessfulBorder ? false : state.tutorialReplay,
-      tutorialAcknowledgedTargetId: undefined,
-      tutorialPreviewAcknowledged: false,
-      preferences: completedReplay
-        ? { ...state.preferences, tutorial: 'complete' }
-        : state.preferences,
-      message:
-        activatedRuleNames.length > 0
-          ? `規則上線：${activatedRuleNames.join('、')}。帶著新引擎重刷，讓下一次殲滅更誇張。`
-          : '狩獵紀錄已更新。帶著戰利品重刷，讓下一次殲滅更誇張。',
+      recentEvents: [],
+      message: '已撤離，整備進度保持不變。',
     };
-  }
-  if (action.type === 'CHOOSE_ITEM' && state.rewards) {
-    if (state.resolvedItemIds.includes(action.itemId)) return state;
-    const item = state.rewards.items.find((candidate) => candidate.id === action.itemId);
-    if (!item) return state;
-    const resolution = resolveItemChoice(
-      state.profile,
-      item,
-      action.choice,
-      action.adventurerId,
-      GUILD_GAME_CONTENT.rules,
-    );
-    const rejectedKeep = action.choice === 'keep' && resolution.profile === state.profile;
-    return {
-      ...state,
-      profile: resolution.profile,
-      resolvedItemIds: rejectedKeep
-        ? state.resolvedItemIds
-        : [...state.resolvedItemIds, action.itemId],
-      activatedRuleIds:
-        action.choice === 'equip' && resolution.profile !== state.profile
-          ? [...new Set([...state.activatedRuleIds, ...(item.ruleIds ?? [])])]
-          : state.activatedRuleIds,
-      message: resolution.message,
-    };
-  }
-  if (!state.battle || state.screen !== 'battle') return state;
-
-  if (
-    action.type === 'APPEND_COMBO_CARD' ||
-    action.type === 'UNDO_COMBO_CARD' ||
-    action.type === 'RELEASE_COMBO'
-  ) {
-    const build = compileBuild(state.profile, GUILD_GAME_CONTENT);
-    const rules = Object.fromEntries(
-      build.ruleIds.map((ruleId) => [ruleId, GUILD_GAME_CONTENT.rules[ruleId]!]),
-    );
-    const hunt = GUILD_GAME_CONTENT.hunts.find(
-      (candidate) => candidate.questId === state.battle?.questId,
-    );
-    const resolution = reduceComboAction(
-      state.battle,
-      action,
-      GUILD_GAME_CONTENT.cards,
-      rules,
-      hunt,
-    );
-    const next = { ...state, paused: true, battle: resolution.battle, message: resolution.message };
-    if (action.type !== 'RELEASE_COMBO') return next;
-    return {
-      ...next,
-      screen: 'playback',
-      paused: false,
-      tutorialPreviewAcknowledged: false,
-      playback: {
-        eventStartIndex:
-          resolution.battle.combo?.lastCommandEventStartIndex ??
-          state.battle.combo?.events.length ??
-          0,
-        startingUnits: state.battle.units,
-        visibleEventCount: 0,
-      },
-    };
-  }
-  if (action.type === 'SELECT_TARGET') {
-    const valid = state.battle.units.some(
-      (unit) => unit.id === action.targetId && unit.side === 'enemies' && unit.currentHp > 0,
-    );
-    return valid
-      ? {
-          ...state,
-          battle: { ...state.battle, selectedTargetId: action.targetId },
-          tutorialAcknowledgedTargetId:
-            state.preferences.tutorial === 'active' && state.battle.questId === 'border_pack'
-              ? action.targetId
-              : state.tutorialAcknowledgedTargetId,
-        }
-      : state;
-  }
-  if (action.type === 'TOGGLE_AUTO') {
-    return {
-      ...state,
-      battle: {
-        ...state.battle,
-        leaderAuto: !state.battle.leaderAuto,
-        pendingLeaderId: undefined,
-      },
-      message: state.battle.leaderAuto ? '隊長改為手動指揮。' : '隊長已交由自動戰術。',
-    };
-  }
-  if (action.type === 'TICK') {
-    if (state.paused && state.battle.status === 'active') return state;
-    const battle = state.battle.combo
-      ? advanceComposition(state.battle, action.elapsedMs)
-      : advanceGuildBattle(
-          state.battle,
-          action.elapsedMs,
-          GUILD_GAME_CONTENT.skills,
-          actionRandom(state.battle),
-        );
-    return finishBattle(state, battle);
-  }
-  if (action.type === 'USE_SKILL' && state.battle.pendingLeaderId) {
-    const battle = submitLeaderAction(
-      state.battle,
-      {
-        actorId: state.battle.pendingLeaderId,
-        skillId: action.skillId,
-        targetId: action.targetId,
-      },
-      GUILD_GAME_CONTENT.skills,
-      actionRandom(state.battle),
-    );
-    return finishBattle(state, battle);
   }
   return state;
 }

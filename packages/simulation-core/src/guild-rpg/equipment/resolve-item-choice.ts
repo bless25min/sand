@@ -3,22 +3,24 @@ import type {
   GuildAdventurer,
   GuildProfile,
   ItemChoice,
-  RuleCatalog,
   RewardResolution,
 } from '@expedition/shared-types';
 
-const INVENTORY_CAPACITY = 20;
-
-function ruleActivation(item: EquipmentItem, rules: RuleCatalog) {
-  const names = item.ruleIds?.map((ruleId) => rules[ruleId]?.name ?? ruleId) ?? [];
-  return names.length > 0 ? ` 規則上線：${names.join('、')}。` : '';
+function coreActivation(item: EquipmentItem) {
+  const cores = item.cores?.length
+    ? item.cores
+    : item.coreId
+      ? [{ id: item.coreId, strength: item.coreStrength ?? 0 }]
+      : [];
+  return cores.length > 0
+    ? ` 核心上線：${cores.map(({ id, strength }) => `${id} +${strength}`).join('、')}。`
+    : '';
 }
 
 function equipItem(
   profile: GuildProfile,
   item: EquipmentItem,
   adventurerId: string,
-  rules: RuleCatalog,
 ): RewardResolution {
   let replaced: EquipmentItem | undefined;
   let found = false;
@@ -33,19 +35,12 @@ function equipItem(
   if (!replaced) {
     return {
       profile: { ...profile, party },
-      message: `${item.name}已裝備。${ruleActivation(item, rules)}`,
+      message: `${item.name}已裝備。${coreActivation(item)}`,
     };
   }
-  if (profile.inventory.length < INVENTORY_CAPACITY) {
-    return {
-      profile: { ...profile, party, inventory: [...profile.inventory, replaced] },
-      message: `${item.name}已裝備，舊裝備已放入背包。${ruleActivation(item, rules)}`,
-    };
-  }
-
   return {
-    profile: { ...profile, party, gold: profile.gold + replaced.sellValue },
-    message: `${item.name}已裝備；背包已滿，舊裝備自動售出。${ruleActivation(item, rules)}`,
+    profile: { ...profile, party, inventory: [...profile.inventory, replaced] },
+    message: `${item.name}已裝備，舊裝備已放入背包。${coreActivation(item)}`,
   };
 }
 
@@ -54,17 +49,13 @@ export function resolveItemChoice(
   item: EquipmentItem,
   choice: ItemChoice,
   adventurerId: string,
-  rules: RuleCatalog = {},
 ): RewardResolution {
-  if (choice === 'equip') return equipItem(profile, item, adventurerId, rules);
+  if (choice === 'equip') return equipItem(profile, item, adventurerId);
   if (choice === 'sell') {
     return {
       profile: { ...profile, gold: profile.gold + item.sellValue },
       message: `${item.name}售出，獲得 ${item.sellValue} 金幣。`,
     };
-  }
-  if (profile.inventory.length >= INVENTORY_CAPACITY) {
-    return { profile, message: '背包已滿（20/20），請改為裝備或出售。' };
   }
   return {
     profile: { ...profile, inventory: [...profile.inventory, item] },

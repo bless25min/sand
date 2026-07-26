@@ -8,14 +8,7 @@ import type {
 } from '@expedition/shared-types';
 
 import type { RandomSource } from '../../rng/random-source';
-
-const RARITY_SCALE: Readonly<Record<GuildItemRarity, number>> = {
-  common: 1,
-  uncommon: 1.3,
-  rare: 1.7,
-  epic: 2.25,
-  legendary: 3.1,
-};
+import { generateSkillDrop } from '../progression/generate-skill-drop';
 
 const RARITY_LABEL: Readonly<Record<GuildItemRarity, string>> = {
   common: '樸素',
@@ -48,20 +41,29 @@ export function generateEquipmentItem(
   const base = content.equipmentBases[random.nextInt(0, content.equipmentBases.length - 1)];
   if (!base) throw new Error('Equipment base content is empty');
   const rarity = rarityForRoll(random.next());
-  const scale = RARITY_SCALE[rarity];
   const affixStart = random.nextInt(0, content.equipmentAffixes.length - 1);
   const affixes = Array.from({ length: affixCount(rarity) }, (_, index) => {
     const definition =
       content.equipmentAffixes[(affixStart + index) % content.equipmentAffixes.length]!;
-    const statScale = definition.stat === 'hp' ? 5 : definition.stat === 'speed' ? 0.45 : 1;
+    const statBase = definition.stat === 'hp' ? 10 : definition.stat === 'speed' ? 1 : 3;
     return {
       stat: definition.stat,
-      value: Math.max(1, Math.round((2 + questLevel) * scale * statScale)),
+      value: statBase + random.nextInt(0, Math.max(1, questLevel)),
       sourceId: definition.id,
       label: definition.name,
     };
   });
-  const mainValue = Math.round((base.baseValue + questLevel * 1.5) * scale);
+  const mainValue = random.nextInt(base.mainStatRoll.min, base.mainStatRoll.max);
+  const coreId = base.coreIds[random.nextInt(0, base.coreIds.length - 1)]!;
+  const coreStrength = random.nextInt(base.coreStrengthRoll.min, base.coreStrengthRoll.max);
+  const remainingCoreIds = base.coreIds.filter((candidate) => candidate !== coreId);
+  const secondCoreId =
+    rarity === 'legendary' && remainingCoreIds.length > 0
+      ? remainingCoreIds[random.nextInt(0, remainingCoreIds.length - 1)]
+      : undefined;
+  const secondCoreStrength = secondCoreId
+    ? random.nextInt(base.coreStrengthRoll.min, base.coreStrengthRoll.max)
+    : undefined;
 
   return {
     id: itemId,
@@ -71,9 +73,16 @@ export function generateEquipmentItem(
     rarity,
     mainStat: { stat: base.mainStat, value: mainValue },
     affixes,
-    sellValue: Math.round((mainValue + affixes.reduce((sum, affix) => sum + affix.value, 0)) * 1.6),
+    sellValue: 10 + mainValue + affixes.reduce((sum, affix) => sum + affix.value, 0),
     forgeMaterialId: base.forgeMaterialId,
-    ...(base.ruleIds ? { ruleIds: base.ruleIds } : {}),
+    coreId,
+    coreStrength,
+    cores: [
+      { id: coreId, strength: coreStrength },
+      ...(secondCoreId && secondCoreStrength !== undefined
+        ? [{ id: secondCoreId, strength: secondCoreStrength }]
+        : []),
+    ],
   };
 }
 
@@ -86,10 +95,16 @@ export function generateQuestRewards(
   if (battle.status !== 'victory') return undefined;
   const quest = content.quests.find((candidate) => candidate.id === battle.questId);
   if (!quest) throw new Error(`Unknown quest: ${battle.questId}`);
+  const hunt = content.hunts.find((candidate) => candidate.questId === quest.id);
+  const pool = hunt?.skillDropPool ?? {
+    id: hunt?.id ?? quest.id,
+    elements: content.elements.map(({ id }) => id),
+    specializationIds: content.skillSpecializations.map(({ id }) => id),
+    triggerIds: content.triggerConditions.map(({ id }) => id),
+  };
 
   return {
     questId: quest.id,
-    experience: quest.rewardExperience,
     gold: quest.rewardGold,
     clearMs: battle.elapsedMs,
     items: [0, 1].map((index) =>
@@ -99,6 +114,9 @@ export function generateQuestRewards(
         `${quest.id}-${profile.nextLootSeed}-${index}`,
         random,
       ),
+    ),
+    skillDrops: [0, 1].map((index) =>
+      generateSkillDrop(pool, profile.nextLootSeed * 10 + index, content, random),
     ),
   };
 }

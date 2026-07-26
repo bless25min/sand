@@ -1,7 +1,6 @@
 import type { GuildGameContent, GuildProfile } from '@expedition/shared-types';
 
 import { createGuildBattle } from '../battle/create-battle';
-import { compileBuild } from '../combo/compile-build';
 
 export function startGuildQuest(
   profile: GuildProfile,
@@ -32,8 +31,6 @@ export function startGuildQuest(
     seed: `${questId}-${profile.nextLootSeed}`,
     leaderAuto,
   });
-  const build = compileBuild(profile, content);
-  const buildDefinition = content.builds.find((candidate) => candidate.id === build.buildId)!;
   const hunt = content.hunts.find((candidate) => candidate.questId === questId);
   return {
     ...battle,
@@ -43,31 +40,5 @@ export function startGuildQuest(
       const traits = hunt?.enemies.find((enemy) => enemy.enemyId === unit.id)?.traits;
       return traits ? { ...unit, huntTraits: traits } : unit;
     }),
-    combo: {
-      phase: 'composing' as const,
-      draft: { cardIds: [] },
-      availableCardIds: build.cardIds,
-      signatureCardIds: buildDefinition.signatureCardIds,
-      events: ascension
-        ? [
-            {
-              id: 0,
-              causalId: `ascension:${ascension.id}`,
-              kind: 'enemy_pressure' as const,
-              message: `${ascension.name}覆寫戰場：${ascension.routeLabel}。`,
-              cueId: ascension.cueId,
-            },
-          ]
-        : [],
-      metrics: {
-        comboCount: 0,
-        totalDamage: 0,
-        totalOverkill: 0,
-        defeatedEnemyIds: [],
-        annihilationOverflow: 0,
-        commandCount: 0,
-        bestCommandCardCount: 0,
-      },
-    },
   };
 }

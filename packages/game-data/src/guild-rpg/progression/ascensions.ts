@@ -14,11 +14,11 @@ export const GUILD_ASCENSIONS: readonly AscensionDefinition[] = [
   {
     id: 'signature_route',
     name: '招牌風暴',
-    description: '宣告目前 Build 的招牌路線，讓整場追逐同一條規則連鎖。',
+    description: '宣告目前全隊的招牌接力路線，讓整場追逐同一條規則連鎖。',
     pressureMultiplier: 1.85,
     signatureDamageMultiplier: 2.4,
     route: 'signature',
-    routeLabel: 'Build 招牌路線',
+    routeLabel: '全隊招牌接力',
     cueId: 'rule-online',
     motif: 'command',
   },

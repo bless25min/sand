@@ -22,6 +22,7 @@
 ### Task 1: Version-4 contracts and authored grammar
 
 **Files:**
+
 - Create: `packages/shared-types/src/guild-rpg/skill-build.ts`
 - Modify: `packages/shared-types/src/guild-rpg/{content,equipment,battle-state,profile,game-state,index}.ts`
 - Create: `packages/game-data/src/guild-rpg/skill-build/{attributes,specializations,triggers,skill-forms,equipment-cores,validate}.ts`
@@ -29,6 +30,7 @@
 - Test: `packages/game-data/src/guild-rpg/skill-build/skill-build-content.test.ts`
 
 **Interfaces:**
+
 - Produce `GuildElement`, `SkillSpecialization`, `TriggerCondition`, `SkillComponent`, `OwnedSkill`, `FusedSkill`, `StatusLayers`, `RoundOrder`, and v4 `GuildProfile`.
 - `ELEMENTS.length === 3`, `SPECIALIZATIONS.length === 6`, `TRIGGERS.length === 30`; the validator enumerates all 540 one-star structures.
 
@@ -40,6 +42,7 @@
 ### Task 2: Deterministic status, trigger, fusion, and immediate relay engine
 
 **Files:**
+
 - Create: `packages/simulation-core/src/guild-rpg/skills/{resolve-skill,resolve-trigger,resolve-element-reaction,resolve-target-route}.ts`
 - Create: `packages/simulation-core/src/guild-rpg/round-order/{create-round-order,choose-next-adventurer,complete-turn}.ts`
 - Create: `packages/simulation-core/src/guild-rpg/skills/{skill-engine,trigger-matrix}.test.ts`
@@ -48,6 +51,7 @@
 - Modify: `packages/simulation-core/src/guild-rpg/index.ts`
 
 **Interfaces:**
+
 - `resolveSkill({ battle, actorId, skillId, targetId, content }): { battle, events }` resolves base clauses left-to-right, then queued triggers.
 - `chooseNextAdventurer(order, actorId)` may move only an unacted living hero; actual position drives relay triggers.
 - Damage is `max(0, base + skill + equipment + consumedLayers + additions - reduction)`; each repeat, bounce, or echo is a separate event.
@@ -60,6 +64,7 @@
 ### Task 3: Loot, reversible fusion, equipment cores, forging, and save migration
 
 **Files:**
+
 - Create: `packages/simulation-core/src/guild-rpg/skills/{fuse-skills,replace-fused-component,dismantle-skill}.ts`
 - Create: `packages/simulation-core/src/guild-rpg/progression/{generate-skill-drop,migrate-profile-v4}.ts`
 - Modify: `packages/simulation-core/src/guild-rpg/rewards/{calculate-hunt-rewards,apply-rewards,create-hunt-equipment-item}.ts`
@@ -68,6 +73,7 @@
 - Modify/Test: `apps/web/src/guild-rpg/storage/{guild-save.ts,guild-save.test.ts}`
 
 **Interfaces:**
+
 - Fusion accepts two or three same-element owned skills, preserves component rolls/order, occupies one slot, supports single-component replacement, and dismantles back to exact components.
 - Rewards emit 4–6 items from hunt-authored element/specialization/trigger pools; forge actions are `calibrate | reforge | lock | transplant | salvage`.
 - Migration writes `expedition:guild-rpg:v4`, retains a v3 backup, adds three heroes, imports old cards/equipment/progress, and converts XP/levels to materials.
@@ -80,6 +86,7 @@
 ### Task 4: Four-page RPG UI, six-skill combat, complete onboarding, and spectacle
 
 **Files:**
+
 - Create: `apps/web/src/guild-rpg/components/{TeamOrderPanel,SkillLoadoutPanel,SkillFusionWorkbench,SixSkillControls,TurnOrderRail}.tsx`
 - Modify: `apps/web/src/guild-rpg/components/{GuildMobileStage,GuildScreen,BattleScreen,RewardScreen,Inventory,ForgeWorkbench}.tsx`
 - Modify: `apps/web/src/guild-rpg/state/{game-reducer,reduce-combo-action}.ts`
@@ -89,6 +96,7 @@
 - Test: `apps/web/src/guild-rpg/components/deterministic-six-hero-flow.test.tsx`
 
 **Interfaces:**
+
 - Permanent navigation is `quest | party | skills | equipment`; fusion nests under skills and forge under equipment.
 - Combat renders a 2×3 skill grid and six-portrait rail; tapping a skill immediately dispatches resolution, tapping an unacted portrait chooses the next actor.
 - Coach advances only from real intents through navigation, order, loadout, equipment, hunt, target, skill, reorder, reward, fusion, equip, and replay.
@@ -101,6 +109,7 @@
 ### Task 5: Twelve target-farm hunts and production E2E
 
 **Files:**
+
 - Modify: `packages/game-data/src/guild-rpg/campaign/{frontier,deepmine,ember,storm,zones}.ts`
 - Modify: `packages/game-data/src/guild-rpg/combo/{hunts,validate-content}.ts`
 - Create: `apps/web/e2e/guild-rpg-release.spec.ts`

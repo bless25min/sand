@@ -3,6 +3,7 @@ import type { HuntRewardAxes, HuntRewardInput, HuntRewards } from '@expedition/s
 import type { RandomSource } from '../../rng/random-source';
 import { huntChestSourceEnemyId, qualifiesForHuntChest } from '../hunt-chest-eligibility';
 import { createHuntEquipmentItem } from './create-hunt-equipment-item';
+import { generateSkillDrop } from '../progression/generate-skill-drop';
 
 function killedEnemyIds(input: HuntRewardInput) {
   const rewardEnemyIds = new Set(input.hunt.enemies.map((enemy) => enemy.enemyId));
@@ -14,9 +15,10 @@ function killedEnemyIds(input: HuntRewardInput) {
 function individualOverkill(input: HuntRewardInput) {
   const result: Record<string, number> = {};
   const runtime = input.battle.combo;
-  if (!runtime) return result;
-  const eventStart = runtime.lastCommandEventStartIndex ?? 0;
-  for (const event of runtime.events.slice(eventStart)) {
+  const events = runtime
+    ? runtime.events.slice(runtime.lastCommandEventStartIndex ?? 0)
+    : input.battle.events;
+  for (const event of events) {
     if (event.kind !== 'overkill' || !event.targetId) continue;
     result[event.targetId] = (result[event.targetId] ?? 0) + (event.amount ?? 0);
   }
@@ -52,8 +54,16 @@ function calculateAxes(
     bossChest,
     quantityMultiplier,
     individualOverkill: individualOverkill(input),
-    sharedOverflow: runtime?.metrics.annihilationOverflow ?? 0,
-    totalOverkill: runtime?.metrics.totalOverkill ?? 0,
+    sharedOverflow:
+      runtime?.metrics.annihilationOverflow ??
+      input.battle.events
+        .filter(({ kind, targetId }) => kind === 'overkill' && !targetId)
+        .reduce((sum, { amount }) => sum + (amount ?? 0), 0),
+    totalOverkill:
+      runtime?.metrics.totalOverkill ??
+      input.battle.events
+        .filter(({ kind }) => kind === 'overkill')
+        .reduce((sum, { amount }) => sum + (amount ?? 0), 0),
   };
 }
 
@@ -105,12 +115,28 @@ export function calculateHuntRewards(input: HuntRewardInput, random: RandomSourc
   const axes = calculateAxes(input, defeatedEnemyIds);
   const successful = input.battle.status === 'victory';
   const materialMultiplier = successful ? axes.quantityMultiplier : 1;
+  const skillDropCount = input.hunt.guaranteedBossDrops ?? 1;
+  const skillDrops =
+    successful && input.content
+      ? Array.from({ length: skillDropCount }, (_, index) =>
+          generateSkillDrop(
+            input.hunt.skillDropPool ?? {
+              id: input.hunt.id,
+              elements: input.content!.elements.map(({ id }) => id),
+              specializationIds: input.content!.skillSpecializations.map(({ id }) => id),
+              triggerIds: input.content!.triggerConditions.map(({ id }) => id),
+            },
+            input.profile.nextLootSeed * 10 + index,
+            input.content!,
+            random,
+          ),
+        )
+      : [];
 
   return {
     questId: input.hunt.questId,
     huntId: input.hunt.id,
     successful,
-    experience: successful ? input.hunt.rewardExperience : 0,
     gold: successful ? input.hunt.rewardGold : 0,
     clearMs: input.battle.elapsedMs,
     materials: input.hunt.enemies.map((enemy) => ({
@@ -119,6 +145,7 @@ export function calculateHuntRewards(input: HuntRewardInput, random: RandomSourc
       quantity: Math.max(1, Math.ceil(enemy.material.baseQuantity * materialMultiplier)),
     })),
     items: generateItems(input, defeatedEnemyIds, axes, random),
+    skillDrops,
     axes,
   };
 }
