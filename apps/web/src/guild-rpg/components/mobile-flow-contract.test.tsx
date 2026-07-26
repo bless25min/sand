@@ -284,7 +284,14 @@ describe('right-thumb mobile flow', () => {
     );
     const inventoryState = returnWithInventory();
     const inventoryMarkup = renderToStaticMarkup(
-      <GuildMobileStage state={inventoryState} dispatch={dispatch} initialPage="inventory" />,
+      <GuildMobileStage
+        state={{
+          ...inventoryState,
+          preferences: { ...inventoryState.preferences, tutorial: 'skipped' },
+        }}
+        dispatch={dispatch}
+        initialPage="inventory"
+      />,
     );
 
     expect(partyMarkup).toContain('設為隊長');
@@ -313,6 +320,7 @@ describe('right-thumb mobile flow', () => {
       type: 'START_QUEST',
       questId: 'border_pack',
     });
+    state = guildRpgReducer(state, { type: 'SELECT_TARGET', targetId: 'wolf_scout' });
     state = guildRpgReducer(state, { type: 'APPEND_COMBO_CARD', cardId: 'brann_brace' });
     const guidedMarkup = renderToStaticMarkup(<BattleScreen state={state} dispatch={dispatch} />);
     const markup = renderToStaticMarkup(
@@ -368,6 +376,7 @@ describe('right-thumb mobile flow', () => {
       type: 'START_QUEST',
       questId: 'border_pack',
     });
+    wrong = guildRpgReducer(wrong, { type: 'SELECT_TARGET', targetId: 'wolf_scout' });
     wrong = guildRpgReducer(wrong, { type: 'APPEND_COMBO_CARD', cardId: 'lyra_quickshot' });
     expect(renderToStaticMarkup(<BattleScreen state={wrong} dispatch={dispatch} />)).toContain(
       '撤銷錯誤卡',
@@ -377,6 +386,7 @@ describe('right-thumb mobile flow', () => {
       type: 'START_QUEST',
       questId: 'border_pack',
     });
+    preview = guildRpgReducer(preview, { type: 'SELECT_TARGET', targetId: 'wolf_scout' });
     for (const cardId of ['brann_brace', 'brann_riposte', 'brann_sweep']) {
       preview = guildRpgReducer(preview, { type: 'APPEND_COMBO_CARD', cardId });
     }
@@ -426,6 +436,7 @@ describe('right-thumb mobile flow', () => {
 
   it('keeps the next boss-execution card in the visible thumb slots', () => {
     let state = reachExecutionWindow();
+    state = guildRpgReducer(state, { type: 'SELECT_TARGET', targetId: 'wolf_alpha' });
     state = guildRpgReducer(state, { type: 'APPEND_COMBO_CARD', cardId: 'brann_brace' });
 
     const markup = renderToStaticMarkup(<BattleScreen state={state} dispatch={dispatch} />);

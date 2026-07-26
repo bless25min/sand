@@ -90,6 +90,37 @@
     line-height: 1.35;
   }
 
+  .gr-thumb-deck__guide-metrics {
+    display: grid;
+    grid-template-columns: 1.5fr repeat(3, 0.7fr);
+    gap: 4px;
+    margin-top: 6px;
+  }
+
+  .gr-thumb-deck__guide-metrics span {
+    display: grid;
+    gap: 1px;
+    min-width: 0;
+    padding: 4px 5px;
+    background: #00000042;
+  }
+
+  .gr-thumb-deck__guide-metrics small,
+  .gr-thumb-deck__guide-metrics b {
+    overflow: hidden;
+    font-size: 0.54rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .gr-thumb-deck__guide-metrics small {
+    color: #c6b897;
+  }
+
+  .gr-thumb-deck__guide-metrics b {
+    color: #fff0bd;
+  }
+
   .gr-thumb-deck__header div {
     min-width: 0;
   }
@@ -293,7 +324,7 @@
   .gr-shell:has(.gr-thumb-deck[data-guide-active='true']),
   .gr-battle:has(.gr-thumb-deck[data-guide-active='true']),
   .gr-rewards:has(.gr-thumb-deck[data-guide-active='true']) {
-    padding-bottom: calc(180px + env(safe-area-inset-bottom));
+    padding-bottom: calc(210px + env(safe-area-inset-bottom));
   }
 }
 

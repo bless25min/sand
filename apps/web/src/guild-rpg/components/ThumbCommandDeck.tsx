@@ -27,6 +27,7 @@ interface ThumbCommandDeckProps {
   status?: string | undefined;
   feedback?: string | undefined;
   guide?: FirstHuntCoach | undefined;
+  guideMetrics?: readonly { label: string; value: string | number }[] | undefined;
   onSkipGuide?: (() => void) | undefined;
   tabs?: readonly ThumbDeckTab[];
   actions: readonly ThumbDeckAction[];
@@ -39,6 +40,7 @@ export function ThumbCommandDeck({
   status,
   feedback,
   guide,
+  guideMetrics,
   onSkipGuide,
   tabs = [],
   actions,
@@ -64,6 +66,16 @@ export function ThumbCommandDeck({
           </span>
           <strong>{guide.title}</strong>
           <p>{guide.message}</p>
+          {guideMetrics && guideMetrics.length > 0 && (
+            <div className="gr-thumb-deck__guide-metrics">
+              {guideMetrics.map((metric) => (
+                <span key={metric.label}>
+                  <small>{metric.label}</small>
+                  <b>{metric.value}</b>
+                </span>
+              ))}
+            </div>
+          )}
           {onSkipGuide && (
             <button type="button" className="gr-thumb-deck__skip" onClick={onSkipGuide}>
               略過引導

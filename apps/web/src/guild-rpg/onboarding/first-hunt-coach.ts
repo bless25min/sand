@@ -15,6 +15,9 @@ type FirstHuntCoachStep =
   | 'playback'
   | 'loot'
   | 'return'
+  | 'power-build'
+  | 'forge'
+  | 'next-hunt'
   | 'replay'
   | 'complete';
 
@@ -24,6 +27,9 @@ export interface CoachInput {
   questId?: string;
   selectedBuildId: string;
   selectedTargetId?: string;
+  acknowledgedTargetId?: string;
+  focusedBuildId?: string;
+  forgeSequence?: number;
   draftCardIds: readonly string[];
   previewEventCount: number;
   rewardItemCount: number;
@@ -60,7 +66,10 @@ function signatureStep(input: CoachInput): FirstHuntCoach {
   const signature = input.bossExecutionOpen ? EXECUTION_SIGNATURE : OPENING_SIGNATURE;
   const stepTotal = signature.length + 3;
   const expectedTargetId = input.bossExecutionOpen ? 'wolf_alpha' : 'wolf_scout';
-  if (input.selectedTargetId !== expectedTargetId) {
+  if (
+    input.selectedTargetId !== expectedTargetId ||
+    input.acknowledgedTargetId !== expectedTargetId
+  ) {
     return {
       step: 'target',
       paused: true,
@@ -146,6 +155,52 @@ export function createFirstHuntCoach(input: CoachInput): FirstHuntCoach | undefi
   }
   if (input.screen === 'guild') {
     if (input.hasBorderRecord) {
+      if (!input.replaying) {
+        if (input.selectedBuildId !== 'ricochet') {
+          const onBuildPage = input.mobilePage === 'build';
+          const focusedOnRicochet = input.focusedBuildId === 'ricochet';
+          return {
+            step: 'power-build',
+            paused: false,
+            phaseLabel: '力量成長',
+            stepNumber: 1,
+            stepTotal: 3,
+            title: focusedOnRicochet ? '啟動殲滅彈射' : '找到殲滅彈射',
+            message: focusedOnRicochet
+              ? '啟動殲滅彈射，讓每次命中分岔成覆蓋全場的追擊。'
+              : '切到殲滅彈射；剛取得的規則會讓下一場的命中一路跳遍敵群。',
+            focusId: !onBuildPage
+              ? 'tab:build'
+              : focusedOnRicochet
+                ? 'action:activate-build'
+                : 'action:next-build',
+          };
+        }
+        if ((input.forgeSequence ?? 0) === 0) {
+          const onInventoryPage = input.mobilePage === 'inventory';
+          return {
+            step: 'forge',
+            paused: false,
+            phaseLabel: '力量成長',
+            stepNumber: 2,
+            stepTotal: 3,
+            title: onInventoryPage ? '點燃第一次鍛造' : '前往鍛造工坊',
+            message: '完成一次結果可預見的力量強化，把剛拿到的戰利品再推高一階。',
+            focusId: onInventoryPage ? 'action:open-forge' : 'tab:inventory',
+          };
+        }
+        const onQuestPage = input.mobilePage === 'quest';
+        return {
+          step: 'next-hunt',
+          paused: false,
+          phaseLabel: '力量成長',
+          stepNumber: 3,
+          stepTotal: 3,
+          title: onQuestPage ? '帶新引擎出發' : '前往下一場狩獵',
+          message: 'Build 與裝備都已升級。出發下一戰，親眼看見力量成長。',
+          focusId: onQuestPage ? 'action:start-quest' : 'tab:quest',
+        };
+      }
       const onQuestPage = input.mobilePage === 'quest';
       return {
         step: 'replay',

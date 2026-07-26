@@ -23,12 +23,14 @@ describe('guild RPG reducer', () => {
       type: 'START_QUEST',
       questId: 'border_pack',
     });
-    const battleBefore = state.battle;
-
     expect(state.paused).toBe(true);
     expect(state.preferences.tutorial).toBe('active');
+    expect(state.tutorialAcknowledgedTargetId).toBeUndefined();
+    state = guildRpgReducer(state, { type: 'SELECT_TARGET', targetId: 'wolf_scout' });
+    expect(state.tutorialAcknowledgedTargetId).toBe('wolf_scout');
+    const battleAfterTarget = state.battle;
     state = guildRpgReducer(state, { type: 'TICK', elapsedMs: 13_000 });
-    expect(state.battle).toBe(battleBefore);
+    expect(state.battle).toBe(battleAfterTarget);
 
     state = guildRpgReducer(state, { type: 'APPEND_COMBO_CARD', cardId: 'brann_brace' });
     expect(state.battle?.combo?.draft.cardIds).toEqual(['brann_brace']);
@@ -179,7 +181,7 @@ describe('guild RPG reducer', () => {
     });
   });
 
-  it('completes fresh guidance after the successful first hunt returns to the guild', () => {
+  it('keeps fresh guidance active through power growth and completes it on the next hunt', () => {
     let state = guildRpgReducer(createGuildRpgState(), {
       type: 'START_QUEST',
       questId: 'border_pack',
@@ -202,6 +204,29 @@ describe('guild RPG reducer', () => {
 
     expect(state).toMatchObject({
       screen: 'guild',
+      tutorialReplay: false,
+      preferences: { tutorial: 'active' },
+    });
+
+    state = {
+      ...state,
+      profile: {
+        ...state.profile,
+        selectedBuildId: 'ricochet',
+        forgeSequence: 1,
+        unlockedQuestIds: [...new Set([...state.profile.unlockedQuestIds, 'moonroad_pursuit'])],
+        questRecords: {
+          ...state.profile.questRecords,
+          border_pack: { clears: 1, bestClearMs: 12_000 },
+        },
+      },
+    };
+    state = guildRpgReducer(state, {
+      type: 'START_QUEST',
+      questId: 'moonroad_pursuit',
+    });
+    expect(state).toMatchObject({
+      screen: 'battle',
       tutorialReplay: false,
       preferences: { tutorial: 'complete' },
     });

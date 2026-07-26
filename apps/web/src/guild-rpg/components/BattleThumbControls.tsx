@@ -30,6 +30,9 @@ export function BattleThumbControls({ state, dispatch }: BattleThumbControlsProp
     questId: battle.questId,
     selectedBuildId: state.profile.selectedBuildId,
     ...(battle.selectedTargetId ? { selectedTargetId: battle.selectedTargetId } : {}),
+    ...(state.tutorialAcknowledgedTargetId
+      ? { acknowledgedTargetId: state.tutorialAcknowledgedTargetId }
+      : {}),
     draftCardIds: runtime.draft.cardIds,
     previewEventCount: sensation.preview.eventCount,
     rewardItemCount: 0,
@@ -205,6 +208,16 @@ export function BattleThumbControls({ state, dispatch }: BattleThumbControlsProp
       status={`${sensation.build.payoffLabel} · ${sensation.signature.nextCard ? `推薦 ${sensation.signature.nextCard.name}` : '招牌路線完成'} · 鎖定 ${selectedTarget?.name ?? '無'}`}
       feedback={state.message}
       guide={guide}
+      guideMetrics={
+        coach?.step === 'preview' || coach?.step === 'release'
+          ? [
+              { label: '因果路線', value: '盾牆→反擊→橫掃' },
+              { label: '總傷害', value: Math.round(sensation.preview.totalDamage) },
+              { label: '擊殺', value: sensation.preview.defeatedEnemyIds.length },
+              { label: 'OVERKILL', value: Math.round(sensation.preview.overkill) },
+            ]
+          : undefined
+      }
       onSkipGuide={() => dispatch({ type: 'SET_TUTORIAL', tutorial: 'skipped' })}
       tabs={[
         {

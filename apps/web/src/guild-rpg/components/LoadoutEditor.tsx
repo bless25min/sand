@@ -17,6 +17,13 @@ export function LoadoutEditor({ state, dispatch, onClose, onOpenSettings }: Load
   const activeIds = state.profile.loadouts[build.id] ?? build.defaultCardIds;
   const reserveIds = build.cardIds.filter((cardId) => !activeIds.includes(cardId));
   const [removedCardId, setRemovedCardId] = useState(activeIds[0]!);
+  const [expanded, setExpanded] = useState(false);
+  const focusedActiveIds = [
+    ...build.signatureCardIds,
+    ...activeIds.filter((cardId) => !build.signatureCardIds.includes(cardId)),
+  ].slice(0, 4);
+  const visibleActiveIds = expanded ? activeIds : focusedActiveIds;
+  const visibleReserveIds = expanded ? reserveIds : reserveIds.slice(0, 2);
   const cardButton = (cardId: string, active: boolean) => {
     const card = GUILD_GAME_CONTENT.cards[cardId]!;
     return (
@@ -57,14 +64,31 @@ export function LoadoutEditor({ state, dispatch, onClose, onOpenSettings }: Load
       <p className="gr-longterm-feedback" role="status" aria-live="polite">
         {state.message}
       </p>
+      <section className="gr-loadout-suggestion" aria-label="建議路線">
+        <div>
+          <b>建議路線 · {build.payoffLabel}</b>
+          <span>
+            {build.signatureCardIds
+              .map((cardId) => GUILD_GAME_CONTENT.cards[cardId]!.name)
+              .join(' → ')}
+          </span>
+        </div>
+        <button type="button" aria-expanded={expanded} onClick={() => setExpanded(!expanded)}>
+          {expanded ? '收起建議模式' : `展開全部 ${build.cardIds.length} 張`}
+        </button>
+      </section>
       <div className="gr-loadout-columns">
         <div>
-          <b>ACTIVE 8 · 點選換下</b>
-          <div className="gr-card-button-grid">{activeIds.map((id) => cardButton(id, true))}</div>
+          <b>{expanded ? 'ACTIVE 8 · 點選換下' : '核心軍令 4 · 先讀懂主路線'}</b>
+          <div className="gr-card-button-grid">
+            {visibleActiveIds.map((id) => cardButton(id, true))}
+          </div>
         </div>
         <div>
-          <b>ARSENAL RESERVE · 點選裝填</b>
-          <div className="gr-card-button-grid">{reserveIds.map((id) => cardButton(id, false))}</div>
+          <b>{expanded ? 'ARSENAL RESERVE · 點選裝填' : '推薦候選 2 · 再決定換入'}</b>
+          <div className="gr-card-button-grid">
+            {visibleReserveIds.map((id) => cardButton(id, false))}
+          </div>
         </div>
       </div>
       {(onClose || onOpenSettings) && (

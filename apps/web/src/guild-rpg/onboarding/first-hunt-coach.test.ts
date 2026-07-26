@@ -9,6 +9,7 @@ function input(overrides: Record<string, unknown> = {}) {
     questId: 'border_pack',
     selectedBuildId: 'retaliation',
     selectedTargetId: 'wolf_scout',
+    acknowledgedTargetId: 'wolf_scout',
     draftCardIds: [] as readonly string[],
     previewEventCount: 0,
     rewardItemCount: 0,
@@ -58,6 +59,11 @@ describe('first hunt coach', () => {
   });
 
   it('guides the exact retaliation signature route and pauses only before player decisions', () => {
+    expect(createFirstHuntCoach(input({ acknowledgedTargetId: undefined }))).toMatchObject({
+      step: 'target',
+      paused: true,
+      focusId: 'action:wolf_scout',
+    });
     expect(createFirstHuntCoach(input({ selectedTargetId: 'wolf_alpha' }))).toMatchObject({
       step: 'target',
       paused: true,
@@ -122,13 +128,77 @@ describe('first hunt coach', () => {
       title: '返回公會',
       focusId: 'action:return-guild',
     });
-    expect(createFirstHuntCoach(input({ screen: 'guild', hasBorderRecord: true }))).toMatchObject({
-      step: 'replay',
-      paused: false,
-    });
+    expect(
+      createFirstHuntCoach(input({ screen: 'guild', hasBorderRecord: true, replaying: true })),
+    ).toMatchObject({ step: 'replay', paused: false });
     expect(
       createFirstHuntCoach(input({ screen: 'battle', hasBorderRecord: true, replaying: true })),
     ).toMatchObject({ step: 'brace', paused: true });
+  });
+
+  it('bridges a fresh first victory through ricochet, forge, and the next hunt', () => {
+    expect(
+      createFirstHuntCoach(
+        input({
+          screen: 'guild',
+          hasBorderRecord: true,
+          mobilePage: 'build',
+          focusedBuildId: 'retaliation',
+          forgeSequence: 0,
+        }),
+      ),
+    ).toMatchObject({
+      step: 'power-build',
+      title: '找到殲滅彈射',
+      focusId: 'action:next-build',
+    });
+    expect(
+      createFirstHuntCoach(
+        input({
+          screen: 'guild',
+          hasBorderRecord: true,
+          mobilePage: 'build',
+          focusedBuildId: 'ricochet',
+          forgeSequence: 0,
+        }),
+      ),
+    ).toMatchObject({
+      step: 'power-build',
+      title: '啟動殲滅彈射',
+      focusId: 'action:activate-build',
+    });
+    expect(
+      createFirstHuntCoach(
+        input({
+          screen: 'guild',
+          hasBorderRecord: true,
+          selectedBuildId: 'ricochet',
+          mobilePage: 'inventory',
+          focusedBuildId: 'ricochet',
+          forgeSequence: 0,
+        }),
+      ),
+    ).toMatchObject({
+      step: 'forge',
+      title: '點燃第一次鍛造',
+      focusId: 'action:open-forge',
+    });
+    expect(
+      createFirstHuntCoach(
+        input({
+          screen: 'guild',
+          hasBorderRecord: true,
+          selectedBuildId: 'ricochet',
+          mobilePage: 'quest',
+          focusedBuildId: 'ricochet',
+          forgeSequence: 1,
+        }),
+      ),
+    ).toMatchObject({
+      step: 'next-hunt',
+      title: '帶新引擎出發',
+      focusId: 'action:start-quest',
+    });
   });
 
   it('continues from the broken guards into a five-card boss execution route', () => {
@@ -136,7 +206,13 @@ describe('first hunt coach', () => {
       createFirstHuntCoach(input({ bossExecutionOpen: true, selectedTargetId: 'wolf_scout' })),
     ).toMatchObject({ step: 'target', paused: true });
     expect(
-      createFirstHuntCoach(input({ bossExecutionOpen: true, selectedTargetId: 'wolf_alpha' })),
+      createFirstHuntCoach(
+        input({
+          bossExecutionOpen: true,
+          selectedTargetId: 'wolf_alpha',
+          acknowledgedTargetId: 'wolf_alpha',
+        }),
+      ),
     ).toMatchObject({
       step: 'execution',
       expectedCardId: 'brann_brace',
@@ -147,6 +223,7 @@ describe('first hunt coach', () => {
         input({
           bossExecutionOpen: true,
           selectedTargetId: 'wolf_alpha',
+          acknowledgedTargetId: 'wolf_alpha',
           draftCardIds: ['brann_brace'],
         }),
       )?.message,
@@ -156,6 +233,7 @@ describe('first hunt coach', () => {
         input({
           bossExecutionOpen: true,
           selectedTargetId: 'wolf_alpha',
+          acknowledgedTargetId: 'wolf_alpha',
           draftCardIds: [
             'brann_brace',
             'brann_riposte',

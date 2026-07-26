@@ -32,6 +32,7 @@ export interface GuildRpgState {
   pausedBeforeSettings: boolean;
   settingsOpen: boolean;
   tutorialReplay: boolean;
+  tutorialAcknowledgedTargetId?: string | undefined;
   tutorialPreviewAcknowledged: boolean;
   battle?: GuildBattleState | undefined;
   rewards?: QuestRewards | undefined;
@@ -107,6 +108,13 @@ export function guildRpgReducer(state: GuildRpgState, action: GuildRpgAction): G
   if (action.type === 'START_QUEST') {
     const guidedBorderHunt =
       state.preferences.tutorial === 'active' && action.questId === 'border_pack';
+    const completedPowerBridge =
+      state.preferences.tutorial === 'active' &&
+      !state.tutorialReplay &&
+      Boolean(state.profile.questRecords.border_pack) &&
+      state.profile.selectedBuildId === 'ricochet' &&
+      state.profile.forgeSequence > 0 &&
+      action.questId !== 'border_pack';
     return {
       ...state,
       screen: 'battle',
@@ -116,7 +124,11 @@ export function guildRpgReducer(state: GuildRpgState, action: GuildRpgAction): G
       tutorialReplay:
         guidedBorderHunt &&
         (state.tutorialReplay || Boolean(state.profile.questRecords.border_pack)),
+      tutorialAcknowledgedTargetId: undefined,
       tutorialPreviewAcknowledged: false,
+      preferences: completedPowerBridge
+        ? { ...state.preferences, tutorial: 'complete' }
+        : state.preferences,
       battle: startGuildQuest(
         state.profile,
         action.questId,
@@ -166,6 +178,7 @@ export function guildRpgReducer(state: GuildRpgState, action: GuildRpgAction): G
       pausedBeforeSettings:
         pauseGuidedHunt && state.settingsOpen ? true : state.pausedBeforeSettings,
       tutorialReplay: replayRequested,
+      tutorialAcknowledgedTargetId: undefined,
       tutorialPreviewAcknowledged: false,
       preferences: { ...state.preferences, tutorial: action.tutorial },
     };
@@ -205,6 +218,7 @@ export function guildRpgReducer(state: GuildRpgState, action: GuildRpgAction): G
       paused: false,
       pausedBeforeSettings: false,
       settingsOpen: false,
+      tutorialAcknowledgedTargetId: undefined,
       tutorialPreviewAcknowledged: false,
       message: '本次遠征已中止；公會與裝備進度保持不變。',
     };
@@ -312,10 +326,13 @@ export function guildRpgReducer(state: GuildRpgState, action: GuildRpgAction): G
     return { ...state, profile: resolution.profile, message: resolution.message };
   }
   if (action.type === 'RETURN_GUILD') {
-    const completedTutorial =
+    const completedReplay =
       state.preferences.tutorial === 'active' &&
+      state.tutorialReplay &&
       state.battle?.questId === 'border_pack' &&
       state.rewards?.successful === true;
+    const returnedSuccessfulBorder =
+      state.battle?.questId === 'border_pack' && state.rewards?.successful === true;
     const activatedRuleNames = state.activatedRuleIds.map(
       (ruleId) => GUILD_GAME_CONTENT.rules[ruleId]?.name ?? ruleId,
     );
@@ -329,9 +346,10 @@ export function guildRpgReducer(state: GuildRpgState, action: GuildRpgAction): G
       paused: false,
       pausedBeforeSettings: false,
       settingsOpen: false,
-      tutorialReplay: completedTutorial ? false : state.tutorialReplay,
+      tutorialReplay: returnedSuccessfulBorder ? false : state.tutorialReplay,
+      tutorialAcknowledgedTargetId: undefined,
       tutorialPreviewAcknowledged: false,
-      preferences: completedTutorial
+      preferences: completedReplay
         ? { ...state.preferences, tutorial: 'complete' }
         : state.preferences,
       message:
@@ -408,7 +426,14 @@ export function guildRpgReducer(state: GuildRpgState, action: GuildRpgAction): G
       (unit) => unit.id === action.targetId && unit.side === 'enemies' && unit.currentHp > 0,
     );
     return valid
-      ? { ...state, battle: { ...state.battle, selectedTargetId: action.targetId } }
+      ? {
+          ...state,
+          battle: { ...state.battle, selectedTargetId: action.targetId },
+          tutorialAcknowledgedTargetId:
+            state.preferences.tutorial === 'active' && state.battle.questId === 'border_pack'
+              ? action.targetId
+              : state.tutorialAcknowledgedTargetId,
+        }
       : state;
   }
   if (action.type === 'TOGGLE_AUTO') {

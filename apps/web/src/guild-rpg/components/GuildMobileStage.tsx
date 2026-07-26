@@ -40,7 +40,9 @@ export function GuildMobileStage({ state, dispatch, initialPage }: GuildMobileSt
   const [questIndex, setQuestIndex] = useState(() =>
     Math.max(
       0,
-      GUILD_GAME_CONTENT.quests.findIndex((quest) => quest.id === campaign.currentQuestId),
+      GUILD_GAME_CONTENT.quests.findIndex(
+        (quest) => quest.id === (state.tutorialReplay ? 'border_pack' : campaign.currentQuestId),
+      ),
     ),
   );
   const [partyIndex, setPartyIndex] = useState(0);
@@ -74,6 +76,8 @@ export function GuildMobileStage({ state, dispatch, initialPage }: GuildMobileSt
     tutorial: state.preferences.tutorial,
     screen: 'guild',
     selectedBuildId: state.profile.selectedBuildId,
+    focusedBuildId: build.id,
+    forgeSequence: state.profile.forgeSequence,
     draftCardIds: [],
     previewEventCount: 0,
     rewardItemCount: 0,
@@ -93,7 +97,7 @@ export function GuildMobileStage({ state, dispatch, initialPage }: GuildMobileSt
         : page === 'party'
           ? `${hero.name} · Lv.${member.level}`
           : (selectedItem?.name ?? '背包是空的');
-  const actions =
+  const baseActions =
     page === 'build'
       ? createBuildThumbActions({
           build,
@@ -136,6 +140,19 @@ export function GuildMobileStage({ state, dispatch, initialPage }: GuildMobileSt
               setInventoryPage,
               setEquipHeroIndex,
             });
+  const actions =
+    coach?.focusId === 'action:open-forge'
+      ? [
+          {
+            id: 'open-forge',
+            label: '開啟鍛造',
+            detail: '第一次力量強化',
+            slot: 'primary' as const,
+            tone: 'primary' as const,
+            onPress: () => setUtilityPanel('forge'),
+          },
+        ]
+      : baseActions;
 
   return (
     <section className="gr-mobile-guild-stage" data-mobile-page={page}>
@@ -214,6 +231,8 @@ export function GuildMobileStage({ state, dispatch, initialPage }: GuildMobileSt
               state={state}
               dispatch={dispatch}
               onClose={() => setUtilityPanel(undefined)}
+              guided={coach?.step === 'forge'}
+              onGuidedForge={() => setUtilityPanel(undefined)}
             />
           ) : (
             <ArchiveCommandCenter

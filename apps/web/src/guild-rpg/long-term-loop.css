@@ -67,6 +67,38 @@
   letter-spacing: 0.1em;
 }
 
+.gr-loadout-suggestion {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid #e9b3543d;
+  background: linear-gradient(110deg, #d794281f, transparent);
+}
+
+.gr-loadout-suggestion div {
+  display: grid;
+  gap: 4px;
+}
+
+.gr-loadout-suggestion b {
+  color: #f2c36e;
+}
+
+.gr-loadout-suggestion span {
+  color: #b8c0bc;
+  font-size: 0.72rem;
+}
+
+.gr-loadout-suggestion button {
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 1px solid #e9b3545c;
+  background: #e9b35412;
+  white-space: nowrap;
+}
+
 .gr-card-button-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -143,6 +175,29 @@
 .gr-forge__actions span {
   color: #b99a63;
   font-size: 0.65rem;
+}
+
+.gr-forge__guide {
+  display: grid;
+  gap: 3px;
+  padding: 10px 12px;
+  border-left: 3px solid #ffc45d;
+  background: #ffc45d12;
+}
+
+.gr-forge__guide strong {
+  color: #ffd88a;
+}
+
+.gr-forge__guide span {
+  color: #b8c1bd;
+  font-size: 0.72rem;
+}
+
+.gr-forge__actions button[data-guide-focus='true'] {
+  border-color: #ffe7a1;
+  background: linear-gradient(140deg, #e9a6374a, #ffffff0d);
+  box-shadow: 0 0 0 3px #e9a63735;
 }
 
 .gr-item__forge-rank {
@@ -452,6 +507,11 @@
   .gr-archive__mission,
   .gr-codex-browser {
     grid-template-columns: 1fr;
+  }
+
+  .gr-loadout-suggestion {
+    align-items: stretch;
+    flex-direction: column;
   }
 
   .gr-card-button-grid {

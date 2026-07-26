@@ -10,6 +10,8 @@ interface ForgeWorkbenchProps {
   state: GuildRpgState;
   dispatch: React.Dispatch<GuildRpgAction>;
   onClose?: () => void;
+  guided?: boolean;
+  onGuidedForge?: () => void;
 }
 
 function ownedItems(state: GuildRpgState) {
@@ -21,7 +23,13 @@ function ownedItems(state: GuildRpgState) {
   ];
 }
 
-export function ForgeWorkbench({ state, dispatch, onClose }: ForgeWorkbenchProps) {
+export function ForgeWorkbench({
+  state,
+  dispatch,
+  onClose,
+  guided = false,
+  onGuidedForge,
+}: ForgeWorkbenchProps) {
   const items = ownedItems(state);
   const [selectedId, setSelectedId] = useState(items[0]?.id);
   const item = items.find((candidate) => candidate.id === selectedId) ?? items[0];
@@ -39,7 +47,11 @@ export function ForgeWorkbench({ state, dispatch, onClose }: ForgeWorkbenchProps
     return (
       <button
         type="button"
-        onClick={() => dispatch({ type: 'FORGE_ITEM', itemId: item!.id, forgeAction: action })}
+        data-guide-focus={guided && action === 'upgrade' ? 'true' : undefined}
+        onClick={() => {
+          dispatch({ type: 'FORGE_ITEM', itemId: item!.id, forgeAction: action });
+          if (guided && action === 'upgrade') onGuidedForge?.();
+        }}
       >
         <strong>{label}</strong>
         <span>
@@ -61,6 +73,12 @@ export function ForgeWorkbench({ state, dispatch, onClose }: ForgeWorkbenchProps
         </div>
         <span>背包與已裝備物品都可直接鍛造；每次結果立即寫回同一件裝備。</span>
       </header>
+      {guided && (
+        <div className="gr-forge__guide" role="status">
+          <strong>第一次鍛造</strong>
+          <span>結果已預覽：按下力量強化，主屬性會立即升階。</span>
+        </div>
+      )}
       {item ? (
         <>
           <div className="gr-forge__items" aria-label="選擇鍛造裝備">
@@ -80,8 +98,8 @@ export function ForgeWorkbench({ state, dispatch, onClose }: ForgeWorkbenchProps
             <InventoryItemCard item={item} selected />
             <div className="gr-forge__actions">
               {actionButton('upgrade', '力量強化')}
-              {actionButton('infuse', '規則灌注')}
-              {actionButton('reroll', '詞綴重鑄')}
+              {!guided && actionButton('infuse', '規則灌注')}
+              {!guided && actionButton('reroll', '詞綴重鑄')}
             </div>
           </div>
         </>

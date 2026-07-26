@@ -22,6 +22,7 @@ export function createGuildRpgState(
     pausedBeforeSettings: false,
     settingsOpen: false,
     tutorialReplay: false,
+    tutorialAcknowledgedTargetId: undefined,
     tutorialPreviewAcknowledged: false,
     speed: 1,
     resolvedItemIds: [],
