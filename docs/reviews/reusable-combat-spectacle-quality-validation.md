@@ -40,5 +40,39 @@ same batch:
 
 ## Batch Gate
 
-Final `pnpm check`, responsive browser proof, production deployment evidence, and immutable asset
-hashes are recorded after the review-fix source is frozen.
+Final `pnpm check` completed with exit code `0`.
+
+- TypeScript, ESLint, Prettier, architecture, and Knip checks passed.
+- Vitest passed: 116 files and 414 tests.
+- All workspace builds passed.
+- Wrangler Worker type generation and dry-run upload passed. Its attempt to write debug logs under
+  the sandboxed AppData path emitted the known non-blocking `EPERM` warning.
+
+## Browser Verification
+
+The immutable production deployment completed the full first-hunt route through both releases.
+
+- 375 px: Build → quest → three-card guard break → visible boss execution → six-card finisher →
+  `ANNIHILATION` → `LOOT RAIN` and `BOSS CHEST`.
+- Enemy cards exposed distinct skirmisher, brute, and boss identities without obscuring controls.
+- 390 px: document width matched the viewport, horizontal overflow was false, and visible thumb
+  controls measured 56 px high.
+- 1440 px: the complete guild layout fit without horizontal overflow.
+- Browser console log count was zero.
+
+## Deployment Evidence
+
+- Project: `ai-expedition-legion-rpg`
+- Environment: Production
+- Branch metadata: `main`
+- Source: `9103e06`
+- Deployment ID: `9b49c06d-57ce-48e7-8274-5020e13ac0d7`
+- Immutable URL: `https://9b49c06d.ai-expedition-legion-rpg.pages.dev/`
+- Canonical URL: `https://ai-expedition-legion-rpg.pages.dev/`
+- Immutable and canonical HTML: `200`, byte-identical
+- JavaScript: `/assets/index-BM3OvSNW.js`
+- JavaScript SHA-256:
+  `D3F56EDB9A61C245070603141E371B6DA683FB13EABC32C940EEDD5A9F864BB9`, identical to local
+- CSS: `/assets/index-BFJ-VMrT.css`
+- CSS SHA-256:
+  `CA212C2F121921459D493D6563663BA5BB7F9E66538575C2DA43501C16427913`, identical to local
