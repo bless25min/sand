@@ -33,6 +33,7 @@ interface GuildMobileFocusProps {
   visibleItems: readonly EquipmentItem[];
   selectedItemId?: string | undefined;
   guided?: boolean | undefined;
+  hasCompletedFirstHunt?: boolean | undefined;
   dispatch: React.Dispatch<GuildRpgAction>;
   onOpenForge?: () => void;
 }
@@ -55,6 +56,7 @@ export function GuildMobileFocus({
   visibleItems,
   selectedItemId,
   guided = false,
+  hasCompletedFirstHunt = false,
   dispatch,
   onOpenForge,
 }: GuildMobileFocusProps) {
@@ -101,8 +103,12 @@ export function GuildMobileFocus({
         <p>{quest.description}</p>
         {guided ? (
           <div className="gr-mobile-campaign-card__guided">
-            <strong>第一次遠征</strong>
-            <span>現在只要按下開始遠征；戰場會先停時，再逐步帶你完成第一條軍令。</span>
+            <strong>{hasCompletedFirstHunt ? '力量驗證' : '第一次遠征'}</strong>
+            <span>
+              {hasCompletedFirstHunt
+                ? '新 Build 與鍛造裝備已就緒；出發下一戰，親眼確認力量成長。'
+                : '現在只要按下開始遠征；戰場會先停時，再逐步帶你完成第一條軍令。'}
+            </span>
           </div>
         ) : (
           <div className="gr-mobile-campaign-card__intel">

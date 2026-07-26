@@ -108,6 +108,9 @@ describe('new player power bridge', () => {
       itemId: forgeItem!.id,
       forgeAction: 'upgrade',
     });
+    const nextHuntMarkup = renderToStaticMarkup(
+      <GuildMobileStage state={forged} dispatch={dispatch} initialPage="quest" />,
+    );
 
     expect(postHunt.preferences.tutorial).toBe('active');
     expect(buildMarkup).toContain('找到殲滅彈射');
@@ -120,6 +123,8 @@ describe('new player power bridge', () => {
     expect(forgeMarkup).not.toContain('規則灌注');
     expect(forged.profile.forgeSequence).toBe(1);
     expect(forged.message).toContain('鍛造完成');
+    expect(nextHuntMarkup).toContain('力量驗證');
+    expect(nextHuntMarkup).not.toContain('第一次遠征');
   });
 
   it('replays the authored first hunt and progressively discloses the arsenal', () => {

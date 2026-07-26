@@ -175,6 +175,7 @@ export function GuildMobileStage({ state, dispatch, initialPage }: GuildMobileSt
           visibleItems={visibleItems}
           selectedItemId={selectedItem?.id}
           guided={Boolean(coach)}
+          hasCompletedFirstHunt={Boolean(state.profile.questRecords.border_pack)}
           dispatch={dispatch}
           onOpenForge={() => setUtilityPanel('forge')}
         />
