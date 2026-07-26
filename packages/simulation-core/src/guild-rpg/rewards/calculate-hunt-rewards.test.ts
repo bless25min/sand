@@ -91,7 +91,7 @@ const equipmentAffixes: readonly EquipmentAffixDefinition[] = [
 ];
 
 const profile: GuildProfile = {
-  version: 2,
+  version: 3,
   leaderId: 'hero',
   party: [],
   inventory: [],
@@ -101,6 +101,12 @@ const profile: GuildProfile = {
   questRecords: {},
   nextLootSeed: 7,
   selectedBuildId: 'retaliation',
+  loadouts: {},
+  completedChallengeIds: [],
+  discoveredEquipmentIds: [],
+  discoveredRuleIds: [],
+  forgeSequence: 0,
+  progressionEvents: [],
 };
 
 function combo(

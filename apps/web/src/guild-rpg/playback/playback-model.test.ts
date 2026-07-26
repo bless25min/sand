@@ -13,13 +13,12 @@ function releaseFullCommand() {
   for (const cardId of [
     'brann_brace',
     'brann_riposte',
+    'brann_shield_crash',
     'brann_sweep',
-    'lyra_mark',
-    'lyra_piercing_shot',
-    'lyra_ricochet',
+    'brann_fortress_breaker',
+    'lyra_quickshot',
     'elin_prayer',
-    'elin_overflow_bolt',
-    'elin_radiant_burst',
+    'elin_aegis',
   ]) {
     state = guildRpgReducer(state, { type: 'APPEND_COMBO_CARD', cardId });
   }

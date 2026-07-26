@@ -19,18 +19,6 @@ import { compileCommand } from './compile-command';
 import { resolveCommand } from './resolve-command';
 import { resolveTriggerQueue } from './resolve-trigger-queue';
 
-const FULL_WIPE_COMMAND = [
-  'brann_brace',
-  'brann_riposte',
-  'brann_sweep',
-  'lyra_mark',
-  'lyra_piercing_shot',
-  'lyra_ricochet',
-  'elin_prayer',
-  'elin_overflow_bolt',
-  'elin_radiant_burst',
-] as const;
-
 function release(battle: GuildBattleState, build: CompiledBuild, cardIds: readonly string[]) {
   const command = compileCommand({ cardIds }, GUILD_GAME_CONTENT.cards);
   const prepared: GuildBattleState = {
@@ -78,7 +66,7 @@ describe('golden strong-hunt flow', () => {
     (buildId, ruleName) => {
       const profile = { ...createGuildProfile(GUILD_GAME_CONTENT), selectedBuildId: buildId };
       const build = compileBuild(profile, GUILD_GAME_CONTENT);
-      const battle = release(start(profile), build, FULL_WIPE_COMMAND);
+      const battle = release(start(profile), build, build.cardIds);
 
       expect(battle.status).toBe('victory');
       expect(battle.combo?.events).toEqual(
@@ -146,13 +134,13 @@ describe('golden strong-hunt flow', () => {
     expect(early.combo?.draft.cardIds).toEqual([]);
     expect(early.units.some((unit) => unit.side === 'heroes' && unit.currentHp > 0)).toBe(true);
 
-    const firstBattle = release(start(profile), build, FULL_WIPE_COMMAND);
+    const firstBattle = release(start(profile), build, build.cardIds);
     const firstRewards = huntRewards(profile, firstBattle);
     const rewarded = applyQuestRewards(profile, firstRewards, GUILD_GAME_CONTENT.quests);
     const exclusive = firstRewards.items.find((item) => item.baseId === 'scout_charm')!;
     const equipped = resolveItemChoice(rewarded, exclusive, 'equip', 'lyra').profile;
     const rebuilt = compileBuild(equipped, GUILD_GAME_CONTENT);
-    const replayBattle = release(start(equipped), rebuilt, FULL_WIPE_COMMAND);
+    const replayBattle = release(start(equipped), rebuilt, rebuilt.cardIds);
     const replayRewards = huntRewards(equipped, replayBattle);
     const replayed = applyQuestRewards(equipped, replayRewards, GUILD_GAME_CONTENT.quests);
 

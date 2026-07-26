@@ -3,6 +3,7 @@ import type { ComboRuntimeState } from './combo/runtime';
 import type { GuildAdventurer } from './profile';
 import type { HuntEnemyTrait } from './hunt';
 import type { GuildStats } from './stats';
+import type { AscensionDefinition } from './progression';
 
 export type BattleStatus = 'active' | 'victory' | 'defeat';
 export type BattleSide = 'heroes' | 'enemies';
@@ -52,6 +53,7 @@ export interface GuildBattleState {
   leaderAuto: boolean;
   events: readonly GuildBattleEvent[];
   combo?: ComboRuntimeState;
+  ascension?: AscensionDefinition;
 }
 
 export interface StartBattleInput {

@@ -12,6 +12,7 @@ import { GUILD_EQUIPMENT_AFFIXES, GUILD_EQUIPMENT_BASES } from './equipment';
 import { GUILD_QUESTS } from './quests';
 import { GUILD_SKILLS } from './skills';
 import { GUILD_ZONES } from './campaign/zones';
+import { GUILD_ASCENSIONS, GUILD_CODEX_ENTRIES, GUILD_HUNT_CHALLENGES } from './progression';
 
 export {
   GUILD_ADVENTURERS,
@@ -25,6 +26,9 @@ export {
   GUILD_QUESTS,
   GUILD_SKILLS,
   GUILD_ZONES,
+  GUILD_ASCENSIONS,
+  GUILD_CODEX_ENTRIES,
+  GUILD_HUNT_CHALLENGES,
 };
 
 export const GUILD_GAME_CONTENT: GuildGameContent = {
@@ -38,4 +42,7 @@ export const GUILD_GAME_CONTENT: GuildGameContent = {
   quests: GUILD_QUESTS,
   equipmentBases: GUILD_EQUIPMENT_BASES,
   equipmentAffixes: GUILD_EQUIPMENT_AFFIXES,
+  challenges: GUILD_HUNT_CHALLENGES,
+  ascensions: GUILD_ASCENSIONS,
+  codexEntries: GUILD_CODEX_ENTRIES,
 };

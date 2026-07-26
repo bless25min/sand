@@ -12,9 +12,12 @@ import {
   compileBuild,
   createSeededRandom,
   equipStoredItem,
+  forgeEquipmentItem,
   resolveItemChoice,
   startGuildQuest,
   submitLeaderAction,
+  swapBuildLoadoutCard,
+  type ForgeAction,
 } from '@expedition/simulation-core';
 
 import { reduceComboAction, type ComboCommandAction } from './reduce-combo-action';
@@ -50,7 +53,7 @@ export type GuildRpgAction =
   | { type: 'ADVANCE_PLAYBACK'; count: number }
   | { type: 'SKIP_PLAYBACK' }
   | { type: 'COMPLETE_PLAYBACK' }
-  | { type: 'START_QUEST'; questId: string }
+  | { type: 'START_QUEST'; questId: string; ascensionId?: string }
   | { type: 'TICK'; elapsedMs: number }
   | { type: 'SELECT_TARGET'; targetId: string }
   | { type: 'USE_SKILL'; skillId: string; targetId: string }
@@ -68,6 +71,13 @@ export type GuildRpgAction =
   | { type: 'SET_BUILD'; buildId: string }
   | { type: 'SET_LEADER'; adventurerId: string }
   | { type: 'EQUIP_STORED'; itemId: string; adventurerId: string }
+  | {
+      type: 'SWAP_LOADOUT_CARD';
+      buildId: string;
+      removedCardId: string;
+      addedCardId: string;
+    }
+  | { type: 'FORGE_ITEM'; itemId: string; forgeAction: ForgeAction }
   | { type: 'CHOOSE_ITEM'; itemId: string; choice: ItemChoice; adventurerId: string }
   | { type: 'RETURN_GUILD' };
 
@@ -100,19 +110,27 @@ export function guildRpgReducer(state: GuildRpgState, action: GuildRpgAction): G
     return {
       ...state,
       screen: 'battle',
-      paused: guidedBorderHunt,
+      paused: true,
       pausedBeforeSettings: false,
       settingsOpen: false,
       tutorialReplay:
         guidedBorderHunt &&
         (state.tutorialReplay || Boolean(state.profile.questRecords.border_pack)),
       tutorialPreviewAcknowledged: false,
-      battle: startGuildQuest(state.profile, action.questId, GUILD_GAME_CONTENT),
+      battle: startGuildQuest(
+        state.profile,
+        action.questId,
+        GUILD_GAME_CONTENT,
+        false,
+        action.ascensionId,
+      ),
       rewards: undefined,
       playback: undefined,
       resolvedItemIds: [],
       activatedRuleIds: [],
-      message: '遠征開始，編排軍令時敵人仍會持續進攻。',
+      message: action.ascensionId
+        ? `${GUILD_GAME_CONTENT.ascensions.find((ascension) => ascension.id === action.ascensionId)!.name}啟動——壓力、路線與奇觀全面升階。`
+        : '遠征開始，戰場已停時；只有你明確繼續時間時敵軍才會推進。',
     };
   }
   if (action.type === 'SET_PAUSED') return { ...state, paused: action.paused };
@@ -144,7 +162,7 @@ export function guildRpgReducer(state: GuildRpgState, action: GuildRpgAction): G
       state.battle?.questId === 'border_pack';
     return {
       ...state,
-      paused: pauseGuidedHunt ? true : action.tutorial === 'active' ? state.paused : false,
+      paused: pauseGuidedHunt ? true : state.paused,
       pausedBeforeSettings:
         pauseGuidedHunt && state.settingsOpen ? true : state.pausedBeforeSettings,
       tutorialReplay: replayRequested,
@@ -157,12 +175,11 @@ export function guildRpgReducer(state: GuildRpgState, action: GuildRpgAction): G
       state.battle?.combo?.activatedBossPhaseIds?.includes('alpha-execution');
     const signature = bossExecutionOpen
       ? [
-          'lyra_mark',
-          'lyra_piercing_shot',
-          'lyra_ricochet',
-          'elin_prayer',
-          'elin_overflow_bolt',
-          'elin_radiant_burst',
+          'brann_brace',
+          'brann_riposte',
+          'brann_shield_crash',
+          'brann_sweep',
+          'brann_fortress_breaker',
         ]
       : ['brann_brace', 'brann_riposte', 'brann_sweep'];
     const draft = state.battle?.combo?.draft.cardIds ?? [];
@@ -239,7 +256,7 @@ export function guildRpgReducer(state: GuildRpgState, action: GuildRpgAction): G
     return {
       ...state,
       screen: 'battle',
-      paused: state.preferences.tutorial === 'active' && state.battle.questId === 'border_pack',
+      paused: true,
       pausedBeforeSettings: false,
       playback: undefined,
       message: '軍令播放完成，可以繼續編排下一次釋放。',
@@ -250,7 +267,11 @@ export function guildRpgReducer(state: GuildRpgState, action: GuildRpgAction): G
     if (!build || build.id === state.profile.selectedBuildId) return state;
     return {
       ...state,
-      profile: { ...state.profile, selectedBuildId: build.id },
+      profile: {
+        ...state.profile,
+        selectedBuildId: build.id,
+        discoveredRuleIds: [...new Set([...state.profile.discoveredRuleIds, ...build.ruleIds])],
+      },
       message: `已切換為「${build.name}」。下一次軍令將套用新的規則圖。`,
     };
   }
@@ -266,6 +287,28 @@ export function guildRpgReducer(state: GuildRpgState, action: GuildRpgAction): G
   }
   if (action.type === 'EQUIP_STORED' && state.screen === 'guild') {
     const resolution = equipStoredItem(state.profile, action.itemId, action.adventurerId);
+    return { ...state, profile: resolution.profile, message: resolution.message };
+  }
+  if (action.type === 'SWAP_LOADOUT_CARD' && state.screen === 'guild') {
+    const resolution = swapBuildLoadoutCard(
+      state.profile,
+      action.buildId,
+      action.removedCardId,
+      action.addedCardId,
+      GUILD_GAME_CONTENT,
+    );
+    return { ...state, profile: resolution.profile, message: resolution.message };
+  }
+  if (action.type === 'FORGE_ITEM' && state.screen === 'guild') {
+    const resolution = forgeEquipmentItem(
+      state.profile,
+      action.itemId,
+      action.forgeAction,
+      GUILD_GAME_CONTENT,
+      createSeededRandom(
+        `forge:${state.profile.forgeSequence}:${action.itemId}:${action.forgeAction}`,
+      ),
+    );
     return { ...state, profile: resolution.profile, message: resolution.message };
   }
   if (action.type === 'RETURN_GUILD') {
@@ -343,7 +386,7 @@ export function guildRpgReducer(state: GuildRpgState, action: GuildRpgAction): G
       rules,
       hunt,
     );
-    const next = { ...state, battle: resolution.battle, message: resolution.message };
+    const next = { ...state, paused: true, battle: resolution.battle, message: resolution.message };
     if (action.type !== 'RELEASE_COMBO') return next;
     return {
       ...next,

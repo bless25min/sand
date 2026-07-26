@@ -5,7 +5,7 @@ import type {
   HuntRewards,
 } from '@expedition/shared-types';
 import {
-  applyQuestRewards,
+  applyHuntProgression,
   calculateHuntRewards,
   createSeededRandom,
 } from '@expedition/simulation-core';
@@ -28,11 +28,16 @@ export function reduceHuntResult(
     { profile, battle, hunt, equipmentAffixes: content.equipmentAffixes },
     createSeededRandom(`${battle.seed}:hunt-loot`),
   );
+  const progression = applyHuntProgression(profile, battle, rewards, content);
   return {
     rewards,
-    profile: applyQuestRewards(profile, rewards, content.quests),
+    profile: progression.profile,
     message: rewards.successful
-      ? `狩獵完成：獲得 ${rewards.experience} 經驗、${rewards.gold} 金幣。`
+      ? `狩獵完成：獲得 ${rewards.experience} 經驗、${rewards.gold} 金幣。${
+          progression.newChallengeIds.length > 0
+            ? ` 新完成 ${progression.newChallengeIds.length} 項爽感挑戰！`
+            : ''
+        }`
       : '狩獵失敗：帶回已採集的敵人材料，裝備掉落未解鎖。',
   };
 }

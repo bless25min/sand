@@ -56,6 +56,7 @@ describe('guild profile and rewards', () => {
     expect(profile.leaderId).toBe('lyra');
     expect(profile.unlockedQuestIds).toEqual(['border_pack']);
     expect(profile.inventory).toEqual([]);
+    expect(profile.gold).toBe(200);
     expect(profile.selectedBuildId).toBe('retaliation');
   });
 
@@ -75,7 +76,7 @@ describe('guild profile and rewards', () => {
     const compiled = compileBuild(configured, GUILD_GAME_CONTENT);
     expect(compiled.buildId).toBe('ricochet');
     expect(compiled.cardIds).toEqual(
-      GUILD_GAME_CONTENT.builds.find((build) => build.id === 'ricochet')?.cardIds,
+      GUILD_GAME_CONTENT.builds.find((build) => build.id === 'ricochet')?.defaultCardIds,
     );
     expect(compiled.ruleIds).toEqual(expect.arrayContaining(['ricochet_fork', 'steel_echo']));
   });

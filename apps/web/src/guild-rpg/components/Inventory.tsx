@@ -2,6 +2,7 @@ import { GUILD_GAME_CONTENT } from '@expedition/game-data';
 
 import type { GuildRpgAction, GuildRpgState } from '../state/game-reducer';
 import { InventoryItemCard } from './InventoryItemCard';
+import { ForgeWorkbench } from './ForgeWorkbench';
 
 interface InventoryProps {
   state: GuildRpgState;
@@ -50,6 +51,7 @@ export function Inventory({ state, dispatch }: InventoryProps) {
           ))}
         </div>
       )}
+      <ForgeWorkbench state={state} dispatch={dispatch} />
     </section>
   );
 }

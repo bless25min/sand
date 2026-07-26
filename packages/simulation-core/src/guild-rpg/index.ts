@@ -13,9 +13,19 @@ export { resolveBossPhase } from './combo/resolve-boss-phase';
 export { resolveTriggerQueue } from './combo/resolve-trigger-queue';
 export { equipmentPower, equipmentStatTotals } from './equipment/compare-equipment';
 export { equipStoredItem } from './equipment/equip-stored-item';
+export {
+  FORGE_COSTS,
+  forgeEquipmentItem,
+  previewForgeEquipmentItem,
+  type ForgeAction,
+  type ForgePreview,
+} from './equipment/forge-equipment';
 export { resolveItemChoice } from './equipment/resolve-item-choice';
 export { createGuildProfile } from './profile/create-profile';
+export { validateBuildLoadout } from './profile/validate-build-loadout';
 export { startGuildQuest } from './profile/start-quest';
+export { swapBuildLoadoutCard } from './profile/swap-build-loadout-card';
+export { applyHuntProgression, evaluateHuntChallenges } from './progression/replay-progression';
 export { applyQuestRewards } from './rewards/apply-rewards';
 export { calculateHuntRewards } from './rewards/calculate-hunt-rewards';
 export { generateEquipmentItem, generateQuestRewards } from './rewards/generate-rewards';

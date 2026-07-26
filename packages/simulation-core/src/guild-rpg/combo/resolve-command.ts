@@ -24,6 +24,18 @@ function replaceUnit(units: BattleUnit[], nextUnit: BattleUnit) {
   units[index] = nextUnit;
 }
 
+function cardDamageMultiplier(battle: GuildBattleState, cardId: string) {
+  const ascension = battle.ascension;
+  if (!ascension) return 1;
+  if (ascension.route === 'signature' && battle.combo?.signatureCardIds?.includes(cardId)) {
+    return ascension.signatureDamageMultiplier ?? 1;
+  }
+  if (ascension.route === 'overkill') {
+    return ascension.overkillDamageMultiplier ?? 1;
+  }
+  return 1;
+}
+
 export function resolveCommand(
   battle: GuildBattleState,
   command: CompiledCommand,
@@ -48,6 +60,7 @@ export function resolveCommand(
       kind: 'card_played',
       message: `${card.name}加入連擊。`,
       actorId: card.ownerId,
+      cardId: card.id,
       ...(card.cueId ? { cueId: card.cueId } : {}),
     });
 
@@ -93,6 +106,7 @@ export function resolveCommand(
       }
 
       const enemies = livingEnemies(units);
+      const ascendedAmount = Math.round(effect.amount * cardDamageMultiplier(battle, card.id));
       const targets =
         effect.target === 'all_enemies'
           ? enemies
@@ -101,15 +115,15 @@ export function resolveCommand(
             );
 
       if (targets.length === 0) {
-        const outcome = applyComboDamage(undefined, effect.amount, metrics, true);
+        const outcome = applyComboDamage(undefined, ascendedAmount, metrics, true);
         metrics = outcome.metrics;
         pushEvent({
           causalId,
           parentCausalId: step.causalId,
           kind: 'overkill',
-          message: `ANNIHILATION OVERFLOW +${effect.amount}`,
+          message: `ANNIHILATION OVERFLOW +${ascendedAmount}`,
           actorId: card.ownerId,
-          amount: effect.amount,
+          amount: ascendedAmount,
           cueId: 'overkill',
         });
         return;
@@ -117,7 +131,7 @@ export function resolveCommand(
 
       targets.forEach((target) => {
         const remainingEnemyCount = livingEnemies(units).length;
-        const amount = calculateHuntDamage(target, units, effect.amount);
+        const amount = calculateHuntDamage(target, units, ascendedAmount);
         const outcome = applyComboDamage(target, amount, metrics, remainingEnemyCount === 1);
         metrics = outcome.metrics;
         if (outcome.target) replaceUnit(units, outcome.target);
@@ -158,6 +172,11 @@ export function resolveCommand(
   }
 
   const enemiesAlive = livingEnemies(units).length > 0;
+  metrics = {
+    ...metrics,
+    commandCount: (metrics.commandCount ?? 0) + 1,
+    bestCommandCardCount: Math.max(metrics.bestCommandCardCount ?? 0, command.cardIds.length),
+  };
   if (!enemiesAlive) {
     pushEvent({
       causalId: `victory:${battle.sequence}`,

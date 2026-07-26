@@ -20,6 +20,7 @@ export function InventoryItemCard({ item, selected = false, children }: Inventor
         {RARITY_LABEL[item.rarity]} · {SLOT_LABEL[item.slot]}
       </p>
       <h3>{item.name}</h3>
+      {item.forgeRank ? <b className="gr-item__forge-rank">FORGE +{item.forgeRank}</b> : null}
       <strong>
         {STAT_LABEL[item.mainStat.stat]} +{item.mainStat.value}
       </strong>

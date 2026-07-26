@@ -12,6 +12,7 @@ interface QuestActionsInput {
   replay: boolean;
   dispatch: React.Dispatch<GuildRpgAction>;
   setQuestIndex: Dispatch<SetStateAction<number>>;
+  onOpenArchive?: () => void;
 }
 
 export function createQuestThumbActions({
@@ -21,6 +22,7 @@ export function createQuestThumbActions({
   replay,
   dispatch,
   setQuestIndex,
+  onOpenArchive,
 }: QuestActionsInput): readonly ThumbDeckAction[] {
   return [
     {
@@ -34,6 +36,14 @@ export function createQuestThumbActions({
       label: '下一個',
       slot: 'choice-a',
       onPress: () => setQuestIndex((current) => wrapThumbIndex(current, questCount, 1)),
+    },
+    {
+      id: 'archive',
+      label: '檔案館',
+      detail: '挑戰 · 紀錄 · Ascended',
+      slot: 'utility',
+      disabled: !onOpenArchive,
+      onPress: onOpenArchive ?? (() => undefined),
     },
     {
       id: 'start-quest',

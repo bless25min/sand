@@ -3,6 +3,7 @@ import type { HuntDefinition } from './hunt';
 import type { CardCatalog } from './combo/content';
 import type { BuildDefinition, RuleCatalog } from './combo/rules';
 import type { GuildStats } from './stats';
+import type { AscensionDefinition, GuildCodexEntry, HuntChallengeDefinition } from './progression';
 
 export type AdventurerRole = 'vanguard' | 'ranger' | 'cleric';
 export type SkillKind = 'attack' | 'heal' | 'guard';
@@ -65,4 +66,7 @@ export interface GuildGameContent {
   quests: readonly QuestDefinition[];
   equipmentBases: readonly EquipmentBaseDefinition[];
   equipmentAffixes: readonly EquipmentAffixDefinition[];
+  challenges: readonly HuntChallengeDefinition[];
+  ascensions: readonly AscensionDefinition[];
+  codexEntries: readonly GuildCodexEntry[];
 }

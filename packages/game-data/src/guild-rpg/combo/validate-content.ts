@@ -96,13 +96,30 @@ export function validateComboContent(content: ComboContent): readonly ContentDia
         report('unknown_card', `builds.${index}.cardIds`, `${cardId} 不存在`);
       }
     });
+    const defaultCardIds = build.defaultCardIds ?? [];
+    if (defaultCardIds.length !== 8 || new Set(defaultCardIds).size !== defaultCardIds.length) {
+      report(
+        'invalid_default_loadout',
+        `builds.${index}.defaultCardIds`,
+        '預設牌組必須正好包含八張不重複卡牌',
+      );
+    }
+    defaultCardIds.forEach((cardId) => {
+      if (!content.cards[cardId] || !build.cardIds.includes(cardId)) {
+        report('unknown_default_card', `builds.${index}.defaultCardIds`, `${cardId} 不在卡池中`);
+      }
+    });
     build.ruleIds.forEach((ruleId) => {
       if (!content.rules[ruleId]) {
         report('unknown_rule', `builds.${index}.ruleIds`, `${ruleId} 不存在`);
       }
     });
     (build.signatureCardIds ?? []).forEach((cardId) => {
-      if (!content.cards[cardId] || !build.cardIds.includes(cardId)) {
+      if (
+        !content.cards[cardId] ||
+        !build.cardIds.includes(cardId) ||
+        !defaultCardIds.includes(cardId)
+      ) {
         report(
           'unknown_signature_card',
           `builds.${index}.signatureCardIds`,
@@ -207,6 +224,8 @@ export function validateCampaignContent(content: GuildGameContent): readonly Con
     ['quests', content.quests.length, 12],
     ['hunts', content.hunts.length, 12],
     ['builds', content.builds.length, 4],
+    ['challenges', content.challenges.length, 48],
+    ['ascensions', content.ascensions.length, 3],
   ] as const;
   for (const [path, actual, expected] of releaseCounts) {
     if (actual !== expected) {
@@ -332,6 +351,64 @@ export function validateCampaignContent(content: GuildGameContent): readonly Con
         }
       }
     }
+  }
+
+  const challengeIds = new Set<string>();
+  for (const hunt of content.hunts) {
+    const challenges = content.challenges.filter((challenge) => challenge.huntId === hunt.id);
+    const kinds = new Set(challenges.map((challenge) => challenge.kind));
+    if (
+      challenges.length !== 4 ||
+      !(['one_command', 'overkill', 'build_route', 'execution'] as const).every((kind) =>
+        kinds.has(kind),
+      )
+    ) {
+      report('invalid_hunt_challenges', `challenges.${hunt.id}`, '每場必須具備四種爽感挑戰');
+    }
+    for (const challenge of challenges) {
+      if (challengeIds.has(challenge.id)) {
+        report('duplicate_challenge', `challenges.${challenge.id}`, '挑戰 ID 不可重複');
+      }
+      challengeIds.add(challenge.id);
+      if (challenge.questId !== hunt.questId) {
+        report('mismatched_challenge_quest', `challenges.${challenge.id}`, challenge.questId);
+      }
+      if (challenge.kind === 'build_route' && !buildIds.has(challenge.requiredBuildId ?? '')) {
+        report('unknown_challenge_build', `challenges.${challenge.id}`, 'Build 路線不存在');
+      }
+      if (
+        challenge.kind === 'execution' &&
+        !hunt.enemies.some((enemy) => enemy.enemyId === challenge.executionEnemyId)
+      ) {
+        report('unknown_challenge_execution', `challenges.${challenge.id}`, '處刑目標不存在');
+      }
+      if (
+        challenge.kind === 'overkill' &&
+        (!challenge.overkillThreshold || challenge.overkillThreshold <= 0)
+      ) {
+        report('invalid_challenge_threshold', `challenges.${challenge.id}`, 'Overkill 門檻無效');
+      }
+    }
+  }
+  if (
+    new Set(content.ascensions.map((ascension) => ascension.id)).size !== 3 ||
+    content.ascensions.some(
+      (ascension) =>
+        ascension.pressureMultiplier <= 1 ||
+        !SPECTACLE_CUES.has(ascension.cueId) ||
+        !SPECTACLE_MOTIFS.has(ascension.motif) ||
+        ascension.routeLabel.trim() === '',
+    )
+  ) {
+    report('invalid_ascensions', 'ascensions', 'Ascension 必須提供唯一壓力、路線與奇觀身分');
+  }
+  const codexCategories = new Set(content.codexEntries.map((entry) => entry.category));
+  if (
+    !(['enemy', 'equipment', 'rule', 'build', 'zone', 'challenge'] as const).every((category) =>
+      codexCategories.has(category),
+    )
+  ) {
+    report('incomplete_codex', 'codexEntries', '圖鑑缺少必要分類');
   }
 
   diagnostics.push(...validateHuntBossPhases(content.hunts));

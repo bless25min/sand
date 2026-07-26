@@ -15,13 +15,12 @@ const dispatch = () => undefined;
 const FULL_WIPE_COMMAND = [
   'brann_brace',
   'brann_riposte',
+  'brann_shield_crash',
   'brann_sweep',
-  'lyra_mark',
-  'lyra_piercing_shot',
-  'lyra_ricochet',
+  'brann_fortress_breaker',
+  'lyra_quickshot',
   'elin_prayer',
-  'elin_overflow_bolt',
-  'elin_radiant_burst',
+  'elin_aegis',
 ] as const;
 
 function start() {

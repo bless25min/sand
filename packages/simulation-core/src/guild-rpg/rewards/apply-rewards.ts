@@ -63,6 +63,7 @@ export function applyQuestRewards(
     questRecords: {
       ...profile.questRecords,
       [rewards.questId]: {
+        ...previous,
         clears: (previous?.clears ?? 0) + 1,
         bestClearMs:
           previous?.bestClearMs === undefined

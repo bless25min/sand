@@ -2,6 +2,7 @@ import { GUILD_GAME_CONTENT } from '@expedition/game-data';
 import { compileBuild } from '@expedition/simulation-core';
 
 import type { GuildRpgAction, GuildRpgState } from '../state/game-reducer';
+import { LoadoutEditor } from '../components/LoadoutEditor';
 
 interface BuildWorkbenchProps {
   state: GuildRpgState;
@@ -68,6 +69,7 @@ export function BuildWorkbench({ state, dispatch }: BuildWorkbenchProps) {
           <strong>{equipmentRuleIds.size || '尚無'}</strong>
         </div>
       </div>
+      <LoadoutEditor state={state} dispatch={dispatch} />
     </section>
   );
 }

@@ -9,20 +9,8 @@ import { compileCommand } from './compile-command';
 import { resolveCommand } from './resolve-command';
 import { resolveTriggerQueue } from './resolve-trigger-queue';
 
-const OVERDRIVE_COMMAND = [
-  'brann_brace',
-  'brann_riposte',
-  'brann_sweep',
-  'lyra_mark',
-  'lyra_piercing_shot',
-  'lyra_ricochet',
-  'elin_prayer',
-  'elin_overflow_bolt',
-  'elin_radiant_burst',
-] as const;
-
 function release(battle: GuildBattleState, build: CompiledBuild) {
-  const command = compileCommand({ cardIds: OVERDRIVE_COMMAND }, GUILD_GAME_CONTENT.cards);
+  const command = compileCommand({ cardIds: build.cardIds }, GUILD_GAME_CONTENT.cards);
   const resolved = resolveCommand(battle, command, GUILD_GAME_CONTENT.cards);
   const rules = Object.fromEntries(
     build.ruleIds.map((ruleId) => [ruleId, GUILD_GAME_CONTENT.rules[ruleId]!]),

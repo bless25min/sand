@@ -25,6 +25,7 @@ import './thumb-command-deck.css';
 import './mobile-guild.css';
 import './mobile-battle.css';
 import './mobile-rewards.css';
+import './long-term-loop.css';
 
 function initialState() {
   return typeof window === 'undefined'

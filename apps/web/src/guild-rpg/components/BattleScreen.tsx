@@ -78,6 +78,21 @@ export function BattleScreen({ state, dispatch }: BattleScreenProps) {
         </div>
       </header>
 
+      {battle.ascension && (
+        <section
+          className="gr-ascension-banner"
+          data-ascension={battle.ascension.id}
+          data-cue={battle.ascension.cueId}
+          data-motif={battle.ascension.motif}
+        >
+          <div>
+            <p>ASCENDED HUNT · {battle.ascension.routeLabel}</p>
+            <strong>{battle.ascension.name}</strong>
+          </div>
+          <span>{battle.ascension.description}</span>
+        </section>
+      )}
+
       {coach && (
         <section className="gr-coach" data-coach-step={coach.step} aria-live="polite">
           <div>

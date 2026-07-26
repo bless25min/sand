@@ -18,6 +18,7 @@ import {
 describe('combo content factory', () => {
   it('ships four valid anchor builds through the bounded vocabulary', () => {
     expect(validateComboContent(GUILD_COMBO_CONTENT)).toEqual([]);
+    expect(Object.keys(GUILD_COMBO_CONTENT.cards)).toHaveLength(16);
     expect(GUILD_COMBO_CONTENT.builds.map((build) => build.id)).toEqual([
       'retaliation',
       'ricochet',
@@ -32,6 +33,16 @@ describe('combo content factory', () => {
       expect(build.signatureCardIds.length, build.id).toBeGreaterThanOrEqual(3);
       expect(
         build.signatureCardIds.every((cardId) => build.cardIds.includes(cardId)),
+        build.id,
+      ).toBe(true);
+      expect(build.defaultCardIds, build.id).toHaveLength(8);
+      expect(new Set(build.defaultCardIds).size, build.id).toBe(8);
+      expect(
+        build.defaultCardIds.every((cardId) => build.cardIds.includes(cardId)),
+        build.id,
+      ).toBe(true);
+      expect(
+        build.signatureCardIds.every((cardId) => build.defaultCardIds.includes(cardId)),
         build.id,
       ).toBe(true);
     }
@@ -49,6 +60,21 @@ describe('combo content factory', () => {
       new Set(GUILD_HUNTS.flatMap((hunt) => (hunt.bossEnemyId ? [hunt.bossEnemyId] : []))).size,
     ).toBe(6);
     expect(GUILD_COMBO_CONTENT.builds).toHaveLength(4);
+    expect(GUILD_GAME_CONTENT.challenges).toHaveLength(48);
+    expect(GUILD_GAME_CONTENT.ascensions).toHaveLength(3);
+    expect(new Set(GUILD_GAME_CONTENT.challenges.map((challenge) => challenge.id)).size).toBe(48);
+    for (const hunt of GUILD_HUNTS) {
+      expect(
+        GUILD_GAME_CONTENT.challenges
+          .filter((challenge) => challenge.huntId === hunt.id)
+          .map((challenge) => challenge.kind)
+          .sort(),
+        hunt.id,
+      ).toEqual(['build_route', 'execution', 'one_command', 'overkill']);
+    }
+    expect(new Set(GUILD_GAME_CONTENT.codexEntries.map((entry) => entry.category))).toEqual(
+      new Set(['enemy', 'equipment', 'rule', 'build', 'zone', 'challenge']),
+    );
   });
 
   it('keeps every zone ordered, traceable, and mechanically complete', () => {

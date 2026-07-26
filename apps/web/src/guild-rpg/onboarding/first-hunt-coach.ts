@@ -41,12 +41,11 @@ export interface FirstHuntCoach {
 
 const OPENING_SIGNATURE = ['brann_brace', 'brann_riposte', 'brann_sweep'] as const;
 const EXECUTION_SIGNATURE = [
-  'lyra_mark',
-  'lyra_piercing_shot',
-  'lyra_ricochet',
-  'elin_prayer',
-  'elin_overflow_bolt',
-  'elin_radiant_burst',
+  'brann_brace',
+  'brann_riposte',
+  'brann_shield_crash',
+  'brann_sweep',
+  'brann_fortress_breaker',
 ] as const;
 
 function signatureStep(input: CoachInput): FirstHuntCoach {
@@ -75,7 +74,7 @@ function signatureStep(input: CoachInput): FirstHuntCoach {
   if (nextIndex < signature.length) {
     const expectedCardId = signature[nextIndex]!;
     const names = input.bossExecutionOpen
-      ? ['鷹眼標記', '貫心箭', '彈射箭雨', '晨光祈禱', '溢光裁決', '輝光爆裂']
+      ? ['架盾', '盾後反擊', '盾擊破勢', '破陣橫掃', '城塞粉碎']
       : ['架盾', '盾後反擊', '破陣橫掃'];
     return {
       step: input.bossExecutionOpen

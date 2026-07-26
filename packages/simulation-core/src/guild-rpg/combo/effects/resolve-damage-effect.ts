@@ -30,7 +30,15 @@ function selectTargets(context: RuleEffectContext, units: readonly BattleUnit[])
 export function resolveDamageEffect(context: RuleEffectContext): RuleEffectResult {
   const runtime = context.battle.combo;
   if (!runtime) return { battle: context.battle, events: [] };
-  const amount = Math.max(0, context.effect.amount ?? 0);
+  const amount = Math.max(
+    0,
+    Math.round(
+      (context.effect.amount ?? 0) *
+        (context.battle.ascension?.route === 'overkill'
+          ? (context.battle.ascension.overkillDamageMultiplier ?? 1)
+          : 1),
+    ),
+  );
   const units = context.battle.units.map((unit) => ({ ...unit }));
   const targets = selectTargets(context, units);
   const events: ComboEvent[] = [];

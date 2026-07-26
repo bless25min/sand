@@ -78,6 +78,7 @@ export interface BuildDefinition {
   signatureCardIds: readonly string[];
   accent: SpectacleMotifId;
   cardIds: readonly string[];
+  defaultCardIds: readonly string[];
   ruleIds: readonly string[];
 }
 

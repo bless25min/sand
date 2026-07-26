@@ -12,7 +12,7 @@ export function createGuildProfile(content: GuildGameContent): GuildProfile {
     content.adventurers[0]!;
 
   return {
-    version: 2,
+    version: 3,
     leaderId: preferredLeader.id,
     party: content.adventurers.map((definition) => ({
       definitionId: definition.id,
@@ -22,10 +22,18 @@ export function createGuildProfile(content: GuildGameContent): GuildProfile {
     })),
     inventory: [],
     materials: {},
-    gold: 40,
+    gold: 200,
     unlockedQuestIds: [firstQuest.id],
     questRecords: {},
     nextLootSeed: 1,
     selectedBuildId: firstBuild.id,
+    loadouts: Object.fromEntries(
+      content.builds.map((build) => [build.id, [...build.defaultCardIds]]),
+    ),
+    completedChallengeIds: [],
+    discoveredEquipmentIds: [],
+    discoveredRuleIds: [...firstBuild.ruleIds],
+    forgeSequence: 0,
+    progressionEvents: [],
   };
 }

@@ -11,6 +11,9 @@ import { createCampaignProgressModel } from '../presentation/campaign-progress-m
 import type { GuildRpgAction, GuildRpgState } from '../state/game-reducer';
 import { GuildMobileFocus } from './GuildMobileFocus';
 import { ThumbCommandDeck } from './ThumbCommandDeck';
+import { ArchiveCommandCenter } from './ArchiveCommandCenter';
+import { ForgeWorkbench } from './ForgeWorkbench';
+import { LoadoutEditor } from './LoadoutEditor';
 
 interface GuildMobileStageProps {
   state: GuildRpgState;
@@ -19,6 +22,7 @@ interface GuildMobileStageProps {
 }
 
 export function GuildMobileStage({ state, dispatch, initialPage }: GuildMobileStageProps) {
+  const [utilityPanel, setUtilityPanel] = useState<'loadout' | 'forge' | 'archive'>();
   const campaign = createCampaignProgressModel({
     content: GUILD_GAME_CONTENT,
     unlockedQuestIds: state.profile.unlockedQuestIds,
@@ -96,6 +100,7 @@ export function GuildMobileStage({ state, dispatch, initialPage }: GuildMobileSt
           activeBuildId: state.profile.selectedBuildId,
           dispatch,
           setBuildIndex,
+          onOpenLoadout: () => setUtilityPanel('loadout'),
         })
       : page === 'quest'
         ? createQuestThumbActions({
@@ -105,6 +110,7 @@ export function GuildMobileStage({ state, dispatch, initialPage }: GuildMobileSt
             replay: Boolean(state.profile.questRecords[quest.id]),
             dispatch,
             setQuestIndex,
+            onOpenArchive: () => setUtilityPanel('archive'),
           })
         : page === 'party'
           ? createPartyThumbActions({
@@ -151,6 +157,7 @@ export function GuildMobileStage({ state, dispatch, initialPage }: GuildMobileSt
           visibleItems={visibleItems}
           selectedItemId={selectedItem?.id}
           dispatch={dispatch}
+          onOpenForge={() => setUtilityPanel('forge')}
         />
       </div>
       <ThumbCommandDeck
@@ -186,6 +193,33 @@ export function GuildMobileStage({ state, dispatch, initialPage }: GuildMobileSt
         ]}
         actions={actions}
       />
+      {utilityPanel && (
+        <div className="gr-mobile-utility-overlay" role="dialog" aria-modal="true">
+          {utilityPanel === 'loadout' ? (
+            <LoadoutEditor
+              state={state}
+              dispatch={dispatch}
+              onClose={() => setUtilityPanel(undefined)}
+              onOpenSettings={() => {
+                setUtilityPanel(undefined);
+                dispatch({ type: 'SET_SETTINGS_OPEN', open: true });
+              }}
+            />
+          ) : utilityPanel === 'forge' ? (
+            <ForgeWorkbench
+              state={state}
+              dispatch={dispatch}
+              onClose={() => setUtilityPanel(undefined)}
+            />
+          ) : (
+            <ArchiveCommandCenter
+              state={state}
+              dispatch={dispatch}
+              onClose={() => setUtilityPanel(undefined)}
+            />
+          )}
+        </div>
+      )}
     </section>
   );
 }

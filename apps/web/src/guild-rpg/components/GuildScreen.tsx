@@ -7,6 +7,7 @@ import { AdventurerCard } from './AdventurerCard';
 import { GuildMobileStage } from './GuildMobileStage';
 import { Inventory } from './Inventory';
 import { CampaignZonePanel } from './CampaignZonePanel';
+import { ArchiveCommandCenter } from './ArchiveCommandCenter';
 
 interface GuildScreenProps {
   state: GuildRpgState;
@@ -116,6 +117,7 @@ export function GuildScreen({ state, dispatch }: GuildScreenProps) {
           </div>
         </section>
 
+        <ArchiveCommandCenter state={state} dispatch={dispatch} />
         <Inventory state={state} dispatch={dispatch} />
       </div>
     </main>

@@ -21,7 +21,7 @@ export function advanceComposition(battle: GuildBattleState, elapsedMs: number):
   for (const enemy of units.filter((unit) => unit.side === 'enemies' && unit.currentHp > 0)) {
     const pressureMultiplier = (enemy.huntTraits ?? []).reduce(
       (multiplier, trait) => multiplier * (trait.pressureMultiplier ?? 1),
-      1,
+      battle.ascension?.pressureMultiplier ?? 1,
     );
     enemy.gauge +=
       (enemy.stats.speed * pressureMultiplier * elapsedMs * COMPOSITION_TIME_SCALE) /

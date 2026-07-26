@@ -4,4 +4,5 @@ export type * from './equipment';
 export type * from './hunt';
 export type * from './hunt-reward-input';
 export type * from './profile';
+export type * from './progression';
 export type * from './stats';

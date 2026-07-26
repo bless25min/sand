@@ -13,6 +13,9 @@ export interface EquipmentItem {
   affixes: readonly StatModifier[];
   sellValue: number;
   ruleIds?: readonly string[];
+  sourceEnemyId?: string;
+  forgeMaterialId?: string;
+  forgeRank?: number;
 }
 
 export interface EquipmentLoadout {
@@ -27,6 +30,7 @@ export interface EquipmentBaseDefinition {
   slot: GuildEquipmentSlot;
   mainStat: StatModifier['stat'];
   baseValue: number;
+  forgeMaterialId: string;
   ruleIds?: readonly string[];
 }
 

@@ -13,10 +13,19 @@ export interface QuestRecord {
   bestOverkill?: number;
   bestLootMultiplier?: number;
   bestItemQuality?: number;
+  bestChain?: number;
+  ascendedClears?: number;
+}
+
+export interface GuildProgressionEvent {
+  id: string;
+  kind: 'forge' | 'challenge' | 'ascension';
+  label: string;
+  detail: string;
 }
 
 export interface GuildProfile {
-  version: 2;
+  version: 3;
   leaderId: string;
   party: readonly GuildAdventurer[];
   inventory: readonly EquipmentItem[];
@@ -26,6 +35,12 @@ export interface GuildProfile {
   questRecords: Readonly<Record<string, QuestRecord>>;
   nextLootSeed: number;
   selectedBuildId: string;
+  loadouts: Readonly<Record<string, readonly string[]>>;
+  completedChallengeIds: readonly string[];
+  discoveredEquipmentIds: readonly string[];
+  discoveredRuleIds: readonly string[];
+  forgeSequence: number;
+  progressionEvents: readonly GuildProgressionEvent[];
 }
 
 export interface QuestRewards {

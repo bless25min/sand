@@ -14,13 +14,12 @@ const dispatch = () => undefined;
 const FULL_WIPE_COMMAND = [
   'brann_brace',
   'brann_riposte',
+  'brann_shield_crash',
   'brann_sweep',
-  'lyra_mark',
-  'lyra_piercing_shot',
-  'lyra_ricochet',
+  'brann_fortress_breaker',
+  'lyra_quickshot',
   'elin_prayer',
-  'elin_overflow_bolt',
-  'elin_radiant_burst',
+  'elin_aegis',
 ] as const;
 
 function reachRewards(): GuildRpgState {
@@ -80,7 +79,7 @@ function reachExecutionWindow(): GuildRpgState {
       ),
     },
   };
-  for (const cardId of ['lyra_quickshot', 'lyra_ricochet']) {
+  for (const cardId of ['lyra_quickshot', 'brann_sweep']) {
     state = guildRpgReducer(state, { type: 'APPEND_COMBO_CARD', cardId });
   }
   state = guildRpgReducer(state, { type: 'RELEASE_COMBO' });
@@ -99,6 +98,7 @@ describe('right-thumb mobile flow', () => {
     expect(markup).toContain('>任務<');
     expect(markup).toContain('>隊伍<');
     expect(markup).toContain('>背包<');
+    expect(markup).toContain('檔案館');
     expect(markup).toContain('data-thumb-slot="primary"');
     expect(markup).toContain('開始遠征');
   });
@@ -183,6 +183,7 @@ describe('right-thumb mobile flow', () => {
     expect(markup).toContain('目前 Build');
     expect(markup).toContain('data-thumb-slot="primary"');
     expect(markup).toContain('盾牆蓄爆');
+    expect(markup).toContain('牌組編成');
   });
 
   it('starts a fresh first hunt on Build before showing the quest action', () => {
@@ -208,6 +209,20 @@ describe('right-thumb mobile flow', () => {
     expect(inventoryMarkup).toContain(inventoryState.profile.inventory[0]!.name);
     expect(inventoryMarkup).toContain('裝備給');
     expect(inventoryMarkup).toContain('下一頁');
+    expect(inventoryMarkup).toContain('開啟鍛造');
+  });
+
+  it('keeps the mobile forge reachable when the backpack page has no visible items', () => {
+    const markup = renderToStaticMarkup(
+      <GuildMobileStage
+        state={createGuildRpgState()}
+        dispatch={dispatch}
+        initialPage="inventory"
+      />,
+    );
+
+    expect(markup).toContain('完成遠征並保留裝備後');
+    expect(markup).toContain('開啟鍛造');
   });
 
   it('keeps card, command, target, undo, and release controls in the battle thumb deck', () => {
@@ -297,11 +312,11 @@ describe('right-thumb mobile flow', () => {
 
   it('keeps the next boss-execution card in the visible thumb slots', () => {
     let state = reachExecutionWindow();
-    state = guildRpgReducer(state, { type: 'APPEND_COMBO_CARD', cardId: 'lyra_mark' });
+    state = guildRpgReducer(state, { type: 'APPEND_COMBO_CARD', cardId: 'brann_brace' });
 
     const markup = renderToStaticMarkup(<BattleScreen state={state} dispatch={dispatch} />);
-    expect(markup).toContain('處決鏈 2/6：選 貫心箭');
-    expect(markup).toContain('>貫心箭<');
+    expect(markup).toContain('處決鏈 2/5：選 盾後反擊');
+    expect(markup).toContain('>盾後反擊<');
   });
 
   it('renders a material-only failed hunt with an immediate safe return', () => {

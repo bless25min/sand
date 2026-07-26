@@ -72,6 +72,7 @@ export function generateEquipmentItem(
     mainStat: { stat: base.mainStat, value: mainValue },
     affixes,
     sellValue: Math.round((mainValue + affixes.reduce((sum, affix) => sum + affix.value, 0)) * 1.6),
+    forgeMaterialId: base.forgeMaterialId,
     ...(base.ruleIds ? { ruleIds: base.ruleIds } : {}),
   };
 }

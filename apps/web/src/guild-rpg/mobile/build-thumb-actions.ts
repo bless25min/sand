@@ -11,6 +11,7 @@ interface BuildActionsInput {
   activeBuildId: string;
   dispatch: React.Dispatch<GuildRpgAction>;
   setBuildIndex: Dispatch<SetStateAction<number>>;
+  onOpenLoadout?: () => void;
 }
 
 export function createBuildThumbActions({
@@ -19,6 +20,7 @@ export function createBuildThumbActions({
   activeBuildId,
   dispatch,
   setBuildIndex,
+  onOpenLoadout,
 }: BuildActionsInput): readonly ThumbDeckAction[] {
   const active = build.id === activeBuildId;
   return [
@@ -35,10 +37,10 @@ export function createBuildThumbActions({
       onPress: () => setBuildIndex((current) => wrapThumbIndex(current, buildCount, 1)),
     },
     {
-      id: 'settings',
-      label: '設定',
+      id: onOpenLoadout ? 'loadout' : 'settings',
+      label: onOpenLoadout ? '牌組編成' : '設定',
       slot: 'utility',
-      onPress: () => dispatch({ type: 'SET_SETTINGS_OPEN', open: true }),
+      onPress: onOpenLoadout ?? (() => dispatch({ type: 'SET_SETTINGS_OPEN', open: true })),
     },
     {
       id: 'activate-build',

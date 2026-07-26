@@ -72,7 +72,7 @@ describe('first hunt coach', () => {
     ).toMatchObject({ step: 'brace', paused: true });
   });
 
-  it('continues from the broken guards into a six-card boss execution route', () => {
+  it('continues from the broken guards into a five-card boss execution route', () => {
     expect(
       createFirstHuntCoach(input({ bossExecutionOpen: true, selectedTargetId: 'wolf_scout' })),
     ).toMatchObject({ step: 'target', paused: true });
@@ -80,7 +80,7 @@ describe('first hunt coach', () => {
       createFirstHuntCoach(input({ bossExecutionOpen: true, selectedTargetId: 'wolf_alpha' })),
     ).toMatchObject({
       step: 'execution',
-      expectedCardId: 'lyra_mark',
+      expectedCardId: 'brann_brace',
       paused: true,
     });
     expect(
@@ -88,22 +88,21 @@ describe('first hunt coach', () => {
         input({
           bossExecutionOpen: true,
           selectedTargetId: 'wolf_alpha',
-          draftCardIds: ['lyra_mark'],
+          draftCardIds: ['brann_brace'],
         }),
       )?.message,
-    ).toContain('貫心箭');
+    ).toContain('盾後反擊');
     expect(
       createFirstHuntCoach(
         input({
           bossExecutionOpen: true,
           selectedTargetId: 'wolf_alpha',
           draftCardIds: [
-            'lyra_mark',
-            'lyra_piercing_shot',
-            'lyra_ricochet',
-            'elin_prayer',
-            'elin_overflow_bolt',
-            'elin_radiant_burst',
+            'brann_brace',
+            'brann_riposte',
+            'brann_shield_crash',
+            'brann_sweep',
+            'brann_fortress_breaker',
           ],
         }),
       ),

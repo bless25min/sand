@@ -33,6 +33,7 @@ interface GuildMobileFocusProps {
   visibleItems: readonly EquipmentItem[];
   selectedItemId?: string | undefined;
   dispatch: React.Dispatch<GuildRpgAction>;
+  onOpenForge?: () => void;
 }
 
 export function GuildMobileFocus({
@@ -53,6 +54,7 @@ export function GuildMobileFocus({
   visibleItems,
   selectedItemId,
   dispatch,
+  onOpenForge,
 }: GuildMobileFocusProps) {
   if (page === 'build') {
     return (
@@ -118,14 +120,30 @@ export function GuildMobileFocus({
   }
 
   if (visibleItems.length === 0) {
-    return <div className="gr-empty">完成遠征並保留裝備後，物品會出現在這裡。</div>;
+    return (
+      <div>
+        <div className="gr-empty">完成遠征並保留裝備後，物品會出現在這裡。</div>
+        {onOpenForge && (
+          <button type="button" className="gr-mobile-inline-utility" onClick={onOpenForge}>
+            開啟鍛造
+          </button>
+        )}
+      </div>
+    );
   }
 
   return (
-    <div className="gr-mobile-inventory-pair">
-      {visibleItems.map((item) => (
-        <InventoryItemCard item={item} selected={item.id === selectedItemId} key={item.id} />
-      ))}
+    <div>
+      <div className="gr-mobile-inventory-pair">
+        {visibleItems.map((item) => (
+          <InventoryItemCard item={item} selected={item.id === selectedItemId} key={item.id} />
+        ))}
+      </div>
+      {onOpenForge && (
+        <button type="button" className="gr-mobile-inline-utility" onClick={onOpenForge}>
+          開啟鍛造
+        </button>
+      )}
     </div>
   );
 }

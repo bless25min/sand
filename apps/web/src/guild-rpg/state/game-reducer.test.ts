@@ -1,3 +1,4 @@
+import { GUILD_GAME_CONTENT } from '@expedition/game-data';
 import type { HuntRewards } from '@expedition/shared-types';
 import { describe, expect, it } from 'vitest';
 
@@ -7,13 +8,12 @@ import { guildRpgReducer } from './game-reducer';
 const FULL_WIPE_COMMAND = [
   'brann_brace',
   'brann_riposte',
+  'brann_shield_crash',
   'brann_sweep',
-  'lyra_mark',
-  'lyra_piercing_shot',
-  'lyra_ricochet',
+  'brann_fortress_breaker',
+  'lyra_quickshot',
   'elin_prayer',
-  'elin_overflow_bolt',
-  'elin_radiant_burst',
+  'elin_aegis',
 ] as const;
 
 describe('guild RPG reducer', () => {
@@ -33,7 +33,7 @@ describe('guild RPG reducer', () => {
     state = guildRpgReducer(state, { type: 'APPEND_COMBO_CARD', cardId: 'brann_brace' });
     expect(state.battle?.combo?.draft.cardIds).toEqual(['brann_brace']);
     state = guildRpgReducer(state, { type: 'SET_TUTORIAL', tutorial: 'skipped' });
-    expect(state.paused).toBe(false);
+    expect(state.paused).toBe(true);
     expect(state.preferences.tutorial).toBe('skipped');
 
     state = guildRpgReducer(state, { type: 'SET_PAUSED', paused: true });
@@ -69,7 +69,7 @@ describe('guild RPG reducer', () => {
       hapticsEnabled: false,
       motion: 'reduced',
     });
-    expect(state.profile.version).toBe(2);
+    expect(state.profile.version).toBe(3);
   });
 
   it('restores the exact pre-settings pause state when settings close', () => {
@@ -78,6 +78,7 @@ describe('guild RPG reducer', () => {
       questId: 'border_pack',
     });
     running = guildRpgReducer(running, { type: 'SET_TUTORIAL', tutorial: 'skipped' });
+    running = guildRpgReducer(running, { type: 'SET_PAUSED', paused: false });
     running = guildRpgReducer(running, { type: 'SET_SETTINGS_OPEN', open: true });
     running = guildRpgReducer(running, { type: 'SET_SETTINGS_OPEN', open: false });
     expect(running).toMatchObject({ settingsOpen: false, paused: false });
@@ -86,6 +87,26 @@ describe('guild RPG reducer', () => {
     manuallyPaused = guildRpgReducer(manuallyPaused, { type: 'SET_SETTINGS_OPEN', open: true });
     manuallyPaused = guildRpgReducer(manuallyPaused, { type: 'SET_SETTINGS_OPEN', open: false });
     expect(manuallyPaused).toMatchObject({ settingsOpen: false, paused: true });
+  });
+
+  it('auto-pauses every command decision and advances pressure only after explicit resume', () => {
+    const initial = createGuildRpgState();
+    let state = guildRpgReducer(
+      { ...initial, preferences: { ...initial.preferences, tutorial: 'skipped' } },
+      { type: 'START_QUEST', questId: 'border_pack' },
+    );
+    const untouched = state.battle;
+
+    expect(state.paused).toBe(true);
+    state = guildRpgReducer(state, { type: 'TICK', elapsedMs: 2_000 });
+    expect(state.battle).toBe(untouched);
+
+    state = guildRpgReducer(state, { type: 'SET_PAUSED', paused: false });
+    state = guildRpgReducer(state, { type: 'TICK', elapsedMs: 400 });
+    expect(state.battle?.elapsedMs).toBeGreaterThan(0);
+    state = guildRpgReducer(state, { type: 'APPEND_COMBO_CARD', cardId: 'lyra_quickshot' });
+
+    expect(state.paused).toBe(true);
   });
 
   it('keeps a tutorial replay paused when it is enabled from battle settings', () => {
@@ -174,7 +195,7 @@ describe('guild RPG reducer', () => {
     state = guildRpgReducer(state, { type: 'START_QUEST', questId: 'abandoned_mine' });
     expect(state).toMatchObject({
       screen: 'battle',
-      paused: false,
+      paused: true,
       preferences: { tutorial: 'active' },
     });
   });
@@ -200,6 +221,77 @@ describe('guild RPG reducer', () => {
     ).toBe('ricochet');
   });
 
+  it('mutates loadouts and forged equipped items only through guild intents', () => {
+    const initial = createGuildRpgState();
+    const build = GUILD_GAME_CONTENT.builds[0]!;
+    const removedCardId = build.defaultCardIds[7]!;
+    const addedCardId = build.cardIds.find((cardId) => !build.defaultCardIds.includes(cardId))!;
+    const swapped = guildRpgReducer(initial, {
+      type: 'SWAP_LOADOUT_CARD',
+      buildId: build.id,
+      removedCardId,
+      addedCardId,
+    });
+    expect(swapped.profile.loadouts[build.id]).toContain(addedCardId);
+
+    const forgeItem = {
+      id: 'reducer-forge',
+      baseId: 'scout_charm',
+      name: '斥候追風符',
+      slot: 'accessory' as const,
+      rarity: 'rare' as const,
+      mainStat: { stat: 'speed' as const, value: 5 },
+      affixes: [],
+      sellValue: 40,
+      sourceEnemyId: 'wolf_scout',
+    };
+    const forgeReady = {
+      ...swapped,
+      profile: {
+        ...swapped.profile,
+        gold: 100,
+        materials: { scout_fang: 1 },
+        party: swapped.profile.party.map((member, index) =>
+          index === 0 ? { ...member, equipment: { accessory: forgeItem } } : member,
+        ),
+      },
+    };
+    const forged = guildRpgReducer(forgeReady, {
+      type: 'FORGE_ITEM',
+      itemId: forgeItem.id,
+      forgeAction: 'upgrade',
+    });
+    expect(forged.profile.gold).toBe(70);
+    expect(forged.profile.party[0]?.equipment.accessory?.forgeRank).toBe(1);
+    expect(forged.message).toContain('鍛造完成');
+  });
+
+  it('launches an authored Ascended replay after all twelve hunts are cleared', () => {
+    const initial = createGuildRpgState();
+    const complete = {
+      ...initial,
+      profile: {
+        ...initial.profile,
+        unlockedQuestIds: GUILD_GAME_CONTENT.quests.map((quest) => quest.id),
+        questRecords: Object.fromEntries(
+          GUILD_GAME_CONTENT.quests.map((quest) => [quest.id, { clears: 1 }]),
+        ),
+      },
+    };
+    const started = guildRpgReducer(complete, {
+      type: 'START_QUEST',
+      questId: 'border_pack',
+      ascensionId: 'crimson_pressure',
+    });
+
+    expect(started.battle?.ascension).toMatchObject({
+      id: 'crimson_pressure',
+      routeLabel: '一令全滅路線',
+      cueId: 'break',
+    });
+    expect(started.message).toContain('赤紅壓境');
+  });
+
   it('plays a complete command before applying rewards and replay records', () => {
     let state = guildRpgReducer(createGuildRpgState(), {
       type: 'START_QUEST',
@@ -208,7 +300,7 @@ describe('guild RPG reducer', () => {
 
     expect(state.screen).toBe('battle');
     expect(state.battle?.combo?.phase).toBe('composing');
-    expect(state.battle?.combo?.availableCardIds).toHaveLength(12);
+    expect(state.battle?.combo?.availableCardIds).toHaveLength(8);
 
     for (const cardId of FULL_WIPE_COMMAND) {
       state = guildRpgReducer(state, { type: 'APPEND_COMBO_CARD', cardId });
@@ -249,6 +341,15 @@ describe('guild RPG reducer', () => {
       huntRewards.items.every((item) => item.qualityScore >= huntRewards.axes.sharedOverflow),
     ).toBe(true);
     expect(state.profile.questRecords.border_pack?.clears).toBe(1);
+    expect(state.profile.questRecords.border_pack?.bestChain).toBe(8);
+    expect(state.profile.completedChallengeIds).toEqual(
+      expect.arrayContaining([
+        'border-pack-hunt-one-command',
+        'border-pack-hunt-overkill',
+        'border-pack-hunt-build-route',
+      ]),
+    );
+    expect(state.message).toContain('新完成');
 
     const [equipped, ...sold] = state.rewards!.items;
     for (const [index, item] of [equipped!, ...sold].entries()) {
@@ -372,12 +473,11 @@ describe('guild RPG reducer', () => {
     expect(state.battle?.selectedTargetId).toBe('wolf_alpha');
 
     for (const cardId of [
-      'lyra_mark',
-      'lyra_piercing_shot',
-      'lyra_ricochet',
-      'elin_prayer',
-      'elin_overflow_bolt',
-      'elin_radiant_burst',
+      'brann_brace',
+      'brann_riposte',
+      'brann_shield_crash',
+      'brann_sweep',
+      'brann_fortress_breaker',
     ]) {
       state = guildRpgReducer(state, { type: 'APPEND_COMBO_CARD', cardId });
     }
@@ -409,7 +509,7 @@ describe('guild RPG reducer', () => {
       },
     };
     state = guildRpgReducer(state, { type: 'APPEND_COMBO_CARD', cardId: 'lyra_quickshot' });
-    state = guildRpgReducer(state, { type: 'APPEND_COMBO_CARD', cardId: 'lyra_ricochet' });
+    state = guildRpgReducer(state, { type: 'APPEND_COMBO_CARD', cardId: 'brann_sweep' });
     state = guildRpgReducer(state, { type: 'RELEASE_COMBO' });
 
     expect(state.battle?.selectedTargetId).toBe('wolf_alpha');
@@ -433,6 +533,7 @@ describe('guild RPG reducer', () => {
     state = guildRpgReducer(state, { type: 'APPEND_COMBO_CARD', cardId: 'brann_riposte' });
     state = guildRpgReducer(state, { type: 'UNDO_COMBO_CARD' });
     state = guildRpgReducer(state, { type: 'SET_SPEED', speed: 2 });
+    state = guildRpgReducer(state, { type: 'SET_PAUSED', paused: false });
     state = guildRpgReducer(state, { type: 'TICK', elapsedMs: 13_000 });
 
     expect(state.battle?.selectedTargetId).toBe(secondEnemy.id);

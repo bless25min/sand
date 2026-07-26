@@ -7,6 +7,7 @@ export const GUILD_EQUIPMENT_BASES: readonly EquipmentBaseDefinition[] = [
     slot: 'weapon',
     mainStat: 'attack',
     baseValue: 7,
+    forgeMaterialId: 'hunter_sinew',
     ruleIds: ['steel_echo'],
   },
   {
@@ -15,6 +16,7 @@ export const GUILD_EQUIPMENT_BASES: readonly EquipmentBaseDefinition[] = [
     slot: 'weapon',
     mainStat: 'healing',
     baseValue: 8,
+    forgeMaterialId: 'alpha_core',
     ruleIds: ['overflow_reserve'],
   },
   {
@@ -23,12 +25,41 @@ export const GUILD_EQUIPMENT_BASES: readonly EquipmentBaseDefinition[] = [
     slot: 'weapon',
     mainStat: 'attack',
     baseValue: 8,
+    forgeMaterialId: 'hunter_sinew',
     ruleIds: ['ricochet_focus'],
   },
-  { id: 'guard_plate', name: '守望胸甲', slot: 'armor', mainStat: 'defense', baseValue: 6 },
-  { id: 'traveler_coat', name: '疾行皮衣', slot: 'armor', mainStat: 'hp', baseValue: 28 },
-  { id: 'wolf_charm', name: '狼牙護符', slot: 'accessory', mainStat: 'speed', baseValue: 2 },
-  { id: 'sun_emblem', name: '曦光徽記', slot: 'accessory', mainStat: 'healing', baseValue: 5 },
+  {
+    id: 'guard_plate',
+    name: '守望胸甲',
+    slot: 'armor',
+    mainStat: 'defense',
+    baseValue: 6,
+    forgeMaterialId: 'alpha_core',
+  },
+  {
+    id: 'traveler_coat',
+    name: '疾行皮衣',
+    slot: 'armor',
+    mainStat: 'hp',
+    baseValue: 28,
+    forgeMaterialId: 'scout_fang',
+  },
+  {
+    id: 'wolf_charm',
+    name: '狼牙護符',
+    slot: 'accessory',
+    mainStat: 'speed',
+    baseValue: 2,
+    forgeMaterialId: 'scout_fang',
+  },
+  {
+    id: 'sun_emblem',
+    name: '曦光徽記',
+    slot: 'accessory',
+    mainStat: 'healing',
+    baseValue: 5,
+    forgeMaterialId: 'alpha_core',
+  },
 ];
 
 export const GUILD_EQUIPMENT_AFFIXES: readonly EquipmentAffixDefinition[] = [

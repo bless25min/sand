@@ -39,6 +39,7 @@ export interface ComboEvent {
   amount?: number;
   phaseId?: string;
   cueId?: string;
+  cardId?: string;
 }
 
 export interface ComboMetrics {
@@ -47,12 +48,15 @@ export interface ComboMetrics {
   totalOverkill: number;
   defeatedEnemyIds: readonly string[];
   annihilationOverflow: number;
+  commandCount?: number;
+  bestCommandCardCount?: number;
 }
 
 export interface ComboRuntimeState {
   phase: 'composing' | 'resolving' | 'complete';
   draft: CommandDraft;
   availableCardIds: readonly string[];
+  signatureCardIds?: readonly string[];
   events: readonly ComboEvent[];
   metrics: ComboMetrics;
   activatedBossPhaseIds?: readonly string[];
