@@ -137,6 +137,6 @@ Expected: all affected tests pass.
 
 At 375 × 667 and 390 × 844, complete Build → 任務 → 開始 → recommended cards → preview → release. Assert one guide focus, guide text does not overflow, battlefield units stay within battlefield bounds, horizontal overflow is zero, and browser exceptions are zero.
 
-- [ ] **Step 11: Consolidated review, full gate, commit, deploy**
+- [x] **Step 11: Consolidated review, full gate, commit, deploy**
 
 Review the complete diff once, fix all Critical/Important findings, run `pnpm check`, commit source and validation evidence, push `codex/project-expedition-mvp`, deploy `apps/web/dist` to Pages production, compare local/immutable/canonical asset hashes, and smoke-test production mobile.
