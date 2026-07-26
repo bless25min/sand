@@ -59,7 +59,8 @@ describe('complete combo hunt presentation', () => {
     expect(markup).toContain('護衛連結 灰牙斥候、灰牙獵手');
     expect(markup).toContain('data-escalation-stage="stack"');
     expect(markup).toContain('role="status"');
-    expect(markup).toContain('aria-label="戰鬥操作分頁"');
+    expect(markup).toContain('data-guide-active="true"');
+    expect(markup.match(/data-guide-focus="true"/g) ?? []).toHaveLength(1);
   });
 
   it('renders a skippable staged playback before rewards', () => {

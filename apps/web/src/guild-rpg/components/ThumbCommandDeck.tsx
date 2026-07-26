@@ -27,6 +27,7 @@ interface ThumbCommandDeckProps {
   status?: string | undefined;
   feedback?: string | undefined;
   guide?: FirstHuntCoach | undefined;
+  onSkipGuide?: (() => void) | undefined;
   tabs?: readonly ThumbDeckTab[];
   actions: readonly ThumbDeckAction[];
 }
@@ -38,16 +39,24 @@ export function ThumbCommandDeck({
   status,
   feedback,
   guide,
+  onSkipGuide,
   tabs = [],
   actions,
 }: ThumbCommandDeckProps) {
+  const visibleActions = guide?.focusId
+    ? actions.filter((action) => `action:${action.id}` === guide.focusId)
+    : actions;
+  const visibleTabs = guide?.focusId
+    ? tabs.filter((tab) => `tab:${tab.id}` === guide.focusId)
+    : tabs;
+
   return (
-    <aside className="gr-thumb-deck" data-thumb-command-deck="true" aria-label={ariaLabel}>
-      {feedback && (
-        <p className="gr-thumb-deck__feedback" aria-live="polite">
-          {feedback}
-        </p>
-      )}
+    <aside
+      className="gr-thumb-deck"
+      data-thumb-command-deck="true"
+      data-guide-active={guide ? 'true' : undefined}
+      aria-label={ariaLabel}
+    >
       {guide ? (
         <section className="gr-thumb-deck__guide" aria-live="polite">
           <span>
@@ -55,6 +64,11 @@ export function ThumbCommandDeck({
           </span>
           <strong>{guide.title}</strong>
           <p>{guide.message}</p>
+          {onSkipGuide && (
+            <button type="button" className="gr-thumb-deck__skip" onClick={onSkipGuide}>
+              略過引導
+            </button>
+          )}
         </section>
       ) : (
         <header className="gr-thumb-deck__header">
@@ -62,12 +76,16 @@ export function ThumbCommandDeck({
             <span>{eyebrow}</span>
             <strong>{title}</strong>
           </div>
-          {status && <small>{status}</small>}
+          {(feedback ?? status) && (
+            <small className="gr-thumb-deck__status" aria-live={feedback ? 'polite' : undefined}>
+              {feedback ?? status}
+            </small>
+          )}
         </header>
       )}
       <div className="gr-thumb-deck__body">
         <div className="gr-thumb-deck__actions">
-          {actions.map((action) => {
+          {visibleActions.map((action) => {
             const guideId = `action:${action.id}`;
             return (
               <button
@@ -87,9 +105,9 @@ export function ThumbCommandDeck({
             );
           })}
         </div>
-        {tabs.length > 0 && (
+        {visibleTabs.length > 0 && (
           <nav className="gr-thumb-deck__tabs" aria-label={`${ariaLabel}分頁`}>
-            {tabs.map((tab) => {
+            {visibleTabs.map((tab) => {
               const guideId = `tab:${tab.id}`;
               return (
                 <button

@@ -34,10 +34,13 @@ export function RewardScreen({ state, dispatch }: RewardScreenProps) {
         <div>
           <strong>+{rewards.experience} EXP</strong>
           <strong>+{rewards.gold} GOLD</strong>
-          <strong>{(rewards.clearMs / 1_000).toFixed(1)} SEC</strong>
+          <strong>
+            {rewards.clearMs > 0 ? `${(rewards.clearMs / 1_000).toFixed(1)} SEC` : '殲滅完成'}
+          </strong>
         </div>
       </header>
 
+      <RewardThumbControls state={state} dispatch={dispatch} />
       <HuntResultSummary rewards={rewards} />
       <LootRain rewards={rewards} />
 
@@ -73,7 +76,6 @@ export function RewardScreen({ state, dispatch }: RewardScreenProps) {
             <EquipmentCard item={item} state={state} dispatch={dispatch} key={item.id} />
           ))}
         </div>
-        <RewardThumbControls state={state} dispatch={dispatch} />
       </section>
 
       <footer className="gr-rewards__footer">

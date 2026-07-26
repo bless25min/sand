@@ -145,8 +145,15 @@ describe('right-thumb mobile flow', () => {
   });
 
   it('keeps guild navigation and the quest action in the thumb command deck', () => {
+    const fresh = createGuildRpgState();
     const markup = renderToStaticMarkup(
-      <GuildScreen state={createGuildRpgState()} dispatch={dispatch} />,
+      <GuildScreen
+        state={{
+          ...fresh,
+          preferences: { ...fresh.preferences, tutorial: 'skipped' },
+        }}
+        dispatch={dispatch}
+      />,
     );
 
     expect(markup).toContain('data-thumb-command-deck="true"');
@@ -235,8 +242,16 @@ describe('right-thumb mobile flow', () => {
   });
 
   it('makes Build selection a first-class mobile thumb page', () => {
+    const fresh = createGuildRpgState();
     const markup = renderToStaticMarkup(
-      <GuildMobileStage state={createGuildRpgState()} dispatch={dispatch} initialPage="build" />,
+      <GuildMobileStage
+        state={{
+          ...fresh,
+          preferences: { ...fresh.preferences, tutorial: 'skipped' },
+        }}
+        dispatch={dispatch}
+        initialPage="build"
+      />,
     );
 
     expect(markup).toContain('>Build<');
@@ -256,8 +271,16 @@ describe('right-thumb mobile flow', () => {
   });
 
   it('offers party and inventory decisions without leaving the guild thumb zone', () => {
+    const fresh = createGuildRpgState();
     const partyMarkup = renderToStaticMarkup(
-      <GuildMobileStage state={createGuildRpgState()} dispatch={dispatch} initialPage="party" />,
+      <GuildMobileStage
+        state={{
+          ...fresh,
+          preferences: { ...fresh.preferences, tutorial: 'skipped' },
+        }}
+        dispatch={dispatch}
+        initialPage="party"
+      />,
     );
     const inventoryState = returnWithInventory();
     const inventoryMarkup = renderToStaticMarkup(
@@ -291,7 +314,16 @@ describe('right-thumb mobile flow', () => {
       questId: 'border_pack',
     });
     state = guildRpgReducer(state, { type: 'APPEND_COMBO_CARD', cardId: 'brann_brace' });
-    const markup = renderToStaticMarkup(<BattleScreen state={state} dispatch={dispatch} />);
+    const guidedMarkup = renderToStaticMarkup(<BattleScreen state={state} dispatch={dispatch} />);
+    const markup = renderToStaticMarkup(
+      <BattleScreen
+        state={{
+          ...state,
+          preferences: { ...state.preferences, tutorial: 'skipped' },
+        }}
+        dispatch={dispatch}
+      />,
+    );
 
     expect(markup).toContain('data-thumb-command-deck="true"');
     expect(markup).toContain('aria-label="戰鬥操作分頁"');
@@ -299,11 +331,11 @@ describe('right-thumb mobile flow', () => {
     expect(markup).toContain('>軍令<');
     expect(markup).toContain('>目標<');
     expect(markup).toContain('>系統<');
-    expect(markup).toContain('GUIDED HUNT');
-    expect(markup).toContain('下一張選 盾後反擊');
-    expect(markup).toContain('軍令引導 3/6');
-    expect(markup).toContain('data-guide-id="action:brann_riposte" data-guide-focus="true"');
-    expect(markup.match(/data-guide-focus="true"/g) ?? []).toHaveLength(1);
+    expect(guidedMarkup).toContain('GUIDED HUNT');
+    expect(guidedMarkup).toContain('下一張選 盾後反擊');
+    expect(guidedMarkup).toContain('軍令引導 3/6');
+    expect(guidedMarkup).toContain('data-guide-id="action:brann_riposte" data-guide-focus="true"');
+    expect(guidedMarkup.match(/data-guide-focus="true"/g) ?? []).toHaveLength(1);
     expect(markup).toContain('開啟設定');
     expect(markup).toContain('撤銷上一步');
     expect(markup).toContain('提早釋放');

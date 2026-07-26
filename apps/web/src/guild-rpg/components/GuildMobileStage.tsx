@@ -168,6 +168,7 @@ export function GuildMobileStage({ state, dispatch, initialPage }: GuildMobileSt
         title={title}
         status={state.message}
         guide={coach}
+        onSkipGuide={() => dispatch({ type: 'SET_TUTORIAL', tutorial: 'skipped' })}
         tabs={[
           {
             id: 'build',

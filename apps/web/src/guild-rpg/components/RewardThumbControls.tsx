@@ -168,6 +168,7 @@ export function RewardThumbControls({ state, dispatch }: RewardThumbControlsProp
         status={allResolved ? '可以返回公會' : `最佳裝備者：${hero.name}`}
         feedback={state.message}
         guide={coach}
+        onSkipGuide={() => dispatch({ type: 'SET_TUTORIAL', tutorial: 'skipped' })}
         actions={actions}
       />
     </section>

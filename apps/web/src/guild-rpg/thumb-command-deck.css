@@ -37,21 +37,6 @@
     backdrop-filter: blur(12px);
   }
 
-  .gr-thumb-deck__feedback {
-    position: absolute;
-    right: 0;
-    bottom: calc(100% + 8px);
-    width: min(280px, 78vw);
-    margin: 0;
-    padding: 8px 12px;
-    border-right: 3px solid #db9f40;
-    color: #f5d89f;
-    background: #090c0ee8;
-    font-size: 0.72rem;
-    line-height: 1.35;
-    text-align: right;
-  }
-
   .gr-thumb-deck__header {
     display: flex;
     align-items: end;
@@ -66,6 +51,7 @@
   }
 
   .gr-thumb-deck__guide {
+    position: relative;
     display: grid;
     min-height: 78px;
     margin-left: 52px;
@@ -130,12 +116,16 @@
   }
 
   .gr-thumb-deck__header small {
-    max-width: 90px;
+    max-width: 126px;
     overflow: hidden;
     color: #909a97;
     font-size: 0.58rem;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+
+  .gr-thumb-deck__header .gr-thumb-deck__status[aria-live='polite'] {
+    color: #f5d89f;
   }
 
   .gr-thumb-deck__body {
@@ -269,10 +259,46 @@
   .gr-thumb-deck__tabs button:nth-child(4) {
     grid-area: 4 / 3;
   }
+
+  .gr-thumb-deck[data-guide-active='true'] .gr-thumb-deck__body {
+    display: block;
+    margin: 6px 0 0 52px;
+  }
+
+  .gr-thumb-deck[data-guide-active='true'] .gr-thumb-deck__actions,
+  .gr-thumb-deck[data-guide-active='true'] .gr-thumb-deck__tabs {
+    display: block;
+  }
+
+  .gr-thumb-deck[data-guide-active='true'] button {
+    width: 100%;
+    min-height: 60px;
+  }
+
+  .gr-thumb-deck[data-guide-active='true'] .gr-thumb-deck__skip {
+    position: absolute;
+    top: 6px;
+    right: 8px;
+    width: auto;
+    min-height: 28px;
+    padding: 3px 7px;
+    border: 0;
+    color: #c7bfae;
+    background: transparent;
+    font-size: 0.62rem;
+    text-decoration: underline;
+    box-shadow: none;
+  }
+
+  .gr-shell:has(.gr-thumb-deck[data-guide-active='true']),
+  .gr-battle:has(.gr-thumb-deck[data-guide-active='true']),
+  .gr-rewards:has(.gr-thumb-deck[data-guide-active='true']) {
+    padding-bottom: calc(180px + env(safe-area-inset-bottom));
+  }
 }
 
 @media (max-width: 800px) and (max-height: 720px) {
-  .gr-battle {
+  .gr-battle:not(.gr-playback-screen) {
     padding-bottom: calc(372px + env(safe-area-inset-bottom));
   }
 
@@ -296,5 +322,13 @@
   .gr-thumb-deck button {
     min-height: 48px;
     padding: 4px 6px;
+  }
+
+  .gr-thumb-deck[data-guide-active='true'] button {
+    min-height: 56px;
+  }
+
+  .gr-thumb-deck[data-guide-active='true'] .gr-thumb-deck__skip {
+    min-height: 28px;
   }
 }

@@ -205,6 +205,7 @@ export function BattleThumbControls({ state, dispatch }: BattleThumbControlsProp
       status={`${sensation.build.payoffLabel} · ${sensation.signature.nextCard ? `推薦 ${sensation.signature.nextCard.name}` : '招牌路線完成'} · 鎖定 ${selectedTarget?.name ?? '無'}`}
       feedback={state.message}
       guide={guide}
+      onSkipGuide={() => dispatch({ type: 'SET_TUTORIAL', tutorial: 'skipped' })}
       tabs={[
         {
           id: 'cards',

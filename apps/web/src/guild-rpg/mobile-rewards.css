@@ -4,47 +4,31 @@
   }
 
   .gr-rewards__hero {
-    padding: 12px 0 10px;
+    padding: 6px 0 5px;
   }
 
   .gr-rewards__hero h1 {
-    margin: 2px 0 4px;
-    font-size: 2.15rem;
+    margin: 1px 0 2px;
+    font-size: 1.85rem;
   }
 
   .gr-rewards__hero > span {
-    display: block;
-    overflow: hidden;
-    font-size: 0.66rem;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    display: none;
   }
 
   .gr-rewards__hero > div {
-    gap: 10px;
-    margin-top: 9px;
-    font-size: 0.7rem;
+    gap: 8px;
+    margin-top: 4px;
+    font-size: 0.66rem;
   }
 
+  .gr-hunt-summary,
   .gr-reward-party {
-    grid-template-columns: repeat(3, 1fr);
-  }
-
-  .gr-reward-party > div {
-    grid-template-columns: 1fr;
-    gap: 2px;
-    padding: 7px 6px;
-    text-align: center;
-  }
-
-  .gr-reward-party span,
-  .gr-reward-party strong,
-  .gr-reward-party small {
-    font-size: 0.58rem;
+    display: none;
   }
 
   .gr-reward-loot {
-    margin-top: 10px;
+    margin-top: 0;
   }
 
   .gr-reward-loot > .gr-section__heading,
@@ -58,53 +42,43 @@
   }
 
   .gr-mobile-reward-stage > .gr-reward-card {
-    padding: 14px;
+    max-height: 224px;
+    margin-top: 4px;
+    padding: 11px 12px;
+    overflow: hidden;
   }
 
   .gr-mobile-reward-stage .gr-reward-card header h3 {
-    font-size: 1.25rem;
+    font-size: 1.05rem;
   }
 
   .gr-mobile-reward-stage .gr-reward-stat {
-    margin: 12px 0 8px;
-    padding: 9px;
+    margin: 7px 0 5px;
+    padding: 6px 8px;
   }
 
   .gr-mobile-reward-stage .gr-reward-stat strong {
-    font-size: 1.25rem;
+    font-size: 1.05rem;
   }
 
-  .gr-mobile-reward-stage .gr-reward-card ul {
-    min-height: 0;
-    margin-bottom: 10px;
-  }
-
-  .gr-mobile-reward-stage .gr-reward-card label {
+  .gr-mobile-reward-stage .gr-reward-card ul,
+  .gr-mobile-reward-stage .gr-reward-card label,
+  .gr-mobile-reward-stage .gr-compare,
+  .gr-mobile-reward-stage .gr-stat-diff {
     display: none;
-  }
-
-  .gr-mobile-reward-stage .gr-compare {
-    margin-top: 7px;
   }
 
   .gr-mobile-reward-stage .gr-reward-linkage,
   .gr-mobile-reward-stage .gr-reward-rules {
-    margin: 6px 0;
-    padding: 6px 8px;
+    margin: 4px 0;
+    padding: 4px 7px;
     font-size: 0.6rem;
   }
 
   .gr-mobile-reward-stage .gr-reward-rules span {
     overflow: hidden;
+    line-height: 1.25;
     text-overflow: ellipsis;
     white-space: nowrap;
-  }
-
-  .gr-mobile-reward-stage .gr-stat-diff {
-    margin-top: 6px;
-  }
-
-  .gr-mobile-reward-stage .gr-stat-diff div {
-    padding: 3px 2px;
   }
 }

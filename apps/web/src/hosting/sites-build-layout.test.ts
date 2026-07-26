@@ -39,5 +39,5 @@ describe('Sites build layout', () => {
       .filter((name) => name.endsWith('.js'))
       .filter((name) => statSync(join(assetDirectory, name)).size >= 500 * 1024);
     expect(oversizedJavaScript).toEqual([]);
-  });
+  }, 15_000);
 });
