@@ -75,6 +75,8 @@ const battle: GuildBattleState = {
 const hunt: HuntDefinition = {
   id: 'training-hunt',
   questId: 'training',
+  pressureLabel: '訓練壓力',
+  counterBrief: '訓練對策',
   rewardExperience: 1,
   rewardGold: 1,
   enemies: [],

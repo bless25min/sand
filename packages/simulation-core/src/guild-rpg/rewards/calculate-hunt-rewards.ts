@@ -1,6 +1,7 @@
 import type { HuntRewardAxes, HuntRewardInput, HuntRewards } from '@expedition/shared-types';
 
 import type { RandomSource } from '../../rng/random-source';
+import { huntChestSourceEnemyId, qualifiesForHuntChest } from '../hunt-chest-eligibility';
 import { createHuntEquipmentItem } from './create-hunt-equipment-item';
 
 function killedEnemyIds(input: HuntRewardInput) {
@@ -34,13 +35,7 @@ function calculateAxes(
   const startRatios = runtime?.lastCommandEnemyStartHpRatios ?? {};
   const perfectAnnihilation =
     annihilation && input.hunt.enemies.every((enemy) => (startRatios[enemy.enemyId] ?? 0) >= 0.9);
-  const guardsDefeated =
-    input.hunt.guardEnemyIds?.every((enemyId) => defeated.has(enemyId)) ?? false;
-  const bossChest =
-    annihilation &&
-    Boolean(input.hunt.bossEnemyId) &&
-    defeated.has(input.hunt.bossEnemyId!) &&
-    guardsDefeated;
+  const bossChest = qualifiesForHuntChest(input.hunt, defeated, annihilation);
   const chainWipe = defeatedEnemyIds.length >= 3;
   const quantityMultiplier =
     1 +
@@ -87,17 +82,20 @@ function generateItems(
   });
 
   if (axes.bossChest && input.hunt.annihilationChest) {
-    items.push(
-      createHuntEquipmentItem(
-        input,
-        input.hunt.annihilationChest,
-        input.hunt.bossEnemyId!,
-        `${input.hunt.id}-${input.profile.nextLootSeed}-jackpot`,
-        axes.sharedOverflow,
-        true,
-        random,
-      ),
-    );
+    const sourceEnemyId = huntChestSourceEnemyId(input.hunt);
+    if (sourceEnemyId) {
+      items.push(
+        createHuntEquipmentItem(
+          input,
+          input.hunt.annihilationChest,
+          sourceEnemyId,
+          `${input.hunt.id}-${input.profile.nextLootSeed}-jackpot`,
+          axes.sharedOverflow,
+          true,
+          random,
+        ),
+      );
+    }
   }
   return items;
 }

@@ -7,6 +7,7 @@ import { createPartyThumbActions } from '../mobile/party-thumb-actions';
 import { createQuestThumbActions } from '../mobile/quest-thumb-actions';
 import { pageSlice, type GuildMobilePage } from '../mobile/thumb-deck-model';
 import { createFirstHuntCoach } from '../onboarding/first-hunt-coach';
+import { createCampaignProgressModel } from '../presentation/campaign-progress-model';
 import type { GuildRpgAction, GuildRpgState } from '../state/game-reducer';
 import { GuildMobileFocus } from './GuildMobileFocus';
 import { ThumbCommandDeck } from './ThumbCommandDeck';
@@ -18,6 +19,11 @@ interface GuildMobileStageProps {
 }
 
 export function GuildMobileStage({ state, dispatch, initialPage }: GuildMobileStageProps) {
+  const campaign = createCampaignProgressModel({
+    content: GUILD_GAME_CONTENT,
+    unlockedQuestIds: state.profile.unlockedQuestIds,
+    questRecords: state.profile.questRecords,
+  });
   const [page, setPage] = useState<GuildMobilePage>(
     initialPage ?? (state.preferences.tutorial === 'active' ? 'build' : 'quest'),
   );
@@ -27,7 +33,12 @@ export function GuildMobileStage({ state, dispatch, initialPage }: GuildMobileSt
       GUILD_GAME_CONTENT.builds.findIndex((build) => build.id === state.profile.selectedBuildId),
     ),
   );
-  const [questIndex, setQuestIndex] = useState(0);
+  const [questIndex, setQuestIndex] = useState(() =>
+    Math.max(
+      0,
+      GUILD_GAME_CONTENT.quests.findIndex((quest) => quest.id === campaign.currentQuestId),
+    ),
+  );
   const [partyIndex, setPartyIndex] = useState(0);
   const [inventoryPage, setInventoryPage] = useState(0);
   const [itemIndex, setItemIndex] = useState(0);
@@ -39,6 +50,8 @@ export function GuildMobileStage({ state, dispatch, initialPage }: GuildMobileSt
   );
 
   const quest = GUILD_GAME_CONTENT.quests[questIndex]!;
+  const zoneIndex = GUILD_GAME_CONTENT.zones.findIndex((zone) => zone.questIds.includes(quest.id));
+  const zone = GUILD_GAME_CONTENT.zones[zoneIndex]!;
   const build = GUILD_GAME_CONTENT.builds[buildIndex]!;
   const member = state.profile.party[partyIndex]!;
   const hero = GUILD_GAME_CONTENT.adventurers.find(
@@ -124,6 +137,12 @@ export function GuildMobileStage({ state, dispatch, initialPage }: GuildMobileSt
           page={page}
           build={build}
           quest={quest}
+          zone={zone}
+          zoneIndex={zoneIndex}
+          zoneProgress={campaign.zones[zoneIndex]!}
+          campaignClearedQuestCount={campaign.clearedQuestCount}
+          campaignTotalQuestCount={campaign.totalQuestCount}
+          campaignComplete={campaign.complete}
           questUnlocked={unlocked}
           member={member}
           hero={hero}

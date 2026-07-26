@@ -33,8 +33,19 @@ export interface EnemyDefinition {
   stats: GuildStats;
 }
 
+export interface ZoneDefinition {
+  id: string;
+  name: string;
+  subtitle: string;
+  description: string;
+  palette: string;
+  transitionLabel: string;
+  questIds: readonly string[];
+}
+
 export interface QuestDefinition {
   id: string;
+  zoneId: string;
   name: string;
   description: string;
   recommendedLevel: number;
@@ -44,6 +55,7 @@ export interface QuestDefinition {
 }
 
 export interface GuildGameContent {
+  zones: readonly ZoneDefinition[];
   adventurers: readonly AdventurerDefinition[];
   cards: CardCatalog;
   rules: RuleCatalog;

@@ -7,6 +7,7 @@ import {
   SPECTACLE_MOTIF_IDS,
   type ComboContent,
   type ContentDiagnostic,
+  type GuildGameContent,
   type HuntDefinition,
 } from '@expedition/shared-types';
 
@@ -183,5 +184,156 @@ export function validateHuntBossPhases(
     }
   }
 
+  return diagnostics;
+}
+
+export function validateCampaignContent(content: GuildGameContent): readonly ContentDiagnostic[] {
+  const diagnostics: ContentDiagnostic[] = [...validateComboContent(content)];
+  const report = (code: string, path: string, message: string) => {
+    diagnostics.push({ code, path, message });
+  };
+  const buildIds = new Set(content.builds.map((build) => build.id));
+  const ruleIds = new Set(Object.keys(content.rules));
+  const questById = new Map(content.quests.map((quest) => [quest.id, quest]));
+  const huntsByQuestId = new Map<string, HuntDefinition[]>();
+  for (const hunt of content.hunts) {
+    const candidates = huntsByQuestId.get(hunt.questId) ?? [];
+    candidates.push(hunt);
+    huntsByQuestId.set(hunt.questId, candidates);
+  }
+
+  const releaseCounts = [
+    ['zones', content.zones.length, 4],
+    ['quests', content.quests.length, 12],
+    ['hunts', content.hunts.length, 12],
+    ['builds', content.builds.length, 4],
+  ] as const;
+  for (const [path, actual, expected] of releaseCounts) {
+    if (actual !== expected) {
+      report('invalid_release_count', path, `${path} 需要 ${expected} 筆，收到 ${actual} 筆`);
+    }
+  }
+
+  const zoneQuestIds = content.zones.flatMap((zone) => zone.questIds);
+  if (
+    zoneQuestIds.length !== content.quests.length ||
+    zoneQuestIds.some((questId, index) => questId !== content.quests[index]?.id)
+  ) {
+    report('invalid_zone_quest_order', 'zones.questIds', '區域任務必須完整覆蓋戰役順序');
+  }
+  if (new Set(zoneQuestIds).size !== zoneQuestIds.length) {
+    report('duplicate_zone_quest', 'zones.questIds', '同一任務不可重複出現在區域');
+  }
+  for (const [zoneIndex, zone] of content.zones.entries()) {
+    if (zone.questIds.length !== 3) {
+      report('invalid_zone_depth', `zones.${zoneIndex}.questIds`, '每區必須正好三場狩獵');
+    }
+    if (
+      [zone.name, zone.subtitle, zone.description, zone.palette, zone.transitionLabel].some(
+        (value) => value.trim() === '',
+      )
+    ) {
+      report('incomplete_zone_identity', `zones.${zoneIndex}`, `${zone.id} 缺少區域識別`);
+    }
+    for (const questId of zone.questIds) {
+      const quest = questById.get(questId);
+      if (!quest) {
+        report('unknown_zone_quest', `zones.${zoneIndex}.questIds`, `${questId} 不存在`);
+      } else if (quest.zoneId !== zone.id) {
+        report('mismatched_quest_zone', `quests.${questId}.zoneId`, `${questId} 區域歸屬不一致`);
+      }
+    }
+  }
+
+  const uniqueEnemyIds = new Set(
+    content.quests.flatMap((quest) => quest.enemies.map((enemy) => enemy.id)),
+  );
+  const uniqueBossIds = new Set(
+    content.hunts.flatMap((hunt) => (hunt.bossEnemyId ? [hunt.bossEnemyId] : [])),
+  );
+  if (uniqueEnemyIds.size !== 18) {
+    report(
+      'invalid_enemy_count',
+      'quests.enemies',
+      `需要 18 種敵人，收到 ${uniqueEnemyIds.size} 種`,
+    );
+  }
+  if (uniqueBossIds.size !== 6) {
+    report(
+      'invalid_boss_count',
+      'hunts.bossEnemyId',
+      `需要 6 名 Boss，收到 ${uniqueBossIds.size} 名`,
+    );
+  }
+
+  const pressureLabels = new Set<string>();
+  const counterBriefs = new Set<string>();
+  for (const [questIndex, quest] of content.quests.entries()) {
+    const hunts = huntsByQuestId.get(quest.id) ?? [];
+    if (hunts.length !== 1) {
+      report(
+        'invalid_quest_hunt_count',
+        `quests.${questIndex}`,
+        `${quest.id} 必須恰好對應一場狩獵`,
+      );
+      continue;
+    }
+    const hunt = hunts[0]!;
+    const questEnemyIds = new Set(quest.enemies.map((enemy) => enemy.id));
+    if (pressureLabels.has(hunt.pressureLabel) || hunt.pressureLabel.trim() === '') {
+      report('invalid_hunt_pressure', `hunts.${hunt.id}.pressureLabel`, '每場壓力必須清楚且唯一');
+    }
+    pressureLabels.add(hunt.pressureLabel);
+    if (counterBriefs.has(hunt.counterBrief) || hunt.counterBrief.trim() === '') {
+      report('invalid_hunt_counter', `hunts.${hunt.id}.counterBrief`, '每場對策必須清楚且唯一');
+    }
+    counterBriefs.add(hunt.counterBrief);
+    if (!hunt.annihilationChest) {
+      report('missing_annihilation_chest', `hunts.${hunt.id}`, '每場都需要殲滅寶箱');
+    }
+    if (hunt.bossEnemyId && !questEnemyIds.has(hunt.bossEnemyId)) {
+      report('unknown_campaign_boss', `hunts.${hunt.id}.bossEnemyId`, hunt.bossEnemyId);
+    }
+    const authoredEnemyIds = new Set(hunt.enemies.map((enemy) => enemy.enemyId));
+    if (
+      authoredEnemyIds.size !== questEnemyIds.size ||
+      [...questEnemyIds].some((enemyId) => !authoredEnemyIds.has(enemyId))
+    ) {
+      report('mismatched_hunt_enemies', `hunts.${hunt.id}.enemies`, '任務與狩獵敵人必須一致');
+    }
+    for (const [enemyIndex, enemy] of hunt.enemies.entries()) {
+      if (!questEnemyIds.has(enemy.enemyId)) {
+        report('unknown_hunt_enemy', `hunts.${hunt.id}.enemies.${enemyIndex}`, enemy.enemyId);
+      }
+      if (!enemy.traits?.length || !enemy.equipment.length || !enemy.spectacle) {
+        report(
+          'incomplete_enemy_reward_identity',
+          `hunts.${hunt.id}.enemies.${enemyIndex}`,
+          `${enemy.enemyId} 缺少壓力、掉落或視覺身分`,
+        );
+      }
+      for (const trait of enemy.traits ?? []) {
+        for (const buildId of trait.counterBuildIds) {
+          if (!buildIds.has(buildId)) {
+            report('unknown_counter_build', `hunts.${hunt.id}.${trait.id}`, buildId);
+          }
+        }
+      }
+      for (const item of enemy.equipment) {
+        for (const buildId of item.recommendedBuildIds) {
+          if (!buildIds.has(buildId)) {
+            report('unknown_drop_build', `hunts.${hunt.id}.${item.id}`, buildId);
+          }
+        }
+        for (const ruleId of item.ruleIds ?? []) {
+          if (!ruleIds.has(ruleId)) {
+            report('unknown_drop_rule', `hunts.${hunt.id}.${item.id}`, ruleId);
+          }
+        }
+      }
+    }
+  }
+
+  diagnostics.push(...validateHuntBossPhases(content.hunts));
   return diagnostics;
 }

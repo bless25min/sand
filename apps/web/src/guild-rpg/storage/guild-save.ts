@@ -1,3 +1,4 @@
+import { GUILD_GAME_CONTENT } from '@expedition/game-data';
 import type { GuildProfile } from '@expedition/shared-types';
 
 const GUILD_SAVE_KEY = 'expedition:guild-rpg:v2';
@@ -119,7 +120,7 @@ export function parseGuildSave(serialized: string | null): GuildProfile | undefi
   try {
     const parsed: unknown = JSON.parse(serialized);
     if (!isCompatibleProfile(parsed) || !isRecord(parsed)) return undefined;
-    return {
+    const profile: GuildProfile = {
       ...(parsed as unknown as Omit<GuildProfile, 'version' | 'materials' | 'selectedBuildId'>),
       version: 2,
       materials: isMaterials(parsed.materials)
@@ -127,6 +128,26 @@ export function parseGuildSave(serialized: string | null): GuildProfile | undefi
         : {},
       selectedBuildId:
         typeof parsed.selectedBuildId === 'string' ? parsed.selectedBuildId : 'retaliation',
+    };
+    const questIndexById = new Map(
+      GUILD_GAME_CONTENT.quests.map((quest, index) => [quest.id, index]),
+    );
+    let furthestUnlockedIndex = 0;
+    for (const questId of profile.unlockedQuestIds) {
+      furthestUnlockedIndex = Math.max(furthestUnlockedIndex, questIndexById.get(questId) ?? 0);
+    }
+    for (const [questId, record] of Object.entries(profile.questRecords)) {
+      if (record.clears <= 0) continue;
+      const questIndex = questIndexById.get(questId);
+      if (questIndex !== undefined) {
+        furthestUnlockedIndex = Math.max(furthestUnlockedIndex, questIndex + 1);
+      }
+    }
+    return {
+      ...profile,
+      unlockedQuestIds: GUILD_GAME_CONTENT.quests
+        .slice(0, Math.min(furthestUnlockedIndex + 1, GUILD_GAME_CONTENT.quests.length))
+        .map((quest) => quest.id),
     };
   } catch {
     return undefined;

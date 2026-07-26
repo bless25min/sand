@@ -15,7 +15,7 @@ export function HuntResultSummary({ rewards }: HuntResultSummaryProps) {
     rewards.axes.chainWipe ? 'CHAIN WIPE' : undefined,
     rewards.axes.annihilation ? 'ANNIHILATION' : undefined,
     rewards.axes.perfectAnnihilation ? 'PERFECT ANNIHILATION' : undefined,
-    rewards.axes.bossChest ? 'BOSS + GUARDS CHEST' : undefined,
+    rewards.axes.bossChest ? 'ANNIHILATION CHEST' : undefined,
   ].filter((badge): badge is string => Boolean(badge));
 
   return (

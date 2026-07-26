@@ -60,7 +60,7 @@ export const SPECTACLE_CUE_REGISTRY = {
     'annihilation',
   ),
   loot: cue('loot', 'LOOT RAIN', 2, 0, 0, 'soft', 'short', 'none', 'reward'),
-  chest: cue('chest', 'BOSS CHEST', 4, 90, 7, 'hard', 'burst', 'none', 'reward'),
+  chest: cue('chest', 'ANNIHILATION CHEST', 4, 90, 7, 'hard', 'burst', 'none', 'reward'),
   legendary: cue('legendary', 'LEGENDARY', 5, 140, 10, 'hard', 'burst', 'none', 'reward'),
   'rule-online': cue('rule-online', 'RULE ONLINE', 3, 60, 4, 'soft', 'arc', 'none', 'build'),
 } satisfies Readonly<Record<SpectacleCueId, SpectacleCueSpec>>;

@@ -267,7 +267,7 @@ describe('guild RPG reducer', () => {
 
     state = guildRpgReducer(state, { type: 'RETURN_GUILD' });
     expect(state.screen).toBe('guild');
-    expect(state.profile.unlockedQuestIds).toContain('abandoned_mine');
+    expect(state.profile.unlockedQuestIds).toContain('moonroad_pursuit');
     expect(state.message).toContain('規則上線');
     expect(state.message).toContain('帶著新引擎重刷');
 

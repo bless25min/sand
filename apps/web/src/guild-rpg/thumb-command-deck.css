@@ -9,7 +9,7 @@
   .gr-battle,
   .gr-rewards {
     min-height: 100dvh;
-    padding: 10px 12px calc(332px + env(safe-area-inset-bottom));
+    padding: 10px 12px calc(395px + env(safe-area-inset-bottom));
   }
 
   .gr-thumb-deck {
@@ -101,7 +101,7 @@
 
   .gr-thumb-deck__body {
     display: grid;
-    grid-template-rows: repeat(4, 56px);
+    grid-template-rows: repeat(5, 56px);
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 7px;
     margin-top: 7px;
@@ -194,11 +194,11 @@
   }
 
   .gr-thumb-deck button[data-thumb-slot='secondary'] {
-    grid-area: 4 / 2;
+    grid-area: 5 / 2;
   }
 
   .gr-thumb-deck button[data-thumb-slot='primary'] {
-    grid-area: 4 / 3;
+    grid-area: 5 / 3;
   }
 
   .gr-thumb-deck__tabs button:nth-child(1) {
@@ -211,5 +211,9 @@
 
   .gr-thumb-deck__tabs button:nth-child(3) {
     grid-area: 3 / 3;
+  }
+
+  .gr-thumb-deck__tabs button:nth-child(4) {
+    grid-area: 4 / 3;
   }
 }

@@ -8,15 +8,21 @@ import { describe, expect, it } from 'vitest';
 
 import { GUILD_COMBO_CONTENT } from './index';
 import { GUILD_HUNTS } from './hunts';
-import { validateComboContent, validateHuntBossPhases } from './validate-content';
+import { GUILD_GAME_CONTENT, GUILD_QUESTS, GUILD_ZONES } from '../index';
+import {
+  validateCampaignContent,
+  validateComboContent,
+  validateHuntBossPhases,
+} from './validate-content';
 
 describe('combo content factory', () => {
-  it('ships three valid anchor builds through the bounded vocabulary', () => {
+  it('ships four valid anchor builds through the bounded vocabulary', () => {
     expect(validateComboContent(GUILD_COMBO_CONTENT)).toEqual([]);
     expect(GUILD_COMBO_CONTENT.builds.map((build) => build.id)).toEqual([
       'retaliation',
       'ricochet',
       'healing_overflow',
+      'command_storm',
     ]);
     for (const build of GUILD_COMBO_CONTENT.builds) {
       expect(build.fantasy, build.id).not.toBe('');
@@ -28,6 +34,35 @@ describe('combo content factory', () => {
         build.signatureCardIds.every((cardId) => build.cardIds.includes(cardId)),
         build.id,
       ).toBe(true);
+    }
+  });
+
+  it('ships a complete four-zone campaign with exact release depth', () => {
+    expect(validateCampaignContent(GUILD_GAME_CONTENT)).toEqual([]);
+    expect(GUILD_ZONES).toHaveLength(4);
+    expect(GUILD_QUESTS).toHaveLength(12);
+    expect(GUILD_HUNTS).toHaveLength(12);
+    expect(
+      new Set(GUILD_QUESTS.flatMap((quest) => quest.enemies.map((enemy) => enemy.id))).size,
+    ).toBe(18);
+    expect(
+      new Set(GUILD_HUNTS.flatMap((hunt) => (hunt.bossEnemyId ? [hunt.bossEnemyId] : []))).size,
+    ).toBe(6);
+    expect(GUILD_COMBO_CONTENT.builds).toHaveLength(4);
+  });
+
+  it('keeps every zone ordered, traceable, and mechanically complete', () => {
+    const questIds = GUILD_QUESTS.map((quest) => quest.id);
+    const zoneQuestIds = GUILD_ZONES.flatMap((zone) => zone.questIds);
+
+    expect(zoneQuestIds).toEqual(questIds);
+    expect(new Set(zoneQuestIds).size).toBe(12);
+    for (const zone of GUILD_ZONES) {
+      expect(zone.questIds).toHaveLength(3);
+      expect(zone.transitionLabel).not.toBe('');
+      for (const questId of zone.questIds) {
+        expect(GUILD_QUESTS.find((quest) => quest.id === questId)?.zoneId).toBe(zone.id);
+      }
     }
   });
 

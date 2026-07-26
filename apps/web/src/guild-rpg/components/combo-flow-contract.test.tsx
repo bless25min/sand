@@ -100,7 +100,7 @@ describe('complete combo hunt presentation', () => {
     );
 
     expect(rewardMarkup).toContain('PERFECT ANNIHILATION');
-    expect(rewardMarkup).toContain('BOSS + GUARDS CHEST');
+    expect(rewardMarkup).toContain('ANNIHILATION CHEST');
     expect(rewardMarkup).toContain('data-escalation-stage="overflow"');
     expect(rewardMarkup).toContain('OVERKILL QUALITY');
     expect(rewardMarkup).toContain('來源敵人：灰牙斥候');

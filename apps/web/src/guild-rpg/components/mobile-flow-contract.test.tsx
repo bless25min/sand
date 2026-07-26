@@ -1,3 +1,5 @@
+import { GUILD_GAME_CONTENT } from '@expedition/game-data';
+import { readFileSync } from 'node:fs';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
@@ -101,7 +103,14 @@ describe('right-thumb mobile flow', () => {
     expect(markup).toContain('開始遠征');
   });
 
-  it('shows three switchable build graphs during guild preparation', () => {
+  it('pins all four guild tabs to predictable thumb slots', () => {
+    const css = readFileSync(new URL('../thumb-command-deck.css', import.meta.url), 'utf8');
+
+    expect(css).toContain('.gr-thumb-deck__tabs button:nth-child(4)');
+    expect(css).toMatch(/nth-child\(4\)[^{]*\{[^}]*grid-area:\s*4\s*\/\s*3/s);
+  });
+
+  it('shows four switchable build graphs during guild preparation', () => {
     const markup = renderToStaticMarkup(
       <GuildScreen state={createGuildRpgState()} dispatch={dispatch} />,
     );
@@ -109,8 +118,60 @@ describe('right-thumb mobile flow', () => {
     expect(markup).toContain('反擊壁壘');
     expect(markup).toContain('殲滅彈射');
     expect(markup).toContain('溢療裁決');
+    expect(markup).toContain('軍令風暴');
     expect(markup).toContain('切換 Build');
     expect(markup).toContain('目前規則');
+  });
+
+  it('renders four readable warfronts and mobile campaign intelligence', () => {
+    const state = createGuildRpgState();
+    const desktopMarkup = renderToStaticMarkup(<GuildScreen state={state} dispatch={dispatch} />);
+    const mobileMarkup = renderToStaticMarkup(
+      <GuildMobileStage state={state} dispatch={dispatch} initialPage="quest" />,
+    );
+
+    expect(desktopMarkup.match(/data-campaign-zone=/g)).toHaveLength(4);
+    expect(desktopMarkup).toContain('灰牙邊境');
+    expect(desktopMarkup).toContain('風暴王城');
+    expect(desktopMarkup).toContain('戰役推進 · 0/12');
+    expect(desktopMarkup).toContain('狼群護王：先斬雙衛，再開孤王處刑窗。');
+    expect(mobileMarkup).toContain('ZONE 1/4');
+    expect(mobileMarkup).toContain('戰役 0/12');
+    expect(mobileMarkup).toContain('處刑順序');
+    expect(mobileMarkup).toContain('殲滅寶箱');
+  });
+
+  it('turns campaign completion into an unmistakable replay state', () => {
+    const fresh = createGuildRpgState();
+    const state = createGuildRpgState({
+      ...fresh.profile,
+      unlockedQuestIds: GUILD_GAME_CONTENT.quests.map((quest) => quest.id),
+      questRecords: Object.fromEntries(
+        GUILD_GAME_CONTENT.quests.map((quest) => [quest.id, { clears: 1 }]),
+      ),
+    });
+    const markup = renderToStaticMarkup(<GuildScreen state={state} dispatch={dispatch} />);
+
+    expect(markup.match(/data-campaign-zone="[^"]+" data-zone-status="cleared"/g)).toHaveLength(4);
+    expect(markup).toContain('CAMPAIGN CONQUERED');
+    expect(markup).toContain('全戰役完破 · 12 場無限重刷');
+    expect(markup).toContain('完破重刷');
+  });
+
+  it('returns mobile players directly to the newly opened hunt', () => {
+    const fresh = createGuildRpgState();
+    const state = createGuildRpgState({
+      ...fresh.profile,
+      unlockedQuestIds: ['border_pack', 'moonroad_pursuit'],
+      questRecords: { border_pack: { clears: 1 } },
+    });
+    const markup = renderToStaticMarkup(
+      <GuildMobileStage state={state} dispatch={dispatch} initialPage="quest" />,
+    );
+
+    expect(markup).toContain('月路追獵');
+    expect(markup).toContain('ZONE 1/4');
+    expect(markup).toContain('戰役 1/12');
   });
 
   it('makes Build selection a first-class mobile thumb page', () => {

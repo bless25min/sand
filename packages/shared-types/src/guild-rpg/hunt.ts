@@ -51,6 +51,8 @@ export interface HuntBossPhase {
 export interface HuntDefinition {
   id: string;
   questId: string;
+  pressureLabel: string;
+  counterBrief: string;
   rewardExperience: number;
   rewardGold: number;
   bossEnemyId?: string;

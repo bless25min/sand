@@ -38,4 +38,15 @@ export const GUILD_COMBO_BUILDS: readonly BuildDefinition[] = [
     cardIds: ALL_CARD_IDS,
     ruleIds: ['overflow_judgment'],
   },
+  {
+    id: 'command_storm',
+    name: '軍令風暴',
+    description: '每張卡都敲出鋼鐵回聲，讓任意編排一路追加傷害與複製爆點。',
+    fantasy: '不等待條件，讓每一道軍令都帶著上一擊的回聲把戰場連續轟穿。',
+    payoffLabel: '全令共振',
+    signatureCardIds: ['lyra_quickshot', 'brann_sweep', 'elin_prayer', 'elin_radiant_burst'],
+    accent: 'command',
+    cardIds: ALL_CARD_IDS,
+    ruleIds: ['steel_echo'],
+  },
 ];

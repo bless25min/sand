@@ -198,8 +198,8 @@ describe('guild profile and rewards', () => {
     );
 
     expect(first.party.every((member) => member.level >= 3)).toBe(true);
-    expect(first.unlockedQuestIds).toEqual(['border_pack', 'abandoned_mine']);
-    expect(slower.unlockedQuestIds).toEqual(['border_pack', 'abandoned_mine']);
+    expect(first.unlockedQuestIds).toEqual(['border_pack', 'moonroad_pursuit']);
+    expect(slower.unlockedQuestIds).toEqual(['border_pack', 'moonroad_pursuit']);
     expect(slower.questRecords.border_pack).toEqual({ clears: 2, bestClearMs: 30_000 });
   });
 });

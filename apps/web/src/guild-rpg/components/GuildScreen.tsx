@@ -1,12 +1,12 @@
 import { GUILD_GAME_CONTENT } from '@expedition/game-data';
 
-import { createHuntSensationModel } from '../presentation/hunt-sensation-model';
-import { formatTime } from '../presenters';
+import { createCampaignProgressModel } from '../presentation/campaign-progress-model';
 import type { GuildRpgAction, GuildRpgState } from '../state/game-reducer';
 import { BuildWorkbench } from '../dev/BuildWorkbench';
 import { AdventurerCard } from './AdventurerCard';
 import { GuildMobileStage } from './GuildMobileStage';
 import { Inventory } from './Inventory';
+import { CampaignZonePanel } from './CampaignZonePanel';
 
 interface GuildScreenProps {
   state: GuildRpgState;
@@ -18,6 +18,11 @@ export function GuildScreen({ state, dispatch }: GuildScreenProps) {
     (total, quantity) => total + quantity,
     0,
   );
+  const campaign = createCampaignProgressModel({
+    content: GUILD_GAME_CONTENT,
+    unlockedQuestIds: state.profile.unlockedQuestIds,
+    questRecords: state.profile.questRecords,
+  });
   return (
     <main className="gr-shell">
       <header className="gr-topbar">
@@ -88,81 +93,26 @@ export function GuildScreen({ state, dispatch }: GuildScreenProps) {
               <p>QUEST BOARD</p>
               <h2 id="quest-title">遠征委託</h2>
             </div>
-            <span>首勝解鎖下一關；重刷追求裝備與最佳時間</span>
+            <span>{campaign.headline}</span>
           </div>
-          <div className="gr-quest-grid">
-            {GUILD_GAME_CONTENT.quests.map((quest, index) => {
-              const unlocked = state.profile.unlockedQuestIds.includes(quest.id);
-              const record = state.profile.questRecords[quest.id];
-              const sensation = createHuntSensationModel(
-                quest.id,
-                state.profile.selectedBuildId,
-                GUILD_GAME_CONTENT,
-              );
-              return (
-                <article
-                  className={`gr-card gr-quest ${unlocked ? '' : 'is-locked'}`}
-                  key={quest.id}
-                >
-                  <span className="gr-quest__index">0{index + 1}</span>
-                  <p>{unlocked ? `建議 Lv.${quest.recommendedLevel}` : '尚未解鎖'}</p>
-                  <h3>{quest.name}</h3>
-                  <p>{quest.description}</p>
-                  <div className="gr-quest__intel">
-                    <strong>
-                      {sensation.build.payoffLabel} · 可破{' '}
-                      {sensation.counterTargets.join('、') || '等待切換 Build'}
-                    </strong>
-                    <span>處刑順序：{sensation.executionOrder.join(' → ')}</span>
-                    <span>專屬掉落：{sensation.exclusiveDropNames.join('、')}</span>
-                    {sensation.chestName && <b>殲滅寶箱：{sensation.chestName}</b>}
-                  </div>
-                  <dl>
-                    <div>
-                      <dt>敵軍</dt>
-                      <dd>{quest.enemies.length} 隊</dd>
-                    </div>
-                    <div>
-                      <dt>獎勵</dt>
-                      <dd>{quest.rewardGold} G</dd>
-                    </div>
-                    <div>
-                      <dt>通關</dt>
-                      <dd>{record?.clears ?? 0}</dd>
-                    </div>
-                    <div>
-                      <dt>最佳</dt>
-                      <dd>{formatTime(record?.bestClearMs)}</dd>
-                    </div>
-                    <div>
-                      <dt>最高溢傷</dt>
-                      <dd>{record?.bestOverkill ?? '—'}</dd>
-                    </div>
-                    <div>
-                      <dt>掉落效率</dt>
-                      <dd>
-                        {record?.bestLootMultiplier
-                          ? `×${record.bestLootMultiplier.toFixed(2)}`
-                          : '—'}
-                      </dd>
-                    </div>
-                    <div>
-                      <dt>最高品質</dt>
-                      <dd>{record?.bestItemQuality ?? '—'}</dd>
-                    </div>
-                  </dl>
-                  <button
-                    type="button"
-                    className="gr-button gr-button--primary"
-                    disabled={!unlocked}
-                    title={unlocked ? undefined : '先完成上一個遠征委託'}
-                    onClick={() => dispatch({ type: 'START_QUEST', questId: quest.id })}
-                  >
-                    {unlocked ? (record ? '帶新引擎重刷' : '開始遠征') : '需要前置勝利'}
-                  </button>
-                </article>
-              );
-            })}
+          {campaign.transitionLabel && (
+            <div className="gr-campaign-transition" role="status">
+              <span>{campaign.complete ? 'CAMPAIGN CONQUERED' : 'NEW WARFRONT OPEN'}</span>
+              <strong>{campaign.transitionLabel}</strong>
+            </div>
+          )}
+          <div className="gr-campaign-map">
+            {GUILD_GAME_CONTENT.zones.map((zone, zoneIndex) => (
+              <CampaignZonePanel
+                zone={zone}
+                zoneIndex={zoneIndex}
+                progress={campaign.zones[zoneIndex]!}
+                campaignComplete={campaign.complete}
+                profile={state.profile}
+                dispatch={dispatch}
+                key={zone.id}
+              />
+            ))}
           </div>
         </section>
 

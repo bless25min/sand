@@ -6,6 +6,7 @@ import type {
 } from '@expedition/shared-types';
 
 import { compileCommand } from './compile-command';
+import { qualifiesForHuntChest } from '../hunt-chest-eligibility';
 import { resolveBossPhase } from './resolve-boss-phase';
 import { resolveCommand } from './resolve-command';
 import { resolveTriggerQueue } from './resolve-trigger-queue';
@@ -40,12 +41,6 @@ function cloneBattle(battle: GuildBattleState): GuildBattleState {
       },
     },
   };
-}
-
-function earnsChest(input: PreviewComboCommandInput, defeatedIds: ReadonlySet<string>) {
-  const hunt = input.hunt;
-  if (!hunt?.annihilationChest || !hunt.bossEnemyId) return false;
-  return [hunt.bossEnemyId, ...(hunt.guardEnemyIds ?? [])].every((id) => defeatedIds.has(id));
 }
 
 export function previewComboCommand(input: PreviewComboCommandInput): ComboCommandPreview {
@@ -87,7 +82,9 @@ export function previewComboCommand(input: PreviewComboCommandInput): ComboComma
     milestones.push('boss-execution');
   }
   if (annihilation) milestones.push('annihilation');
-  if (annihilation && earnsChest(input, defeatedSet)) milestones.push('chest');
+  if (input.hunt && qualifiesForHuntChest(input.hunt, defeatedSet, annihilation)) {
+    milestones.push('chest');
+  }
 
   return {
     diagnostics: [],

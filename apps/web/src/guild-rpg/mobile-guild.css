@@ -66,6 +66,46 @@
     line-height: 1.45;
   }
 
+  .gr-mobile-campaign-card__route {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #ffffff16;
+  }
+
+  .gr-mobile-campaign-card__route span,
+  .gr-mobile-campaign-card__route b {
+    color: #dcb05f;
+    font-size: 0.62rem;
+    letter-spacing: 0.08em;
+  }
+
+  .gr-mobile-campaign-card__route b {
+    color: #9aa5a2;
+  }
+
+  .gr-mobile-campaign-card__intel {
+    display: grid;
+    gap: 6px;
+    margin-top: 18px;
+    padding: 12px;
+    border-left: 2px solid #dca447;
+    background: #dca4470b;
+    font-size: 0.68rem;
+    line-height: 1.4;
+  }
+
+  .gr-mobile-campaign-card__intel strong,
+  .gr-mobile-campaign-card__intel b {
+    color: #edbf6c;
+  }
+
+  .gr-mobile-campaign-card__intel span {
+    color: #a3adaa;
+  }
+
   .gr-mobile-guild-stage .gr-hero-card {
     padding: 16px;
   }

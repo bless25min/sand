@@ -18,7 +18,7 @@ describe('mobile Build actions', () => {
     });
 
     actions.find((action) => action.id === 'previous-build')?.onPress();
-    expect(index).toBe(2);
+    expect(index).toBe(3);
     actions.find((action) => action.id === 'next-build')?.onPress();
     expect(index).toBe(0);
     const activate = actions.find((action) => action.id === 'activate-build');

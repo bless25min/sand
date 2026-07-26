@@ -27,6 +27,7 @@ const adventurers: readonly AdventurerDefinition[] = [
 
 const quest: QuestDefinition = {
   id: 'rule-training',
+  zoneId: 'training-zone',
   name: '規則訓練',
   description: '驗證三條 build engine。',
   recommendedLevel: 1,

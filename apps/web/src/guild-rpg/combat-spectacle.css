@@ -52,6 +52,48 @@
   --hunt-color: #d994ff;
 }
 
+.gr-combat-spectacle[data-hunt-palette='eclipse-blue'],
+.gr-combat-spectacle[data-hunt-palette='violet-silver'],
+.gr-combat-spectacle[data-hunt-palette='arc-violet'] {
+  --hunt-color: #a894ff;
+}
+
+.gr-combat-spectacle[data-hunt-palette='blood-moon'],
+.gr-combat-spectacle[data-hunt-palette='toxic-orange'],
+.gr-combat-spectacle[data-hunt-palette='iron-ember'],
+.gr-combat-spectacle[data-hunt-palette='solar-orange'] {
+  --hunt-color: #ff7651;
+}
+
+.gr-combat-spectacle[data-hunt-palette='powder-lime'],
+.gr-combat-spectacle[data-hunt-palette='ash-gold'] {
+  --hunt-color: #d7ed72;
+}
+
+.gr-combat-spectacle[data-hunt-palette='tempest-blue'],
+.gr-combat-spectacle[data-hunt-palette='cipher-cyan'] {
+  --hunt-color: #69e3ff;
+}
+
+.gr-combat-spectacle[data-hunt-palette='moon-white'],
+.gr-combat-spectacle[data-hunt-palette='royal-white'],
+.gr-combat-spectacle[data-hunt-palette='blast-white'],
+.gr-combat-spectacle[data-hunt-palette='molten-white'],
+.gr-combat-spectacle[data-hunt-palette='choir-white'],
+.gr-combat-spectacle[data-hunt-palette='solar-white'],
+.gr-combat-spectacle[data-hunt-palette='coil-white'],
+.gr-combat-spectacle[data-hunt-palette='vault-white'],
+.gr-combat-spectacle[data-hunt-palette='sovereign-white'],
+.gr-combat-spectacle[data-hunt-palette='sky-white'],
+.gr-combat-spectacle[data-hunt-palette='crown-gold'],
+.gr-combat-spectacle[data-hunt-palette='ore-gold'],
+.gr-combat-spectacle[data-hunt-palette='silent-gold'],
+.gr-combat-spectacle[data-hunt-palette='sun-gold'],
+.gr-combat-spectacle[data-hunt-palette='storm-gold'],
+.gr-combat-spectacle[data-hunt-palette='thunder-gold'] {
+  --hunt-color: #ffeaa1;
+}
+
 .gr-spectacle__backdrop {
   position: absolute;
   z-index: 1;
@@ -203,6 +245,16 @@
   --enemy-accent: #ff7659;
 }
 
+.gr-unit[data-enemy-family='ember-cult'] {
+  --enemy-accent: #e5b760;
+}
+
+.gr-unit[data-enemy-family='storm-legion'],
+.gr-unit[data-enemy-family='storm-construct'],
+.gr-unit[data-enemy-family='storm-court'] {
+  --enemy-accent: #69dff4;
+}
+
 .gr-unit[data-enemy-palette='moon-silver'] {
   --enemy-accent: #dce8ef;
 }
@@ -233,6 +285,40 @@
 
 .gr-unit[data-enemy-palette='scale-cyan'] {
   --enemy-accent: #6fe5e8;
+}
+
+.gr-unit[data-enemy-palette='eclipse-violet'],
+.gr-unit[data-enemy-palette='arc-violet'] {
+  --enemy-accent: #b18cff;
+}
+
+.gr-unit[data-enemy-palette='blood-moon'] {
+  --enemy-accent: #ff496d;
+}
+
+.gr-unit[data-enemy-palette='blackfire-lime'] {
+  --enemy-accent: #c7ef5a;
+}
+
+.gr-unit[data-enemy-palette='molten-iron'] {
+  --enemy-accent: #ff8c4d;
+}
+
+.gr-unit[data-enemy-palette='ash-gold'] {
+  --enemy-accent: #e6bd6d;
+}
+
+.gr-unit[data-enemy-palette='solar-white'],
+.gr-unit[data-enemy-palette='sovereign-white'] {
+  --enemy-accent: #fff3c2;
+}
+
+.gr-unit[data-enemy-palette='tempest-blue'] {
+  --enemy-accent: #72a9ff;
+}
+
+.gr-unit[data-enemy-palette='coil-cyan'] {
+  --enemy-accent: #5df1ff;
 }
 
 .gr-unit[data-enemy-role]::after {

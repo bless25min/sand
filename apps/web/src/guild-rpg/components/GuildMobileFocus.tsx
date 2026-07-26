@@ -4,11 +4,13 @@ import type {
   EquipmentItem,
   GuildAdventurer,
   QuestDefinition,
+  ZoneDefinition,
 } from '@expedition/shared-types';
 import { GUILD_GAME_CONTENT } from '@expedition/game-data';
 
 import type { GuildMobilePage } from '../mobile/thumb-deck-model';
 import { createHuntSensationModel } from '../presentation/hunt-sensation-model';
+import type { CampaignZoneProgress } from '../presentation/campaign-progress-model';
 import type { GuildRpgAction } from '../state/game-reducer';
 import { AdventurerCard } from './AdventurerCard';
 import { InventoryItemCard } from './InventoryItemCard';
@@ -17,6 +19,12 @@ interface GuildMobileFocusProps {
   page: GuildMobilePage;
   build: BuildDefinition;
   quest: QuestDefinition;
+  zone: ZoneDefinition;
+  zoneIndex: number;
+  zoneProgress: CampaignZoneProgress;
+  campaignClearedQuestCount: number;
+  campaignTotalQuestCount: number;
+  campaignComplete: boolean;
   questUnlocked: boolean;
   member: GuildAdventurer;
   hero: AdventurerDefinition;
@@ -31,6 +39,12 @@ export function GuildMobileFocus({
   page,
   build,
   quest,
+  zone,
+  zoneIndex,
+  zoneProgress,
+  campaignClearedQuestCount,
+  campaignTotalQuestCount,
+  campaignComplete,
   questUnlocked,
   member,
   hero,
@@ -58,15 +72,36 @@ export function GuildMobileFocus({
 
   if (page === 'quest') {
     const sensation = createHuntSensationModel(quest.id, selectedBuildId, GUILD_GAME_CONTENT);
+    const hunt = GUILD_GAME_CONTENT.hunts.find((candidate) => candidate.questId === quest.id)!;
     return (
-      <article className={`gr-card gr-quest ${questUnlocked ? '' : 'is-locked'}`}>
-        <p>{questUnlocked ? `建議 Lv.${quest.recommendedLevel}` : '尚未解鎖'}</p>
+      <article
+        className={`gr-card gr-quest gr-mobile-campaign-card ${questUnlocked ? '' : 'is-locked'}`}
+        data-zone-status={zoneProgress.status}
+      >
+        <div className="gr-mobile-campaign-card__route">
+          <span>
+            ZONE {zoneIndex + 1}/{GUILD_GAME_CONTENT.zones.length} · {zone.name}
+          </span>
+          <b>
+            戰役 {campaignClearedQuestCount}/{campaignTotalQuestCount}
+          </b>
+        </div>
+        <p>
+          {campaignComplete
+            ? '全戰役完破 · 無限重刷'
+            : questUnlocked
+              ? `建議 Lv.${quest.recommendedLevel}`
+              : '尚未解鎖'}
+        </p>
         <h2>{quest.name}</h2>
         <p>{quest.description}</p>
-        <strong>{quest.enemies.length} 隊敵軍</strong>
-        <span>
-          {sensation.build.payoffLabel} · 專屬掉落 {sensation.exclusiveDropNames.join('、')}
-        </span>
+        <div className="gr-mobile-campaign-card__intel">
+          <strong>{hunt.pressureLabel}</strong>
+          <span>{hunt.counterBrief}</span>
+          <span>處刑順序：{sensation.executionOrder.join(' → ')}</span>
+          <span>專屬掉落：{sensation.exclusiveDropNames.join('、')}</span>
+          {sensation.chestName && <b>殲滅寶箱：{sensation.chestName}</b>}
+        </div>
       </article>
     );
   }

@@ -26,6 +26,7 @@ const adventurers: readonly AdventurerDefinition[] = [
 
 const quest: QuestDefinition = {
   id: 'training',
+  zoneId: 'training-zone',
   name: '爆發試煉',
   description: '測試自由軍令。',
   recommendedLevel: 1,
@@ -177,10 +178,11 @@ describe('free-form combo command', () => {
       hunt: {
         id: 'training-hunt',
         questId: quest.id,
+        pressureLabel: '訓練壓力',
+        counterBrief: '訓練對策',
         rewardExperience: 1,
         rewardGold: 1,
-        bossEnemyId: 'target-a',
-        guardEnemyIds: ['target-b'],
+        guardEnemyIds: ['target-a', 'target-b'],
         enemies: [],
         annihilationChest: {
           id: 'training-chest',
@@ -214,6 +216,8 @@ describe('free-form combo command', () => {
       hunt: {
         id: 'training-hunt',
         questId: quest.id,
+        pressureLabel: '訓練壓力',
+        counterBrief: '訓練對策',
         rewardExperience: 1,
         rewardGold: 1,
         enemies: [],

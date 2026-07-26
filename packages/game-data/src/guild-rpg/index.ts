@@ -11,6 +11,7 @@ import {
 import { GUILD_EQUIPMENT_AFFIXES, GUILD_EQUIPMENT_BASES } from './equipment';
 import { GUILD_QUESTS } from './quests';
 import { GUILD_SKILLS } from './skills';
+import { GUILD_ZONES } from './campaign/zones';
 
 export {
   GUILD_ADVENTURERS,
@@ -23,9 +24,11 @@ export {
   GUILD_EQUIPMENT_BASES,
   GUILD_QUESTS,
   GUILD_SKILLS,
+  GUILD_ZONES,
 };
 
 export const GUILD_GAME_CONTENT: GuildGameContent = {
+  zones: GUILD_ZONES,
   adventurers: GUILD_ADVENTURERS,
   cards: GUILD_COMBO_CARDS,
   rules: GUILD_COMBO_RULES,

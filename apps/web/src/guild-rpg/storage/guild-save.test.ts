@@ -28,6 +28,30 @@ describe('guild save', () => {
     });
   });
 
+  it('fills newly inserted campaign steps instead of trapping an existing save', () => {
+    const current = createGuildProfile(GUILD_GAME_CONTENT);
+    const legacyProgress = serializeGuildSave({
+      ...current,
+      unlockedQuestIds: ['border_pack', 'abandoned_mine', 'dragon_shrine'],
+      questRecords: {
+        border_pack: { clears: 2 },
+        abandoned_mine: { clears: 1 },
+        dragon_shrine: { clears: 1 },
+      },
+    });
+
+    expect(parseGuildSave(legacyProgress)?.unlockedQuestIds).toEqual([
+      'border_pack',
+      'moonroad_pursuit',
+      'red_fang_den',
+      'abandoned_mine',
+      'blast_gallery',
+      'iron_throne',
+      'dragon_shrine',
+      'ashen_aisle',
+    ]);
+  });
+
   it.each(['', '{', 'null', '{"version":2}', '{"version":1,"party":[]}'])(
     'recovers from invalid save %s',
     (value) => {

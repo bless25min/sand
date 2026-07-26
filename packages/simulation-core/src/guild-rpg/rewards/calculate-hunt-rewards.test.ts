@@ -23,6 +23,8 @@ class FixedRandom implements RandomSource {
 const hunt: HuntDefinition = {
   id: 'training-hunt',
   questId: 'training',
+  pressureLabel: '訓練壓力',
+  counterBrief: '訓練對策',
   rewardExperience: 30,
   rewardGold: 20,
   bossEnemyId: 'boss',
@@ -223,6 +225,33 @@ describe('hunt reward calculation', () => {
     );
     expect(rewards.items.some((item) => item.jackpot)).toBe(true);
     expect(rewards.items.every((item) => item.qualityScore >= 180)).toBe(true);
+  });
+
+  it('awards the authored annihilation chest even when the hunt has no boss', () => {
+    const { bossEnemyId, ...huntWithoutBoss } = hunt;
+    void bossEnemyId;
+    const noBossHunt: HuntDefinition = {
+      ...huntWithoutBoss,
+      guardEnemyIds: ['guard-a', 'guard-b', 'boss'],
+    };
+    const startRatios = { 'guard-a': 1, 'guard-b': 1, boss: 1 };
+    const rewards = calculateHuntRewards(
+      {
+        profile,
+        battle: battle('victory', Object.keys(startRatios), startRatios, 120),
+        hunt: noBossHunt,
+        equipmentAffixes,
+      },
+      new FixedRandom(0.4),
+    );
+
+    expect(rewards.axes.bossChest).toBe(true);
+    expect(rewards.items).toHaveLength(4);
+    expect(rewards.items.at(-1)).toMatchObject({
+      baseId: 'annihilation-chest',
+      sourceEnemyId: 'boss',
+      jackpot: true,
+    });
   });
 
   it.each([

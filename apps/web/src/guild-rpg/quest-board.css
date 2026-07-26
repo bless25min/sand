@@ -1,3 +1,118 @@
+.gr-campaign-map {
+  display: grid;
+  gap: 48px;
+}
+
+.gr-campaign-zone {
+  --zone-accent: #dca447;
+  position: relative;
+  padding: 22px;
+  border: 1px solid color-mix(in srgb, var(--zone-accent) 28%, #ffffff16);
+  background:
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--zone-accent) 8%, transparent),
+      transparent 46%
+    ),
+    #0b1012b8;
+}
+
+.gr-campaign-zone[data-zone-palette='moon-iron'] {
+  --zone-accent: #b8ccea;
+}
+
+.gr-campaign-zone[data-zone-palette='ore-green'] {
+  --zone-accent: #97c46f;
+}
+
+.gr-campaign-zone[data-zone-palette='ember-violet'] {
+  --zone-accent: #e77b62;
+}
+
+.gr-campaign-zone[data-zone-palette='storm-cyan'] {
+  --zone-accent: #65d9ef;
+}
+
+.gr-campaign-zone[data-zone-status='active'] {
+  border-color: color-mix(in srgb, var(--zone-accent) 70%, transparent);
+  box-shadow: 0 0 48px color-mix(in srgb, var(--zone-accent) 10%, transparent);
+}
+
+.gr-campaign-zone[data-zone-status='locked'] .gr-campaign-zone__header {
+  filter: saturate(0.25);
+  opacity: 0.58;
+}
+
+.gr-campaign-zone__header {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 30px;
+  margin-bottom: 20px;
+}
+
+.gr-campaign-zone__header p,
+.gr-campaign-zone__header h3,
+.gr-campaign-zone__header strong {
+  margin: 0;
+}
+
+.gr-campaign-zone__header p,
+.gr-campaign-zone__header aside b {
+  color: var(--zone-accent);
+  font-size: 0.67rem;
+  font-weight: 900;
+  letter-spacing: 0.16em;
+}
+
+.gr-campaign-zone__header h3 {
+  display: flex;
+  gap: 12px;
+  align-items: baseline;
+  margin-top: 7px;
+  font-family: Georgia, 'Noto Serif TC', serif;
+  font-size: clamp(1.65rem, 3vw, 2.45rem);
+}
+
+.gr-campaign-zone__header h3 span {
+  color: var(--zone-accent);
+  font-size: 0.74em;
+}
+
+.gr-campaign-zone__header > div > strong {
+  display: block;
+  max-width: 720px;
+  margin-top: 7px;
+  color: #9ba5a2;
+  font-size: 0.78rem;
+  font-weight: 500;
+}
+
+.gr-campaign-zone__header aside {
+  display: grid;
+  min-width: 180px;
+  gap: 5px;
+  text-align: right;
+}
+
+.gr-campaign-zone__header aside span {
+  color: #899390;
+  font-size: 0.65rem;
+}
+
+.gr-campaign-zone__header aside i {
+  overflow: hidden;
+  height: 4px;
+  background: #ffffff12;
+}
+
+.gr-campaign-zone__header aside i span {
+  display: block;
+  height: 100%;
+  background: var(--zone-accent);
+  box-shadow: 0 0 12px var(--zone-accent);
+}
+
 .gr-quest-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -5,8 +120,13 @@
 }
 
 .gr-quest {
-  min-height: 310px;
+  min-height: 430px;
   padding: 24px;
+}
+
+.gr-quest[data-current-quest='true'] {
+  border-color: var(--zone-accent);
+  box-shadow: inset 3px 0 var(--zone-accent);
 }
 
 .gr-quest__index {
@@ -19,10 +139,16 @@
   line-height: 1;
 }
 
-.gr-quest h3 {
+.gr-quest h3,
+.gr-quest h4 {
   margin: 22px 0 10px;
   font-family: Georgia, 'Noto Serif TC', serif;
   font-size: 1.75rem;
+}
+
+.gr-quest h4 {
+  position: relative;
+  z-index: 1;
 }
 
 .gr-quest > p:nth-of-type(2) {
@@ -48,6 +174,23 @@
 
 .gr-quest__intel span {
   color: #9aa4a1;
+}
+
+.gr-quest__pressure {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 4px 8px;
+  margin-top: 14px;
+  font-size: 0.68rem;
+  line-height: 1.45;
+}
+
+.gr-quest__pressure b {
+  color: var(--zone-accent, #dca447);
+}
+
+.gr-quest__pressure span {
+  color: #a9b2af;
 }
 
 .gr-quest dl {
@@ -79,6 +222,38 @@
 .gr-quest.is-locked {
   filter: saturate(0.2);
   opacity: 0.52;
+}
+
+.gr-campaign-transition,
+.gr-zone-transition {
+  display: grid;
+  gap: 5px;
+  padding: 13px 16px;
+  border-left: 3px solid #e6b455;
+  background: linear-gradient(90deg, #dca44716, transparent);
+}
+
+.gr-campaign-transition {
+  margin-bottom: 22px;
+}
+
+.gr-zone-transition {
+  margin-top: 16px;
+  border-left-color: var(--zone-accent);
+}
+
+.gr-campaign-transition span,
+.gr-zone-transition span {
+  color: #dca447;
+  font-size: 0.6rem;
+  font-weight: 900;
+  letter-spacing: 0.16em;
+}
+
+.gr-campaign-transition strong,
+.gr-zone-transition strong {
+  color: #e9ddc4;
+  font-size: 0.82rem;
 }
 
 .gr-empty {
@@ -143,6 +318,10 @@
 }
 
 @media (max-width: 980px) {
+  .gr-campaign-zone__header {
+    align-items: start;
+  }
+
   .gr-quest-grid {
     grid-template-columns: 1fr;
   }
