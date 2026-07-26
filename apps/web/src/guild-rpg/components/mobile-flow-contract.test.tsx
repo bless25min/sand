@@ -88,6 +88,62 @@ function reachExecutionWindow(): GuildRpgState {
 }
 
 describe('right-thumb mobile flow', () => {
+  it('renders one complete, focused instruction for each fresh guild step', () => {
+    const buildMarkup = renderToStaticMarkup(
+      <GuildMobileStage state={createGuildRpgState()} dispatch={dispatch} />,
+    );
+    const questMarkup = renderToStaticMarkup(
+      <GuildMobileStage state={createGuildRpgState()} dispatch={dispatch} initialPage="quest" />,
+    );
+
+    expect(buildMarkup).toContain('新手引導 1/2');
+    expect(buildMarkup).toContain('前往第一個任務');
+    expect(buildMarkup).toContain('反擊壁壘已就緒。現在只要切到任務分頁。');
+    expect(buildMarkup).toContain('data-guide-id="tab:quest" data-guide-focus="true"');
+    expect(buildMarkup.match(/data-guide-focus="true"/g) ?? []).toHaveLength(1);
+    expect(questMarkup).toContain('新手引導 2/2');
+    expect(questMarkup).toContain('出發邊境狼群');
+    expect(questMarkup).toContain('data-guide-id="action:start-quest" data-guide-focus="true"');
+    expect(questMarkup.match(/data-guide-focus="true"/g) ?? []).toHaveLength(1);
+  });
+
+  it('hides advanced mission intelligence only during fresh guidance', () => {
+    const guided = renderToStaticMarkup(
+      <GuildMobileStage state={createGuildRpgState()} dispatch={dispatch} initialPage="quest" />,
+    );
+    const fresh = createGuildRpgState();
+    const skipped = renderToStaticMarkup(
+      <GuildMobileStage
+        state={{
+          ...fresh,
+          preferences: { ...fresh.preferences, tutorial: 'skipped' },
+        }}
+        dispatch={dispatch}
+        initialPage="quest"
+      />,
+    );
+
+    expect(guided).toContain('現在只要按下開始遠征');
+    expect(guided).not.toContain('處刑順序');
+    expect(guided).not.toContain('專屬掉落');
+    expect(skipped).toContain('處刑順序');
+    expect(skipped).toContain('專屬掉落');
+  });
+
+  it('reserves the mobile battle grid for header and battlefield at every height', () => {
+    const battleCss = readFileSync(new URL('../mobile-battle.css', import.meta.url), 'utf8');
+    const deckCss = readFileSync(new URL('../thumb-command-deck.css', import.meta.url), 'utf8');
+
+    expect(battleCss).toContain('grid-template-areas:');
+    expect(battleCss).toContain("'header'");
+    expect(battleCss).toContain("'battlefield'");
+    expect(battleCss).toContain('.gr-battle > .gr-coach');
+    expect(battleCss).toContain('@media (max-width: 800px) and (max-height: 720px)');
+    expect(deckCss).toContain('.gr-thumb-deck__guide');
+    expect(deckCss).toContain("[data-guide-focus='true']");
+    expect(deckCss).toContain('padding-bottom: calc(372px + env(safe-area-inset-bottom))');
+  });
+
   it('keeps guild navigation and the quest action in the thumb command deck', () => {
     const markup = renderToStaticMarkup(
       <GuildScreen state={createGuildRpgState()} dispatch={dispatch} />,
@@ -125,9 +181,13 @@ describe('right-thumb mobile flow', () => {
 
   it('renders four readable warfronts and mobile campaign intelligence', () => {
     const state = createGuildRpgState();
+    const unguidedState = {
+      ...state,
+      preferences: { ...state.preferences, tutorial: 'skipped' as const },
+    };
     const desktopMarkup = renderToStaticMarkup(<GuildScreen state={state} dispatch={dispatch} />);
     const mobileMarkup = renderToStaticMarkup(
-      <GuildMobileStage state={state} dispatch={dispatch} initialPage="quest" />,
+      <GuildMobileStage state={unguidedState} dispatch={dispatch} initialPage="quest" />,
     );
 
     expect(desktopMarkup.match(/data-campaign-zone=/g)).toHaveLength(4);
@@ -192,7 +252,7 @@ describe('right-thumb mobile flow', () => {
     );
 
     expect(markup).toContain('data-mobile-page="build"');
-    expect(markup).toContain('先確認反擊壁壘');
+    expect(markup).toContain('前往第一個任務');
   });
 
   it('offers party and inventory decisions without leaving the guild thumb zone', () => {
@@ -241,12 +301,34 @@ describe('right-thumb mobile flow', () => {
     expect(markup).toContain('>系統<');
     expect(markup).toContain('GUIDED HUNT');
     expect(markup).toContain('下一張選 盾後反擊');
+    expect(markup).toContain('軍令引導 3/6');
+    expect(markup).toContain('data-guide-id="action:brann_riposte" data-guide-focus="true"');
+    expect(markup.match(/data-guide-focus="true"/g) ?? []).toHaveLength(1);
     expect(markup).toContain('開啟設定');
     expect(markup).toContain('撤銷上一步');
     expect(markup).toContain('提早釋放');
     expect(markup).not.toContain('行動 0%');
     expect(markup).toContain('壓力 0%');
     expect(markup).toContain('data-thumb-slot="primary"');
+  });
+
+  it('keeps the guided target correction visible from the default battle page', () => {
+    const started = guildRpgReducer(createGuildRpgState(), {
+      type: 'START_QUEST',
+      questId: 'border_pack',
+    });
+    const state = {
+      ...started,
+      battle: {
+        ...started.battle!,
+        selectedTargetId: 'wolf_alpha',
+      },
+    };
+
+    const markup = renderToStaticMarkup(<BattleScreen state={state} dispatch={dispatch} />);
+
+    expect(markup).toContain('data-guide-id="tab:target" data-guide-focus="true"');
+    expect(markup.match(/data-guide-focus="true"/g) ?? []).toHaveLength(1);
   });
 
   it('turns the guided primary action into recovery, preview confirmation, then release', () => {

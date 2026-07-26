@@ -181,16 +181,30 @@ export function BattleThumbControls({ state, dispatch }: BattleThumbControlsProp
     ];
   }
 
+  const focusedActionVisible =
+    coach?.focusId?.startsWith('action:') &&
+    actions.some((action) => `action:${action.id}` === coach.focusId);
+  const guide =
+    coach?.focusId?.startsWith('action:') && !focusedActionVisible
+      ? {
+          ...coach,
+          title: coach.step === 'target' ? '打開目標選單' : '回到卡牌',
+          message:
+            coach.step === 'target'
+              ? '先切到目標分頁，再鎖定教學標示的敵人。'
+              : '先切回卡牌分頁，繼續完成這一步軍令。',
+          focusId: coach.step === 'target' ? 'tab:target' : 'tab:cards',
+        }
+      : coach;
+
   return (
     <ThumbCommandDeck
       ariaLabel="戰鬥操作"
       eyebrow="FREE-FORM COMMAND"
       title={title}
-      status={
-        coach?.message ??
-        `${sensation.build.payoffLabel} · ${sensation.signature.nextCard ? `推薦 ${sensation.signature.nextCard.name}` : '招牌路線完成'} · 鎖定 ${selectedTarget?.name ?? '無'}`
-      }
+      status={`${sensation.build.payoffLabel} · ${sensation.signature.nextCard ? `推薦 ${sensation.signature.nextCard.name}` : '招牌路線完成'} · 鎖定 ${selectedTarget?.name ?? '無'}`}
       feedback={state.message}
+      guide={guide}
       tabs={[
         {
           id: 'cards',

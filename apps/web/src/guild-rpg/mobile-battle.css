@@ -2,6 +2,9 @@
   .gr-battle {
     display: grid;
     overflow: hidden;
+    grid-template-areas:
+      'header'
+      'battlefield';
     grid-template-rows: auto minmax(230px, 1fr);
     gap: 8px;
     height: 100dvh;
@@ -9,6 +12,7 @@
   }
 
   .gr-battle__header {
+    grid-area: header;
     align-items: center;
     flex-direction: row;
     min-height: 54px;
@@ -89,6 +93,7 @@
   .gr-battlefield {
     display: grid;
     overflow: hidden;
+    grid-area: battlefield;
     grid-template-columns: 1fr;
     grid-template-rows: 1fr 18px 1fr;
     gap: 4px;
@@ -201,5 +206,77 @@
 
   .gr-result > div {
     padding: 26px 20px;
+  }
+
+  .gr-battle > .gr-coach {
+    display: none;
+  }
+
+  .gr-battle > .gr-ascension-banner {
+    position: fixed;
+    z-index: 13;
+    top: 82px;
+    right: 12px;
+    left: 12px;
+    max-height: 58px;
+    overflow: hidden;
+    pointer-events: none;
+  }
+}
+
+@media (max-width: 800px) and (max-height: 720px) {
+  .gr-battle {
+    grid-template-rows: auto minmax(0, 1fr);
+    gap: 5px;
+  }
+
+  .gr-battle__header {
+    min-height: 48px;
+    padding-bottom: 4px;
+  }
+
+  .gr-battlefield {
+    grid-template-rows: minmax(0, 1fr) 12px minmax(0, 1fr);
+    gap: 2px;
+    padding: 5px;
+  }
+
+  .gr-line {
+    gap: 2px;
+  }
+
+  .gr-line > p {
+    font-size: 0.46rem;
+  }
+
+  .gr-unit {
+    min-height: 58px;
+    padding: 4px;
+  }
+
+  .gr-unit header h3 {
+    font-size: 0.66rem;
+  }
+
+  .gr-unit__numbers {
+    margin-top: 3px;
+    font-size: 0.5rem;
+  }
+
+  .gr-unit__trait {
+    display: none;
+  }
+
+  .gr-unit__intent {
+    margin-top: 2px;
+    padding: 1px 3px;
+  }
+
+  .gr-meter {
+    margin-top: 2px;
+  }
+
+  .gr-versus {
+    gap: 4px;
   }
 }

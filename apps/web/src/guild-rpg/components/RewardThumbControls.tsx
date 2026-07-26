@@ -165,8 +165,9 @@ export function RewardThumbControls({ state, dispatch }: RewardThumbControlsProp
         ariaLabel="戰利品操作"
         eyebrow={allResolved ? 'LOOT COMPLETE' : `LOOT ${itemIndex + 1}/${rewards.items.length}`}
         title={allResolved || !item ? '戰利品已處理完成' : item.name}
-        status={coach?.message ?? (allResolved ? '可以返回公會' : `最佳裝備者：${hero.name}`)}
+        status={allResolved ? '可以返回公會' : `最佳裝備者：${hero.name}`}
         feedback={state.message}
+        guide={coach}
         actions={actions}
       />
     </section>

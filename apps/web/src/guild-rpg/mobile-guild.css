@@ -106,6 +106,28 @@
     color: #a3adaa;
   }
 
+  .gr-mobile-campaign-card__guided {
+    display: grid;
+    gap: 6px;
+    margin-top: 18px;
+    padding: 14px;
+    border: 1px solid #e2b45a55;
+    border-left: 4px solid #e8b657;
+    background: linear-gradient(105deg, #e4aa3c20, transparent);
+  }
+
+  .gr-mobile-campaign-card__guided strong {
+    color: #f2c66f;
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+  }
+
+  .gr-mobile-campaign-card__guided span {
+    color: #f2ead8;
+    font-size: 0.9rem;
+    line-height: 1.5;
+  }
+
   .gr-mobile-guild-stage .gr-hero-card {
     padding: 16px;
   }

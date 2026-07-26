@@ -179,6 +179,34 @@ describe('guild RPG reducer', () => {
     });
   });
 
+  it('completes fresh guidance after the successful first hunt returns to the guild', () => {
+    let state = guildRpgReducer(createGuildRpgState(), {
+      type: 'START_QUEST',
+      questId: 'border_pack',
+    });
+    state = {
+      ...state,
+      screen: 'rewards',
+      rewards: {
+        questId: 'border_pack',
+        clearMs: 12_000,
+        successful: true,
+        gold: 0,
+        experience: 0,
+        items: [],
+        materials: [],
+      },
+    };
+
+    state = guildRpgReducer(state, { type: 'RETURN_GUILD' });
+
+    expect(state).toMatchObject({
+      screen: 'guild',
+      tutorialReplay: false,
+      preferences: { tutorial: 'complete' },
+    });
+  });
+
   it('does not attach border guidance to a different hunt during tutorial replay', () => {
     const recorded = {
       ...createGuildRpgState(),

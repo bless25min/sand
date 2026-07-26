@@ -82,6 +82,7 @@ export function GuildMobileStage({ state, dispatch, initialPage }: GuildMobileSt
     replaying: state.tutorialReplay,
     previewAcknowledged: state.tutorialPreviewAcknowledged,
     bossExecutionOpen: false,
+    mobilePage: page,
   });
 
   const title =
@@ -156,6 +157,7 @@ export function GuildMobileStage({ state, dispatch, initialPage }: GuildMobileSt
           isLeader={member.definitionId === state.profile.leaderId}
           visibleItems={visibleItems}
           selectedItemId={selectedItem?.id}
+          guided={Boolean(coach)}
           dispatch={dispatch}
           onOpenForge={() => setUtilityPanel('forge')}
         />
@@ -164,7 +166,8 @@ export function GuildMobileStage({ state, dispatch, initialPage }: GuildMobileSt
         ariaLabel="公會操作"
         eyebrow="RIGHT THUMB · GUILD"
         title={title}
-        status={coach?.message ?? state.message}
+        status={state.message}
+        guide={coach}
         tabs={[
           {
             id: 'build',

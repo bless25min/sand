@@ -312,8 +312,8 @@ export function guildRpgReducer(state: GuildRpgState, action: GuildRpgAction): G
     return { ...state, profile: resolution.profile, message: resolution.message };
   }
   if (action.type === 'RETURN_GUILD') {
-    const completedReplay =
-      state.tutorialReplay &&
+    const completedTutorial =
+      state.preferences.tutorial === 'active' &&
       state.battle?.questId === 'border_pack' &&
       state.rewards?.successful === true;
     const activatedRuleNames = state.activatedRuleIds.map(
@@ -329,9 +329,9 @@ export function guildRpgReducer(state: GuildRpgState, action: GuildRpgAction): G
       paused: false,
       pausedBeforeSettings: false,
       settingsOpen: false,
-      tutorialReplay: completedReplay ? false : state.tutorialReplay,
+      tutorialReplay: completedTutorial ? false : state.tutorialReplay,
       tutorialPreviewAcknowledged: false,
-      preferences: completedReplay
+      preferences: completedTutorial
         ? { ...state.preferences, tutorial: 'complete' }
         : state.preferences,
       message:

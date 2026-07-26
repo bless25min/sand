@@ -32,6 +32,7 @@ interface GuildMobileFocusProps {
   isLeader: boolean;
   visibleItems: readonly EquipmentItem[];
   selectedItemId?: string | undefined;
+  guided?: boolean | undefined;
   dispatch: React.Dispatch<GuildRpgAction>;
   onOpenForge?: () => void;
 }
@@ -53,6 +54,7 @@ export function GuildMobileFocus({
   isLeader,
   visibleItems,
   selectedItemId,
+  guided = false,
   dispatch,
   onOpenForge,
 }: GuildMobileFocusProps) {
@@ -97,13 +99,20 @@ export function GuildMobileFocus({
         </p>
         <h2>{quest.name}</h2>
         <p>{quest.description}</p>
-        <div className="gr-mobile-campaign-card__intel">
-          <strong>{hunt.pressureLabel}</strong>
-          <span>{hunt.counterBrief}</span>
-          <span>處刑順序：{sensation.executionOrder.join(' → ')}</span>
-          <span>專屬掉落：{sensation.exclusiveDropNames.join('、')}</span>
-          {sensation.chestName && <b>殲滅寶箱：{sensation.chestName}</b>}
-        </div>
+        {guided ? (
+          <div className="gr-mobile-campaign-card__guided">
+            <strong>第一次遠征</strong>
+            <span>現在只要按下開始遠征；戰場會先停時，再逐步帶你完成第一條軍令。</span>
+          </div>
+        ) : (
+          <div className="gr-mobile-campaign-card__intel">
+            <strong>{hunt.pressureLabel}</strong>
+            <span>{hunt.counterBrief}</span>
+            <span>處刑順序：{sensation.executionOrder.join(' → ')}</span>
+            <span>專屬掉落：{sensation.exclusiveDropNames.join('、')}</span>
+            {sensation.chestName && <b>殲滅寶箱：{sensation.chestName}</b>}
+          </div>
+        )}
       </article>
     );
   }

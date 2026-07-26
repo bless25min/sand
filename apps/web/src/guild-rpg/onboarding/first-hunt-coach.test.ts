@@ -22,6 +22,41 @@ function input(overrides: Record<string, unknown> = {}) {
 }
 
 describe('first hunt coach', () => {
+  it('turns the fresh mobile guild into two focused, readable actions', () => {
+    expect(
+      createFirstHuntCoach(
+        input({
+          screen: 'guild',
+          selectedTargetId: undefined,
+          mobilePage: 'build',
+        }),
+      ),
+    ).toMatchObject({
+      step: 'quest',
+      phaseLabel: '新手引導',
+      stepNumber: 1,
+      stepTotal: 2,
+      title: '前往第一個任務',
+      focusId: 'tab:quest',
+    });
+    expect(
+      createFirstHuntCoach(
+        input({
+          screen: 'guild',
+          selectedTargetId: undefined,
+          mobilePage: 'quest',
+        }),
+      ),
+    ).toMatchObject({
+      step: 'start',
+      phaseLabel: '新手引導',
+      stepNumber: 2,
+      stepTotal: 2,
+      title: '出發邊境狼群',
+      focusId: 'action:start-quest',
+    });
+  });
+
   it('guides the exact retaliation signature route and pauses only before player decisions', () => {
     expect(createFirstHuntCoach(input({ selectedTargetId: 'wolf_alpha' }))).toMatchObject({
       step: 'target',
@@ -31,6 +66,11 @@ describe('first hunt coach', () => {
       step: 'brace',
       paused: true,
       expectedCardId: 'brann_brace',
+      phaseLabel: '軍令引導',
+      stepNumber: 2,
+      stepTotal: 6,
+      title: '打出架盾',
+      focusId: 'action:brann_brace',
     });
     expect(createFirstHuntCoach(input({ draftCardIds: ['brann_brace'] }))).toMatchObject({
       step: 'riposte',
@@ -52,6 +92,8 @@ describe('first hunt coach', () => {
     expect(createFirstHuntCoach(input({ draftCardIds: ['lyra_quickshot'] }))).toMatchObject({
       step: 'recover',
       paused: true,
+      title: '撤銷錯誤卡',
+      focusId: 'action:undo',
     });
   });
 
@@ -62,7 +104,24 @@ describe('first hunt coach', () => {
     });
     expect(
       createFirstHuntCoach(input({ screen: 'rewards', rewardItemCount: 4, resolvedItemCount: 2 })),
-    ).toMatchObject({ step: 'loot', paused: false });
+    ).toMatchObject({
+      step: 'loot',
+      paused: false,
+      phaseLabel: '戰利品引導',
+      stepNumber: 3,
+      stepTotal: 5,
+      title: '處理第 3 件戰利品',
+      focusId: 'action:equip',
+    });
+    expect(
+      createFirstHuntCoach(input({ screen: 'rewards', rewardItemCount: 4, resolvedItemCount: 4 })),
+    ).toMatchObject({
+      step: 'return',
+      stepNumber: 5,
+      stepTotal: 5,
+      title: '返回公會',
+      focusId: 'action:return-guild',
+    });
     expect(createFirstHuntCoach(input({ screen: 'guild', hasBorderRecord: true }))).toMatchObject({
       step: 'replay',
       paused: false,
