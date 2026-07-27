@@ -20,6 +20,8 @@ const events: readonly GuildBattleEvent[] = [
     targetId: 'wolf_alpha',
     amount: 48,
     element: 'fire',
+    specializationId: 'blast',
+    triggerId: 'target_burning',
   },
   {
     id: 12,
@@ -67,6 +69,8 @@ describe('visual battle events', () => {
       number: -48,
       polarity: 'damage',
       camera: 'punch',
+      specializationId: 'blast',
+      triggerId: 'target_burning',
     });
     expect(projected[2]).toMatchObject({
       headline: '燃燒疊層',

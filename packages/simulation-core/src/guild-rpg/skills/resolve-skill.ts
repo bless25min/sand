@@ -38,12 +38,18 @@ export function resolveSkill(input: {
     throw new Error(`It is not ${input.actorId}'s turn.`);
   }
 
+  const openingComponent = skill.components[0]!;
+  const closingComponent = skill.components.at(-1)!;
   const drafts: Omit<GuildBattleEvent, 'id'>[] = [
     {
       kind: 'skill_cast',
       message: `${actor.name}立即施放「${skill.name}」。`,
       actorId: actor.id,
+      targetId: input.targetId,
       skillId: skill.id,
+      element: openingComponent.element,
+      specializationId: openingComponent.specializationId,
+      triggerId: openingComponent.triggerId,
     },
   ];
   const roundIndex = input.battle.roundIndex ?? 1;
@@ -132,8 +138,12 @@ export function resolveSkill(input: {
       kind: 'finisher',
       message: `第六棒終結：五次接力餘震完成，累積追加 ${relayDamage} 點。`,
       actorId: actor.id,
+      targetId: input.targetId,
       amount: relayDamage,
       skillId: skill.id,
+      element: closingComponent.element,
+      specializationId: closingComponent.specializationId,
+      triggerId: closingComponent.triggerId,
     });
   }
   const passive = resolveDeliveryPassive({
@@ -141,7 +151,7 @@ export function resolveSkill(input: {
     units,
     actorId: actor.id,
     targetId: input.targetId,
-    element: skill.components.at(-1)!.element,
+    element: closingComponent.element,
     relayIndex,
   });
   units = [...passive.units];

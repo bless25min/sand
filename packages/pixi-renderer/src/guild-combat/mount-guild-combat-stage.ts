@@ -1,6 +1,7 @@
 import { Application, Container, RendererType } from 'pixi.js';
 
 import { createCombatEffectPlan } from './combat-effect-plan';
+import { createCombatMotion } from './combat-motion-plan';
 import type { GuildCombatScene } from './contracts';
 import { drawCombatBackground, type AmbientNode } from './draw-background';
 import { drawCombatEffects, type EffectNodes } from './draw-effects';
@@ -101,8 +102,22 @@ export async function mountGuildCombatStage(
         );
       }
       for (const [index, unit] of nodes.units.entries()) {
+        const sceneUnit = currentScene.units.find(({ id }) => id === unit.id);
         const activeBoost = unit.state === 'acting' ? 4.5 : unit.state === 'next' ? 2.4 : 1.2;
-        unit.node.position.y = unit.baseY + Math.sin(elapsed * 2.2 + index) * activeBoost;
+        const motion = createCombatMotion({
+          side: sceneUnit?.side ?? 'heroes',
+          state: unit.state,
+          ...(currentScene.event?.phase ? { phase: currentScene.event.phase } : {}),
+          relay: currentScene.relay,
+          progress,
+          finisher: currentPlan.finisher && currentScene.event?.phase === 'finisher',
+        });
+        unit.node.position.set(
+          unit.baseX + motion.x,
+          unit.baseY + motion.y + Math.sin(elapsed * 2.2 + index) * activeBoost,
+        );
+        unit.node.scale.set(motion.scale);
+        unit.node.rotation = motion.rotation;
       }
       if (currentPlan.shakePx > 0 && currentScene.event?.camera !== 'none') {
         const decay = 1 - progress;
@@ -127,6 +142,12 @@ export async function mountGuildCombatStage(
       particle.x += Math.cos(angle) * (0.6 + currentScene.relay * 0.15);
       particle.y += Math.sin(angle) * (0.6 + currentScene.relay * 0.15);
       particle.alpha = Math.max(0, 1 - progress);
+    }
+    for (const [index, mark] of nodes.effects.marks.entries()) {
+      const direction = index % 2 === 0 ? 1 : -1;
+      mark.rotation += direction * (0.008 + currentScene.relay * 0.002);
+      mark.scale.set(0.78 + Math.sin(Math.min(1, progress) * Math.PI) * 0.38);
+      mark.alpha = Math.max(0.08, 1 - progress * 0.9);
     }
     if (nodes.effects.number) {
       nodes.effects.number.y -= 0.35 + currentScene.relay * 0.05;

@@ -9,10 +9,21 @@ export interface CombatEffectPlan {
   ambientParticles: number;
   impactParticles: number;
   impactRings: number;
+  impactTargetIds: readonly string[];
   cameraZoom: number;
   shakePx: number;
   hitStopMs: number;
   finisher: boolean;
+  elementMotif: 'ember-shards' | 'toxic-spores' | 'tidal-ribbons' | 'neutral-sparks';
+  specializationMotif:
+    | 'detonation'
+    | 'layer-orbit'
+    | 'armor-fracture'
+    | 'ricochet'
+    | 'relay-aura'
+    | 'rapid-strikes'
+    | 'impact';
+  signatureMarks: number;
   route: readonly CombatEffectPoint[];
 }
 
@@ -41,16 +52,57 @@ function eventRoute(scene: GuildCombatScene): readonly CombatEffectPoint[] {
   return [actor, target];
 }
 
+const elementMotif = (scene: GuildCombatScene): CombatEffectPlan['elementMotif'] => {
+  if (scene.event?.element === 'fire') return 'ember-shards';
+  if (scene.event?.element === 'grass') return 'toxic-spores';
+  if (scene.event?.element === 'water') return 'tidal-ribbons';
+  return 'neutral-sparks';
+};
+
+const specializationMotif = (scene: GuildCombatScene): CombatEffectPlan['specializationMotif'] => {
+  const specialization = scene.event?.specializationId;
+  if (specialization === 'blast') return 'detonation';
+  if (specialization === 'stack') return 'layer-orbit';
+  if (specialization === 'weaken') return 'armor-fracture';
+  if (specialization === 'chain') return 'ricochet';
+  if (specialization === 'empower') return 'relay-aura';
+  if (specialization === 'multistrike') return 'rapid-strikes';
+  return 'impact';
+};
+
+const impactTargetIds = (scene: GuildCombatScene): readonly string[] => {
+  if (scene.event?.targetId) return [scene.event.targetId];
+  if (scene.event?.phase === 'finisher') {
+    return scene.units.filter(({ side }) => side === 'enemies').map(({ id }) => id);
+  }
+  if (scene.event?.polarity === 'support') {
+    return scene.units
+      .filter(({ side, state }) => side === 'heroes' && state !== 'defeated')
+      .map(({ id }) => id);
+  }
+  if (scene.event?.route === 'area') {
+    return scene.units
+      .filter(({ side, state }) => side === 'enemies' && state !== 'defeated')
+      .map(({ id }) => id);
+  }
+  return [];
+};
+
 export function createCombatEffectPlan(scene: GuildCombatScene): CombatEffectPlan {
   const relay = Math.max(1, Math.min(6, Math.trunc(scene.relay)));
+  const motif = specializationMotif(scene);
   return {
     ambientParticles: 8 + relay * 8,
     impactParticles: 12 + relay * 10,
-    impactRings: relay + 1,
+    impactRings: relay + 1 + (motif === 'detonation' ? 2 : 0),
+    impactTargetIds: impactTargetIds(scene),
     cameraZoom: relay === 6 ? 1.08 : 1 + (relay - 1) * 0.008,
     shakePx: relay === 1 ? 0 : relay * 1.5,
     hitStopMs: 18 + relay * 8,
     finisher: relay === 6,
+    elementMotif: elementMotif(scene),
+    specializationMotif: motif,
+    signatureMarks: relay + (motif === 'rapid-strikes' ? 4 : motif === 'layer-orbit' ? 2 : 1),
     route: eventRoute(scene),
   };
 }

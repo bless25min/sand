@@ -142,7 +142,14 @@ describe('deterministic skill engine', () => {
       content: content([selected]),
     });
 
-    expect(result.events[0]).toMatchObject({ kind: 'skill_cast', actorId: 'brann' });
+    expect(result.events[0]).toMatchObject({
+      kind: 'skill_cast',
+      actorId: 'brann',
+      targetId: 'enemy-a',
+      element: 'fire',
+      specializationId: 'multistrike',
+      triggerId: 'on_hit',
+    });
     expect(result.events.filter((event) => event.kind === 'damage').length).toBeGreaterThanOrEqual(
       3,
     );
@@ -390,7 +397,18 @@ describe('deterministic skill engine', () => {
     }
 
     expect(echoCounts).toEqual([0, 1, 2, 3, 4, 5]);
-    expect(allEvents.some(({ kind }) => kind === 'finisher')).toBe(true);
+    expect(allEvents).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          kind: 'finisher',
+          actorId: 'kyro',
+          targetId: 'enemy-a',
+          element: 'fire',
+          specializationId: 'stack',
+          triggerId: 'after_skill',
+        }),
+      ]),
+    );
   });
 
   it('resolves every hero delivery passive as a real traceable event', () => {

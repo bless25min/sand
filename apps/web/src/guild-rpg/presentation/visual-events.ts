@@ -264,6 +264,8 @@ export function projectVisualEvents(
       ...(event.targetId ? { targetId: event.targetId } : {}),
       ...(number !== undefined ? { number } : {}),
       ...(event.element ? { element: event.element } : {}),
+      ...(event.specializationId ? { specializationId: event.specializationId } : {}),
+      ...(event.triggerId ? { triggerId: event.triggerId } : {}),
       ...(status ? { status } : {}),
     };
   });

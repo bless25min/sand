@@ -1,8 +1,10 @@
 import { Graphics, Text } from 'pixi.js';
 import type { Container } from 'pixi.js';
 
+import { createEffectMarks } from './combat-effect-language';
 import type { CombatEffectPlan } from './combat-effect-plan';
 import type { GuildCombatScene } from './contracts';
+import { drawMark, drawProjectile, drawRoute } from './draw-effect-motifs';
 
 export interface EffectNodes {
   projectile?: Graphics;
@@ -10,6 +12,7 @@ export interface EffectNodes {
   rings: readonly Graphics[];
   number?: Text;
   burst: readonly Graphics[];
+  marks: readonly Graphics[];
 }
 
 const ELEMENT_COLOR = {
@@ -30,50 +33,78 @@ export function drawCombatEffects(
   let route: Graphics | undefined;
   let projectile: Graphics | undefined;
   if (plan.route.length >= 2) {
-    route = new Graphics();
-    route.moveTo(plan.route[0]!.x, plan.route[0]!.y);
-    for (const point of plan.route.slice(1)) route.lineTo(point.x, point.y);
-    route.stroke({ color, width: 3 + scene.relay * 0.7, alpha: 0.38 });
+    route = drawRoute(plan, color);
     container.addChild(route);
 
-    projectile = new Graphics()
-      .circle(0, 0, 7 + scene.relay * 1.5)
-      .fill({ color, alpha: 0.98 })
-      .circle(0, 0, 18 + scene.relay * 2)
-      .stroke({ color: 0xffffff, width: 3, alpha: 0.58 });
+    projectile = drawProjectile(plan, color);
+    projectile.scale.set(0.78 + scene.relay * 0.08);
     projectile.position.set(plan.route[0]!.x, plan.route[0]!.y);
     container.addChild(projectile);
   }
 
-  const target = scene.units.find(({ id }) => id === scene.event?.targetId);
+  const targets = plan.impactTargetIds
+    .map((id) => scene.units.find((unit) => unit.id === id))
+    .filter((unit) => unit !== undefined);
   const rings: Graphics[] = [];
   const burst: Graphics[] = [];
-  if (target && (scene.event?.phase === 'impact' || scene.event?.phase === 'finisher')) {
-    for (let index = 0; index < plan.impactRings; index += 1) {
-      const ring = new Graphics()
-        .circle(0, 0, 28 + index * 12)
-        .stroke({ color, width: Math.max(2, 7 - index * 0.5), alpha: 0.72 });
-      ring.position.set(target.x, target.y - 45);
-      container.addChild(ring);
-      rings.push(ring);
-    }
-    for (let index = 0; index < plan.impactParticles; index += 1) {
-      const angle = (index / plan.impactParticles) * Math.PI * 2;
-      const distance = 30 + (index % 7) * 8;
-      const particle = new Graphics()
-        .circle(0, 0, 2 + (index % 3))
-        .fill({ color: index % 4 === 0 ? 0xffffff : color, alpha: 0.86 });
-      particle.position.set(
-        target.x + Math.cos(angle) * distance,
-        target.y - 45 + Math.sin(angle) * distance,
-      );
-      container.addChild(particle);
-      burst.push(particle);
+  const marks: Graphics[] = [];
+  const showImpact =
+    scene.event?.phase === 'impact' ||
+    scene.event?.phase === 'aftermath' ||
+    scene.event?.phase === 'finisher';
+  if (showImpact) {
+    const particlesPerTarget = Math.max(
+      8,
+      Math.ceil(plan.impactParticles / Math.max(1, targets.length)),
+    );
+    for (const target of targets) {
+      for (let index = 0; index < plan.impactRings; index += 1) {
+        const ring = new Graphics()
+          .circle(0, 0, 28 + index * 12)
+          .stroke({ color, width: Math.max(2, 7 - index * 0.5), alpha: 0.72 });
+        ring.position.set(target.x, target.y - 45);
+        container.addChild(ring);
+        rings.push(ring);
+      }
+      for (let index = 0; index < particlesPerTarget; index += 1) {
+        const angle = (index / particlesPerTarget) * Math.PI * 2;
+        const distance = 30 + (index % 7) * 8;
+        const particle = new Graphics()
+          .circle(0, 0, 2 + (index % 3))
+          .fill({ color: index % 4 === 0 ? 0xffffff : color, alpha: 0.86 });
+        particle.position.set(
+          target.x + Math.cos(angle) * distance,
+          target.y - 45 + Math.sin(angle) * distance,
+        );
+        container.addChild(particle);
+        burst.push(particle);
+      }
+      for (const mark of createEffectMarks(plan)) {
+        const node = drawMark(mark, color);
+        const centered =
+          mark.kind === 'shockwave' ||
+          mark.kind === 'fracture' ||
+          mark.kind === 'aura' ||
+          mark.kind === 'slash';
+        node.position.set(
+          target.x + (centered ? 0 : Math.cos(mark.angle) * mark.distance),
+          target.y - 45 + (centered ? 0 : Math.sin(mark.angle) * mark.distance),
+        );
+        node.rotation = mark.angle;
+        container.addChild(node);
+        marks.push(node);
+      }
     }
   }
 
   let number: Text | undefined;
-  if (target && scene.event?.number !== undefined) {
+  if (targets.length > 0 && scene.event?.number !== undefined) {
+    const center = targets.reduce(
+      (total, target) => ({ x: total.x + target.x, y: total.y + target.y }),
+      { x: 0, y: 0 },
+    );
+    center.x /= targets.length;
+    center.y /= targets.length;
     const prefix = scene.event.number > 0 ? '+' : '';
     number = new Text({
       text: `${prefix}${scene.event.number}`,
@@ -87,7 +118,7 @@ export function drawCombatEffects(
       },
     });
     number.anchor.set(0.5);
-    number.position.set(target.x, target.y - 130);
+    number.position.set(center.x, center.y - 150);
     container.addChild(number);
   }
 
@@ -97,5 +128,6 @@ export function drawCombatEffects(
     rings,
     ...(number ? { number } : {}),
     burst,
+    marks,
   };
 }

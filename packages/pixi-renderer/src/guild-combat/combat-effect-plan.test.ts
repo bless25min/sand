@@ -107,4 +107,127 @@ describe('Pixi guild combat effect plan', () => {
     expect(plan.route.at(-1)).toEqual({ x: 760, y: 230 });
     expect(plan.route[1]).not.toEqual(plan.route.at(-1));
   });
+
+  it('gives fire, grass, and water different effect motifs', () => {
+    const motifs = (['fire', 'grass', 'water'] as const).map(
+      (element) =>
+        createCombatEffectPlan({
+          ...scene(3),
+          event: {
+            id: `visual:${element}`,
+            sourceEventId: 30,
+            eventKind: 'damage',
+            phase: 'impact',
+            headline: '屬性命中',
+            detail: '屬性命中',
+            relay: 3,
+            intensity: 50,
+            durationMs: 170,
+            polarity: 'damage',
+            route: 'direct',
+            camera: 'punch',
+            actorId: 'brann',
+            targetId: 'wolf_alpha',
+            number: -30,
+            element,
+            specializationId: 'stack',
+            triggerId: 'on_hit',
+          },
+        }).elementMotif,
+    );
+
+    expect(new Set(motifs).size).toBe(3);
+    expect(motifs).toEqual(['ember-shards', 'toxic-spores', 'tidal-ribbons']);
+  });
+
+  it('assigns all six specializations a distinct readable combat signature', () => {
+    const specializations = [
+      'blast',
+      'stack',
+      'weaken',
+      'chain',
+      'empower',
+      'multistrike',
+    ] as const;
+    const signatures = specializations.map(
+      (specializationId) =>
+        createCombatEffectPlan({
+          ...scene(4),
+          event: {
+            id: `visual:${specializationId}`,
+            sourceEventId: 40,
+            eventKind: 'damage',
+            phase: 'impact',
+            headline: '特化命中',
+            detail: '特化命中',
+            relay: 4,
+            intensity: 62,
+            durationMs: 170,
+            polarity: specializationId === 'empower' ? 'support' : 'damage',
+            route: specializationId === 'chain' ? 'bounce' : 'direct',
+            camera: 'punch',
+            actorId: 'brann',
+            targetId: 'wolf_alpha',
+            element: 'fire',
+            specializationId,
+            triggerId: 'on_hit',
+          },
+        }).specializationMotif,
+    );
+
+    expect(new Set(signatures).size).toBe(6);
+    expect(signatures).toEqual([
+      'detonation',
+      'layer-orbit',
+      'armor-fracture',
+      'ricochet',
+      'relay-aura',
+      'rapid-strikes',
+    ]);
+  });
+
+  it('turns a targetless sixth finisher into an impact on every enemy including just-defeated targets', () => {
+    const plan = createCombatEffectPlan({
+      ...scene(6),
+      units: [
+        scene(6).units[0]!,
+        {
+          ...scene(6).units[1]!,
+          state: 'defeated',
+          hpRatio: 0,
+        },
+        {
+          ...scene(6).units[1]!,
+          id: 'wolf_guard',
+          name: '灰牙獵手',
+          x: 850,
+          y: 390,
+          state: 'idle',
+          selected: false,
+        },
+      ],
+      event: {
+        id: 'visual:finisher',
+        sourceEventId: 60,
+        eventKind: 'finisher',
+        phase: 'finisher',
+        headline: '全軍終結',
+        detail: '第六棒終結',
+        relay: 6,
+        intensity: 100,
+        durationMs: 520,
+        polarity: 'damage',
+        route: 'area',
+        camera: 'finisher',
+        actorId: 'brann',
+        number: -324,
+        element: 'fire',
+        specializationId: 'blast',
+        triggerId: 'final_actor',
+      },
+    });
+
+    expect(plan.impactTargetIds).toEqual(['wolf_alpha', 'wolf_guard']);
+    expect(plan.finisher).toBe(true);
+  });
 });

@@ -375,6 +375,10 @@ export function resolveSkillComponent(input: {
         message: `連鎖彈射至${route.target.name}。`,
         actorId: actor.id,
         targetId: route.target.id,
+        componentId: input.component.id,
+        element: input.component.element,
+        specializationId: input.component.specializationId,
+        triggerId: input.component.triggerId,
       });
     if (route.echoed)
       events.push({
@@ -382,6 +386,10 @@ export function resolveSkillComponent(input: {
         message: `孤王迴響回到${route.target.name}。`,
         actorId: actor.id,
         targetId: route.target.id,
+        componentId: input.component.id,
+        element: input.component.element,
+        specializationId: input.component.specializationId,
+        triggerId: input.component.triggerId,
       });
 
     const liveTarget = units.find(({ id }) => id === route.target!.id)!;

@@ -1,4 +1,10 @@
-import type { BattleEventKind, GuildElement, StatusLayers } from '@expedition/shared-types';
+import type {
+  BattleEventKind,
+  GuildElement,
+  SkillSpecialization,
+  StatusLayers,
+  TriggerCondition,
+} from '@expedition/shared-types';
 
 export type GuildCombatUnitState = 'idle' | 'acting' | 'next' | 'targeted' | 'hit' | 'defeated';
 
@@ -49,6 +55,8 @@ export interface GuildCombatVisualEvent {
   targetId?: string;
   number?: number;
   element?: GuildElement;
+  specializationId?: SkillSpecialization;
+  triggerId?: TriggerCondition;
   status?: 'burn' | 'poison' | 'tide' | 'weaken' | 'strengthen';
 }
 

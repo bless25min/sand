@@ -19,7 +19,7 @@ const expectFullyInViewport = async (page: Page, selector: string) => {
 
 const mainNav = (page: Page) => page.getByRole('navigation', { name: '主要遊戲介面' });
 
-async function expectBattlefieldVisible(page: Page) {
+async function expectBattlefieldVisible(page: Page, viewportLabel = 'current viewport') {
   const battlefield = page.locator('[data-combat-battlefield="true"]');
   await expect(battlefield).toBeVisible();
   await expect(battlefield.locator('[data-hero-formation]')).toHaveCount(6);
@@ -27,7 +27,16 @@ async function expectBattlefieldVisible(page: Page) {
   const box = await battlefield.boundingBox();
   expect(box?.height ?? 0).toBeGreaterThanOrEqual(360);
   const command = await page.locator('.gr-command-dock').boundingBox();
-  expect(command && box ? command.y >= box.y + box.height - 1 : false).toBe(true);
+  expect(command).not.toBeNull();
+  expect(box).not.toBeNull();
+  const horizontalOverlap =
+    Math.min(command!.x + command!.width, box!.x + box!.width) - Math.max(command!.x, box!.x);
+  const verticalOverlap =
+    Math.min(command!.y + command!.height, box!.y + box!.height) - Math.max(command!.y, box!.y);
+  expect(
+    horizontalOverlap <= 1 || verticalOverlap <= 1,
+    `${viewportLabel}: battlefield and command dock overlap by ${horizontalOverlap}x${verticalOverlap}px`,
+  ).toBe(true);
 }
 
 async function castVisibleSkill(page: Page) {
@@ -40,6 +49,16 @@ async function castVisibleSkill(page: Page) {
   await expect(skill).toBeVisible();
   await skill.click();
   await expect(battle).toHaveAttribute('data-playback', 'true');
+  const stage = page.locator('[data-pixi-combat-stage="true"]');
+  await expect(stage).toHaveAttribute('data-effect-element', /fire|grass|water/);
+  await expect(stage).toHaveAttribute(
+    'data-effect-specialization',
+    /blast|stack|weaken|chain|empower|multistrike/,
+  );
+  await expect(stage).toHaveAttribute(
+    'data-effect-phase',
+    /windup|travel|impact|aftermath|finisher/,
+  );
   await expect(page.locator('button[data-battle-skill]:not([disabled])')).toHaveCount(0);
   const relay = Number(
     await page.locator('[data-combat-battlefield]').getAttribute('data-relay-tier'),
@@ -198,4 +217,37 @@ test('migrates a v3 save, preserves its backup, and keeps every main page usable
     await expectNoHorizontalCrop(page);
   }
   await expect(page.getByRole('button', { name: '布蘭' })).toBeVisible();
+});
+
+test('keeps the semantic WebGL battle readable at wide mobile and desktop sizes', async ({
+  page,
+}) => {
+  for (const viewport of [
+    { width: 430, height: 932 },
+    { width: 1_280, height: 800 },
+  ]) {
+    await page.setViewportSize(viewport);
+    await page.addInitScript(() => {
+      localStorage.clear();
+      localStorage.setItem(
+        'expedition:guild-rpg:preferences:v1',
+        JSON.stringify({
+          version: 1,
+          tutorial: 'skipped',
+          masterVolume: 0,
+          musicEnabled: false,
+          hapticsEnabled: false,
+          motion: 'reduced',
+        }),
+      );
+    });
+    await page.goto('/');
+    await page.locator('[data-hunt-card="border_pack"] .gr-primary-action').click();
+
+    await expectBattlefieldVisible(page, `${viewport.width}x${viewport.height}`);
+    await expect(page.locator('[data-pixi-combat-stage="true"] canvas')).toHaveCount(1);
+    await expect(page.locator('button[data-battle-skill]')).toHaveCount(6);
+    await expectNoHorizontalCrop(page);
+    await castVisibleSkill(page);
+  }
 });

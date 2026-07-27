@@ -1,6 +1,7 @@
 import { Container, Graphics, Text } from 'pixi.js';
 
 import type { GuildCombatScene, GuildCombatSceneUnit } from './contracts';
+import { drawBossPresence } from './draw-boss-presence';
 import { drawEnemyFigure, drawHeroFigure } from './draw-figures';
 
 export interface UnitNode {
@@ -125,6 +126,7 @@ export function drawCombatUnits(
   return scene.units.map((unit) => {
     const root = new Container();
     root.position.set(unit.x, unit.y);
+    drawBossPresence(root, unit, scene.relay, unitAccent(unit));
     drawState(root, unit, scene.relay);
     const figure = unit.hero
       ? drawHeroFigure(unit.hero)
