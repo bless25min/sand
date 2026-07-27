@@ -58,8 +58,17 @@ describe('combat beat presentation', () => {
         actorId: 'brann',
         targetId: 'wolf',
         relay: 3,
+        visual: expect.objectContaining({
+          phase: 'windup',
+          headline: '熔火起手',
+        }),
       }),
-      expect.objectContaining({ id: '2:hit', kind: 'hit', amount: 38 }),
+      expect.objectContaining({
+        id: '2:hit',
+        kind: 'hit',
+        amount: 38,
+        visual: expect.objectContaining({ headline: '重擊', number: -38 }),
+      }),
       expect.objectContaining({ id: '3:status', kind: 'status', amount: 4 }),
       expect.objectContaining({ id: '4:chain', kind: 'chain', targetId: 'wolf_guard' }),
       expect.objectContaining({ id: '5:relay', kind: 'relay', relay: 3 }),

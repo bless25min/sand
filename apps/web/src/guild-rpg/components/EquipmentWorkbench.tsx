@@ -61,6 +61,11 @@ export function EquipmentWorkbench({
           </button>
         ))}
       </div>
+      <ol className="gr-workflow-steps" aria-label="裝備操作步驟">
+        <li data-current="true">1 選角色</li>
+        <li>2 看三個欄位</li>
+        <li>3 比較並裝備</li>
+      </ol>
       <aside className="gr-equipment-next-action" data-equipment-next-action="true">
         <strong>{hero.name}的三個裝備欄位</strong>
         <span>

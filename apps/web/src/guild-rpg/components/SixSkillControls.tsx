@@ -36,9 +36,15 @@ export function SixSkillControls({
           : readiness.some(({ readiness: value }) => value === 'pending-impact')
             ? '命中後判定'
             : '追加未成立；基礎效果可用';
+        const readinessShort = readinessLabel === '條件現在成立' ? '可觸發' : '可使用';
+        const skillLabel =
+          skill && first
+            ? `${index + 1}，${skill.name}，${elementName(first.element)}，${specializationName(first.specializationId)}，${triggerName(first.triggerId)}，${readinessLabel}`
+            : `${index + 1}，未裝備`;
         return (
           <button
             type="button"
+            aria-label={skillLabel}
             data-battle-skill={index + 1}
             data-element={first?.element}
             data-trigger-readiness={readinessLabel}
@@ -60,10 +66,12 @@ export function SixSkillControls({
             <span>
               {index + 1} · {first ? elementName(first.element) : '空'}
             </span>
-            <strong>{skill?.name ?? '未裝備'}</strong>
+            <strong>
+              {first ? specializationName(first.specializationId) : (skill?.name ?? '未裝備')}
+            </strong>
             <small>
-              {skill
-                ? `${skill.stars}★ · ${specializationName(first!.specializationId)} · ${triggerName(first!.triggerId)} · ${readinessLabel}`
+              {skill && first
+                ? `${skill.stars}★ · ${triggerName(first.triggerId)} · ${readinessShort}`
                 : '返回技能頁裝備'}
             </small>
           </button>

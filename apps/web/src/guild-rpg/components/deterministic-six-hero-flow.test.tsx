@@ -6,6 +6,7 @@ import { createGuildRpgState } from '../state/create-game-state';
 import { guildRpgReducer } from '../state/game-reducer';
 import { BattleScreen } from './BattleScreen';
 import { GuildScreen } from './GuildScreen';
+import { RewardScreen } from './RewardScreen';
 
 const dispatch = () => undefined;
 
@@ -19,6 +20,8 @@ describe('deterministic six-hero interface', () => {
     expect(freshMarkup).toContain('1. 鎖定敵人');
     expect(freshMarkup).toContain('2. 選擇技能');
     expect(freshMarkup).toContain('3. 完成六棒接力');
+    expect(freshMarkup).toContain('<details');
+    expect(freshMarkup.indexOf('開始第一場教學戰')).toBeLessThan(freshMarkup.indexOf('<details'));
     expect(freshMarkup).toContain('data-secondary-hunts="true"');
 
     const trainingState = {
@@ -47,8 +50,12 @@ describe('deterministic six-hero interface', () => {
     expect(markup).toContain('裝備');
     expect(markup).toContain('目前角色：布蘭');
     expect(markup.match(/data-skill-slot=/g) ?? []).toHaveLength(6);
+    expect(markup).toContain('1 選角色');
+    expect(markup).toContain('2 選技能格');
+    expect(markup).toContain('3 裝備技能');
     expect(markup).toContain('可選技能');
     expect(markup).toContain('data-progressive-skill-library="true"');
+    expect(markup).toContain('data-skill-library="visible"');
     expect(markup).not.toContain('Build');
   });
 
@@ -61,11 +68,29 @@ describe('deterministic six-hero interface', () => {
     const partyMarkup = renderToStaticMarkup(<GuildScreen state={state} dispatch={dispatch} />);
     expect(partyMarkup).toContain('data-party-selected-hero="brann"');
     expect(partyMarkup).toContain('目前操作：布蘭');
+    expect(partyMarkup).toContain('配置布蘭技能');
+    expect(partyMarkup).toContain('更換布蘭裝備');
 
     state = guildRpgReducer(state, { type: 'NAVIGATE', page: 'equipment' });
     const equipmentMarkup = renderToStaticMarkup(<GuildScreen state={state} dispatch={dispatch} />);
     expect(equipmentMarkup).toContain('data-equipment-next-action="true"');
     expect(equipmentMarkup.match(/data-equipment-slot=/g) ?? []).toHaveLength(3);
+    expect(equipmentMarkup).toContain('1 選角色');
+    expect(equipmentMarkup).toContain('2 看三個欄位');
+    expect(equipmentMarkup).toContain('3 比較並裝備');
+  });
+
+  it('shows four discoverable zones while keeping each mission choice compact', () => {
+    const state = guildRpgReducer(createGuildRpgState(), {
+      type: 'SET_TUTORIAL',
+      tutorial: 'skipped',
+    });
+    const markup = renderToStaticMarkup(<GuildScreen state={state} dispatch={dispatch} />);
+
+    expect(markup.match(/data-zone-tab=/g) ?? []).toHaveLength(4);
+    expect(markup).toContain('data-zone-missions="greyfang_frontier"');
+    expect(markup.match(/data-hunt-card=/g) ?? []).toHaveLength(3);
+    expect(markup).toContain('本區 3 個任務');
   });
 
   it('equips one skill then automatically advances to the next hero', () => {
@@ -82,6 +107,20 @@ describe('deterministic six-hero interface', () => {
     expect(state.message).toContain('下一位：萊拉');
   });
 
+  it('pins the newly fused skill inside the immediately equipable skill list', () => {
+    const fresh = createGuildRpgState();
+    const lastSkill = fresh.profile.skillInventory.at(-1)!;
+    const state = {
+      ...fresh,
+      page: 'skills' as const,
+      tutorialStep: 'equip_fused' as const,
+      lastFusedSkillId: lastSkill.id,
+    };
+    const markup = renderToStaticMarkup(<GuildScreen state={state} dispatch={dispatch} />);
+
+    expect(markup).toContain('data-guide-id="skill:equip-fused"');
+  });
+
   it('renders a tactical battlefield and resolves each tap before the next hero acts', () => {
     let state = guildRpgReducer(createGuildRpgState(), {
       type: 'START_QUEST',
@@ -94,9 +133,11 @@ describe('deterministic six-hero interface', () => {
     expect(markup.match(/data-order-hero=/g) ?? []).toHaveLength(6);
     expect(markup.match(/data-battle-skill=/g) ?? []).toHaveLength(6);
     expect(markup).toContain('data-combat-battlefield="true"');
+    expect(markup).toContain('data-pixi-combat-stage="true"');
+    expect(markup).toContain('data-combat-canvas-host="true"');
     expect(markup.match(/data-hero-formation=/g) ?? []).toHaveLength(6);
     expect(markup.match(/data-enemy-formation=/g) ?? []).toHaveLength(3);
-    expect(markup).toContain('data-target-route="true"');
+    expect(markup).toContain('戰鬥詳情');
     expect(markup).toContain('data-current-actor="brann"');
     expect(markup).toContain('data-next-actor="lyra"');
     expect(markup).toContain('目前出手：布蘭');
@@ -124,10 +165,43 @@ describe('deterministic six-hero interface', () => {
     expect(state.battle?.roundOrder?.currentOrder[0]).toBe('seph');
   });
 
-  it('uses a scoped mobile 2 × 3 command grid and preserves a meaningful battlefield', () => {
+  it('reveals every main drop visually and recommends an immediate build action', () => {
+    let state = guildRpgReducer(createGuildRpgState(), {
+      type: 'START_QUEST',
+      questId: 'border_pack',
+    });
+    let turns = 0;
+    while (state.screen === 'battle' && turns < 60) {
+      if (state.battle?.status === 'victory') {
+        state = guildRpgReducer(state, { type: 'COLLECT_VICTORY' });
+        break;
+      }
+      const target = state.battle!.units.find(
+        ({ side, currentHp }) => side === 'enemies' && currentHp > 0,
+      )!;
+      const actorId = state.battle!.roundOrder!.activeAdventurerId;
+      const actor = state.profile.party.find(({ definitionId }) => definitionId === actorId)!;
+      state = guildRpgReducer(state, { type: 'SELECT_TARGET', targetId: target.id });
+      state = guildRpgReducer(state, {
+        type: 'USE_SKILL',
+        skillId: actor.skillIds[turns % actor.skillIds.length]!,
+        targetId: target.id,
+      });
+      turns += 1;
+    }
+    const markup = renderToStaticMarkup(<RewardScreen state={state} dispatch={dispatch} />);
+
+    expect(markup.match(/data-loot-reveal=/g) ?? []).toHaveLength(6);
+    expect(markup).toContain('data-loot-recommendation="true"');
+    expect(markup).toContain('這次最值得先試');
+    expect(markup).toContain('為什麼有用');
+    expect(markup).toContain('先穿上推薦裝備');
+  });
+
+  it('uses a scoped mobile 2-row × 3-column command grid and preserves a meaningful battlefield', () => {
     const css = readFileSync(new URL('../guild-rpg.css', import.meta.url), 'utf8');
     expect(css).toMatch(
-      /@media \(max-width: 620px\)[\s\S]*?\.gr-battle-skills\s*\{[^}]*grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\)/,
+      /@media \(max-width: 620px\)[\s\S]*?\.gr-battle-skills\s*\{[^}]*grid-template-columns:\s*repeat\(3,\s*minmax\(0,\s*1fr\)\)/,
     );
     expect(css).toMatch(
       /@media \(max-width: 620px\)[\s\S]*?\.gr-battle-skills button\s*\{[^}]*min-height:\s*56px/,

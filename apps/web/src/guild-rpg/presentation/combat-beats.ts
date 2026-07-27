@@ -1,5 +1,7 @@
 import type { BattleEventKind, GuildBattleEvent } from '@expedition/shared-types';
 
+import { projectVisualEvents, type VisualEvent } from './visual-events';
+
 type CombatBeatKind =
   'cast' | 'hit' | 'status' | 'chain' | 'relay' | 'defeat' | 'finisher' | 'support' | 'info';
 
@@ -14,6 +16,7 @@ export interface CombatBeat {
   amount?: number;
   element?: GuildBattleEvent['element'];
   eventKind: BattleEventKind;
+  visual: VisualEvent;
 }
 
 export interface RelayPresentation {
@@ -79,8 +82,10 @@ export function createCombatBeats(
   reducedMotion = false,
 ): readonly CombatBeat[] {
   const normalizedRelay = relayPresentation(relay).relay;
-  return events.map((event) => {
+  const visuals = projectVisualEvents(events, normalizedRelay, reducedMotion);
+  return events.map((event, index) => {
     const kind = KIND_BY_EVENT[event.kind] ?? 'info';
+    const visual = visuals[index]!;
     return {
       id: `${event.id}:${kind}`,
       kind,
@@ -89,8 +94,9 @@ export function createCombatBeats(
         event.kind === 'relay' && event.amount !== undefined
           ? relayPresentation(event.amount).relay
           : normalizedRelay,
-      delayMs: reducedMotion ? 0 : DELAY_BY_KIND[kind],
+      delayMs: reducedMotion ? 0 : Math.min(DELAY_BY_KIND[kind], visual.durationMs),
       eventKind: event.kind,
+      visual,
       ...(event.actorId ? { actorId: event.actorId } : {}),
       ...(event.targetId ? { targetId: event.targetId } : {}),
       ...(event.amount !== undefined ? { amount: event.amount } : {}),

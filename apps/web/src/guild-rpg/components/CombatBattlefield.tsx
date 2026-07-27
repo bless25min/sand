@@ -1,9 +1,15 @@
 import type { BattleUnit, GuildBattleState } from '@expedition/shared-types';
+import { lazy, Suspense } from 'react';
 
-import { isFirstHuntCoachFocus } from '../onboarding/first-hunt-coach';
+import { isFirstHuntCoachFocus, type FirstHuntCoachStep } from '../onboarding/first-hunt-coach';
 import type { GuildPreferences } from '../preferences/guild-preferences';
+import { createBattleScene } from '../presentation/battle-scene';
 import { relayPresentation, type CombatBeat } from '../presentation/combat-beats';
-import type { FirstHuntCoachStep } from '../onboarding/first-hunt-coach';
+
+const PixiCombatStage = lazy(async () => {
+  const module = await import('./PixiCombatStage');
+  return { default: module.PixiCombatStage };
+});
 
 interface CombatBattlefieldProps {
   battle: GuildBattleState;
@@ -21,14 +27,22 @@ interface CombatBattlefieldProps {
 const hpPercent = (unit: BattleUnit) =>
   `${Math.max(0, Math.min(100, (unit.currentHp / unit.stats.hp) * 100))}%`;
 
-function StatusLayers({ unit }: { unit: BattleUnit }) {
+function StatusPips({ unit }: { unit: BattleUnit }) {
   const layers = unit.statusLayers;
+  const visible = [
+    ['燃', layers?.burn ?? 0, 'burn'],
+    ['毒', layers?.poison ?? 0, 'poison'],
+    ['潮', layers?.tide ?? 0, 'tide'],
+  ] as const;
   return (
-    <div className="gr-formation-status" aria-label={`${unit.name}狀態`}>
-      <span data-status="burn">燃 {layers?.burn ?? 0}</span>
-      <span data-status="poison">毒 {layers?.poison ?? 0}</span>
-      <span data-status="tide">潮 {layers?.tide ?? 0}</span>
-    </div>
+    <span className="gr-target-status" aria-label={`${unit.name}狀態`}>
+      {visible.map(([label, value, kind]) => (
+        <i data-status={kind} data-empty={value === 0} key={kind}>
+          {label}
+          {value}
+        </i>
+      ))}
+    </span>
   );
 }
 
@@ -47,7 +61,14 @@ export function CombatBattlefield({
   const stage = relayPresentation(relay);
   const enemies = battle.units.filter(({ side }) => side === 'enemies');
   const heroes = battle.units.filter(({ side }) => side === 'heroes');
-  const impactTarget = currentBeat?.targetId ?? battle.selectedTargetId;
+  const actor = heroes.find(({ id }) => id === actingActorId);
+  const nextActor = heroes.find(({ id }) => id === nextActorId);
+  const scene = createBattleScene(battle, {
+    relay,
+    ...(actingActorId ? { actingActorId } : {}),
+    ...(nextActorId ? { nextActorId } : {}),
+    ...(currentBeat ? { event: currentBeat.visual } : {}),
+  });
   return (
     <section
       className="gr-combat-battlefield"
@@ -61,20 +82,20 @@ export function CombatBattlefield({
     >
       <header className="gr-battlefield-readout">
         <span>{stage.label}</span>
-        <strong>{locked ? '軍令演出中' : '選擇技能，立即出招'}</strong>
+        <strong>
+          {currentBeat?.visual.headline ?? (locked ? '軍令演出中' : '選技能，立即出招')}
+        </strong>
         <small>
-          目前：{heroes.find(({ id }) => id === actingActorId)?.name ?? '結算中'} · 下一位：
-          {heroes.find(({ id }) => id === nextActorId)?.name ?? '終結'}
+          {actor?.name ?? '結算中'} → {nextActor?.name ?? '終結'}
         </small>
       </header>
 
-      <div className="gr-combat-enemies" aria-label="敵方軍勢">
+      <div className="gr-target-rack" aria-label="選擇敵人">
         {enemies.map((enemy, index) => (
           <button
             type="button"
             data-enemy-formation={enemy.id}
             data-targeted={battle.selectedTargetId === enemy.id}
-            data-impacted={impactTarget === enemy.id}
             data-defeated={enemy.currentHp <= 0}
             data-guide-id={index === 0 ? 'target:first' : undefined}
             data-guide-active={
@@ -86,69 +107,57 @@ export function CombatBattlefield({
             key={enemy.id}
             onClick={() => onSelectTarget(enemy.id)}
           >
-            <span className="gr-formation-figure" aria-hidden="true">
-              <i />
-              <i />
-              <i />
-              <b />
-            </span>
-            <span className="gr-formation-copy">
+            <span>
+              <strong>{enemy.name}</strong>
               <small>
                 {enemy.currentHp <= 0
-                  ? '已擊破'
+                  ? '擊破'
                   : battle.selectedTargetId === enemy.id
-                    ? '鎖定目標'
-                    : '點擊鎖定'}
+                    ? '已鎖定'
+                    : '鎖定'}
               </small>
-              <strong>{enemy.name}</strong>
-              <span>
-                HP {enemy.currentHp} / {enemy.stats.hp}
-              </span>
-              <span className="gr-hp">
-                <i style={{ width: hpPercent(enemy) }} />
-              </span>
-              <StatusLayers unit={enemy} />
             </span>
+            <span className="gr-target-hp">
+              <i style={{ width: hpPercent(enemy) }} />
+            </span>
+            <StatusPips unit={enemy} />
           </button>
         ))}
       </div>
 
-      <div className="gr-combat-impact" data-combat-beat={currentBeat?.kind} aria-live="polite">
-        <svg
-          data-target-route="true"
-          viewBox="0 0 100 100"
-          preserveAspectRatio="none"
-          aria-hidden="true"
-        >
-          <path d="M 18 82 Q 52 52 80 18" />
-          <path d="M 22 78 Q 53 60 78 47" />
-          <path d="M 24 82 Q 58 78 82 76" />
-        </svg>
-        <div className="gr-impact-rings" aria-hidden="true">
-          {Array.from({ length: stage.trailCount }, (_, index) => (
-            <i style={{ '--ring': index } as React.CSSProperties} key={index} />
-          ))}
-        </div>
-        <div className="gr-impact-copy" data-element={currentBeat?.element}>
-          <span>{stage.finisher ? 'SIXTH RELAY FINISHER' : 'IMMEDIATE RELAY'}</span>
-          <strong>{currentBeat?.label ?? '鎖定敵人，從六個技能中選擇一招'}</strong>
-          {currentBeat?.amount !== undefined && (
-            <b key={currentBeat.id}>
-              {currentBeat.kind === 'support' ? '+' : '−'}
-              {currentBeat.amount}
-            </b>
-          )}
-        </div>
-        <div className="gr-event-ribbon" aria-label="本次技能事件">
-          {visibleBeats.slice(-5).map((beat) => (
-            <span data-beat-kind={beat.kind} key={beat.id}>
-              {beat.label}
-            </span>
-          ))}
-        </div>
-      </div>
+      <Suspense
+        fallback={
+          <div
+            className="gr-pixi-combat-stage"
+            data-pixi-combat-stage="true"
+            data-renderer="loading"
+          >
+            <div data-combat-canvas-host="true" />
+          </div>
+        }
+      >
+        <PixiCombatStage scene={scene} reducedMotion={preferences.motion === 'reduced'} />
+      </Suspense>
 
-      <div className="gr-combat-heroes" aria-label="遠征隊">
+      {currentBeat && (
+        <div
+          className="gr-impact-callout"
+          data-combat-beat={currentBeat.kind}
+          data-element={currentBeat.element}
+          role="status"
+        >
+          <span>{currentBeat.visual.headline}</span>
+          {currentBeat.visual.number !== undefined && (
+            <strong key={currentBeat.id}>
+              {currentBeat.visual.number > 0 ? '+' : ''}
+              {currentBeat.visual.number}
+            </strong>
+          )}
+          <small>{currentBeat.visual.detail}</small>
+        </div>
+      )}
+
+      <div className="gr-formation-rail" aria-label="遠征隊戰場狀態">
         {heroes.map((hero) => (
           <article
             data-hero-formation={hero.id}
@@ -157,22 +166,31 @@ export function CombatBattlefield({
             data-defeated={hero.currentHp <= 0}
             key={hero.id}
           >
-            <span className="gr-hero-sigil" aria-hidden="true">
-              <i />
-              <b>{hero.name.slice(0, 1)}</b>
-            </span>
+            <b>{hero.name.slice(0, 1)}</b>
             <span>
-              <small>
-                {hero.id === actingActorId ? '出手中' : hero.id === nextActorId ? '下一棒' : '待命'}
-              </small>
               <strong>{hero.name}</strong>
-              <span className="gr-hp">
-                <i style={{ width: hpPercent(hero) }} />
-              </span>
+              <small>
+                {hero.id === actingActorId ? '出手' : hero.id === nextActorId ? '下一棒' : '待命'}
+              </small>
             </span>
+            <i>
+              <i style={{ width: hpPercent(hero) }} />
+            </i>
           </article>
         ))}
       </div>
+
+      <details className="gr-combat-log">
+        <summary>戰鬥詳情 · {visibleBeats.length} 個事件</summary>
+        <ol>
+          {visibleBeats.map((beat) => (
+            <li data-beat-kind={beat.kind} key={beat.id}>
+              <strong>{beat.visual.headline}</strong>
+              <span>{beat.visual.detail}</span>
+            </li>
+          ))}
+        </ol>
+      </details>
     </section>
   );
 }

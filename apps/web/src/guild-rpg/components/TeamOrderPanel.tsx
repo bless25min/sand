@@ -27,10 +27,15 @@ export function TeamOrderPanel({
           <span>目前操作：{selectedHero.name}</span>
           <strong>{selectedHero.title}</strong>
         </div>
-        <p>
-          點角色即可切換目前操作對象；前往技能或裝備頁時會保持這位角色。
-          下方箭頭只調整預設接力順序。
-        </p>
+        <p>點角色切換；箭頭調整預設接力順序。戰鬥中仍能臨時改下一棒。</p>
+        <div className="gr-party-quick-actions">
+          <button type="button" onClick={() => dispatch({ type: 'NAVIGATE', page: 'skills' })}>
+            配置{selectedHero.name}技能
+          </button>
+          <button type="button" onClick={() => dispatch({ type: 'NAVIGATE', page: 'equipment' })}>
+            更換{selectedHero.name}裝備
+          </button>
+        </div>
       </div>
       <div className="gr-hero-order">
         {state.profile.defaultOrder.map((heroId, index) => {

@@ -1,5 +1,5 @@
 import react from '@vitejs/plugin-react';
-import { defineConfig } from 'vite';
+import { defineConfig, type ResolveModulePreloadDependenciesFn } from 'vite';
 
 export const webCodeSplitting = {
   groups: [
@@ -14,7 +14,7 @@ export const webCodeSplitting = {
       test: /[\\/]node_modules[\\/](?:@pixi|pixi\.js)[\\/]/,
       priority: 20,
       entriesAware: false,
-      includeDependenciesRecursively: false,
+      includeDependenciesRecursively: true,
     },
     {
       name: 'prototypes',
@@ -26,9 +26,21 @@ export const webCodeSplitting = {
   ],
 };
 
+export const resolveWebModulePreloadDependencies: ResolveModulePreloadDependenciesFn = (
+  _filename,
+  dependencies,
+  context,
+) =>
+  context.hostType === 'html'
+    ? dependencies.filter((dependency) => !/(?:^|\/)(?:pixi|prototypes)[^/]*\.js$/.test(dependency))
+    : dependencies;
+
 export default defineConfig({
   plugins: [react()],
   build: {
+    modulePreload: {
+      resolveDependencies: resolveWebModulePreloadDependencies,
+    },
     rolldownOptions: {
       output: {
         codeSplitting: webCodeSplitting,

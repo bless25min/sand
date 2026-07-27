@@ -11,6 +11,20 @@ const beat = (relay: number, kind: CombatBeat['kind']): CombatBeat => ({
   relay,
   delayMs: 0,
   eventKind: kind === 'hit' ? 'damage' : 'relay',
+  visual: {
+    id: `visual:${relay}:${kind}`,
+    sourceEventId: relay,
+    eventKind: kind === 'hit' ? 'damage' : 'relay',
+    phase: kind === 'finisher' ? 'finisher' : kind === 'hit' ? 'impact' : 'aftermath',
+    headline: kind,
+    detail: kind,
+    relay,
+    intensity: relay * 12,
+    durationMs: 0,
+    polarity: kind === 'hit' || kind === 'finisher' ? 'damage' : 'neutral',
+    route: 'none',
+    camera: kind === 'finisher' ? 'finisher' : 'none',
+  },
 });
 
 describe('combat sensation output', () => {

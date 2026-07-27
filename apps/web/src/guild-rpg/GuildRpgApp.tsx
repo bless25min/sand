@@ -8,6 +8,9 @@ import { createGuildRpgState, loadGuildRpgState } from './state/create-game-stat
 import { guildRpgReducer } from './state/game-reducer';
 import { storeGuildSave } from './storage/guild-save';
 import './guild-rpg.css';
+import './guild-combat.css';
+import './guild-interface.css';
+import './guild-rewards.css';
 
 const initialState = () =>
   typeof window === 'undefined' ? createGuildRpgState() : loadGuildRpgState(window.localStorage);

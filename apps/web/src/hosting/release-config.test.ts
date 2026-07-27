@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 
-import { webCodeSplitting } from '../../vite.config';
+import { resolveWebModulePreloadDependencies, webCodeSplitting } from '../../vite.config';
 
 describe('Guild RPG release configuration', () => {
   it('uses Guild RPG document metadata', () => {
@@ -18,5 +18,23 @@ describe('Guild RPG release configuration', () => {
       'pixi',
       'prototypes',
     ]);
+  });
+
+  it('keeps Pixi and its transitive runtime dependencies in one production chunk', () => {
+    const pixiGroup = webCodeSplitting.groups.find((group) => group.name === 'pixi');
+
+    expect(pixiGroup).toMatchObject({
+      entriesAware: false,
+      includeDependenciesRecursively: true,
+    });
+  });
+
+  it('does not preload battle rendering or preserved prototypes from the landing document', () => {
+    expect(
+      resolveWebModulePreloadDependencies('index.js', ['react.js', 'pixi.js', 'prototypes.js'], {
+        hostId: 'index.html',
+        hostType: 'html',
+      }),
+    ).toEqual(['react.js']);
   });
 });

@@ -16,6 +16,7 @@ export function SkillLoadoutPanel({
   const [specializationFilter, setSpecializationFilter] = useState('all');
   const [triggerFilter, setTriggerFilter] = useState('all');
   const [starFilter, setStarFilter] = useState('all');
+  const [showAll, setShowAll] = useState(false);
   const member = state.profile.party.find(
     ({ definitionId }) => definitionId === state.selectedHeroId,
   )!;
@@ -31,18 +32,29 @@ export function SkillLoadoutPanel({
       .filter(({ id }) => equippedIds.has(id))
       .flatMap(({ components }) => components.map(({ triggerId }) => triggerId)),
   );
-  const visibleSkills = state.profile.skillInventory.filter(
-    (skill) =>
-      (elementFilter === 'all' ||
-        skill.components.some(({ element }) => element === elementFilter)) &&
-      (specializationFilter === 'all' ||
-        skill.components.some(
-          ({ specializationId }) => specializationId === specializationFilter,
-        )) &&
-      (triggerFilter === 'all' ||
-        skill.components.some(({ triggerId }) => triggerId === triggerFilter)) &&
-      (starFilter === 'all' || skill.stars === Number(starFilter)),
-  );
+  const filteredSkills = state.profile.skillInventory
+    .filter(
+      (skill) =>
+        (elementFilter === 'all' ||
+          skill.components.some(({ element }) => element === elementFilter)) &&
+        (specializationFilter === 'all' ||
+          skill.components.some(
+            ({ specializationId }) => specializationId === specializationFilter,
+          )) &&
+        (triggerFilter === 'all' ||
+          skill.components.some(({ triggerId }) => triggerId === triggerFilter)) &&
+        (starFilter === 'all' || skill.stars === Number(starFilter)),
+    )
+    .sort(
+      (left, right) =>
+        Number(right.id === state.lastFusedSkillId) - Number(left.id === state.lastFusedSkillId),
+    );
+  const filtersActive =
+    elementFilter !== 'all' ||
+    specializationFilter !== 'all' ||
+    triggerFilter !== 'all' ||
+    starFilter !== 'all';
+  const visibleSkills = showAll || filtersActive ? filteredSkills : filteredSkills.slice(0, 12);
   return (
     <section className="gr-panel" aria-labelledby="skill-loadout-title">
       <header className="gr-panel__header">
@@ -54,6 +66,11 @@ export function SkillLoadoutPanel({
           {hero.deliveryPassive.name}：{hero.deliveryPassive.description}
         </span>
       </header>
+      <ol className="gr-workflow-steps" aria-label="技能配置步驟">
+        <li data-current="true">1 選角色</li>
+        <li>2 選技能格</li>
+        <li>3 裝備技能</li>
+      </ol>
       <div className="gr-hero-tabs" aria-label="選擇角色">
         {state.profile.defaultOrder.map((heroId) => {
           const definition = GUILD_GAME_CONTENT.adventurers.find(({ id }) => id === heroId)!;
@@ -91,73 +108,77 @@ export function SkillLoadoutPanel({
           );
         })}
       </div>
-      <details
+      <section
         className="gr-progressive-library"
         data-progressive-skill-library="true"
-        open={state.tutorialStep === 'equip_fused'}
+        data-skill-library="visible"
       >
-        <summary>
-          <strong>可選技能與進階篩選</strong>
+        <header className="gr-library-heading">
+          <strong>可選技能</strong>
           <span>
-            {visibleSkills.length} 張 · 將裝備到第 {state.selectedSkillSlot + 1} 格
+            顯示 {visibleSkills.length}/{filteredSkills.length} 張 · 裝到第{' '}
+            {state.selectedSkillSlot + 1} 格後自動切換下一位
           </span>
-        </summary>
-        <div className="gr-skill-filters" aria-label="技能篩選">
-          <label>
-            屬性
-            <select
-              value={elementFilter}
-              onChange={(event) => setElementFilter(event.currentTarget.value)}
-            >
-              <option value="all">全部</option>
-              {GUILD_GAME_CONTENT.elements.map(({ id, name }) => (
-                <option key={id} value={id}>
-                  {name}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label>
-            特化
-            <select
-              value={specializationFilter}
-              onChange={(event) => setSpecializationFilter(event.currentTarget.value)}
-            >
-              <option value="all">全部</option>
-              {GUILD_GAME_CONTENT.skillSpecializations.map(({ id, name }) => (
-                <option key={id} value={id}>
-                  {name}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label>
-            觸發
-            <select
-              value={triggerFilter}
-              onChange={(event) => setTriggerFilter(event.currentTarget.value)}
-            >
-              <option value="all">全部</option>
-              {GUILD_GAME_CONTENT.triggerConditions.map(({ id, name }) => (
-                <option key={id} value={id}>
-                  {name}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label>
-            星級
-            <select
-              value={starFilter}
-              onChange={(event) => setStarFilter(event.currentTarget.value)}
-            >
-              <option value="all">全部</option>
-              <option value="1">1★</option>
-              <option value="2">2★</option>
-              <option value="3">3★</option>
-            </select>
-          </label>
-        </div>
+        </header>
+        <details className="gr-filter-drawer">
+          <summary>依屬性、特化、觸發或星級篩選</summary>
+          <div className="gr-skill-filters" aria-label="技能篩選">
+            <label>
+              屬性
+              <select
+                value={elementFilter}
+                onChange={(event) => setElementFilter(event.currentTarget.value)}
+              >
+                <option value="all">全部</option>
+                {GUILD_GAME_CONTENT.elements.map(({ id, name }) => (
+                  <option key={id} value={id}>
+                    {name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              特化
+              <select
+                value={specializationFilter}
+                onChange={(event) => setSpecializationFilter(event.currentTarget.value)}
+              >
+                <option value="all">全部</option>
+                {GUILD_GAME_CONTENT.skillSpecializations.map(({ id, name }) => (
+                  <option key={id} value={id}>
+                    {name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              觸發
+              <select
+                value={triggerFilter}
+                onChange={(event) => setTriggerFilter(event.currentTarget.value)}
+              >
+                <option value="all">全部</option>
+                {GUILD_GAME_CONTENT.triggerConditions.map(({ id, name }) => (
+                  <option key={id} value={id}>
+                    {name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              星級
+              <select
+                value={starFilter}
+                onChange={(event) => setStarFilter(event.currentTarget.value)}
+              >
+                <option value="all">全部</option>
+                <option value="1">1★</option>
+                <option value="2">2★</option>
+                <option value="3">3★</option>
+              </select>
+            </label>
+          </div>
+        </details>
         <div className="gr-skill-library">
           {visibleSkills.length === 0 && <p>目前沒有符合這組屬性、特化與觸發條件的技能。</p>}
           {visibleSkills.map((skill, index) => {
@@ -212,38 +233,41 @@ export function SkillLoadoutPanel({
                     {specializationName(first.specializationId)} · {triggerName(first.triggerId)}
                   </small>
                 </div>
-                <ol className="gr-skill-components">
-                  {skill.components.map((component, index) =>
-                    (() => {
-                      const element = GUILD_GAME_CONTENT.elements.find(
-                        ({ id }) => id === component.element,
-                      )!;
-                      const specialization = GUILD_GAME_CONTENT.skillSpecializations.find(
-                        ({ id }) => id === component.specializationId,
-                      )!;
-                      const trigger = GUILD_GAME_CONTENT.triggerConditions.find(
-                        ({ id }) => id === component.triggerId,
-                      )!;
-                      return (
-                        <li key={component.id}>
-                          <strong>
-                            {index + 1}. {elementName(component.element)}・
-                            {specializationName(component.specializationId)}・
-                            {triggerName(component.triggerId)}
-                          </strong>
-                          <small>
-                            基礎 +{component.power}（{specialization.powerRoll.min}–
-                            {specialization.powerRoll.max}） · 疊層 +{component.layerStrength}（
-                            {element.layerRoll.min}–{element.layerRoll.max}） · 追加 +
-                            {component.triggerAddition}（{trigger.additionRoll.min}–
-                            {trigger.additionRoll.max}） · 次數 {component.repeatCount}（
-                            {specialization.repeatRoll.min}–{specialization.repeatRoll.max}）
-                          </small>
-                        </li>
-                      );
-                    })(),
-                  )}
-                </ol>
+                <details className="gr-skill-numbers">
+                  <summary>查看完整數值與融合段</summary>
+                  <ol className="gr-skill-components">
+                    {skill.components.map((component, index) =>
+                      (() => {
+                        const element = GUILD_GAME_CONTENT.elements.find(
+                          ({ id }) => id === component.element,
+                        )!;
+                        const specialization = GUILD_GAME_CONTENT.skillSpecializations.find(
+                          ({ id }) => id === component.specializationId,
+                        )!;
+                        const trigger = GUILD_GAME_CONTENT.triggerConditions.find(
+                          ({ id }) => id === component.triggerId,
+                        )!;
+                        return (
+                          <li key={component.id}>
+                            <strong>
+                              {index + 1}. {elementName(component.element)}・
+                              {specializationName(component.specializationId)}・
+                              {triggerName(component.triggerId)}
+                            </strong>
+                            <small>
+                              基礎 +{component.power}（{specialization.powerRoll.min}–
+                              {specialization.powerRoll.max}） · 疊層 +{component.layerStrength}（
+                              {element.layerRoll.min}–{element.layerRoll.max}） · 追加 +
+                              {component.triggerAddition}（{trigger.additionRoll.min}–
+                              {trigger.additionRoll.max}） · 次數 {component.repeatCount}（
+                              {specialization.repeatRoll.min}–{specialization.repeatRoll.max}）
+                            </small>
+                          </li>
+                        );
+                      })(),
+                    )}
+                  </ol>
+                </details>
                 <div className="gr-item-tags">
                   {skill.components.some(({ triggerId }) => !equippedTriggers.has(triggerId)) && (
                     <span>新觸發</span>
@@ -277,7 +301,12 @@ export function SkillLoadoutPanel({
             );
           })}
         </div>
-      </details>
+        {!filtersActive && filteredSkills.length > visibleSkills.length && (
+          <button type="button" className="gr-show-all" onClick={() => setShowAll(true)}>
+            顯示全部 {filteredSkills.length} 張技能
+          </button>
+        )}
+      </section>
     </section>
   );
 }

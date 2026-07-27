@@ -8,6 +8,15 @@ const expectNoHorizontalCrop = async (page: Page) => {
   );
 };
 
+const expectFullyInViewport = async (page: Page, selector: string) => {
+  const box = await page.locator(selector).boundingBox();
+  const viewport = page.viewportSize();
+  expect(box).not.toBeNull();
+  expect(viewport).not.toBeNull();
+  expect(box!.y).toBeGreaterThanOrEqual(0);
+  expect(box!.y + box!.height).toBeLessThanOrEqual(viewport!.height);
+};
+
 const mainNav = (page: Page) => page.getByRole('navigation', { name: '主要遊戲介面' });
 
 async function expectBattlefieldVisible(page: Page) {
@@ -45,18 +54,34 @@ test('a new player understands combat, sees six escalating relays, and completes
   const pageErrors: Error[] = [];
   page.on('pageerror', (error) => pageErrors.push(error));
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.addInitScript(() => localStorage.clear());
+  await page.addInitScript(() => {
+    localStorage.clear();
+    localStorage.setItem(
+      'expedition:guild-rpg:preferences:v1',
+      JSON.stringify({
+        version: 1,
+        tutorial: 'active',
+        masterVolume: 0,
+        musicEnabled: false,
+        hapticsEnabled: false,
+        motion: 'reduced',
+      }),
+    );
+  });
   await page.goto('/');
 
   await expect(page.getByText('六人接力刷寶遠征', { exact: true })).toBeVisible();
   await expect(mainNav(page).getByRole('button')).toHaveCount(4);
   await expect(page.locator('[data-first-session="true"]')).toBeVisible();
   await expect(page.getByRole('button', { name: '開始第一場教學戰' })).toHaveCount(1);
+  await expectFullyInViewport(page, '[data-guide-id="hunt:start"]');
   await expectNoHorizontalCrop(page);
 
   await page.getByRole('button', { name: '開始第一場教學戰' }).click();
   await expect(page.getByRole('heading', { name: '目前出手：布蘭' })).toBeVisible();
   await expectBattlefieldVisible(page);
+  await expect(page.locator('button[data-battle-skill]')).toHaveCount(6);
+  await expectFullyInViewport(page, 'button[data-battle-skill="6"]');
   await expect(page.locator('[data-combat-battlefield]')).toHaveAttribute(
     'data-current-actor',
     'brann',
@@ -90,9 +115,10 @@ test('a new player understands combat, sees six escalating relays, and completes
 
   await expect(page.locator('.gr-rewards')).toBeVisible();
   await expect(page.getByText('接力殲滅完成', { exact: true })).toBeVisible();
-  await expect(page.locator('.gr-reward-grid > div').nth(0).locator('article')).toHaveCount(2);
-  await expect(page.locator('.gr-reward-grid > div').nth(1).locator('article')).toHaveCount(4);
-  await page.getByRole('button', { name: '先穿上新裝備' }).click();
+  await expect(page.locator('[data-loot-reveal]')).toHaveCount(6);
+  await expect(page.locator('[data-loot-reveal][data-rarity="skill"]')).toHaveCount(2);
+  await expect(page.locator('[data-loot-reveal]:not([data-rarity="skill"])')).toHaveCount(4);
+  await page.locator('.gr-reward-actions button').first().click();
 
   await expect(page.getByRole('region', { name: '公會訓練清單' })).toBeVisible();
   await page
@@ -102,7 +128,7 @@ test('a new player understands combat, sees six escalating relays, and completes
   await expect(page.locator('.gr-status-line')).toContainText('已裝備');
   await page.getByRole('button', { name: '校準' }).first().click();
   await expect(page.getByText('打開技能配置', { exact: true })).toBeVisible();
-  await mainNav(page).getByRole('button', { name: '技能', exact: true }).click();
+  await page.locator('[data-guide-id="nav:skills"]').click();
 
   await expect(page.getByRole('heading', { name: '技能融合工坊' })).toBeVisible();
   const candidates = page.locator('.gr-fusion__candidates button');
@@ -115,7 +141,7 @@ test('a new player understands combat, sees six escalating relays, and completes
   await fusedCard.getByRole('button', { name: /裝備到第/ }).click();
   await expect(page.getByText(/下一位：/)).toBeVisible();
 
-  await mainNav(page).getByRole('button', { name: '任務', exact: true }).click();
+  await page.locator('[data-guide-id="nav:quest"]').click();
   await page.getByRole('button', { name: '再次狩獵' }).click();
   await expect(page.locator('.gr-battle')).toBeVisible();
   await expect(page.locator('.gr-battle-guide-strip')).toHaveCount(0);
@@ -167,8 +193,8 @@ test('migrates a v3 save, preserves its backup, and keeps every main page usable
     await page.evaluate(() => localStorage.getItem('expedition:guild-rpg:v3:backup')),
   ).not.toBeNull();
 
-  for (const pageName of ['任務', '隊伍', '技能', '裝備']) {
-    await mainNav(page).getByRole('button', { name: pageName, exact: true }).click();
+  for (const pageId of ['quest', 'party', 'skills', 'equipment']) {
+    await page.locator(`[data-guide-id="nav:${pageId}"]`).click();
     await expectNoHorizontalCrop(page);
   }
   await expect(page.getByRole('button', { name: '布蘭' })).toBeVisible();

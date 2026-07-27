@@ -351,12 +351,6 @@ button:focus-visible {
   box-shadow: 0 22px 54px rgb(0 0 0 / 28%);
 }
 
-.gr-first-session > div:first-child {
-  display: grid;
-  align-content: center;
-}
-
-.gr-first-session > div:first-child > span,
 .gr-first-session__mission > span {
   color: #ffc66b;
   font-size: 0.68rem;
@@ -372,10 +366,11 @@ button:focus-visible {
     serif;
 }
 
-.gr-first-session > div:first-child > p {
+.gr-first-session__mission > p {
+  margin: 0;
   max-width: 42rem;
   color: #d2ddd7;
-  line-height: 1.65;
+  line-height: 1.45;
 }
 
 .gr-first-session ol {
@@ -413,17 +408,38 @@ button:focus-visible {
   font-size: 1.35rem;
 }
 
-.gr-first-session__mission > small,
-.gr-first-session__mission > p {
-  margin: 0;
-  color: #bfcbc5;
-  line-height: 1.5;
-}
-
 .gr-first-session__mission button {
   width: 100%;
   min-height: 58px;
   font-size: 1rem;
+}
+
+.gr-first-session__briefing {
+  align-self: center;
+  padding: 4px 14px 14px;
+  border: 1px solid rgb(255 255 255 / 12%);
+  border-radius: 12px;
+  background: rgb(0 0 0 / 24%);
+}
+
+.gr-first-session__briefing > summary {
+  min-height: 48px;
+  color: #ffd27e;
+  cursor: pointer;
+  font-weight: 900;
+  line-height: 48px;
+}
+
+.gr-first-session__briefing > div {
+  display: grid;
+  gap: 7px;
+}
+
+.gr-first-session__briefing small,
+.gr-first-session__briefing p {
+  margin: 0;
+  color: #bfcbc5;
+  line-height: 1.45;
 }
 
 .gr-recommended-hunt {
@@ -1844,11 +1860,21 @@ button:focus-visible {
 
   .gr-first-session {
     grid-template-columns: 1fr;
-    padding: 15px;
+    gap: 8px;
+    padding: 10px;
   }
 
   .gr-first-session ol {
     grid-template-columns: 1fr;
+  }
+
+  .gr-first-session h3 {
+    font-size: 1.45rem;
+  }
+
+  .gr-first-session__mission {
+    gap: 6px;
+    padding: 11px;
   }
 
   .gr-training-checklist ol {
@@ -2141,7 +2167,7 @@ button:focus-visible {
   }
 
   .gr-battle-skills {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 4px;
   }
 

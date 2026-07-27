@@ -1,0 +1,84 @@
+import type { GuildBattleState, StatusLayers } from '@expedition/shared-types';
+import type {
+  GuildCombatScene,
+  GuildCombatSceneUnit,
+  GuildCombatUnitState,
+} from '@expedition/pixi-renderer';
+
+import type { VisualEvent } from './visual-events';
+import { enemyVisual, heroVisual, zoneVisualForQuest } from './visual-catalog';
+
+export type BattleScene = GuildCombatScene;
+
+export interface BattleSceneContext {
+  relay: number;
+  actingActorId?: string;
+  nextActorId?: string;
+  event?: VisualEvent;
+}
+
+const HERO_POSITIONS = [
+  { x: 135, y: 330 },
+  { x: 245, y: 285 },
+  { x: 355, y: 345 },
+  { x: 165, y: 450 },
+  { x: 285, y: 445 },
+  { x: 405, y: 465 },
+] as const;
+
+const ENEMY_POSITIONS = [
+  { x: 690, y: 210 },
+  { x: 825, y: 315 },
+  { x: 690, y: 425 },
+] as const;
+
+const emptyLayers = (): StatusLayers => ({ burn: 0, poison: 0, tide: 0 });
+
+export function createBattleScene(
+  battle: GuildBattleState,
+  context: BattleSceneContext,
+): BattleScene {
+  let heroIndex = 0;
+  let enemyIndex = 0;
+  const units = battle.units.map((unit): GuildCombatSceneUnit => {
+    const position =
+      unit.side === 'heroes'
+        ? HERO_POSITIONS[Math.min(heroIndex++, HERO_POSITIONS.length - 1)]!
+        : ENEMY_POSITIONS[Math.min(enemyIndex++, ENEMY_POSITIONS.length - 1)]!;
+    const selected = battle.selectedTargetId === unit.id;
+    const hit = context.event?.targetId === unit.id && context.event.phase === 'impact';
+    const state: GuildCombatUnitState =
+      unit.currentHp <= 0
+        ? 'defeated'
+        : hit
+          ? 'hit'
+          : unit.id === context.actingActorId
+            ? 'acting'
+            : unit.id === context.nextActorId
+              ? 'next'
+              : selected
+                ? 'targeted'
+                : 'idle';
+    return {
+      id: unit.id,
+      name: unit.name,
+      side: unit.side,
+      x: position.x,
+      y: position.y,
+      hpRatio: Math.max(0, Math.min(1, unit.currentHp / Math.max(1, unit.stats.hp))),
+      state,
+      selected,
+      statusLayers: unit.statusLayers ?? emptyLayers(),
+      ...(unit.side === 'heroes' ? { hero: heroVisual(unit.id) } : { enemy: enemyVisual(unit.id) }),
+    };
+  });
+  return {
+    width: 1_000,
+    height: 560,
+    questId: battle.questId,
+    zone: zoneVisualForQuest(battle.questId),
+    relay: Math.max(1, Math.min(6, Math.trunc(context.relay))),
+    units,
+    ...(context.event ? { event: context.event } : {}),
+  };
+}
