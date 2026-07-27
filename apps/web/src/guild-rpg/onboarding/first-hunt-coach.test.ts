@@ -1,22 +1,22 @@
 import { describe, expect, it } from 'vitest';
 
-import { createFirstHuntCoach, TUTORIAL_STEPS } from './first-hunt-coach';
+import { createFirstHuntCoach, isFirstHuntCoachFocus, TUTORIAL_STEPS } from './first-hunt-coach';
 
 describe('complete RPG onboarding coach', () => {
-  it('teaches every real page and battle action instead of advancing from one fake button', () => {
+  it('teaches the first hunt through six real relay actions before configuration', () => {
     expect(TUTORIAL_STEPS).toEqual([
-      'inspect_party',
-      'select_hero',
-      'inspect_skills',
-      'equip_skill',
-      'inspect_equipment',
       'start_hunt',
       'select_target',
-      'use_skill',
-      'reorder',
+      'relay_1',
+      'relay_2',
+      'relay_3',
+      'relay_4',
+      'relay_5',
+      'relay_6',
       'collect_reward',
       'equip_loot',
       'forge_loot',
+      'inspect_skills',
       'fuse_skill',
       'equip_fused',
       'replay',
@@ -30,22 +30,38 @@ describe('complete RPG onboarding coach', () => {
     }
   });
 
-  it('names the selected hero and all six skill choices at the decision point', () => {
-    expect(createFirstHuntCoach('active', 'select_hero')).toMatchObject({
-      title: '選一名角色',
-      focusId: 'hero:first',
+  it('names the acting hero, relay count, and six immediately available skills', () => {
+    expect(createFirstHuntCoach('active', 'relay_1', { heroName: '布蘭' })).toMatchObject({
+      title: '第 1 棒：布蘭',
+      focusId: 'battle:skill',
     });
-    expect(createFirstHuntCoach('active', 'equip_skill', { heroName: '布蘭' })).toMatchObject({
-      title: '替布蘭選擇技能',
-      focusId: 'skill:equip',
-    });
-    expect(createFirstHuntCoach('active', 'equip_skill', { heroName: '布蘭' })?.message).toContain(
-      '六格',
+    expect(createFirstHuntCoach('active', 'relay_1', { heroName: '布蘭' })?.message).toContain(
+      '六個技能',
     );
   });
 
+  it('keeps a usable combat action focused after six relays until victory exists', () => {
+    expect(
+      createFirstHuntCoach('active', 'collect_reward', { battleStatus: 'active' }),
+    ).toMatchObject({
+      title: '自由接力，殲滅剩餘敵人',
+      focusId: 'battle:skill',
+    });
+    expect(
+      createFirstHuntCoach('active', 'collect_reward', { battleStatus: 'victory' }),
+    ).toMatchObject({
+      title: '接力完成，收下戰利品',
+      focusId: 'battle:collect',
+    });
+    expect(
+      isFirstHuntCoachFocus('active', 'collect_reward', 'battle:skill', {
+        battleStatus: 'active',
+      }),
+    ).toBe(true);
+  });
+
   it('stays absent after skip or completion', () => {
-    expect(createFirstHuntCoach('skipped', 'inspect_party')).toBeUndefined();
+    expect(createFirstHuntCoach('skipped', 'start_hunt')).toBeUndefined();
     expect(createFirstHuntCoach('complete', 'complete')).toBeUndefined();
   });
 });

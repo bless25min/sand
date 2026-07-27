@@ -10,6 +10,9 @@ export function TeamOrderPanel({
   state: GuildRpgState;
   dispatch: React.Dispatch<GuildRpgAction>;
 }) {
+  const selectedHero = GUILD_GAME_CONTENT.adventurers.find(
+    ({ id }) => id === state.selectedHeroId,
+  )!;
   return (
     <section className="gr-panel" aria-labelledby="team-order-title">
       <header className="gr-panel__header">
@@ -19,6 +22,16 @@ export function TeamOrderPanel({
         </div>
         <span>戰鬥中仍可把尚未出手的角色臨時調成下一位</span>
       </header>
+      <div className="gr-party-context" data-party-selected-hero={selectedHero.id}>
+        <div>
+          <span>目前操作：{selectedHero.name}</span>
+          <strong>{selectedHero.title}</strong>
+        </div>
+        <p>
+          點角色即可切換目前操作對象；前往技能或裝備頁時會保持這位角色。
+          下方箭頭只調整預設接力順序。
+        </p>
+      </div>
       <div className="gr-hero-order">
         {state.profile.defaultOrder.map((heroId, index) => {
           const hero = GUILD_GAME_CONTENT.adventurers.find(({ id }) => id === heroId)!;

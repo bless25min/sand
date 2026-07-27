@@ -98,6 +98,9 @@ const withTutorial = (
     ? { ...state, tutorialStep: next }
     : state;
 
+const isBattleTutorialStep = (step: FirstHuntCoachStep) =>
+  step === 'select_target' || step === 'collect_reward' || step.startsWith('relay_');
+
 const engineContent = (profile: GuildProfile) => ({
   skills: Object.fromEntries(profile.skillInventory.map((skill) => [skill.id, skill])),
   elements: GUILD_GAME_CONTENT.elements,
@@ -115,7 +118,7 @@ const finishBattle = (state: GuildRpgState, battle: GuildBattleState): GuildRpgS
     battle,
     rewards: result.rewards,
     profile: result.profile,
-    tutorialStep: state.preferences.tutorial === 'active' ? 'collect_reward' : state.tutorialStep,
+    tutorialStep: state.preferences.tutorial === 'active' ? 'equip_loot' : state.tutorialStep,
     message: result.message,
   };
 };
@@ -125,25 +128,19 @@ export function guildRpgReducer(state: GuildRpgState, action: GuildRpgAction): G
     return {
       ...state,
       preferences: { ...state.preferences, tutorial: action.tutorial },
-      tutorialStep: action.tutorial === 'active' ? 'inspect_party' : 'complete',
+      tutorialStep: action.tutorial === 'active' ? 'start_hunt' : 'complete',
     };
   }
   if (action.type === 'NAVIGATE' && state.screen === 'guild') {
     let next = { ...state, page: action.page };
-    if (action.page === 'party') next = withTutorial(next, 'inspect_party', 'select_hero');
-    if (action.page === 'skills') next = withTutorial(next, 'inspect_skills', 'equip_skill');
-    if (action.page === 'equipment') next = withTutorial(next, 'inspect_equipment', 'start_hunt');
+    if (action.page === 'skills') next = withTutorial(next, 'inspect_skills', 'fuse_skill');
     return next;
   }
   if (action.type === 'SELECT_HERO' && state.screen === 'guild') {
     if (!state.profile.party.some(({ definitionId }) => definitionId === action.adventurerId)) {
       return state;
     }
-    return withTutorial(
-      { ...state, selectedHeroId: action.adventurerId, selectedSkillSlot: 0 },
-      'select_hero',
-      'inspect_skills',
-    );
+    return { ...state, selectedHeroId: action.adventurerId, selectedSkillSlot: 0 };
   }
   if (action.type === 'SELECT_SKILL_SLOT' && action.slotIndex >= 0 && action.slotIndex < 6) {
     return { ...state, selectedSkillSlot: action.slotIndex };
@@ -160,11 +157,9 @@ export function guildRpgReducer(state: GuildRpgState, action: GuildRpgAction): G
     const index = state.profile.defaultOrder.indexOf(state.selectedHeroId);
     const nextHeroId = state.profile.defaultOrder[(index + 1) % state.profile.defaultOrder.length]!;
     const tutorialStep =
-      state.tutorialStep === 'equip_skill'
-        ? 'inspect_equipment'
-        : state.tutorialStep === 'equip_fused' && action.skillId === state.lastFusedSkillId
-          ? 'replay'
-          : state.tutorialStep;
+      state.tutorialStep === 'equip_fused' && action.skillId === state.lastFusedSkillId
+        ? 'replay'
+        : state.tutorialStep;
     return {
       ...state,
       profile: resolution.profile,
@@ -344,7 +339,7 @@ export function guildRpgReducer(state: GuildRpgState, action: GuildRpgAction): G
       ? withTutorial(
           { ...state, battle: { ...state.battle, selectedTargetId: action.targetId } },
           'select_target',
-          'use_skill',
+          'relay_1',
         )
       : state;
   }
@@ -353,18 +348,14 @@ export function guildRpgReducer(state: GuildRpgState, action: GuildRpgAction): G
       const living = state.battle.units
         .filter((unit) => unit.side === 'heroes' && unit.currentHp > 0)
         .map(({ id }) => id);
-      return withTutorial(
-        {
-          ...state,
-          battle: {
-            ...state.battle,
-            roundOrder: chooseNextAdventurer(state.battle.roundOrder, action.adventurerId, living),
-          },
-          message: `${heroName(action.adventurerId)}已調整為本回合下一位。`,
+      return {
+        ...state,
+        battle: {
+          ...state.battle,
+          roundOrder: chooseNextAdventurer(state.battle.roundOrder, action.adventurerId, living),
         },
-        'reorder',
-        'collect_reward',
-      );
+        message: `${heroName(action.adventurerId)}已調整為本回合下一位。`,
+      };
     } catch (error) {
       return { ...state, message: error instanceof Error ? error.message : '無法調整順序。' };
     }
@@ -407,16 +398,21 @@ export function guildRpgReducer(state: GuildRpgState, action: GuildRpgAction): G
         targetId: action.targetId,
         content: engineContent(state.profile),
       });
-      const next = withTutorial(
-        {
-          ...state,
-          battle: result.battle,
-          recentEvents: result.events,
-          message: result.events.at(-1)?.message ?? '技能已結算。',
-        },
-        'use_skill',
-        'reorder',
-      );
+      const relayStep = state.tutorialStep.match(/^relay_([1-6])$/);
+      const relayNumber = relayStep ? Number(relayStep[1]) : undefined;
+      const tutorialStep =
+        state.preferences.tutorial === 'active' && relayNumber
+          ? relayNumber === 6
+            ? 'collect_reward'
+            : (`relay_${relayNumber + 1}` as FirstHuntCoachStep)
+          : state.tutorialStep;
+      const next = {
+        ...state,
+        battle: result.battle,
+        recentEvents: result.events,
+        tutorialStep,
+        message: result.events.at(-1)?.message ?? '技能已結算。',
+      };
       return result.battle.status === 'victory'
         ? {
             ...next,
@@ -502,10 +498,10 @@ export function guildRpgReducer(state: GuildRpgState, action: GuildRpgAction): G
     return {
       ...state,
       profile: result.profile,
-      page: completedCoachForge ? 'skills' : state.page,
-      tutorialStep: completedCoachForge ? 'fuse_skill' : state.tutorialStep,
+      page: state.page,
+      tutorialStep: completedCoachForge ? 'inspect_skills' : state.tutorialStep,
       message: completedCoachForge
-        ? `${result.message} 接著選兩張同屬性技能進行融合。`
+        ? `${result.message} 接著打開技能頁，查看這次取得的新技能。`
         : result.message,
     };
   }
@@ -515,17 +511,23 @@ export function guildRpgReducer(state: GuildRpgState, action: GuildRpgAction): G
       screen: 'guild',
       page: 'equipment',
       rewards: undefined,
-      tutorialStep: state.tutorialStep === 'collect_reward' ? 'equip_loot' : state.tutorialStep,
+      tutorialStep: state.tutorialStep,
       message: '所有掉落已收入背包；先把一件新裝備穿到目前角色身上。',
     };
   }
   if (action.type === 'GO_TO_FUSION' && state.screen === 'rewards') {
+    if (state.preferences.tutorial === 'active' && state.tutorialStep === 'equip_loot') {
+      return {
+        ...state,
+        message: '先穿上一件新裝備，完成後就會開放技能融合。',
+      };
+    }
     return {
       ...state,
       screen: 'guild',
       page: 'skills',
       rewards: undefined,
-      tutorialStep: state.tutorialStep === 'collect_reward' ? 'fuse_skill' : state.tutorialStep,
+      tutorialStep: state.tutorialStep === 'equip_loot' ? 'fuse_skill' : state.tutorialStep,
       message: '戰利品已全部收入背包與技能庫；選兩張同屬性一星技能融合。',
     };
   }
@@ -541,11 +543,15 @@ export function guildRpgReducer(state: GuildRpgState, action: GuildRpgAction): G
     };
   }
   if (action.type === 'ABANDON_HUNT' && state.screen === 'battle') {
+    const resetTutorial =
+      state.preferences.tutorial === 'active' && isBattleTutorialStep(state.tutorialStep);
     return {
       ...state,
       screen: 'guild',
+      page: 'quest',
       battle: undefined,
       recentEvents: [],
+      tutorialStep: resetTutorial ? 'start_hunt' : state.tutorialStep,
       message: '已撤離，整備進度保持不變。',
     };
   }

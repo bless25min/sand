@@ -6,9 +6,11 @@ import type { GuildRpgAction, GuildRpgState } from '../state/game-reducer';
 export function TurnOrderRail({
   state,
   dispatch,
+  locked = false,
 }: {
   state: GuildRpgState;
   dispatch: React.Dispatch<GuildRpgAction>;
+  locked?: boolean;
 }) {
   const order = state.battle?.roundOrder;
   if (!order) return null;
@@ -42,7 +44,7 @@ export function TurnOrderRail({
                   )
                 : undefined
             }
-            disabled={victory || acted || !alive || active}
+            disabled={locked || victory || acted || !alive || active}
             key={heroId}
             onClick={() => dispatch({ type: 'CHOOSE_NEXT_HERO', adventurerId: heroId })}
           >

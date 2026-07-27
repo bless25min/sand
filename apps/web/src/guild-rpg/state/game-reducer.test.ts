@@ -32,27 +32,71 @@ const winFirstHunt = (initial: GuildRpgState) => {
 };
 
 describe('deterministic six-hero game flow', () => {
-  it('advances onboarding only through the real page, hero, skill, and equipment actions', () => {
+  it('starts a fresh player in the hunt instead of forcing a pre-battle menu tour', () => {
     let state = createGuildRpgState();
 
-    state = reduce(state, { type: 'NAVIGATE', page: 'party' });
-    expect(state.tutorialStep).toBe('select_hero');
-
-    state = reduce(state, { type: 'SELECT_HERO', adventurerId: 'brann' });
-    expect(state.tutorialStep).toBe('inspect_skills');
-    expect(state.selectedHeroId).toBe('brann');
-
-    state = reduce(state, { type: 'NAVIGATE', page: 'skills' });
-    expect(state.tutorialStep).toBe('equip_skill');
-    const replacement = state.profile.party[1]!.skillIds[0]!;
-    state = reduce(state, { type: 'SELECT_SKILL_SLOT', slotIndex: 2 });
-    state = reduce(state, { type: 'EQUIP_SKILL', skillId: replacement });
-    expect(state.profile.party[0]!.skillIds[2]).toBe(replacement);
-    expect(state.selectedHeroId).toBe('lyra');
-    expect(state.tutorialStep).toBe('inspect_equipment');
-
-    state = reduce(state, { type: 'NAVIGATE', page: 'equipment' });
     expect(state.tutorialStep).toBe('start_hunt');
+    expect(state.page).toBe('quest');
+
+    state = reduce(state, { type: 'START_QUEST', questId: 'border_pack' });
+    expect(state.tutorialStep).toBe('select_target');
+  });
+
+  it('persists the battle coach through six casts and cannot be skipped by reordering', () => {
+    let state = reduce(createGuildRpgState(), {
+      type: 'START_QUEST',
+      questId: 'border_pack',
+    });
+    const firstTarget = state.battle!.selectedTargetId!;
+    state = reduce(state, { type: 'SELECT_TARGET', targetId: firstTarget });
+    expect(state.tutorialStep).toBe('relay_1');
+
+    state = reduce(state, { type: 'CHOOSE_NEXT_HERO', adventurerId: 'lyra' });
+    expect(state.tutorialStep).toBe('relay_1');
+
+    for (let relay = 1; relay <= 6; relay += 1) {
+      const actorId = state.battle!.roundOrder!.activeAdventurerId;
+      const actor = state.profile.party.find(({ definitionId }) => definitionId === actorId)!;
+      state = reduce(state, {
+        type: 'USE_SKILL',
+        skillId: actor.skillIds[0]!,
+        targetId: state.battle!.selectedTargetId!,
+      });
+      expect(state.tutorialStep).toBe(relay === 6 ? 'collect_reward' : `relay_${relay + 1}`);
+    }
+  });
+
+  it('returns an abandoned tutorial battle to the visible first-hunt action', () => {
+    let state = reduce(createGuildRpgState(), {
+      type: 'START_QUEST',
+      questId: 'border_pack',
+    });
+    state = reduce(state, {
+      type: 'SELECT_TARGET',
+      targetId: state.battle!.selectedTargetId!,
+    });
+    expect(state.tutorialStep).toBe('relay_1');
+
+    state = reduce(state, { type: 'ABANDON_HUNT' });
+
+    expect(state).toMatchObject({
+      screen: 'guild',
+      page: 'quest',
+      tutorialStep: 'start_hunt',
+    });
+  });
+
+  it('does not let the reward shortcut skip required equipment training', () => {
+    const state = winFirstHunt(createGuildRpgState());
+    expect(state).toMatchObject({ screen: 'rewards', tutorialStep: 'equip_loot' });
+
+    const blocked = reduce(state, { type: 'GO_TO_FUSION' });
+
+    expect(blocked).toMatchObject({
+      screen: 'rewards',
+      tutorialStep: 'equip_loot',
+      message: '先穿上一件新裝備，完成後就會開放技能融合。',
+    });
   });
 
   it('keeps the saved default order while a battle reorder changes only the current round', () => {
@@ -151,7 +195,9 @@ describe('deterministic six-hero game flow', () => {
       itemId: equipmentId,
       forgeAction: 'calibrate',
     });
-    expect(state).toMatchObject({ page: 'skills', tutorialStep: 'fuse_skill' });
+    expect(state).toMatchObject({ page: 'equipment', tutorialStep: 'inspect_skills' });
+    state = reduce(state, { type: 'NAVIGATE', page: 'skills' });
+    expect(state.tutorialStep).toBe('fuse_skill');
     for (const skillId of rewardSkillIds) {
       state = reduce(state, { type: 'TOGGLE_FUSION_SKILL', skillId });
     }

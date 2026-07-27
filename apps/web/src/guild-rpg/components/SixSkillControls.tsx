@@ -7,9 +7,11 @@ import type { GuildRpgAction, GuildRpgState } from '../state/game-reducer';
 export function SixSkillControls({
   state,
   dispatch,
+  locked = false,
 }: {
   state: GuildRpgState;
   dispatch: React.Dispatch<GuildRpgAction>;
+  locked?: boolean;
 }) {
   const actorId = state.battle?.roundOrder?.activeAdventurerId;
   const member = state.profile.party.find(({ definitionId }) => definitionId === actorId);
@@ -47,10 +49,11 @@ export function SixSkillControls({
                     state.preferences.tutorial,
                     state.tutorialStep,
                     'battle:skill',
+                    { battleStatus: state.battle?.status },
                   )
                 : undefined
             }
-            disabled={!skill || !targetId}
+            disabled={locked || !skill || !targetId}
             key={`${skillId}:${index}`}
             onClick={() => targetId && dispatch({ type: 'USE_SKILL', skillId, targetId })}
           >

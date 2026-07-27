@@ -20,7 +20,7 @@ export function createGuildRpgState(
     page: 'quest',
     profile: activeProfile,
     preferences,
-    tutorialStep: preferences.tutorial === 'active' ? 'inspect_party' : 'complete',
+    tutorialStep: preferences.tutorial === 'active' ? 'start_hunt' : 'complete',
     selectedHeroId: activeProfile.defaultOrder[0]!,
     selectedSkillSlot: 0,
     selectedFusionIds: [],

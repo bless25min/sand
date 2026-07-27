@@ -61,11 +61,19 @@ export function EquipmentWorkbench({
           </button>
         ))}
       </div>
+      <aside className="gr-equipment-next-action" data-equipment-next-action="true">
+        <strong>{hero.name}的三個裝備欄位</strong>
+        <span>
+          {state.profile.inventory.length > 0
+            ? '先比較下方第一件戰利品；裝備後再決定是否校準核心。'
+            : '目前沒有背包裝備。完成狩獵後，戰利品會安全保留在這裡。'}
+        </span>
+      </aside>
       <div className="gr-equipment-slots">
         {(['weapon', 'armor', 'accessory'] as const).map((slot) => {
           const item = member.equipment[slot];
           return (
-            <article key={slot}>
+            <article data-equipment-slot={slot} key={slot}>
               <span>{equipmentSlotName(slot)}</span>
               <strong>{item?.name ?? '尚未裝備'}</strong>
               <small>

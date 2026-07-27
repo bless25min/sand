@@ -1,18 +1,18 @@
 import type { TutorialState } from '../preferences/guild-preferences';
 
 export const TUTORIAL_STEPS = [
-  'inspect_party',
-  'select_hero',
-  'inspect_skills',
-  'equip_skill',
-  'inspect_equipment',
   'start_hunt',
   'select_target',
-  'use_skill',
-  'reorder',
+  'relay_1',
+  'relay_2',
+  'relay_3',
+  'relay_4',
+  'relay_5',
+  'relay_6',
   'collect_reward',
   'equip_loot',
   'forge_loot',
+  'inspect_skills',
   'fuse_skill',
   'equip_fused',
   'replay',
@@ -30,40 +30,21 @@ export interface FirstHuntCoach {
   focusId: string;
 }
 
+export interface FirstHuntCoachContext {
+  heroName?: string;
+  surface?: 'guild' | 'rewards';
+  battleStatus?: 'active' | 'victory' | 'defeat' | undefined;
+}
+
 const COPY: Readonly<
   Record<
     Exclude<FirstHuntCoachStep, 'complete'>,
     Omit<FirstHuntCoach, 'step' | 'stepNumber' | 'stepTotal'>
   >
 > = {
-  inspect_party: {
-    title: '先看完整隊伍',
-    message: '點「隊伍」，確認六名角色與預設出手順序。',
-    focusId: 'nav:party',
-  },
-  select_hero: {
-    title: '選一名角色',
-    message: '點任一角色；目前操作角色會持續高亮並顯示名字。',
-    focusId: 'hero:first',
-  },
-  inspect_skills: {
-    title: '打開技能頁',
-    message: '點「技能」，查看目前角色的六格技能與所有可選技能。',
-    focusId: 'nav:skills',
-  },
-  equip_skill: {
-    title: '選擇技能',
-    message: '先點六格中的一格，再從技能庫裝備一招；完成後會自動切到下一位角色。',
-    focusId: 'skill:equip',
-  },
-  inspect_equipment: {
-    title: '打開裝備頁',
-    message: '點「裝備」，查看武器、護甲、飾品、內嵌核心與鍛造。',
-    focusId: 'nav:equipment',
-  },
   start_hunt: {
-    title: '進入第一場狩獵',
-    message: '回到「任務」，閱讀公開掉落池後開始邊境狼群。',
+    title: '開始第一場教學戰',
+    message: '先親手完成六人接力；勝利後再學裝備、技能與刷寶養成。',
     focusId: 'hunt:start',
   },
   select_target: {
@@ -71,30 +52,55 @@ const COPY: Readonly<
     message: '點一張仍存活的敵人卡；金框會顯示目前鎖定目標。',
     focusId: 'target:first',
   },
-  use_skill: {
-    title: '讓當前角色立即出招',
-    message: '下方六招全部可用。點一招就立刻結算，不必等全隊設定完成。',
+  relay_1: {
+    title: '第 1 棒',
+    message: '確認目前角色，從下方六個技能選一個；點擊後會立即演出。',
     focusId: 'battle:skill',
   },
-  reorder: {
-    title: '改變本回合下一位',
-    message: '點一名尚未行動的角色，把他調到下一位並立即看見接力變化。',
-    focusId: 'order:next',
+  relay_2: {
+    title: '第 2 棒',
+    message: '第二位角色已接力。觀察上一招留下的屬性與狀態，再選六個技能之一。',
+    focusId: 'battle:skill',
+  },
+  relay_3: {
+    title: '第 3 棒',
+    message: '連技開始升溫。綠框代表追加條件已成立，仍可自由選擇任何技能。',
+    focusId: 'battle:skill',
+  },
+  relay_4: {
+    title: '第 4 棒',
+    message: '連鎖效果正在累積；也可點上方尚未行動的角色改成下一棒。',
+    focusId: 'battle:skill',
+  },
+  relay_5: {
+    title: '第 5 棒',
+    message: '進入終結準備。選擇能消耗疊層、擴散或多段命中的技能。',
+    focusId: 'battle:skill',
+  },
+  relay_6: {
+    title: '第 6 棒',
+    message: '最後一位角色會釋放本回合終結演出；選一招完成六人接力。',
+    focusId: 'battle:skill',
   },
   collect_reward: {
-    title: '讀完這次掉落',
-    message: '勝利會同時取得素材、帶核心裝備與技能；先穿上其中一件裝備。',
-    focusId: 'reward:equipment',
+    title: '接力完成，收下戰利品',
+    message: '戰場會保留最後爆發結果；確認後一次取得素材、裝備與技能。',
+    focusId: 'battle:collect',
   },
   equip_loot: {
     title: '穿上第一件屬性裝備',
-    message: '點戰利品的「裝備給角色」；原裝備會安全回到背包，不會消失。',
-    focusId: 'equipment:equip',
+    message: '先前往裝備頁，再把第一件掉落裝備穿給目前角色。',
+    focusId: 'reward:equipment',
   },
   forge_loot: {
     title: '做一次範圍內校準',
     message: '點已裝備物品的「校準」；只會在公開範圍內重骰，不會無限線性升級。',
     focusId: 'equipment:forge',
+  },
+  inspect_skills: {
+    title: '打開技能配置',
+    message: '點「技能」，查看目前角色的六格技能與這次獲得的新組合。',
+    focusId: 'nav:skills',
   },
   fuse_skill: {
     title: '融合相同屬性技能',
@@ -116,19 +122,37 @@ const COPY: Readonly<
 export function createFirstHuntCoach(
   tutorial: TutorialState,
   step: FirstHuntCoachStep,
-  context: { heroName?: string } = {},
+  context: FirstHuntCoachContext = {},
 ): FirstHuntCoach | undefined {
   if (tutorial !== 'active' || step === 'complete') return undefined;
   const copy = COPY[step];
+  const relay = step.startsWith('relay_') ? Number(step.slice('relay_'.length)) : undefined;
   return {
     step,
     stepNumber: TUTORIAL_STEPS.indexOf(step) + 1,
     stepTotal: TUTORIAL_STEPS.length - 1,
     ...copy,
-    ...(step === 'equip_skill' && context.heroName
+    ...(step === 'equip_loot' && context.surface === 'guild'
       ? {
-          title: `替${context.heroName}選擇技能`,
-          message: `先點${context.heroName}的六格之一，再從技能庫裝備一招；完成後會自動切到下一位角色。`,
+          title: '穿上第一件屬性裝備',
+          message: '從下方背包找到剛取得的裝備，點「裝備給角色」。',
+          focusId: 'equipment:equip',
+        }
+      : {}),
+    ...(step === 'collect_reward' && context.battleStatus === 'active'
+      ? {
+          title: '自由接力，殲滅剩餘敵人',
+          message: '六棒教學已完成。繼續從目前角色的六個技能中選招，直到敵人全滅。',
+          focusId: 'battle:skill',
+        }
+      : {}),
+    ...(relay && context.heroName
+      ? {
+          title: `第 ${relay} 棒：${context.heroName}`,
+          message:
+            relay === 1
+              ? `目前由${context.heroName}出手。從下方六個技能選一個，點擊後立即演出並交棒。`
+              : `${context.heroName}已接棒。查看目標狀態，從六個技能選一個延續第 ${relay} 段連技。`,
         }
       : {}),
   };
@@ -138,4 +162,5 @@ export const isFirstHuntCoachFocus = (
   tutorial: TutorialState,
   step: FirstHuntCoachStep,
   focusId: string,
-) => createFirstHuntCoach(tutorial, step)?.focusId === focusId;
+  context: FirstHuntCoachContext = {},
+) => createFirstHuntCoach(tutorial, step, context)?.focusId === focusId;

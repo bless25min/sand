@@ -19,7 +19,9 @@ export function RewardScreen({
   dispatch: React.Dispatch<GuildRpgAction>;
 }) {
   const rewards = state.rewards!;
-  const coach = createFirstHuntCoach(state.preferences.tutorial, state.tutorialStep);
+  const coach = createFirstHuntCoach(state.preferences.tutorial, state.tutorialStep, {
+    surface: 'rewards',
+  });
   return (
     <main className="gr-rewards">
       <header className="gr-reward-hero">
@@ -118,8 +120,14 @@ export function RewardScreen({
         >
           先穿上新裝備
         </button>
-        <button type="button" onClick={() => dispatch({ type: 'GO_TO_FUSION' })}>
-          直接前往技能融合
+        <button
+          type="button"
+          disabled={state.preferences.tutorial === 'active' && state.tutorialStep === 'equip_loot'}
+          onClick={() => dispatch({ type: 'GO_TO_FUSION' })}
+        >
+          {state.preferences.tutorial === 'active' && state.tutorialStep === 'equip_loot'
+            ? '完成裝備教學後開放融合'
+            : '直接前往技能融合'}
         </button>
       </div>
       <p className="gr-status-line" role="status">

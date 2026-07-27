@@ -91,178 +91,193 @@ export function SkillLoadoutPanel({
           );
         })}
       </div>
-      <header className="gr-subheading">
-        <h3>可選技能</h3>
-        <span>將裝備到第 {state.selectedSkillSlot + 1} 格；裝備後自動切換下一位角色</span>
-      </header>
-      <div className="gr-skill-filters" aria-label="技能篩選">
-        <label>
-          屬性
-          <select
-            value={elementFilter}
-            onChange={(event) => setElementFilter(event.currentTarget.value)}
-          >
-            <option value="all">全部</option>
-            {GUILD_GAME_CONTENT.elements.map(({ id, name }) => (
-              <option key={id} value={id}>
-                {name}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label>
-          特化
-          <select
-            value={specializationFilter}
-            onChange={(event) => setSpecializationFilter(event.currentTarget.value)}
-          >
-            <option value="all">全部</option>
-            {GUILD_GAME_CONTENT.skillSpecializations.map(({ id, name }) => (
-              <option key={id} value={id}>
-                {name}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label>
-          觸發
-          <select
-            value={triggerFilter}
-            onChange={(event) => setTriggerFilter(event.currentTarget.value)}
-          >
-            <option value="all">全部</option>
-            {GUILD_GAME_CONTENT.triggerConditions.map(({ id, name }) => (
-              <option key={id} value={id}>
-                {name}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label>
-          星級
-          <select value={starFilter} onChange={(event) => setStarFilter(event.currentTarget.value)}>
-            <option value="all">全部</option>
-            <option value="1">1★</option>
-            <option value="2">2★</option>
-            <option value="3">3★</option>
-          </select>
-        </label>
-      </div>
-      <div className="gr-skill-library">
-        {visibleSkills.length === 0 && <p>目前沒有符合這組屬性、特化與觸發條件的技能。</p>}
-        {visibleSkills.map((skill, index) => {
-          const first = skill.components[0];
-          const selected = state.selectedFusionIds.includes(skill.id);
-          const power = skill.components.reduce((sum, component) => sum + component.power, 0);
-          const canFuse =
-            skill.stars === 1 &&
-            state.profile.skillInventory.some(
-              (candidate) =>
-                candidate.id !== skill.id &&
-                candidate.stars === 1 &&
-                candidate.components[0].element === first.element &&
-                !equippedIds.has(candidate.id),
+      <details
+        className="gr-progressive-library"
+        data-progressive-skill-library="true"
+        open={state.tutorialStep === 'equip_fused'}
+      >
+        <summary>
+          <strong>可選技能與進階篩選</strong>
+          <span>
+            {visibleSkills.length} 張 · 將裝備到第 {state.selectedSkillSlot + 1} 格
+          </span>
+        </summary>
+        <div className="gr-skill-filters" aria-label="技能篩選">
+          <label>
+            屬性
+            <select
+              value={elementFilter}
+              onChange={(event) => setElementFilter(event.currentTarget.value)}
+            >
+              <option value="all">全部</option>
+              {GUILD_GAME_CONTENT.elements.map(({ id, name }) => (
+                <option key={id} value={id}>
+                  {name}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            特化
+            <select
+              value={specializationFilter}
+              onChange={(event) => setSpecializationFilter(event.currentTarget.value)}
+            >
+              <option value="all">全部</option>
+              {GUILD_GAME_CONTENT.skillSpecializations.map(({ id, name }) => (
+                <option key={id} value={id}>
+                  {name}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            觸發
+            <select
+              value={triggerFilter}
+              onChange={(event) => setTriggerFilter(event.currentTarget.value)}
+            >
+              <option value="all">全部</option>
+              {GUILD_GAME_CONTENT.triggerConditions.map(({ id, name }) => (
+                <option key={id} value={id}>
+                  {name}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            星級
+            <select
+              value={starFilter}
+              onChange={(event) => setStarFilter(event.currentTarget.value)}
+            >
+              <option value="all">全部</option>
+              <option value="1">1★</option>
+              <option value="2">2★</option>
+              <option value="3">3★</option>
+            </select>
+          </label>
+        </div>
+        <div className="gr-skill-library">
+          {visibleSkills.length === 0 && <p>目前沒有符合這組屬性、特化與觸發條件的技能。</p>}
+          {visibleSkills.map((skill, index) => {
+            const first = skill.components[0];
+            const selected = state.selectedFusionIds.includes(skill.id);
+            const power = skill.components.reduce((sum, component) => sum + component.power, 0);
+            const canFuse =
+              skill.stars === 1 &&
+              state.profile.skillInventory.some(
+                (candidate) =>
+                  candidate.id !== skill.id &&
+                  candidate.stars === 1 &&
+                  candidate.components[0].element === first.element &&
+                  !equippedIds.has(candidate.id),
+              );
+            const fillsChain = skill.components.some(({ triggerId }) =>
+              [
+                'previous_fire',
+                'previous_grass',
+                'previous_water',
+                'ally_same_element',
+                'team_three_elements',
+                'final_actor',
+              ].includes(triggerId),
             );
-          const fillsChain = skill.components.some(({ triggerId }) =>
-            [
-              'previous_fire',
-              'previous_grass',
-              'previous_water',
-              'ally_same_element',
-              'team_three_elements',
-              'final_actor',
-            ].includes(triggerId),
-          );
-          const highValue = skill.components.some((component) => {
-            const specialization = GUILD_GAME_CONTENT.skillSpecializations.find(
-              ({ id }) => id === component.specializationId,
-            );
-            const trigger = GUILD_GAME_CONTENT.triggerConditions.find(
-              ({ id }) => id === component.triggerId,
-            );
+            const highValue = skill.components.some((component) => {
+              const specialization = GUILD_GAME_CONTENT.skillSpecializations.find(
+                ({ id }) => id === component.specializationId,
+              );
+              const trigger = GUILD_GAME_CONTENT.triggerConditions.find(
+                ({ id }) => id === component.triggerId,
+              );
+              return (
+                component.power >= (specialization?.powerRoll.max ?? Infinity) ||
+                component.triggerAddition >= (trigger?.additionRoll.max ?? Infinity)
+              );
+            });
+            const guideId =
+              state.lastFusedSkillId === skill.id
+                ? 'skill:equip-fused'
+                : index === 0 && !state.lastFusedSkillId
+                  ? 'skill:equip'
+                  : undefined;
             return (
-              component.power >= (specialization?.powerRoll.max ?? Infinity) ||
-              component.triggerAddition >= (trigger?.additionRoll.max ?? Infinity)
+              <article className="gr-skill-card" data-element={first.element} key={skill.id}>
+                <div>
+                  <span>
+                    {skill.stars}★ · {elementName(first.element)}
+                  </span>
+                  <strong>{skill.name}</strong>
+                  <small>
+                    {specializationName(first.specializationId)} · {triggerName(first.triggerId)}
+                  </small>
+                </div>
+                <ol className="gr-skill-components">
+                  {skill.components.map((component, index) =>
+                    (() => {
+                      const element = GUILD_GAME_CONTENT.elements.find(
+                        ({ id }) => id === component.element,
+                      )!;
+                      const specialization = GUILD_GAME_CONTENT.skillSpecializations.find(
+                        ({ id }) => id === component.specializationId,
+                      )!;
+                      const trigger = GUILD_GAME_CONTENT.triggerConditions.find(
+                        ({ id }) => id === component.triggerId,
+                      )!;
+                      return (
+                        <li key={component.id}>
+                          <strong>
+                            {index + 1}. {elementName(component.element)}・
+                            {specializationName(component.specializationId)}・
+                            {triggerName(component.triggerId)}
+                          </strong>
+                          <small>
+                            基礎 +{component.power}（{specialization.powerRoll.min}–
+                            {specialization.powerRoll.max}） · 疊層 +{component.layerStrength}（
+                            {element.layerRoll.min}–{element.layerRoll.max}） · 追加 +
+                            {component.triggerAddition}（{trigger.additionRoll.min}–
+                            {trigger.additionRoll.max}） · 次數 {component.repeatCount}（
+                            {specialization.repeatRoll.min}–{specialization.repeatRoll.max}）
+                          </small>
+                        </li>
+                      );
+                    })(),
+                  )}
+                </ol>
+                <div className="gr-item-tags">
+                  {skill.components.some(({ triggerId }) => !equippedTriggers.has(triggerId)) && (
+                    <span>新觸發</span>
+                  )}
+                  {canFuse && <span>可融合</span>}
+                  {fillsChain && <span>可補鏈</span>}
+                  {highValue && <span>高數值</span>}
+                  <span>
+                    相較目前傷害 {power - currentPower >= 0 ? '+' : ''}
+                    {power - currentPower}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  data-guide-id={guideId}
+                  data-guide-active={
+                    guideId
+                      ? isFirstHuntCoachFocus(
+                          state.preferences.tutorial,
+                          state.tutorialStep,
+                          guideId,
+                        )
+                      : undefined
+                  }
+                  aria-pressed={selected}
+                  onClick={() => dispatch({ type: 'EQUIP_SKILL', skillId: skill.id })}
+                >
+                  裝備到第 {state.selectedSkillSlot + 1} 格
+                </button>
+              </article>
             );
-          });
-          const guideId =
-            state.lastFusedSkillId === skill.id
-              ? 'skill:equip-fused'
-              : index === 0 && !state.lastFusedSkillId
-                ? 'skill:equip'
-                : undefined;
-          return (
-            <article className="gr-skill-card" data-element={first.element} key={skill.id}>
-              <div>
-                <span>
-                  {skill.stars}★ · {elementName(first.element)}
-                </span>
-                <strong>{skill.name}</strong>
-                <small>
-                  {specializationName(first.specializationId)} · {triggerName(first.triggerId)}
-                </small>
-              </div>
-              <ol className="gr-skill-components">
-                {skill.components.map((component, index) =>
-                  (() => {
-                    const element = GUILD_GAME_CONTENT.elements.find(
-                      ({ id }) => id === component.element,
-                    )!;
-                    const specialization = GUILD_GAME_CONTENT.skillSpecializations.find(
-                      ({ id }) => id === component.specializationId,
-                    )!;
-                    const trigger = GUILD_GAME_CONTENT.triggerConditions.find(
-                      ({ id }) => id === component.triggerId,
-                    )!;
-                    return (
-                      <li key={component.id}>
-                        <strong>
-                          {index + 1}. {elementName(component.element)}・
-                          {specializationName(component.specializationId)}・
-                          {triggerName(component.triggerId)}
-                        </strong>
-                        <small>
-                          基礎 +{component.power}（{specialization.powerRoll.min}–
-                          {specialization.powerRoll.max}） · 疊層 +{component.layerStrength}（
-                          {element.layerRoll.min}–{element.layerRoll.max}） · 追加 +
-                          {component.triggerAddition}（{trigger.additionRoll.min}–
-                          {trigger.additionRoll.max}） · 次數 {component.repeatCount}（
-                          {specialization.repeatRoll.min}–{specialization.repeatRoll.max}）
-                        </small>
-                      </li>
-                    );
-                  })(),
-                )}
-              </ol>
-              <div className="gr-item-tags">
-                {skill.components.some(({ triggerId }) => !equippedTriggers.has(triggerId)) && (
-                  <span>新觸發</span>
-                )}
-                {canFuse && <span>可融合</span>}
-                {fillsChain && <span>可補鏈</span>}
-                {highValue && <span>高數值</span>}
-                <span>
-                  相較目前傷害 {power - currentPower >= 0 ? '+' : ''}
-                  {power - currentPower}
-                </span>
-              </div>
-              <button
-                type="button"
-                data-guide-id={guideId}
-                data-guide-active={
-                  guideId
-                    ? isFirstHuntCoachFocus(state.preferences.tutorial, state.tutorialStep, guideId)
-                    : undefined
-                }
-                aria-pressed={selected}
-                onClick={() => dispatch({ type: 'EQUIP_SKILL', skillId: skill.id })}
-              >
-                裝備到第 {state.selectedSkillSlot + 1} 格
-              </button>
-            </article>
-          );
-        })}
-      </div>
+          })}
+        </div>
+      </details>
     </section>
   );
 }

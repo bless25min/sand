@@ -25,10 +25,17 @@ export function GuildRpgApp() {
   }, [state.preferences]);
 
   useEffect(() => {
-    document
-      .querySelector<HTMLElement>('[data-guide-active="true"]')
-      ?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  }, [state.tutorialStep]);
+    if (state.screen === 'battle') return;
+    const target = document.querySelector<HTMLElement>('[data-guide-active="true"]');
+    if (!target) return;
+    const rect = target.getBoundingClientRect();
+    if (rect.top < 0 || rect.bottom > window.innerHeight) {
+      target.scrollIntoView({
+        behavior: state.preferences.motion === 'reduced' ? 'auto' : 'smooth',
+        block: 'center',
+      });
+    }
+  }, [state.preferences.motion, state.screen, state.tutorialStep]);
 
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: 'instant' });

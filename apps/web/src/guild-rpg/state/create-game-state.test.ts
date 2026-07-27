@@ -16,7 +16,7 @@ describe('guild RPG initial state', () => {
     expect(state.profile.party.every(({ skillIds }) => skillIds.length === 6)).toBe(true);
     expect(state.profile.skillInventory).toHaveLength(36);
     expect(state.page).toBe('quest');
-    expect(state.tutorialStep).toBe('inspect_party');
+    expect(state.tutorialStep).toBe('start_hunt');
   });
 
   it('hydrates v4 progression and presentation preferences together', () => {

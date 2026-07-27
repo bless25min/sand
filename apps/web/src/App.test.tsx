@@ -9,7 +9,7 @@ describe('App', () => {
 
     expect(markup).toContain('六人接力刷寶遠征');
     expect(markup).toContain('邊境狼群');
-    expect(markup).toContain('開始狩獵');
+    expect(markup).toContain('開始第一場教學戰');
     expect(markup).not.toContain('data-testid="playable-expedition"');
   });
 
