@@ -6,6 +6,7 @@ import { createCombatEffectPlan } from './combat-effect-plan';
 const scene = (relay: number): GuildCombatScene => ({
   width: 1_000,
   height: 560,
+  layout: 'landscape',
   questId: 'border_pack',
   relay,
   zone: {

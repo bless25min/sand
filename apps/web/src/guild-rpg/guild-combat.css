@@ -925,6 +925,53 @@
   box-shadow: 0 0 12px #ff8a42;
 }
 
+.gr-focus-hud {
+  position: absolute;
+  z-index: 24;
+  top: max(78px, calc(env(safe-area-inset-top) + 74px));
+  right: 8px;
+  left: 8px;
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 8px;
+  pointer-events: none;
+}
+
+.gr-focus-card {
+  display: grid;
+  width: min(42%, 180px);
+  gap: 1px;
+  padding: 6px 8px;
+  border: 1px solid rgb(99 220 169 / 65%);
+  border-radius: 8px;
+  background: rgb(3 12 10 / 82%);
+  box-shadow: inset 3px 0 #52d19a;
+  color: #f7f2df;
+  text-shadow: 0 1px 2px #000;
+}
+
+.gr-focus-card--target {
+  border-color: rgb(255 116 72 / 72%);
+  box-shadow: inset -3px 0 #ef6848;
+  text-align: right;
+}
+
+.gr-focus-card strong {
+  font-size: clamp(12px, 3.4vw, 16px);
+}
+
+.gr-focus-card span {
+  color: #fff0a6;
+  font-size: clamp(11px, 3vw, 14px);
+  font-weight: 900;
+}
+
+.gr-focus-card small {
+  color: #c9d5ce;
+  font-size: 9px;
+}
+
 .gr-battle-unit-controls {
   position: absolute;
   z-index: 15;
@@ -935,8 +982,8 @@
 .gr-battle-unit-controls > button {
   position: absolute;
   display: block;
-  width: clamp(70px, 18vw, 116px);
-  height: clamp(86px, 17vh, 132px);
+  width: clamp(58px, 16vw, 92px);
+  height: clamp(72px, 12vh, 96px);
   min-height: 44px;
   padding: 0;
   transform: translate(-50%, -78%);
@@ -964,7 +1011,7 @@
 }
 
 .gr-battle-unit-controls > button[data-battle-side='enemies'] {
-  width: clamp(78px, 21vw, 130px);
+  width: clamp(64px, 18vw, 104px);
 }
 
 .gr-battle-unit-controls > button[data-cast-ready='true'] {
@@ -1126,37 +1173,25 @@
     sans-serif;
 }
 
-.gr-causal-chain {
-  display: grid;
-  min-width: 0;
-  grid-column: 1;
-  grid-template-columns: repeat(7, auto);
-  gap: 4px;
-  align-items: center;
-  justify-content: start;
-  overflow: hidden;
+.gr-skill-outcome-preview > header i,
+.gr-skill-outcome-preview > header em {
+  padding: 2px 5px;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 9%);
+  color: #ffe4a3;
   font-size: 10px;
-  white-space: nowrap;
-}
-
-.gr-causal-chain > span,
-.gr-causal-chain > strong {
-  padding: 3px 5px;
-  overflow: hidden;
-  border-radius: 5px;
-  background: rgb(255 255 255 / 8%);
-  text-overflow: ellipsis;
-}
-
-.gr-causal-chain > span[data-trigger-ready='true'],
-.gr-causal-chain > strong {
-  color: #fff0a6;
-  background: rgb(135 82 24 / 74%);
-}
-
-.gr-causal-chain > i {
-  color: #d5b36c;
   font-style: normal;
+  font-weight: 900;
+}
+
+.gr-preview-cause {
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+  color: #f2d99d;
+  font-size: 10px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .gr-preview-details {
@@ -1243,7 +1278,7 @@
 
 .gr-command-context {
   display: flex;
-  min-height: 24px !important;
+  min-height: 68px !important;
   align-items: center;
   justify-content: center;
   gap: 9px;
@@ -1274,7 +1309,7 @@
   grid-template-rows: auto auto;
   place-items: center start;
   gap: 1px 5px;
-  padding: 4px 24px 4px 6px;
+  padding: 4px 6px;
   border: 1px solid rgb(242 181 71 / 55%);
   border-radius: 8px;
   background: linear-gradient(135deg, #17241e, #0c1512);
@@ -1286,6 +1321,13 @@
   box-shadow:
     inset 0 0 16px rgb(255 189 69 / 18%),
     0 0 15px rgb(255 123 52 / 32%);
+}
+
+.gr-battle[data-shell='single-screen']
+  .gr-battle-skills
+  [data-battle-skill][data-trigger-readiness='ready'] {
+  border-color: rgb(255 222 113 / 82%);
+  box-shadow: inset 0 0 12px rgb(255 185 66 / 13%);
 }
 
 .gr-skill-glyph {
@@ -1314,25 +1356,32 @@
 
 .gr-battle[data-shell='single-screen'] .gr-battle-skills [data-battle-skill] small {
   grid-column: 2;
+  display: flex;
   width: 100%;
-  overflow: hidden;
-  font-size: 9px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px;
+  color: #e9d9af;
+  font-size: 10px;
 }
 
-.gr-skill-kind {
+.gr-skill-outcome b {
+  color: #fff0a6;
+  font:
+    900 16px/1 'Arial Black',
+    'Noto Sans TC',
+    sans-serif;
+}
+
+.gr-skill-ready {
   position: absolute;
   top: 4px;
   right: 4px;
   color: #f0c96e;
-  max-width: 44%;
-  overflow: hidden;
-  font-size: 8px;
+  font-size: 14px;
   font-style: normal;
   font-weight: 900;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  text-shadow: 0 0 8px #ff8a42;
 }
 
 @media (min-width: 760px) {

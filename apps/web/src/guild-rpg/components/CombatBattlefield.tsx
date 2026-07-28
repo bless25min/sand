@@ -2,10 +2,12 @@ import type { GuildBattleState } from '@expedition/shared-types';
 import type { SkillOutcomePreview } from '@expedition/simulation-core';
 import { lazy, Suspense } from 'react';
 
+import { useBattlefieldLayout } from '../hooks/use-battlefield-layout';
 import type { FirstHuntCoachStep } from '../onboarding/first-hunt-coach';
 import type { GuildPreferences } from '../preferences/guild-preferences';
 import { createBattleScene } from '../presentation/battle-scene';
 import { relayPresentation, type CombatBeat } from '../presentation/combat-beats';
+import { BattleFocusHud } from './BattleFocusHud';
 import { BattlefieldUnitControls } from './BattlefieldUnitControls';
 
 const PixiCombatStage = lazy(async () => {
@@ -43,8 +45,10 @@ export function CombatBattlefield({
   onChooseHero,
 }: CombatBattlefieldProps) {
   const stage = relayPresentation(relay);
+  const layout = useBattlefieldLayout();
   const scene = createBattleScene(battle, {
     relay,
+    layout,
     ...(actingActorId ? { actingActorId } : {}),
     ...(nextActorId ? { nextActorId } : {}),
     ...(currentBeat ? { event: currentBeat.visual } : {}),
@@ -61,6 +65,7 @@ export function CombatBattlefield({
       data-current-actor={actingActorId}
       data-next-actor={nextActorId}
       data-animation-first="true"
+      data-battlefield-layout={layout}
     >
       <div className="gr-relay-energy" aria-label={`接力能量 ${stage.relay} / 6`}>
         {Array.from({ length: 6 }, (_, index) => (
@@ -72,6 +77,8 @@ export function CombatBattlefield({
           />
         ))}
       </div>
+
+      <BattleFocusHud battle={battle} actorId={actingActorId} preview={preview} />
 
       <Suspense
         fallback={

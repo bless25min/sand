@@ -15,6 +15,7 @@ export function BattleCommandDock({
   coach,
   armedSkillId,
   preview,
+  skillPreviews,
   onChooseSkill,
 }: {
   state: GuildRpgState;
@@ -25,6 +26,7 @@ export function BattleCommandDock({
   coach?: FirstHuntCoach | undefined;
   armedSkillId?: string | undefined;
   preview?: SkillOutcomePreview | undefined;
+  skillPreviews: ReadonlyMap<string, SkillOutcomePreview>;
   onChooseSkill(skillId: string): void;
 }) {
   const victory = state.battle?.status === 'victory';
@@ -89,6 +91,7 @@ export function BattleCommandDock({
           <SixSkillControls
             state={state}
             armedSkillId={armedSkillId}
+            previews={skillPreviews}
             onChooseSkill={onChooseSkill}
             locked={playback.isPlaying}
           />

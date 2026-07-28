@@ -15,6 +15,7 @@ describe('battle scene projection', () => {
     const battle = startGuildQuest(profile, 'border_pack', GUILD_GAME_CONTENT);
     const scene = createBattleScene(battle, {
       relay: 1,
+      layout: 'landscape',
       actingActorId: 'brann',
       nextActorId: 'lyra',
     });
@@ -33,6 +34,31 @@ describe('battle scene projection', () => {
       side: 'heroes',
     });
     expect(scene.zone.id).toBe('greyfang_frontier');
+  });
+
+  it('uses a portrait-native formation instead of squeezing the widescreen stage', () => {
+    const profile = createGuildProfile(GUILD_GAME_CONTENT);
+    const battle = startGuildQuest(profile, 'border_pack', GUILD_GAME_CONTENT);
+    const scene = createBattleScene(battle, { relay: 1, layout: 'portrait' });
+
+    expect(scene).toMatchObject({ width: 600, height: 900, layout: 'portrait' });
+    expect(
+      scene.units.filter(({ side }) => side === 'heroes').map(({ x, y }) => ({ x, y })),
+    ).toEqual([
+      { x: 100, y: 650 },
+      { x: 300, y: 650 },
+      { x: 500, y: 650 },
+      { x: 100, y: 805 },
+      { x: 300, y: 805 },
+      { x: 500, y: 805 },
+    ]);
+    expect(
+      scene.units.filter(({ side }) => side === 'enemies').map(({ x, y }) => ({ x, y })),
+    ).toEqual([
+      { x: 110, y: 360 },
+      { x: 300, y: 330 },
+      { x: 490, y: 360 },
+    ]);
   });
 
   it('preserves selected targets, status layers and defeated state for the renderer', () => {

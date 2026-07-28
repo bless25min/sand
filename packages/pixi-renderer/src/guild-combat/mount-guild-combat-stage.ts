@@ -6,6 +6,7 @@ import type { GuildCombatScene } from './contracts';
 import { drawCombatBackground, type AmbientNode } from './draw-background';
 import { drawCombatEffects, type EffectNodes } from './draw-effects';
 import { drawCombatUnits, type UnitNode } from './draw-units';
+import { fitCombatViewport } from './fit-combat-viewport';
 
 export interface MountGuildCombatStageInput {
   host: HTMLElement;
@@ -27,6 +28,8 @@ interface RenderNodes {
   units: readonly UnitNode[];
   effects: EffectNodes;
   effectStartedAt: number;
+  cameraX: number;
+  cameraY: number;
 }
 
 const routePosition = (
@@ -71,23 +74,43 @@ export async function mountGuildCombatStage(
 
   let currentScene = input.scene;
   let currentPlan = createCombatEffectPlan(currentScene);
+  let viewport = { width: currentScene.width, height: currentScene.height };
   let nodes: RenderNodes;
+
+  const fitWorld = (world: Container, scene: GuildCombatScene) => {
+    const fit = fitCombatViewport(scene, viewport);
+    const cameraX = fit.x + (scene.width * fit.scale) / 2;
+    const cameraY = fit.y + (scene.height * fit.scale) / 2;
+    world.pivot.set(scene.width / 2, scene.height / 2);
+    world.position.set(cameraX, cameraY);
+    world.scale.set(fit.scale * currentPlan.cameraZoom);
+    return { cameraX, cameraY };
+  };
 
   const draw = (scene: GuildCombatScene): RenderNodes => {
     app.stage.removeChildren().forEach((child) => child.destroy({ children: true }));
     const world = new Container();
-    world.pivot.set(scene.width / 2, scene.height / 2);
-    world.position.set(scene.width / 2, scene.height / 2);
     const plan = createCombatEffectPlan(scene);
-    world.scale.set(plan.cameraZoom);
     app.stage.addChild(world);
     const ambient = drawCombatBackground(world, scene, plan.ambientParticles);
     const units = drawCombatUnits(world, scene);
     const effects = drawCombatEffects(world, scene, plan);
-    return { world, ambient, units, effects, effectStartedAt: performance.now() };
+    const camera = fitWorld(world, scene);
+    return { world, ambient, units, effects, effectStartedAt: performance.now(), ...camera };
   };
 
   nodes = draw(currentScene);
+
+  const resizeToHost = () => {
+    const bounds = input.host.getBoundingClientRect();
+    if (bounds.width <= 0 || bounds.height <= 0) return;
+    viewport = { width: bounds.width, height: bounds.height };
+    app.renderer.resize(bounds.width, bounds.height);
+    Object.assign(nodes, fitWorld(nodes.world, currentScene));
+  };
+  const observer = new ResizeObserver(resizeToHost);
+  observer.observe(input.host);
+  resizeToHost();
 
   const tick = () => {
     const now = performance.now();
@@ -122,8 +145,8 @@ export async function mountGuildCombatStage(
       if (currentPlan.shakePx > 0 && currentScene.event?.camera !== 'none') {
         const decay = 1 - progress;
         nodes.world.position.set(
-          currentScene.width / 2 + Math.sin(elapsed * 64) * currentPlan.shakePx * decay,
-          currentScene.height / 2 + Math.cos(elapsed * 53) * currentPlan.shakePx * decay,
+          nodes.cameraX + Math.sin(elapsed * 64) * currentPlan.shakePx * decay,
+          nodes.cameraY + Math.cos(elapsed * 53) * currentPlan.shakePx * decay,
         );
       }
     }
@@ -169,8 +192,10 @@ export async function mountGuildCombatStage(
       currentScene = scene;
       currentPlan = createCombatEffectPlan(scene);
       nodes = draw(scene);
+      resizeToHost();
     },
     destroy() {
+      observer.disconnect();
       app.ticker.remove(tick);
       app.destroy({ removeView: true });
       if (canvas.parentElement === input.host) canvas.remove();

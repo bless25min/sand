@@ -98,6 +98,7 @@ export interface GuildCombatScenePreview {
 export interface GuildCombatScene {
   width: number;
   height: number;
+  layout: 'portrait' | 'landscape';
   questId: string;
   zone: GuildZoneVisual;
   relay: number;

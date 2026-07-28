@@ -43,6 +43,7 @@
 ### Task 1: Responsive battlefield with focus-only HUD
 
 **Interfaces:**
+
 - Produces `fitCombatViewport(scene, viewport): { scale; x; y }`.
 - Produces `GuildCombatScene.layout: 'portrait' | 'landscape'`.
 - Produces `useBattlefieldLayout(): GuildCombatScene['layout']`.
@@ -50,10 +51,15 @@
 - [ ] **Step 1: Write failing renderer and scene tests**
 
 ```ts
-expect(fitCombatViewport({ width: 600, height: 900 }, { width: 390, height: 647 }))
-  .toEqual({ scale: 0.65, x: 0, y: 31 });
-expect(createBattleScene(battle, { relay: 1, layout: 'portrait' }).units)
-  .toMatchObject([{ x: 100, y: 650 }, { x: 300, y: 650 }]);
+expect(fitCombatViewport({ width: 600, height: 900 }, { width: 390, height: 647 })).toEqual({
+  scale: 0.65,
+  x: 0,
+  y: 31,
+});
+expect(createBattleScene(battle, { relay: 1, layout: 'portrait' }).units).toMatchObject([
+  { x: 100, y: 650 },
+  { x: 300, y: 650 },
+]);
 ```
 
 - [ ] **Step 2: Run focused tests and verify failure**
@@ -66,7 +72,11 @@ Expected: FAIL because the fit helper and portrait layout do not exist.
 ```ts
 export const fitCombatViewport = (scene: Size, viewport: Size) => {
   const scale = Math.min(viewport.width / scene.width, viewport.height / scene.height);
-  return { scale, x: (viewport.width - scene.width * scale) / 2, y: (viewport.height - scene.height * scale) / 2 };
+  return {
+    scale,
+    x: (viewport.width - scene.width * scale) / 2,
+    y: (viewport.height - scene.height * scale) / 2,
+  };
 };
 ```
 
@@ -79,6 +89,7 @@ Assert each `[data-battle-unit]` rectangle has zero intersection with every peer
 ## Task 2: Outcome-first skill selection and battlefield preview
 
 **Interfaces:**
+
 - Produces `SkillTilePresentation { intentName; primaryValue; hits; statusDelta; readiness }`.
 - `BattleScreen` produces `ReadonlyMap<string, SkillOutcomePreview>` for the active actor’s six skills.
 - `SixSkillControls` consumes the preview map; selected preview remains the existing formal preview.

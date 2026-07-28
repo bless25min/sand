@@ -23,21 +23,30 @@ const unitAccent = (unit: GuildCombatSceneUnit) =>
   unit.hero?.accent ?? unit.enemy?.accent ?? 0xf0d39a;
 
 function drawStatusPips(root: Container, unit: GuildCombatSceneUnit) {
+  const after = unit.preview?.afterStatus ?? unit.statusLayers;
   const statuses = [
-    ['burn', unit.statusLayers.burn],
-    ['poison', unit.statusLayers.poison],
-    ['tide', unit.statusLayers.tide],
+    ['burn', unit.statusLayers.burn, after.burn],
+    ['poison', unit.statusLayers.poison, after.poison],
+    ['tide', unit.statusLayers.tide, after.tide],
   ] as const;
   let offset = -43;
-  for (const [kind, value] of statuses) {
+  let vertical = -116;
+  for (const [kind, before, value] of statuses) {
     if (value <= 0) continue;
     const badge = new Container();
-    badge.position.set(offset, -148);
+    badge.position.set(
+      unit.side === 'heroes' ? 48 : offset,
+      unit.side === 'heroes' ? vertical : -148,
+    );
     badge.addChild(
       new Graphics()
         .roundRect(0, 0, 42, 25, 9)
         .fill({ color: STATUS_COLORS[kind], alpha: 0.86 })
-        .stroke({ color: 0xffffff, width: 1, alpha: 0.44 }),
+        .stroke({
+          color: 0xffffff,
+          width: before === value ? 1 : 3,
+          alpha: before === value ? 0.44 : 0.9,
+        }),
     );
     const label = new Text({
       text: `${kind === 'burn' ? '燃' : kind === 'poison' ? '毒' : '潮'}${value}`,
@@ -53,26 +62,13 @@ function drawStatusPips(root: Container, unit: GuildCombatSceneUnit) {
     badge.addChild(label);
     root.addChild(badge);
     offset += 46;
+    vertical += 29;
   }
 }
 
 function drawIdentity(root: Container, unit: GuildCombatSceneUnit) {
   const hud = createCombatUnitHud(unit);
-  const name = new Text({
-    text: unit.name,
-    style: {
-      fill: unit.state === 'defeated' ? 0x77807c : 0xf7f2df,
-      fontFamily: '"Noto Sans TC", "Microsoft JhengHei", sans-serif',
-      fontSize: unit.enemy?.crowned ? 26 : 22,
-      fontWeight: '800',
-      stroke: { color: 0x07110e, width: 4 },
-    },
-  });
-  name.anchor.set(0.5);
-  name.position.set(0, 18);
-  root.addChild(name);
-
-  const barWidth = unit.enemy?.crowned ? 160 : 132;
+  const barWidth = unit.enemy?.crowned ? 112 : 96;
   const currentRatio =
     unit.currentHp === undefined
       ? unit.hpRatio
@@ -107,20 +103,6 @@ function drawIdentity(root: Container, unit: GuildCombatSceneUnit) {
   }
   root.addChild(hp);
 
-  const hpLabel = new Text({
-    text: hud.projectedHpLabel ?? hud.hpLabel,
-    style: {
-      fill: unit.preview ? 0xffe28c : 0xe8eee9,
-      fontFamily: '"Noto Sans TC", "Microsoft JhengHei", sans-serif',
-      fontSize: 18,
-      fontWeight: '800',
-      stroke: { color: 0x07110e, width: 3 },
-    },
-  });
-  hpLabel.anchor.set(0.5);
-  hpLabel.position.set(0, 58);
-  root.addChild(hpLabel);
-
   if (hud.impactLabel) {
     const change = new Text({
       text: hud.impactLabel,
@@ -133,7 +115,7 @@ function drawIdentity(root: Container, unit: GuildCombatSceneUnit) {
       },
     });
     change.anchor.set(0.5);
-    change.position.set(0, 80);
+    change.position.set(0, 62);
     root.addChild(change);
   }
 }

@@ -13,6 +13,7 @@ export type BattleScene = GuildCombatScene;
 
 export interface BattleSceneContext {
   relay: number;
+  layout?: GuildCombatScene['layout'];
   actingActorId?: string;
   nextActorId?: string;
   event?: VisualEvent;
@@ -34,19 +35,37 @@ const ENEMY_POSITIONS = [
   { x: 690, y: 425 },
 ] as const;
 
+const PORTRAIT_HERO_POSITIONS = [
+  { x: 100, y: 650 },
+  { x: 300, y: 650 },
+  { x: 500, y: 650 },
+  { x: 100, y: 805 },
+  { x: 300, y: 805 },
+  { x: 500, y: 805 },
+] as const;
+
+const PORTRAIT_ENEMY_POSITIONS = [
+  { x: 110, y: 360 },
+  { x: 300, y: 330 },
+  { x: 490, y: 360 },
+] as const;
+
 const emptyLayers = (): StatusLayers => ({ burn: 0, poison: 0, tide: 0 });
 
 export function createBattleScene(
   battle: GuildBattleState,
   context: BattleSceneContext,
 ): BattleScene {
+  const layout = context.layout ?? 'landscape';
+  const heroPositions = layout === 'portrait' ? PORTRAIT_HERO_POSITIONS : HERO_POSITIONS;
+  const enemyPositions = layout === 'portrait' ? PORTRAIT_ENEMY_POSITIONS : ENEMY_POSITIONS;
   let heroIndex = 0;
   let enemyIndex = 0;
   const units = battle.units.map((unit): GuildCombatSceneUnit => {
     const position =
       unit.side === 'heroes'
-        ? HERO_POSITIONS[Math.min(heroIndex++, HERO_POSITIONS.length - 1)]!
-        : ENEMY_POSITIONS[Math.min(enemyIndex++, ENEMY_POSITIONS.length - 1)]!;
+        ? heroPositions[Math.min(heroIndex++, heroPositions.length - 1)]!
+        : enemyPositions[Math.min(enemyIndex++, enemyPositions.length - 1)]!;
     const selected = battle.selectedTargetId === unit.id;
     const preview = context.preview?.units.find(({ id }) => id === unit.id);
     const hit = context.event?.targetId === unit.id && context.event.phase === 'impact';
@@ -94,8 +113,9 @@ export function createBattleScene(
     };
   });
   return {
-    width: 1_000,
-    height: 560,
+    width: layout === 'portrait' ? 600 : 1_000,
+    height: layout === 'portrait' ? 900 : 560,
+    layout,
     questId: battle.questId,
     zone: zoneVisualForQuest(battle.questId),
     relay: Math.max(1, Math.min(6, Math.trunc(context.relay))),

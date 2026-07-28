@@ -8,7 +8,7 @@ import { guildRpgReducer } from '../state/game-reducer';
 import { SkillOutcomePreviewPanel } from './SkillOutcomePreviewPanel';
 
 describe('SkillOutcomePreviewPanel', () => {
-  it('explains an armed skill as one compact causal chain before optional numbers', () => {
+  it('groups visible outcomes by affected unit without an engine-field causal chain', () => {
     const state = guildRpgReducer(createGuildRpgState(), {
       type: 'START_QUEST',
       questId: 'border_pack',
@@ -37,15 +37,14 @@ describe('SkillOutcomePreviewPanel', () => {
       />,
     );
 
-    expect(markup.match(/data-causal-step=/g) ?? []).toHaveLength(4);
-    expect(markup).toContain('data-causal-step="element"');
-    expect(markup).toContain('data-causal-step="specialization"');
-    expect(markup).toContain('data-causal-step="trigger"');
-    expect(markup).toContain('data-causal-step="result"');
-    expect(markup).toContain('data-trigger-ready=');
+    expect(markup).toContain('data-preview-total=');
+    expect(markup).toContain(`data-preview-unit="${target.id}"`);
+    expect(markup).toContain(`${target.currentHp} →`);
+    expect(markup).not.toContain('data-causal-step=');
+    expect(markup).not.toContain('疊層');
+    expect(markup).not.toContain('開戰');
     expect(markup).toContain('<details');
-    expect(markup.indexOf('data-causal-step="result"')).toBeLessThan(
-      markup.indexOf('class="gr-preview-formula"'),
-    );
+    expect(markup).toContain('結果');
+    expect(markup).toContain('計算');
   });
 });

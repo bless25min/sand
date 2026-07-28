@@ -1,12 +1,12 @@
-import type { BattleUnit, GuildSkillItem, StatusLayers } from '@expedition/shared-types';
 import type { SkillOutcomePreview } from '@expedition/simulation-core';
+import type { BattleUnit, GuildSkillItem, StatusLayers } from '@expedition/shared-types';
 
-import { elementName, specializationName, triggerName } from '../content-labels';
+import { createSkillTilePresentation, previewCause } from '../presentation/skill-tile-presentation';
 
 const STATUS_LABELS: Readonly<Record<keyof StatusLayers, string>> = {
-  burn: '燃燒',
-  poison: '毒素',
-  tide: '蓄潮',
+  burn: '燃',
+  poison: '毒',
+  tide: '潮',
 };
 
 const statusChanges = (
@@ -30,33 +30,23 @@ export function SkillOutcomePreviewPanel({
   preview: SkillOutcomePreview;
   units: readonly BattleUnit[];
 }) {
-  const component = skill.components[0]!;
+  const component = skill.components[0];
+  const presentation = createSkillTilePresentation(skill, preview);
   const targetPreview = preview.units.find(({ id }) => id === target.id)!;
   const effectiveDefense = Math.max(0, target.stats.defense - (target.defenseReduction ?? 0));
   const firstHit = Math.max(
     0,
     actor.stats.attack + component.power + (actor.strengthened ?? 0) - effectiveDefense,
   );
-  const hitEvents = preview.events.filter(({ kind }) => kind === 'damage' || kind === 'reaction');
-  const triggeredEvents = preview.events.filter(({ kind }) => kind === 'triggered');
-  const triggerReady = triggeredEvents.length > 0;
   const affected = preview.units.filter(
-    ({
-      damage,
-      healing,
-      beforeStatus,
-      afterStatus,
-      beforeDefenseReduction,
-      afterDefenseReduction,
-      beforeStrengthened,
-      afterStrengthened,
-    }) =>
-      damage > 0 ||
-      healing > 0 ||
-      statusChanges(beforeStatus, afterStatus).length > 0 ||
-      beforeDefenseReduction !== afterDefenseReduction ||
-      beforeStrengthened !== afterStrengthened,
+    (unit) =>
+      unit.damage > 0 ||
+      unit.healing > 0 ||
+      statusChanges(unit.beforeStatus, unit.afterStatus).length > 0 ||
+      unit.beforeDefenseReduction !== unit.afterDefenseReduction ||
+      unit.beforeStrengthened !== unit.afterStrengthened,
   );
+  const cause = previewCause(preview);
 
   return (
     <section
@@ -66,47 +56,26 @@ export function SkillOutcomePreviewPanel({
       aria-live="polite"
     >
       <header>
-        <span>{skill.stars}★</span>
-        <strong>{skill.name}</strong>
-        <b data-preview-total={preview.totalDamage}>預計 {preview.totalDamage}</b>
+        <span aria-hidden="true">{skill.stars}★</span>
+        <strong>{presentation.intentName}</strong>
+        <b data-preview-total={preview.totalDamage}>{presentation.primaryValue}</b>
+        <i aria-hidden="true">×{presentation.hits}</i>
+        {presentation.statusDelta && (
+          <em aria-hidden="true">
+            {STATUS_LABELS[presentation.statusDelta.kind]}
+            {presentation.statusDelta.amount > 0 ? '+' : ''}
+            {presentation.statusDelta.amount}
+          </em>
+        )}
       </header>
-      <div className="gr-causal-chain" aria-label="技能效果關係">
-        <span data-causal-step="element">{elementName(component.element)}</span>
-        <i aria-hidden="true">→</i>
-        <span data-causal-step="specialization">
-          {specializationName(component.specializationId)}
-        </span>
-        <i aria-hidden="true">→</i>
-        <span data-causal-step="trigger" data-trigger-ready={triggerReady}>
-          {triggerReady ? '✓' : '○'} {triggerName(component.triggerId)}
-        </span>
-        <i aria-hidden="true">→</i>
-        <strong data-causal-step="result">
-          {hitEvents.length}擊 · {preview.totalDamage}
-        </strong>
-      </div>
+      {cause && <p className="gr-preview-cause">{cause}</p>}
       <details className="gr-preview-details">
-        <summary>數值詳情</summary>
-        <div className="gr-preview-formula">
-          <span>攻 {actor.stats.attack}</span>
-          <i>＋</i>
-          <span>技 {component.power}</span>
-          {(actor.strengthened ?? 0) > 0 && (
-            <>
-              <i>＋</i>
-              <span>強 {actor.strengthened}</span>
-            </>
-          )}
-          <i>－</i>
-          <span>防 {effectiveDefense}</span>
-          <i>＝</i>
-          <strong>首擊 {firstHit}</strong>
-        </div>
-        <div className="gr-preview-result">
+        <summary>詳細</summary>
+        <div className="gr-preview-result" data-preview-section="result">
+          <b>結果</b>
           <strong>
-            {target.name} HP {targetPreview.beforeHp} → {targetPreview.afterHp}
+            {target.name} {targetPreview.beforeHp} → {targetPreview.afterHp}
           </strong>
-          {triggeredEvents.length > 0 && <span>追加 {triggeredEvents.length} 次</span>}
           {preview.overkill > 0 && <span>OVERKILL +{preview.overkill}</span>}
         </div>
         <div className="gr-preview-deltas">
@@ -115,23 +84,39 @@ export function SkillOutcomePreviewPanel({
             return (
               <span data-preview-unit={unit.id} key={unit.id}>
                 {source?.name ?? unit.id}
-                {unit.damage > 0 ? ` −${unit.damage}` : ''}
-                {unit.healing > 0 ? ` +${unit.healing}HP` : ''}
+                {unit.damage > 0 ? ` −${unit.damage} HP` : ''}
+                {unit.healing > 0 ? ` +${unit.healing} HP` : ''}
                 {statusChanges(unit.beforeStatus, unit.afterStatus).map(
                   (change) => ` · ${change.label} ${change.before}→${change.after}`,
                 )}
                 {unit.beforeDefenseReduction !== unit.afterDefenseReduction
-                  ? ` · 削防 ${unit.beforeDefenseReduction}→${unit.afterDefenseReduction}`
+                  ? ` · 防禦降低 ${unit.beforeDefenseReduction}→${unit.afterDefenseReduction}`
                   : ''}
                 {unit.beforeStrengthened !== unit.afterStrengthened
-                  ? ` · 強化 ${unit.beforeStrengthened}→${unit.afterStrengthened}`
+                  ? ` · 攻擊增加 ${unit.beforeStrengthened}→${unit.afterStrengthened}`
                   : ''}
               </span>
             );
           })}
         </div>
+        <div className="gr-preview-formula" data-preview-section="calculation">
+          <b>計算</b>
+          <span>攻擊 {actor.stats.attack}</span>
+          <i>＋</i>
+          <span>技能 {component.power}</span>
+          {(actor.strengthened ?? 0) > 0 && (
+            <>
+              <i>＋</i>
+              <span>強化 {actor.strengthened}</span>
+            </>
+          )}
+          <i>－</i>
+          <span>防禦 {effectiveDefense}</span>
+          <i>＝</i>
+          <strong>基本命中 {firstHit}</strong>
+        </div>
       </details>
-      <small>點敵人施放；再點此技能則攻擊目前目標</small>
+      <small>再點此技能施放；點其他敵人可改變目標並施放</small>
     </section>
   );
 }

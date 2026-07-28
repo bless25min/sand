@@ -74,16 +74,26 @@ export function BattleScreen({
     : undefined;
   const actor = battle.units.find(({ id }) => id === order.activeAdventurerId);
   const target = battle.units.find(({ id }) => id === battle.selectedTargetId);
-  const skillPreview = useMemo<SkillOutcomePreview | undefined>(() => {
-    if (!armedSkillId || !actor || !target || battle.status !== 'active') return undefined;
-    return previewSkillOutcome({
-      battle,
-      actorId: actor.id,
-      skillId: armedSkillId,
-      targetId: target.id,
-      content: createSkillEngineContent(state.profile),
-    });
-  }, [actor, armedSkillId, battle, state.profile, target]);
+  const commandMember = state.profile.party.find(
+    ({ definitionId }) => definitionId === order.activeAdventurerId,
+  );
+  const skillPreviews = useMemo<ReadonlyMap<string, SkillOutcomePreview>>(() => {
+    if (!actor || !target || !commandMember || battle.status !== 'active') return new Map();
+    const content = createSkillEngineContent(state.profile);
+    return new Map(
+      commandMember.skillIds.map((skillId) => [
+        skillId,
+        previewSkillOutcome({
+          battle,
+          actorId: actor.id,
+          skillId,
+          targetId: target.id,
+          content,
+        }),
+      ]),
+    );
+  }, [actor, battle, commandMember, state.profile, target]);
+  const skillPreview = armedSkillId ? skillPreviews.get(armedSkillId) : undefined;
 
   useEffect(() => {
     setArmedSkillId(undefined);
@@ -187,6 +197,7 @@ export function BattleScreen({
         coach={coach}
         armedSkillId={armedSkillId}
         preview={skillPreview}
+        skillPreviews={skillPreviews}
         onChooseSkill={chooseSkill}
       />
       <p className="gr-status-line gr-sr-only" role="status">

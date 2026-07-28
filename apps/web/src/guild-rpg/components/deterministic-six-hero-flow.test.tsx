@@ -171,7 +171,6 @@ describe('deterministic six-hero interface', () => {
     expect(markup.match(/data-battle-side="enemies"/g) ?? []).toHaveLength(3);
     expect(markup.match(/data-relay-energy=/g) ?? []).toHaveLength(6);
     expect(markup.match(/data-battle-skill=/g) ?? []).toHaveLength(6);
-    expect(markup.match(/data-skill-abbreviation=/g) ?? []).toHaveLength(6);
     expect(markup).toContain('data-combat-battlefield="true"');
     expect(markup).toContain('data-pixi-combat-stage="true"');
     expect(markup).toContain('data-combat-canvas-host="true"');
@@ -182,19 +181,21 @@ describe('deterministic six-hero interface', () => {
     expect(markup).not.toContain('戰鬥詳情');
     expect(markup).toContain('data-current-actor="brann"');
     expect(markup).toContain('data-next-actor="lyra"');
+    expect(markup).toContain('data-focus-actor="brann"');
+    expect(markup).toContain(`data-focus-target="${targetId}"`);
     expect(markup).toContain('data-animation-first="true"');
     expect(markup).toContain('class="gr-battle-guide-strip"');
     const activeMember = state.profile.party.find(
       ({ definitionId }) => definitionId === state.battle?.roundOrder?.activeAdventurerId,
     )!;
-    const firstSkill = state.profile.skillInventory.find(
-      ({ id }) => id === activeMember.skillIds[0],
-    )!;
-    const firstComponent = firstSkill.components[0];
-    expect(markup).toContain(firstSkill.name);
-    expect(markup).toContain(`data-skill-power="${firstComponent.power}"`);
-    expect(markup).toContain(`data-skill-hits="${firstComponent.repeatCount}"`);
-    expect(markup).toContain(`data-skill-layers="${firstComponent.layerStrength}"`);
+    expect(activeMember.skillIds).toHaveLength(6);
+    expect(markup.match(/data-skill-total=/g) ?? []).toHaveLength(6);
+    expect(markup).not.toContain('data-skill-power=');
+    expect(markup).not.toContain('data-skill-layers=');
+    expect(markup).not.toContain('威力 +');
+    expect(markup).not.toContain('疊層 ·');
+    expect(markup).not.toContain('開戰');
+    expect(markup).not.toContain('追燃');
     expect(markup).not.toContain('gr-skill-info');
     expect(markup).not.toContain('gr-unit-hp');
     expect(markup).not.toContain('gr-unit-status');

@@ -30,6 +30,33 @@ const expectMinTouchTarget = async (page: Page, selector: string, minimum = 44) 
   }
 };
 
+const expectNoPairwiseOverlap = async (page: Page, selector: string) => {
+  const boxes = await page.locator(selector).evaluateAll((elements) =>
+    elements.map((element) => {
+      const rect = element.getBoundingClientRect();
+      return {
+        id: element.getAttribute('data-battle-unit'),
+        x: rect.x,
+        y: rect.y,
+        width: rect.width,
+        height: rect.height,
+      };
+    }),
+  );
+  for (let left = 0; left < boxes.length; left += 1) {
+    for (let right = left + 1; right < boxes.length; right += 1) {
+      const a = boxes[left]!;
+      const b = boxes[right]!;
+      const horizontal = Math.min(a.x + a.width, b.x + b.width) - Math.max(a.x, b.x);
+      const vertical = Math.min(a.y + a.height, b.y + b.height) - Math.max(a.y, b.y);
+      expect(
+        horizontal <= 1 || vertical <= 1,
+        `${a.id} overlaps ${b.id} by ${horizontal}x${vertical}px`,
+      ).toBe(true);
+    }
+  }
+};
+
 const expectSingleScreen = async (page: Page) => {
   expect(
     await page.evaluate(
@@ -47,6 +74,9 @@ async function expectBattlefieldVisible(page: Page, viewportLabel = 'current vie
   await expect(battlefield).toBeVisible();
   await expect(battlefield.locator('[data-hero-formation]')).toHaveCount(6);
   await expect(battlefield.locator('[data-enemy-formation]')).toHaveCount(3);
+  await expect(battlefield.locator('[data-focus-actor]')).toHaveCount(1);
+  await expect(battlefield.locator('[data-focus-target]')).toHaveCount(1);
+  await expectNoPairwiseOverlap(page, '[data-battle-unit]');
   const box = await battlefield.boundingBox();
   expect(box?.height ?? 0).toBeGreaterThanOrEqual(360);
   const command = await page.locator('.gr-command-dock').boundingBox();
@@ -74,7 +104,7 @@ async function castVisibleSkill(page: Page, castOnBattlefieldTarget = false) {
   await expect(battle).toHaveAttribute('data-playback', 'false');
   await expect(skill).toHaveAttribute('data-armed', 'true');
   await expect(page.locator('[data-skill-preview]')).toBeVisible();
-  await expect(page.locator('[data-skill-preview] [data-causal-step]')).toHaveCount(4);
+  await expect(page.locator('[data-skill-preview] [data-causal-step]')).toHaveCount(0);
   await expect(page.locator('[data-skill-preview] .gr-preview-details')).not.toHaveAttribute(
     'open',
     '',
@@ -142,6 +172,9 @@ test('a new player understands combat, sees six escalating relays, and completes
   await expectSingleScreen(page);
   await expect(page.locator('.gr-battle-guide-strip')).toBeVisible();
   await expect(page.locator('button[data-battle-skill]')).toHaveCount(6);
+  expect((await page.locator('button[data-battle-skill]').allTextContents()).join('')).not.toMatch(
+    /威力|疊層|開戰|追燃/,
+  );
   await expectMinTouchTarget(page, 'button[data-battle-skill]');
   await expectFullyInViewport(page, 'button[data-battle-skill="6"]');
   await expect(page.locator('[data-combat-battlefield]')).toHaveAttribute(
@@ -151,6 +184,10 @@ test('a new player understands combat, sees six escalating relays, and completes
   await expect(page.locator('[data-combat-battlefield]')).toHaveAttribute(
     'data-next-actor',
     'lyra',
+  );
+  await expect(page.locator('[data-combat-battlefield]')).toHaveAttribute(
+    'data-battlefield-layout',
+    'portrait',
   );
   await page.getByRole('button', { name: /灰牙斥候/ }).click();
   await expect(page.locator('[data-battle-side="enemies"][data-targeted="true"]')).toHaveCount(1);
@@ -301,6 +338,10 @@ test('keeps the semantic WebGL battle readable at wide mobile and desktop sizes'
     await expectSingleScreen(page);
     await expect(page.locator('[data-pixi-combat-stage="true"] canvas')).toHaveCount(1);
     await expect(page.locator('button[data-battle-skill]')).toHaveCount(6);
+    await expect(page.locator('[data-combat-battlefield]')).toHaveAttribute(
+      'data-battlefield-layout',
+      viewport.width <= 620 ? 'portrait' : 'landscape',
+    );
     await expectNoHorizontalCrop(page);
     await castVisibleSkill(page);
   }
