@@ -1,10 +1,9 @@
-import { useState } from 'react';
 import { previewTriggerReadiness } from '@expedition/simulation-core';
-import type { SkillSpecialization } from '@expedition/shared-types';
+import type { GuildElement, SkillSpecialization } from '@expedition/shared-types';
 
 import { elementName, specializationName, triggerName } from '../content-labels';
 import { isFirstHuntCoachFocus } from '../onboarding/first-hunt-coach';
-import type { GuildRpgAction, GuildRpgState } from '../state/game-reducer';
+import type { GuildRpgState } from '../state/game-reducer';
 
 const SPECIALIZATION_ABBREVIATIONS: Partial<Record<SkillSpecialization, string>> = {
   blast: '爆破',
@@ -19,22 +18,27 @@ const specializationAbbreviation = (specializationId: SkillSpecialization) =>
   SPECIALIZATION_ABBREVIATIONS[specializationId] ??
   specializationName(specializationId).slice(0, 2);
 
+const STATUS_ABBREVIATIONS: Readonly<Record<GuildElement, string>> = {
+  fire: '燃',
+  grass: '毒',
+  water: '潮',
+};
+
 export function SixSkillControls({
   state,
-  dispatch,
+  armedSkillId,
+  onChooseSkill,
   locked = false,
 }: {
   state: GuildRpgState;
-  dispatch: React.Dispatch<GuildRpgAction>;
+  armedSkillId?: string | undefined;
+  onChooseSkill(skillId: string): void;
   locked?: boolean;
 }) {
   const actorId = state.battle?.roundOrder?.activeAdventurerId;
   const member = state.profile.party.find(({ definitionId }) => definitionId === actorId);
   const targetId = state.battle?.selectedTargetId;
-  const [detailSkillId, setDetailSkillId] = useState<string>();
   if (!member) return null;
-  const detailSkill = state.profile.skillInventory.find(({ id }) => id === detailSkillId);
-  const detailComponent = detailSkill?.components[0];
 
   return (
     <div className="gr-skill-command-layer">
@@ -58,16 +62,24 @@ export function SixSkillControls({
               : '追加未成立；基礎效果可用';
           const skillLabel =
             skill && first
-              ? `${index + 1}，${skill.name}，${elementName(first.element)}，${specializationName(first.specializationId)}，${triggerName(first.triggerId)}，${readinessLabel}`
+              ? `${index + 1}，${skill.name}，威力加${first.power}，${first.repeatCount}擊，${elementName(first.element)}層數加${first.layerStrength}，${triggerName(first.triggerId)}，${readinessLabel}`
               : `${index + 1}，未裝備`;
           return (
             <div className="gr-battle-skill-slot" key={`${skillId}:${index}`}>
               <button
                 type="button"
                 aria-label={skillLabel}
+                aria-pressed={armedSkillId === skillId}
                 data-battle-skill={index + 1}
                 data-element={first?.element}
                 data-trigger-readiness={readinessLabel}
+                data-armed={armedSkillId === skillId}
+                data-skill-power={first?.power}
+                data-skill-hits={first?.repeatCount}
+                data-skill-layers={first?.layerStrength}
+                data-skill-abbreviation={
+                  first ? specializationAbbreviation(first.specializationId) : ''
+                }
                 data-guide-id={index === 0 ? 'battle:skill' : undefined}
                 data-guide-active={
                   index === 0
@@ -79,57 +91,36 @@ export function SixSkillControls({
                       )
                     : undefined
                 }
-                disabled={locked || !skill || !targetId}
-                onClick={() => targetId && dispatch({ type: 'USE_SKILL', skillId, targetId })}
+                disabled={locked || !skill}
+                onClick={() => skill && onChooseSkill(skillId)}
               >
                 <span className="gr-skill-glyph" aria-hidden="true">
                   {first ? elementName(first.element).slice(0, 1) : '－'}
                 </span>
-                <strong data-skill-abbreviation>
-                  {first ? specializationAbbreviation(first.specializationId) : '空位'}
-                </strong>
+                <strong>{skill?.name ?? '空位'}</strong>
+                {first && (
+                  <small>
+                    威力 +{first.power}
+                    {first.specializationId === 'multistrike' ||
+                    first.specializationId === 'chain' ||
+                    first.specializationId === 'blast'
+                      ? ` · ${first.repeatCount}擊`
+                      : ''}
+                    {' · '}
+                    {STATUS_ABBREVIATIONS[first.element]} +{first.layerStrength}
+                    {skill && skill.components.length > 1 ? ` · ${skill.components.length}段` : ''}
+                  </small>
+                )}
+                <i className="gr-skill-kind" aria-hidden="true">
+                  {first
+                    ? `${specializationAbbreviation(first.specializationId)} · ${triggerName(first.triggerId)}`
+                    : ''}
+                </i>
               </button>
-              {skill && (
-                <button
-                  type="button"
-                  className="gr-skill-info"
-                  data-skill-info={index + 1}
-                  aria-label={`查看${skill.name}詳情`}
-                  disabled={locked}
-                  onClick={() => setDetailSkillId(skill.id)}
-                >
-                  i
-                </button>
-              )}
             </div>
           );
         })}
       </div>
-      {detailSkill && detailComponent && (
-        <aside
-          className="gr-skill-detail-overlay"
-          data-skill-detail
-          role="dialog"
-          aria-modal="true"
-        >
-          <button
-            type="button"
-            className="gr-skill-detail-close"
-            aria-label="關閉技能詳情"
-            onClick={() => setDetailSkillId(undefined)}
-          >
-            ×
-          </button>
-          <span>
-            {elementName(detailComponent.element)} · {detailSkill.stars}★
-          </span>
-          <strong>{detailSkill.name}</strong>
-          <small>
-            {specializationName(detailComponent.specializationId)} ·{' '}
-            {triggerName(detailComponent.triggerId)}
-          </small>
-        </aside>
-      )}
     </div>
   );
 }

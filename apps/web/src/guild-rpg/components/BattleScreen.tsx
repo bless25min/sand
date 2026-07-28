@@ -1,7 +1,11 @@
 import { GUILD_GAME_CONTENT } from '@expedition/game-data';
+import { previewSkillOutcome, type SkillOutcomePreview } from '@expedition/simulation-core';
+import { useEffect, useMemo, useState } from 'react';
 
 import { useCombatPlayback } from '../hooks/use-combat-playback';
 import { createFirstHuntCoach } from '../onboarding/first-hunt-coach';
+import { chooseSkillIntent, chooseTargetIntent } from '../presentation/skill-command-intent';
+import { createSkillEngineContent } from '../state/create-skill-engine-content';
 import type { GuildRpgAction, GuildRpgState } from '../state/game-reducer';
 import { BattleCommandDock } from './BattleCommandDock';
 import { CombatBattlefield } from './CombatBattlefield';
@@ -18,6 +22,7 @@ export function BattleScreen({
 }) {
   const battle = state.battle!;
   const order = battle.roundOrder!;
+  const [armedSkillId, setArmedSkillId] = useState<string>();
   const victory = battle.status === 'victory';
   const quest = GUILD_GAME_CONTENT.quests.find(({ id }) => id === battle.questId)!;
   const recentActorId = state.recentEvents.find(({ kind }) => kind === 'skill_cast')?.actorId;
@@ -51,6 +56,43 @@ export function BattleScreen({
         battleStatus: battle.status,
       })
     : undefined;
+  const actor = battle.units.find(({ id }) => id === order.activeAdventurerId);
+  const target = battle.units.find(({ id }) => id === battle.selectedTargetId);
+  const skillPreview = useMemo<SkillOutcomePreview | undefined>(() => {
+    if (!armedSkillId || !actor || !target || battle.status !== 'active') return undefined;
+    return previewSkillOutcome({
+      battle,
+      actorId: actor.id,
+      skillId: armedSkillId,
+      targetId: target.id,
+      content: createSkillEngineContent(state.profile),
+    });
+  }, [actor, armedSkillId, battle, state.profile, target]);
+
+  useEffect(() => {
+    setArmedSkillId(undefined);
+  }, [battle.status, order.activeAdventurerId]);
+
+  const castSkill = (skillId: string, targetId: string) => {
+    setArmedSkillId(undefined);
+    dispatch({ type: 'USE_SKILL', skillId, targetId });
+  };
+  const chooseSkill = (skillId: string) => {
+    const intent = chooseSkillIntent(armedSkillId, skillId, battle.selectedTargetId);
+    if ('cast' in intent) {
+      castSkill(intent.cast.skillId, intent.cast.targetId);
+      return;
+    }
+    if ('arm' in intent) setArmedSkillId(intent.arm);
+  };
+  const chooseTarget = (targetId: string) => {
+    const intent = chooseTargetIntent(armedSkillId, targetId);
+    if ('cast' in intent) {
+      castSkill(intent.cast.skillId, intent.cast.targetId);
+      return;
+    }
+    if ('select' in intent) dispatch({ type: 'SELECT_TARGET', targetId: intent.select });
+  };
 
   return (
     <main className="gr-battle" data-playback={playback.isPlaying} data-shell="single-screen">
@@ -106,9 +148,13 @@ export function BattleScreen({
         actingActorId={actingActorId}
         nextActorId={nextActorId}
         relay={relay}
+        preview={skillPreview}
         locked={playback.isPlaying}
-        onSelectTarget={(targetId) => dispatch({ type: 'SELECT_TARGET', targetId })}
-        onChooseHero={(adventurerId) => dispatch({ type: 'CHOOSE_NEXT_HERO', adventurerId })}
+        onSelectTarget={chooseTarget}
+        onChooseHero={(adventurerId) => {
+          setArmedSkillId(undefined);
+          dispatch({ type: 'CHOOSE_NEXT_HERO', adventurerId });
+        }}
       />
 
       <BattleCommandDock
@@ -118,6 +164,9 @@ export function BattleScreen({
         relay={relay}
         commandActorName={commandActor?.name}
         coach={coach}
+        armedSkillId={armedSkillId}
+        preview={skillPreview}
+        onChooseSkill={chooseSkill}
       />
       <p className="gr-status-line gr-sr-only" role="status">
         {playback.isPlaying ? playback.currentBeat?.label : state.message}

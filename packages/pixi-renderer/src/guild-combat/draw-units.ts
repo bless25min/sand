@@ -1,5 +1,6 @@
 import { Container, Graphics, Text } from 'pixi.js';
 
+import { createCombatUnitHud } from './combat-unit-hud';
 import type { GuildCombatScene, GuildCombatSceneUnit } from './contracts';
 import { drawBossPresence } from './draw-boss-presence';
 import { drawEnemyFigure, drawHeroFigure } from './draw-figures';
@@ -34,7 +35,7 @@ function drawStatusPips(root: Container, unit: GuildCombatSceneUnit) {
     badge.position.set(offset, -148);
     badge.addChild(
       new Graphics()
-        .roundRect(0, 0, 34, 20, 8)
+        .roundRect(0, 0, 42, 25, 9)
         .fill({ color: STATUS_COLORS[kind], alpha: 0.86 })
         .stroke({ color: 0xffffff, width: 1, alpha: 0.44 }),
     );
@@ -43,42 +44,117 @@ function drawStatusPips(root: Container, unit: GuildCombatSceneUnit) {
       style: {
         fill: 0x07110d,
         fontFamily: '"Noto Sans TC", "Microsoft JhengHei", sans-serif',
-        fontSize: 11,
+        fontSize: 15,
         fontWeight: '900',
       },
     });
     label.anchor.set(0.5);
-    label.position.set(17, 10);
+    label.position.set(21, 12.5);
     badge.addChild(label);
     root.addChild(badge);
-    offset += 38;
+    offset += 46;
   }
 }
 
 function drawIdentity(root: Container, unit: GuildCombatSceneUnit) {
+  const hud = createCombatUnitHud(unit);
   const name = new Text({
     text: unit.name,
     style: {
       fill: unit.state === 'defeated' ? 0x77807c : 0xf7f2df,
       fontFamily: '"Noto Sans TC", "Microsoft JhengHei", sans-serif',
-      fontSize: unit.enemy?.crowned ? 17 : 14,
+      fontSize: unit.enemy?.crowned ? 26 : 22,
       fontWeight: '800',
       stroke: { color: 0x07110e, width: 4 },
     },
   });
   name.anchor.set(0.5);
-  name.position.set(0, 28);
+  name.position.set(0, 18);
   root.addChild(name);
 
-  const barWidth = unit.enemy?.crowned ? 118 : 94;
+  const barWidth = unit.enemy?.crowned ? 160 : 132;
+  const currentRatio =
+    unit.currentHp === undefined
+      ? unit.hpRatio
+      : Math.max(0, Math.min(1, unit.currentHp / Math.max(1, unit.maxHp ?? 100)));
   const hp = new Graphics()
-    .roundRect(-barWidth / 2, 44, barWidth, 8, 4)
+    .roundRect(-barWidth / 2, 36, barWidth, 11, 5)
     .fill({ color: 0x0a1211, alpha: 0.88 })
-    .roundRect(-barWidth / 2 + 1, 45, (barWidth - 2) * unit.hpRatio, 6, 3)
+    .roundRect(-barWidth / 2 + 1, 37, (barWidth - 2) * currentRatio, 9, 4)
     .fill({
       color: unit.side === 'heroes' ? 0x62d5a1 : unit.hpRatio < 0.3 ? 0xff6a43 : 0xe55848,
     });
+  if (unit.preview) {
+    const afterRatio = Math.max(
+      0,
+      Math.min(1, unit.preview.afterHp / Math.max(1, unit.maxHp ?? 100)),
+    );
+    if (afterRatio < currentRatio) {
+      hp.rect(
+        -barWidth / 2 + 1 + (barWidth - 2) * afterRatio,
+        37,
+        (barWidth - 2) * (currentRatio - afterRatio),
+        9,
+      ).fill({ color: 0xffb43f, alpha: 0.74 });
+    } else if (afterRatio > currentRatio) {
+      hp.rect(
+        -barWidth / 2 + 1 + (barWidth - 2) * currentRatio,
+        37,
+        (barWidth - 2) * (afterRatio - currentRatio),
+        9,
+      ).fill({ color: 0x75e9ff, alpha: 0.78 });
+    }
+  }
   root.addChild(hp);
+
+  const hpLabel = new Text({
+    text: hud.projectedHpLabel ?? hud.hpLabel,
+    style: {
+      fill: unit.preview ? 0xffe28c : 0xe8eee9,
+      fontFamily: '"Noto Sans TC", "Microsoft JhengHei", sans-serif',
+      fontSize: 18,
+      fontWeight: '800',
+      stroke: { color: 0x07110e, width: 3 },
+    },
+  });
+  hpLabel.anchor.set(0.5);
+  hpLabel.position.set(0, 58);
+  root.addChild(hpLabel);
+
+  const stats = new Text({
+    text: hud.statLabel,
+    style: {
+      fill: 0xb8c6bd,
+      fontFamily: '"Noto Sans TC", "Microsoft JhengHei", sans-serif',
+      fontSize: 15,
+      fontWeight: '700',
+      stroke: { color: 0x07110e, width: 3 },
+    },
+  });
+  stats.anchor.set(0.5);
+  stats.position.set(0, 76);
+  root.addChild(stats);
+
+  if (unit.preview) {
+    const change = new Text({
+      text: [
+        hud.damage > 0 ? `−${hud.damage}` : hud.healing > 0 ? `+${hud.healing}` : '',
+        ...hud.statuses,
+      ]
+        .filter(Boolean)
+        .join(' · '),
+      style: {
+        fill: 0xffd86f,
+        fontFamily: '"Noto Sans TC", "Microsoft JhengHei", sans-serif',
+        fontSize: 16,
+        fontWeight: '900',
+        stroke: { color: 0x1b0903, width: 3 },
+      },
+    });
+    change.anchor.set(0.5);
+    change.position.set(0, 94);
+    root.addChild(change);
+  }
 }
 
 function drawState(root: Container, unit: GuildCombatSceneUnit, relay: number) {

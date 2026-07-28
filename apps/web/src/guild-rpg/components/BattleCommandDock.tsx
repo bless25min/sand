@@ -1,6 +1,9 @@
+import type { SkillOutcomePreview } from '@expedition/simulation-core';
+
 import type { CombatPlayback } from '../hooks/use-combat-playback';
 import type { FirstHuntCoach } from '../onboarding/first-hunt-coach';
 import type { GuildRpgAction, GuildRpgState } from '../state/game-reducer';
+import { SkillOutcomePreviewPanel } from './SkillOutcomePreviewPanel';
 import { SixSkillControls } from './SixSkillControls';
 
 export function BattleCommandDock({
@@ -10,6 +13,9 @@ export function BattleCommandDock({
   relay,
   commandActorName,
   coach,
+  armedSkillId,
+  preview,
+  onChooseSkill,
 }: {
   state: GuildRpgState;
   dispatch: React.Dispatch<GuildRpgAction>;
@@ -17,11 +23,15 @@ export function BattleCommandDock({
   relay: number;
   commandActorName?: string | undefined;
   coach?: FirstHuntCoach | undefined;
+  armedSkillId?: string | undefined;
+  preview?: SkillOutcomePreview | undefined;
+  onChooseSkill(skillId: string): void;
 }) {
   const victory = state.battle?.status === 'victory';
-  const targetName = state.battle?.units.find(
-    ({ id }) => id === state.battle?.selectedTargetId,
-  )?.name;
+  const actorId = state.battle?.roundOrder?.activeAdventurerId;
+  const actor = state.battle?.units.find(({ id }) => id === actorId);
+  const target = state.battle?.units.find(({ id }) => id === state.battle?.selectedTargetId);
+  const skill = state.profile.skillInventory.find(({ id }) => id === armedSkillId);
 
   return (
     <section className="gr-command-dock" data-locked={playback.isPlaying} data-relay={relay}>
@@ -47,17 +57,32 @@ export function BattleCommandDock({
         </div>
       ) : (
         <>
-          <header className="gr-command-context">
-            <strong>{commandActorName ?? '選擇角色'}</strong>
-            <span aria-hidden="true">→</span>
-            <strong>{targetName ?? '選擇目標'}</strong>
-          </header>
+          {preview && actor && target && skill ? (
+            <SkillOutcomePreviewPanel
+              actor={actor}
+              target={target}
+              skill={skill}
+              preview={preview}
+              units={state.battle!.units}
+            />
+          ) : (
+            <header className="gr-command-context">
+              <strong>{commandActorName ?? '選擇角色'}</strong>
+              <span aria-hidden="true">→</span>
+              <strong>{target?.name ?? '選擇目標'}</strong>
+            </header>
+          )}
           <p className="gr-sr-only" role="status">
             {playback.isPlaying
               ? playback.currentBeat?.label
               : (coach?.message ?? `${commandActorName}可從六個技能中自由選擇`)}
           </p>
-          <SixSkillControls state={state} dispatch={dispatch} locked={playback.isPlaying} />
+          <SixSkillControls
+            state={state}
+            armedSkillId={armedSkillId}
+            onChooseSkill={onChooseSkill}
+            locked={playback.isPlaying}
+          />
         </>
       )}
     </section>

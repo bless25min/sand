@@ -20,13 +20,18 @@ export interface SkillEngineContent {
   forms: readonly SkillFormDefinition[];
 }
 
-export function resolveSkill(input: {
+export interface ResolveSkillInput {
   battle: GuildBattleState;
   actorId: string;
   skillId: string;
   targetId: string;
   content: SkillEngineContent;
-}): { battle: GuildBattleState; events: readonly GuildBattleEvent[] } {
+}
+
+export function resolveSkill(input: ResolveSkillInput): {
+  battle: GuildBattleState;
+  events: readonly GuildBattleEvent[];
+} {
   if (input.battle.status !== 'active') throw new Error('Battle is not active.');
   const skill = input.content.skills[input.skillId];
   if (!skill) throw new Error(`Unknown skill: ${input.skillId}`);

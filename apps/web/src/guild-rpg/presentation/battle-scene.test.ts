@@ -1,7 +1,12 @@
 import { GUILD_GAME_CONTENT } from '@expedition/game-data';
-import { createGuildProfile, startGuildQuest } from '@expedition/simulation-core';
+import {
+  createGuildProfile,
+  previewSkillOutcome,
+  startGuildQuest,
+} from '@expedition/simulation-core';
 import { describe, expect, it } from 'vitest';
 
+import { createSkillEngineContent } from '../state/create-skill-engine-content';
 import { createBattleScene } from './battle-scene';
 
 describe('battle scene projection', () => {
@@ -55,5 +60,39 @@ describe('battle scene projection', () => {
       statusLayers: { burn: 8, poison: 5, tide: 2 },
     });
     expect(scene.relay).toBe(6);
+  });
+
+  it('projects exact numeric stats and armed-skill outcomes into the battlefield HUD', () => {
+    const profile = createGuildProfile(GUILD_GAME_CONTENT);
+    const battle = startGuildQuest(profile, 'border_pack', GUILD_GAME_CONTENT);
+    const actorId = battle.roundOrder!.activeAdventurerId!;
+    const targetId = battle.selectedTargetId!;
+    const skillId = profile.party.find(({ definitionId }) => definitionId === actorId)!
+      .skillIds[0]!;
+    const preview = previewSkillOutcome({
+      battle,
+      actorId,
+      targetId,
+      skillId,
+      content: createSkillEngineContent(profile),
+    });
+    const scene = createBattleScene(battle, { relay: 1, preview });
+    const target = scene.units.find(({ id }) => id === targetId);
+
+    expect(target).toMatchObject({
+      currentHp: expect.any(Number),
+      maxHp: expect.any(Number),
+      attack: expect.any(Number),
+      defense: expect.any(Number),
+      preview: {
+        afterHp: expect.any(Number),
+        damage: expect.any(Number),
+      },
+    });
+    expect(scene.preview).toMatchObject({
+      actorId,
+      totalDamage: preview.totalDamage,
+    });
+    expect(scene.preview?.targetIds).toContain(targetId);
   });
 });

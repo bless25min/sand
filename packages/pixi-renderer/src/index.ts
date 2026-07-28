@@ -7,6 +7,7 @@ export type { CreateFormationOffsetInput } from './formations/create-formation-o
 export { PixiPointLayer } from './layers/pixi-point-layer';
 export type { PointTextureMap } from './layers/pixi-point-layer';
 export { createCombatEffectPlan } from './guild-combat/combat-effect-plan';
+export { createCombatUnitHud } from './guild-combat/combat-unit-hud';
 export { mountGuildCombatStage } from './guild-combat/mount-guild-combat-stage';
 export type { CombatEffectPlan, CombatEffectPoint } from './guild-combat/combat-effect-plan';
 export type {
@@ -15,6 +16,7 @@ export type {
 } from './guild-combat/mount-guild-combat-stage';
 export type {
   GuildCombatScene,
+  GuildCombatScenePreview,
   GuildCombatSceneUnit,
   GuildCombatUnitState,
   GuildCombatVisualEvent,
@@ -22,6 +24,7 @@ export type {
   GuildHeroVisual,
   GuildZoneVisual,
 } from './guild-combat/contracts';
+export type { CombatUnitHud } from './guild-combat/combat-unit-hud';
 export { mountPointCloud } from './mount/mount-point-cloud';
 export type { MountedPointCloud, MountPointCloudInput } from './mount/mount-point-cloud';
 export { advanceVisualPoint } from './points/advance-visual-point';

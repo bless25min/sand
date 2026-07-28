@@ -21,13 +21,22 @@ const statusValues = (unit: GuildCombatSceneUnit) =>
     ['tide', '潮', unit.statusLayers.tide],
   ] as const;
 
-const controlLabel = (unit: GuildCombatSceneUnit, battle: GuildBattleState, acted: boolean) => {
+const controlLabel = (
+  unit: GuildCombatSceneUnit,
+  battle: GuildBattleState,
+  acted: boolean,
+  castReady: boolean,
+) => {
+  const source = battle.units.find(({ id }) => id === unit.id);
+  const hp = source
+    ? `${source.currentHp} / ${source.stats.hp}`
+    : `${Math.round(unit.hpRatio * 100)}%`;
   if (unit.side === 'enemies') {
     const selected = battle.selectedTargetId === unit.id;
-    return `${unit.name}，${selected ? '目前目標' : '點擊鎖定'}，生命 ${Math.round(unit.hpRatio * 100)}%`;
+    return `${unit.name}，${castReady ? '點擊施放已選技能' : selected ? '目前目標' : '點擊鎖定'}，生命 ${hp}`;
   }
   const active = battle.roundOrder?.activeAdventurerId === unit.id;
-  return `${unit.name}，${active ? '目前出手' : acted ? '已行動' : '點擊改為出手角色'}，生命 ${Math.round(unit.hpRatio * 100)}%`;
+  return `${unit.name}，${active ? '目前出手' : acted ? '已行動' : '點擊改為出手角色'}，生命 ${hp}`;
 };
 
 export function BattlefieldUnitControls({
@@ -48,6 +57,7 @@ export function BattlefieldUnitControls({
     <div className="gr-battle-unit-controls" aria-label="戰場人物操作">
       {scene.units.map((unit, index) => {
         const defeated = unit.hpRatio <= 0;
+        const castReady = unit.side === 'enemies' && scene.preview !== undefined;
         const acted = order?.actedIds.includes(unit.id) ?? false;
         const active = order?.activeAdventurerId === unit.id;
         const guideId =
@@ -65,7 +75,12 @@ export function BattlefieldUnitControls({
         return (
           <button
             type="button"
-            aria-label={controlLabel(unit, battle, acted)}
+            aria-label={controlLabel(unit, battle, acted, castReady)}
+            aria-pressed={
+              unit.side === 'enemies'
+                ? battle.selectedTargetId === unit.id
+                : order?.activeAdventurerId === unit.id
+            }
             data-battle-unit={unit.id}
             data-battle-side={unit.side}
             data-enemy-formation={unit.side === 'enemies' ? unit.id : undefined}
@@ -75,6 +90,7 @@ export function BattlefieldUnitControls({
             data-next={unit.side === 'heroes' && unit.state === 'next'}
             data-acted={unit.side === 'heroes' && acted}
             data-defeated={defeated}
+            data-cast-ready={castReady}
             data-guide-id={guideId}
             data-guide-active={
               guideId
@@ -96,22 +112,22 @@ export function BattlefieldUnitControls({
               unit.side === 'enemies' ? onSelectTarget(unit.id) : onChooseHero(unit.id)
             }
           >
-            <span>{unit.name}</span>
-            <i className="gr-unit-hp" aria-hidden="true">
-              <i style={{ width: `${unit.hpRatio * 100}%` }} />
-            </i>
-            {unit.side === 'enemies' && (
-              <span className="gr-unit-status" aria-hidden="true">
-                {statusValues(unit).map(([kind, label, value]) =>
+            <span className="gr-unit-fallback" aria-hidden="true">
+              <b>{unit.name}</b>
+              <i>
+                {battle.units.find(({ id }) => id === unit.id)?.currentHp ?? 0} /{' '}
+                {battle.units.find(({ id }) => id === unit.id)?.stats.hp ?? 0}
+              </i>
+              {unit.side === 'enemies' &&
+                statusValues(unit).map(([kind, label, value]) =>
                   value > 0 ? (
-                    <i data-status={kind} key={kind}>
+                    <em key={kind}>
                       {label}
                       {value}
-                    </i>
+                    </em>
                   ) : null,
                 )}
-              </span>
-            )}
+            </span>
           </button>
         );
       })}

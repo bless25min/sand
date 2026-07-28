@@ -49,12 +49,12 @@ const COPY: Readonly<
   },
   select_target: {
     title: '選擇攻擊目標',
-    message: '點一張仍存活的敵人卡；金框會顯示目前鎖定目標。',
+    message: '直接點戰場上仍存活的敵人；角色身上的金色光圈會顯示目前目標。',
     focusId: 'target:first',
   },
   relay_1: {
     title: '第 1 棒',
-    message: '確認目前角色，從下方六個技能選一個；點擊後會立即演出。',
+    message: '確認目前角色，點一次技能查看精準傷害；再點技能或戰場敵人即可施放。',
     focusId: 'battle:skill',
   },
   relay_2: {
@@ -151,8 +151,8 @@ export function createFirstHuntCoach(
           title: `第 ${relay} 棒：${context.heroName}`,
           message:
             relay === 1
-              ? `目前由${context.heroName}出手。從下方六個技能選一個，點擊後立即演出並交棒。`
-              : `${context.heroName}已接棒。查看目標狀態，從六個技能選一個延續第 ${relay} 段連技。`,
+              ? `目前由${context.heroName}出手。點一次六個技能中的任一招預覽，再點技能或敵人施放。`
+              : `${context.heroName}已接棒。先看目標狀態與預計結果，再選技能延續第 ${relay} 段連技。`,
         }
       : {}),
   };

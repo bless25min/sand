@@ -15,7 +15,16 @@ export { createRoundOrder } from './round-order/create-round-order';
 export { chooseNextAdventurer } from './round-order/choose-next-adventurer';
 export { completeTurn } from './round-order/complete-turn';
 export { resetCurrentRoundOrder, setRoundOrderCarry } from './round-order/update-round-order';
-export { resolveSkill, type SkillEngineContent } from './skills/resolve-skill';
+export {
+  resolveSkill,
+  type ResolveSkillInput,
+  type SkillEngineContent,
+} from './skills/resolve-skill';
+export {
+  previewSkillOutcome,
+  type SkillOutcomePreview,
+  type SkillOutcomeUnitPreview,
+} from './skills/preview-skill-outcome';
 export { resolveDeliveryPassive } from './skills/resolve-delivery-passive';
 export { previewTriggerReadiness, type TriggerReadiness } from './skills/preview-trigger-readiness';
 export { triggerMatches, type TriggerContext } from './skills/resolve-trigger';

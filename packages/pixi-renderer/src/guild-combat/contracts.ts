@@ -66,12 +66,33 @@ export interface GuildCombatSceneUnit {
   side: 'heroes' | 'enemies';
   x: number;
   y: number;
+  currentHp?: number;
+  maxHp?: number;
+  attack?: number;
+  defense?: number;
   hpRatio: number;
   state: GuildCombatUnitState;
   selected: boolean;
   statusLayers: StatusLayers;
+  defenseReduction?: number;
+  strengthened?: number;
+  preview?: {
+    afterHp: number;
+    damage: number;
+    healing: number;
+    afterStatus: StatusLayers;
+    afterDefenseReduction: number;
+    afterStrengthened: number;
+  };
   hero?: GuildHeroVisual;
   enemy?: GuildEnemyVisual;
+}
+
+export interface GuildCombatScenePreview {
+  actorId: string;
+  targetIds: readonly string[];
+  totalDamage: number;
+  element?: GuildElement;
 }
 
 export interface GuildCombatScene {
@@ -82,4 +103,5 @@ export interface GuildCombatScene {
   relay: number;
   units: readonly GuildCombatSceneUnit[];
   event?: GuildCombatVisualEvent;
+  preview?: GuildCombatScenePreview;
 }

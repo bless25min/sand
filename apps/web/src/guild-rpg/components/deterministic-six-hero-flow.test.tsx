@@ -179,6 +179,20 @@ describe('deterministic six-hero interface', () => {
     expect(markup).toContain('data-current-actor="brann"');
     expect(markup).toContain('data-next-actor="lyra"');
     expect(markup).toContain('data-animation-first="true"');
+    const activeMember = state.profile.party.find(
+      ({ definitionId }) => definitionId === state.battle?.roundOrder?.activeAdventurerId,
+    )!;
+    const firstSkill = state.profile.skillInventory.find(
+      ({ id }) => id === activeMember.skillIds[0],
+    )!;
+    const firstComponent = firstSkill.components[0];
+    expect(markup).toContain(firstSkill.name);
+    expect(markup).toContain(`data-skill-power="${firstComponent.power}"`);
+    expect(markup).toContain(`data-skill-hits="${firstComponent.repeatCount}"`);
+    expect(markup).toContain(`data-skill-layers="${firstComponent.layerStrength}"`);
+    expect(markup).not.toContain('gr-skill-info');
+    expect(markup).not.toContain('gr-unit-hp');
+    expect(markup).not.toContain('gr-unit-status');
 
     const skillId = state.profile.party[0]!.skillIds[0]!;
     const resolved = guildRpgReducer(state, { type: 'USE_SKILL', skillId, targetId });

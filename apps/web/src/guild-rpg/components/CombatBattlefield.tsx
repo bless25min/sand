@@ -1,4 +1,5 @@
 import type { GuildBattleState } from '@expedition/shared-types';
+import type { SkillOutcomePreview } from '@expedition/simulation-core';
 import { lazy, Suspense } from 'react';
 
 import type { FirstHuntCoachStep } from '../onboarding/first-hunt-coach';
@@ -21,6 +22,7 @@ interface CombatBattlefieldProps {
   actingActorId?: string | undefined;
   nextActorId?: string | undefined;
   relay: number;
+  preview?: SkillOutcomePreview | undefined;
   locked: boolean;
   onSelectTarget(targetId: string): void;
   onChooseHero(adventurerId: string): void;
@@ -35,6 +37,7 @@ export function CombatBattlefield({
   actingActorId,
   nextActorId,
   relay,
+  preview,
   locked,
   onSelectTarget,
   onChooseHero,
@@ -45,6 +48,7 @@ export function CombatBattlefield({
     ...(actingActorId ? { actingActorId } : {}),
     ...(nextActorId ? { nextActorId } : {}),
     ...(currentBeat ? { event: currentBeat.visual } : {}),
+    ...(preview ? { preview } : {}),
   });
   return (
     <section

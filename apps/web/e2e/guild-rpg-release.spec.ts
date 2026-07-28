@@ -49,7 +49,7 @@ async function expectBattlefieldVisible(page: Page, viewportLabel = 'current vie
   ).toBe(true);
 }
 
-async function castVisibleSkill(page: Page) {
+async function castVisibleSkill(page: Page, castOnBattlefieldTarget = false) {
   const battle = page.locator('.gr-battle');
   await expect(battle).toHaveAttribute('data-playback', 'false', { timeout: 12_000 });
   const actorId = await page
@@ -58,6 +58,19 @@ async function castVisibleSkill(page: Page) {
   const skill = page.locator('button[data-battle-skill]:not([disabled])').first();
   await expect(skill).toBeVisible();
   await skill.click();
+  await expect(battle).toHaveAttribute('data-playback', 'false');
+  await expect(skill).toHaveAttribute('data-armed', 'true');
+  await expect(page.locator('[data-skill-preview]')).toBeVisible();
+  await expect(page.locator('[data-skill-preview] [data-preview-total]')).toHaveCount(1);
+  await expect(page.locator('[data-pixi-combat-stage="true"]')).toHaveAttribute(
+    'data-preview-total',
+    /\d+/,
+  );
+  if (castOnBattlefieldTarget) {
+    await page.locator('[data-battle-side="enemies"]:not([disabled])').last().click();
+  } else {
+    await skill.click();
+  }
   await expect(battle).toHaveAttribute('data-playback', 'true');
   const stage = page.locator('[data-pixi-combat-stage="true"]');
   await expect(stage).toHaveAttribute('data-effect-element', /fire|grass|water/);
@@ -126,7 +139,7 @@ test('a new player understands combat, sees six escalating relays, and completes
   for (let turn = 0; turn < 60; turn += 1) {
     const collect = page.getByRole('button', { name: '收下全部戰利品' });
     if (await collect.isVisible().catch(() => false)) break;
-    const result = await castVisibleSkill(page);
+    const result = await castVisibleSkill(page, turn === 0);
     if (firstRelays.length < 6) firstRelays.push(result);
   }
 

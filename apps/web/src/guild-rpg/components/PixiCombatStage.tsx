@@ -63,6 +63,8 @@ export function PixiCombatStage({
       data-effect-element={scene.event?.element}
       data-effect-specialization={scene.event?.specializationId}
       data-effect-phase={scene.event?.phase}
+      data-preview-total={scene.preview?.totalDamage}
+      data-preview-targets={scene.preview?.targetIds.length}
     >
       <div ref={hostRef} data-combat-canvas-host="true" />
       {error && (

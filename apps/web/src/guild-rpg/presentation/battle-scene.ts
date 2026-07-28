@@ -1,4 +1,5 @@
 import type { GuildBattleState, StatusLayers } from '@expedition/shared-types';
+import type { SkillOutcomePreview } from '@expedition/simulation-core';
 import type {
   GuildCombatScene,
   GuildCombatSceneUnit,
@@ -15,6 +16,7 @@ export interface BattleSceneContext {
   actingActorId?: string;
   nextActorId?: string;
   event?: VisualEvent;
+  preview?: SkillOutcomePreview;
 }
 
 const HERO_POSITIONS = [
@@ -46,6 +48,7 @@ export function createBattleScene(
         ? HERO_POSITIONS[Math.min(heroIndex++, HERO_POSITIONS.length - 1)]!
         : ENEMY_POSITIONS[Math.min(enemyIndex++, ENEMY_POSITIONS.length - 1)]!;
     const selected = battle.selectedTargetId === unit.id;
+    const preview = context.preview?.units.find(({ id }) => id === unit.id);
     const hit = context.event?.targetId === unit.id && context.event.phase === 'impact';
     const state: GuildCombatUnitState =
       unit.currentHp <= 0
@@ -65,10 +68,28 @@ export function createBattleScene(
       side: unit.side,
       x: position.x,
       y: position.y,
+      currentHp: unit.currentHp,
+      maxHp: unit.stats.hp,
+      attack: unit.stats.attack,
+      defense: unit.stats.defense,
       hpRatio: Math.max(0, Math.min(1, unit.currentHp / Math.max(1, unit.stats.hp))),
       state,
       selected,
       statusLayers: unit.statusLayers ?? emptyLayers(),
+      defenseReduction: unit.defenseReduction ?? 0,
+      strengthened: unit.strengthened ?? 0,
+      ...(preview
+        ? {
+            preview: {
+              afterHp: preview.afterHp,
+              damage: preview.damage,
+              healing: preview.healing,
+              afterStatus: preview.afterStatus,
+              afterDefenseReduction: preview.afterDefenseReduction,
+              afterStrengthened: preview.afterStrengthened,
+            },
+          }
+        : {}),
       ...(unit.side === 'heroes' ? { hero: heroVisual(unit.id) } : { enemy: enemyVisual(unit.id) }),
     };
   });
@@ -80,5 +101,22 @@ export function createBattleScene(
     relay: Math.max(1, Math.min(6, Math.trunc(context.relay))),
     units,
     ...(context.event ? { event: context.event } : {}),
+    ...(context.preview
+      ? {
+          preview: {
+            actorId: context.preview.actorId,
+            targetIds: context.preview.units
+              .filter(({ side, damage }) => side === 'enemies' && damage > 0)
+              .map(({ id }) => id),
+            totalDamage: context.preview.totalDamage,
+            ...(context.preview.events.find(({ element }) => element !== undefined)?.element
+              ? {
+                  element: context.preview.events.find(({ element }) => element !== undefined)!
+                    .element!,
+                }
+              : {}),
+          },
+        }
+      : {}),
   };
 }

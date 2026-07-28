@@ -22,7 +22,28 @@ const ELEMENT_COLOR = {
 } as const;
 
 const effectColor = (scene: GuildCombatScene) =>
-  (scene.event?.element && ELEMENT_COLOR[scene.event.element]) ?? scene.zone.accent;
+  (scene.event?.element && ELEMENT_COLOR[scene.event.element]) ??
+  (scene.preview?.element && ELEMENT_COLOR[scene.preview.element]) ??
+  scene.zone.accent;
+
+const drawPreviewRoute = (scene: GuildCombatScene, color: number) => {
+  const actor = scene.units.find(({ id }) => id === scene.preview?.actorId);
+  const targets =
+    scene.preview?.targetIds
+      .map((id) => scene.units.find((unit) => unit.id === id))
+      .filter((unit) => unit !== undefined) ?? [];
+  if (!actor || targets.length === 0) return undefined;
+  const route = new Graphics();
+  for (const [index, target] of targets.entries()) {
+    route
+      .moveTo(actor.x, actor.y - 55)
+      .lineTo(target.x, target.y - 55)
+      .stroke({ color, width: 3 + index, alpha: 0.28 })
+      .circle(target.x, target.y - 55, 34 + index * 6)
+      .stroke({ color, width: 2, alpha: 0.42 });
+  }
+  return route;
+};
 
 export function drawCombatEffects(
   container: Container,
@@ -32,6 +53,10 @@ export function drawCombatEffects(
   const color = effectColor(scene);
   let route: Graphics | undefined;
   let projectile: Graphics | undefined;
+  if (!scene.event && scene.preview) {
+    route = drawPreviewRoute(scene, color);
+    if (route) container.addChild(route);
+  }
   if (plan.route.length >= 2) {
     route = drawRoute(plan, color);
     container.addChild(route);

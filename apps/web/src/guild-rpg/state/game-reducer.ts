@@ -27,6 +27,7 @@ import {
 
 import type { FirstHuntCoachStep } from '../onboarding/first-hunt-coach';
 import type { GuildPreferences, TutorialState } from '../preferences/guild-preferences';
+import { createSkillEngineContent } from './create-skill-engine-content';
 import { reduceHuntResult } from './reduce-hunt-result';
 
 export type GuildPage = 'quest' | 'party' | 'skills' | 'equipment';
@@ -103,14 +104,6 @@ const withTutorial = (
 
 const isBattleTutorialStep = (step: FirstHuntCoachStep) =>
   step === 'select_target' || step === 'collect_reward' || step.startsWith('relay_');
-
-const engineContent = (profile: GuildProfile) => ({
-  skills: Object.fromEntries(profile.skillInventory.map((skill) => [skill.id, skill])),
-  elements: GUILD_GAME_CONTENT.elements,
-  specializations: GUILD_GAME_CONTENT.skillSpecializations,
-  triggers: GUILD_GAME_CONTENT.triggerConditions,
-  forms: GUILD_GAME_CONTENT.skillForms,
-});
 
 const finishBattle = (state: GuildRpgState, battle: GuildBattleState): GuildRpgState => {
   const result = reduceHuntResult(state.profile, battle, GUILD_GAME_CONTENT);
@@ -410,7 +403,7 @@ export function guildRpgReducer(state: GuildRpgState, action: GuildRpgAction): G
         actorId,
         skillId: action.skillId,
         targetId: action.targetId,
-        content: engineContent(state.profile),
+        content: createSkillEngineContent(state.profile),
       });
       const relayStep = state.tutorialStep.match(/^relay_([1-6])$/);
       const relayNumber = relayStep ? Number(relayStep[1]) : undefined;
