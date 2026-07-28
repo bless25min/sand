@@ -17,6 +17,19 @@ const expectFullyInViewport = async (page: Page, selector: string) => {
   expect(box!.y + box!.height).toBeLessThanOrEqual(viewport!.height);
 };
 
+const expectMinTouchTarget = async (page: Page, selector: string, minimum = 44) => {
+  const boxes = await page.locator(selector).evaluateAll((elements) =>
+    elements.map((element) => {
+      const rect = element.getBoundingClientRect();
+      return { width: rect.width, height: rect.height };
+    }),
+  );
+  expect(boxes.length).toBeGreaterThan(0);
+  for (const box of boxes) {
+    expect(Math.max(box.width, box.height)).toBeGreaterThanOrEqual(minimum);
+  }
+};
+
 const expectSingleScreen = async (page: Page) => {
   expect(
     await page.evaluate(
@@ -61,6 +74,11 @@ async function castVisibleSkill(page: Page, castOnBattlefieldTarget = false) {
   await expect(battle).toHaveAttribute('data-playback', 'false');
   await expect(skill).toHaveAttribute('data-armed', 'true');
   await expect(page.locator('[data-skill-preview]')).toBeVisible();
+  await expect(page.locator('[data-skill-preview] [data-causal-step]')).toHaveCount(4);
+  await expect(page.locator('[data-skill-preview] .gr-preview-details')).not.toHaveAttribute(
+    'open',
+    '',
+  );
   await expect(page.locator('[data-skill-preview] [data-preview-total]')).toHaveCount(1);
   await expect(page.locator('[data-pixi-combat-stage="true"]')).toHaveAttribute(
     'data-preview-total',
@@ -122,7 +140,9 @@ test('a new player understands combat, sees six escalating relays, and completes
   await page.getByRole('button', { name: '開始第一場教學戰' }).click();
   await expectBattlefieldVisible(page);
   await expectSingleScreen(page);
+  await expect(page.locator('.gr-battle-guide-strip')).toBeVisible();
   await expect(page.locator('button[data-battle-skill]')).toHaveCount(6);
+  await expectMinTouchTarget(page, 'button[data-battle-skill]');
   await expectFullyInViewport(page, 'button[data-battle-skill="6"]');
   await expect(page.locator('[data-combat-battlefield]')).toHaveAttribute(
     'data-current-actor',
@@ -156,26 +176,23 @@ test('a new player understands combat, sees six escalating relays, and completes
   await page.getByRole('button', { name: '收下全部戰利品' }).click();
 
   await expect(page.locator('.gr-rewards')).toBeVisible();
-  await expect(page.getByText('接力殲滅完成', { exact: true })).toBeVisible();
-  await expect(page.locator('[data-loot-reveal]')).toHaveCount(6);
-  await expect(page.locator('[data-loot-reveal][data-rarity="skill"]')).toHaveCount(2);
-  await expect(page.locator('[data-loot-reveal]:not([data-rarity="skill"])')).toHaveCount(4);
-  await expect(page.locator('[data-loot-active="true"]')).toBeVisible();
+  await expect(page.getByText('戰利品入袋', { exact: true })).toBeVisible();
+  await expect(page.locator('[data-loot-item]')).toHaveCount(6);
+  await expect(page.locator('[data-loot-item][data-rarity="skill"]')).toHaveCount(2);
+  await expect(page.locator('[data-loot-item]:not([data-rarity="skill"])')).toHaveCount(4);
+  await expect(page.locator('[data-pager="loot"]')).toHaveCount(0);
+  await expect(page.locator('.gr-loot-detail-drawer')).toHaveCount(0);
   await expectSingleScreen(page);
-  for (let index = 1; index < 6; index += 1) {
-    await page.getByRole('navigation', { name: '切換戰利品' }).getByRole('button').last().click();
-    await expect(page.locator('[data-loot-active="true"]')).toBeVisible();
-  }
-  await page.locator('.gr-reward-actions button').first().click();
+  await expectMinTouchTarget(page, '[data-loot-item]');
+  await page.locator('[data-loot-item]').first().click();
+  await expect(page.locator('.gr-loot-detail-drawer')).toHaveCount(1);
+  await page.locator('.gr-loot-detail-drawer .gr-drawer-action').click();
+  await expect(page.locator('.gr-status-line')).toContainText('已裝備');
+  await page.getByRole('button', { name: '整理裝備' }).click();
 
   await page.locator('.gr-help-drawer > summary').click();
   await expect(page.getByRole('region', { name: '公會訓練清單' })).toBeVisible();
   await page.locator('.gr-help-drawer > summary').click();
-  await page
-    .getByRole('button', { name: /^裝備給/ })
-    .first()
-    .click();
-  await expect(page.locator('.gr-status-line')).toContainText('已裝備');
   await page.getByRole('button', { name: '校準' }).first().click();
   await page.locator('[data-guide-id="nav:skills"]').click();
 
@@ -252,6 +269,7 @@ test('migrates a v3 save, preserves its backup, and keeps every main page usable
     await expectFullyInViewport(page, '.gr-main-nav');
   }
   await expect(page.getByRole('button', { name: '布蘭' })).toBeVisible();
+  await expectMinTouchTarget(page, '.gr-main-nav button');
 });
 
 test('keeps the semantic WebGL battle readable at wide mobile and desktop sizes', async ({

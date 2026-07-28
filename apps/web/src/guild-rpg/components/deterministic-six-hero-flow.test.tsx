@@ -37,6 +37,9 @@ describe('deterministic six-hero interface', () => {
     expect(trainingMarkup).toContain('aria-label="公會訓練清單"');
     expect(trainingMarkup).toContain('data-training-active="equip_loot"');
     expect(trainingMarkup).toContain('1 / 6');
+    expect(trainingMarkup.indexOf('class="gr-coach"')).toBeLessThan(
+      trainingMarkup.indexOf('class="gr-help-drawer"'),
+    );
   });
 
   it('keeps four permanent pages and makes the selected hero plus six skills explicit', () => {
@@ -51,6 +54,7 @@ describe('deterministic six-hero interface', () => {
     expect(markup).toContain('技能');
     expect(markup).toContain('裝備');
     expect(markup).toContain('目前角色：布蘭');
+    expect(markup).toContain('目前技能格：1');
     expect(markup.match(/data-skill-slot=/g) ?? []).toHaveLength(6);
     expect(markup).toContain('1 選角色');
     expect(markup).toContain('2 選技能格');
@@ -179,6 +183,7 @@ describe('deterministic six-hero interface', () => {
     expect(markup).toContain('data-current-actor="brann"');
     expect(markup).toContain('data-next-actor="lyra"');
     expect(markup).toContain('data-animation-first="true"');
+    expect(markup).toContain('class="gr-battle-guide-strip"');
     const activeMember = state.profile.party.find(
       ({ definitionId }) => definitionId === state.battle?.roundOrder?.activeAdventurerId,
     )!;
@@ -195,6 +200,7 @@ describe('deterministic six-hero interface', () => {
     expect(markup).not.toContain('gr-unit-status');
 
     const skillId = state.profile.party[0]!.skillIds[0]!;
+    const targetHpBefore = state.battle!.units.find(({ id }) => id === targetId)!.currentHp;
     const resolved = guildRpgReducer(state, { type: 'USE_SKILL', skillId, targetId });
     const resolvedMarkup = renderToStaticMarkup(
       <BattleScreen state={resolved} dispatch={dispatch} />,
@@ -202,6 +208,10 @@ describe('deterministic six-hero interface', () => {
     expect(resolved.battle?.events.some(({ kind }) => kind === 'skill_cast')).toBe(true);
     expect(resolved.battle?.roundOrder?.activeAdventurerId).toBe('lyra');
     expect(resolved.recentEvents[0]?.actorId).toBe('brann');
+    expect(resolved.playbackStartBattle?.units.find(({ id }) => id === targetId)?.currentHp).toBe(
+      targetHpBefore,
+    );
+    expect(resolvedMarkup).toContain(`data-display-target-hp="${targetHpBefore}"`);
     expect(resolvedMarkup).toContain('data-combat-beat="cast"');
     expect(resolvedMarkup).toContain('data-relay-tier="1"');
   });
@@ -242,14 +252,13 @@ describe('deterministic six-hero interface', () => {
     }
     const markup = renderToStaticMarkup(<RewardScreen state={state} dispatch={dispatch} />);
 
-    expect(markup.match(/data-loot-reveal=/g) ?? []).toHaveLength(6);
-    expect(markup.match(/data-loot-active="true"/g) ?? []).toHaveLength(1);
-    expect(markup).toContain('data-pager="loot"');
+    expect(markup.match(/data-loot-item=/g) ?? []).toHaveLength(6);
+    expect(markup.match(/data-loot-active="true"/g) ?? []).toHaveLength(0);
+    expect(markup).not.toContain('data-pager="loot"');
     expect(markup).toContain('data-shell="single-screen"');
-    expect(markup).toContain('data-loot-recommendation="true"');
-    expect(markup).toContain('這次最值得先試');
-    expect(markup).toContain('為什麼有用');
-    expect(markup).toContain('先穿上推薦裝備');
+    expect(markup).not.toContain('class="gr-loot-detail-drawer"');
+    expect(markup).toContain('data-material-count=');
+    expect(markup).toContain('整理裝備');
 
     const css = readFileSync(new URL('../guild-rewards.css', import.meta.url), 'utf8');
     expect(css).toMatch(

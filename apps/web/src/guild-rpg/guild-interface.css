@@ -852,11 +852,64 @@ html[data-guild-screen] #root {
   max-width: none;
   height: 100dvh;
   min-height: 0;
-  grid-template-rows: auto minmax(0, 1fr) auto;
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
   gap: 0;
   margin: 0;
   padding: max(5px, env(safe-area-inset-top)) 6px max(5px, env(safe-area-inset-bottom));
   overflow: hidden;
+}
+
+.gr-shell[data-shell='single-screen'] > .gr-coach {
+  z-index: 12;
+  display: grid;
+  min-width: 0;
+  min-height: 36px;
+  grid-row: 2;
+  grid-template-columns: auto minmax(0, 1fr) 44px;
+  gap: 7px;
+  align-items: center;
+  margin: 0 0 4px;
+  padding: 4px 6px;
+  border: 1px solid rgb(239 188 98 / 42%);
+  border-radius: 8px;
+  color: #f4dda8;
+  background: rgb(58 37 16 / 96%);
+}
+
+.gr-shell[data-shell='single-screen'] > .gr-coach > b {
+  color: #ffcf67;
+  font-size: 11px;
+}
+
+.gr-shell[data-shell='single-screen'] > .gr-coach > span {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 7px;
+  align-items: center;
+}
+
+.gr-shell[data-shell='single-screen'] > .gr-coach strong {
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.gr-shell[data-shell='single-screen'] > .gr-coach small {
+  min-width: 0;
+  overflow: hidden;
+  color: #d4c5a6;
+  font-size: 10px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gr-shell[data-shell='single-screen'] > .gr-coach button {
+  width: 44px;
+  min-height: 44px;
+  border: 0;
+  color: #dbcba9;
+  background: transparent;
+  font-size: 18px;
 }
 
 .gr-shell[data-shell='single-screen'] .gr-topbar {
@@ -899,6 +952,7 @@ html[data-guild-screen] #root {
 
 .gr-page-viewport {
   position: relative;
+  grid-row: 3;
   min-height: 0;
   overflow: hidden;
 }
@@ -950,10 +1004,32 @@ html[data-guild-screen] #root {
   position: relative;
   z-index: 35;
   top: auto;
-  grid-row: 3;
+  grid-row: 4;
   margin: 4px 0 0;
   padding: 3px;
   padding-bottom: max(3px, env(safe-area-inset-bottom));
+}
+
+.gr-skill-selection-context {
+  display: flex;
+  min-width: 0;
+  min-height: 28px;
+  align-items: center;
+  gap: 8px;
+  margin: -5px 0 5px;
+  padding: 3px 7px;
+  border-left: 3px solid #efbc62;
+  color: #e9d3a3;
+  background: rgb(239 188 98 / 7%);
+  font-size: 11px;
+}
+
+.gr-skill-selection-context > span {
+  min-width: 0;
+  overflow: hidden;
+  color: #aebdb5;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .gr-shell[data-shell='single-screen'] .gr-main-nav button {
@@ -1171,6 +1247,12 @@ html[data-guild-screen] #root {
     grid-template-columns: repeat(6, minmax(0, 1fr));
     gap: 3px;
     margin-bottom: 4px;
+  }
+
+  .gr-skill-selection-context {
+    min-height: 24px;
+    margin: 0 0 3px;
+    font-size: 10px;
   }
 
   .gr-hero-tabs button {

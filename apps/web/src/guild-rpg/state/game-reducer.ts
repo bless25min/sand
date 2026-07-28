@@ -45,6 +45,7 @@ export interface GuildRpgState {
   selectedSalvageIds: readonly string[];
   lastFusedSkillId?: string;
   battle?: GuildBattleState | undefined;
+  playbackStartBattle?: GuildBattleState | undefined;
   rewards?: HuntRewards | undefined;
   recentEvents: readonly GuildBattleEvent[];
   message: string;
@@ -79,6 +80,8 @@ export type GuildRpgAction =
   | { type: 'SET_CARRY_ORDER'; enabled: boolean }
   | { type: 'USE_SKILL'; skillId: string; targetId: string }
   | { type: 'COLLECT_VICTORY' }
+  | { type: 'EQUIP_REWARD_ITEM'; itemId: string; adventurerId: string }
+  | { type: 'REPLAY_HUNT' }
   | { type: 'EQUIP_STORED'; itemId: string; adventurerId: string }
   | { type: 'FORGE_ITEM'; itemId: string; forgeAction: ForgeAction; options?: ForgeOptions }
   | { type: 'TOGGLE_ITEM_FLAG'; itemId: string; flag: EquipmentItemFlag }
@@ -322,6 +325,7 @@ export function guildRpgReducer(state: GuildRpgState, action: GuildRpgAction): G
           },
         },
         rewards: undefined,
+        playbackStartBattle: undefined,
         recentEvents: [],
         tutorialStep:
           state.tutorialStep === 'start_hunt'
@@ -416,6 +420,7 @@ export function guildRpgReducer(state: GuildRpgState, action: GuildRpgAction): G
       const next = {
         ...state,
         battle: result.battle,
+        playbackStartBattle: state.battle,
         recentEvents: result.events,
         tutorialStep,
         message: result.events.at(-1)?.message ?? '技能已結算。',
@@ -436,6 +441,47 @@ export function guildRpgReducer(state: GuildRpgState, action: GuildRpgAction): G
     state.battle?.status === 'victory'
   ) {
     return finishBattle(state, state.battle);
+  }
+  if (action.type === 'EQUIP_REWARD_ITEM' && state.screen === 'rewards') {
+    const result = equipStoredItem(state.profile, action.itemId, action.adventurerId);
+    return {
+      ...state,
+      profile: result.profile,
+      tutorialStep:
+        result.profile !== state.profile && state.tutorialStep === 'equip_loot'
+          ? 'forge_loot'
+          : state.tutorialStep,
+      message:
+        result.profile !== state.profile
+          ? `${result.message} 可繼續查看全部掉落，或前往裝備頁強化。`
+          : result.message,
+    };
+  }
+  if (action.type === 'REPLAY_HUNT' && state.screen === 'rewards' && state.rewards) {
+    if (state.preferences.tutorial === 'active' && state.tutorialStep !== 'complete') {
+      return { ...state, message: '先完成第一次裝備與技能配置，之後即可從這裡直接再戰。' };
+    }
+    try {
+      const battle = startGuildQuest(state.profile, state.rewards.questId, GUILD_GAME_CONTENT);
+      return {
+        ...state,
+        screen: 'battle',
+        battle: {
+          ...battle,
+          roundOrder: {
+            ...battle.roundOrder!,
+            defaultOrder: state.profile.defaultOrder,
+            currentOrder: state.profile.defaultOrder,
+          },
+        },
+        playbackStartBattle: undefined,
+        rewards: undefined,
+        recentEvents: [],
+        message: '再次出征；鎖定目標並開始六人接力。',
+      };
+    } catch (error) {
+      return { ...state, message: error instanceof Error ? error.message : '無法再次出征。' };
+    }
   }
   if (action.type === 'EQUIP_STORED' && state.screen === 'guild') {
     const result = equipStoredItem(state.profile, action.itemId, action.adventurerId);
@@ -546,6 +592,7 @@ export function guildRpgReducer(state: GuildRpgState, action: GuildRpgAction): G
       page: action.page ?? 'quest',
       skillWorkspace: 'loadout',
       battle: undefined,
+      playbackStartBattle: undefined,
       rewards: undefined,
       recentEvents: [],
       message: '已返回整備介面，所有掉落均已保留。',
@@ -559,6 +606,7 @@ export function guildRpgReducer(state: GuildRpgState, action: GuildRpgAction): G
       screen: 'guild',
       page: 'quest',
       battle: undefined,
+      playbackStartBattle: undefined,
       recentEvents: [],
       tutorialStep: resetTutorial ? 'start_hunt' : state.tutorialStep,
       message: '已撤離，整備進度保持不變。',

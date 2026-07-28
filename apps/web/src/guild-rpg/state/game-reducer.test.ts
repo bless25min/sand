@@ -231,4 +231,39 @@ describe('deterministic six-hero game flow', () => {
     expect(state.preferences.tutorial).toBe('complete');
     expect(state.tutorialStep).toBe('complete');
   });
+
+  it('equips a reward from the loot drawer without leaving the reward summary', () => {
+    const won = winFirstHunt(createGuildRpgState());
+    const item = won.rewards!.items[0]!;
+
+    const equipped = reduce(won, {
+      type: 'EQUIP_REWARD_ITEM',
+      itemId: item.id,
+      adventurerId: 'brann',
+    });
+
+    expect(equipped.screen).toBe('rewards');
+    expect(
+      equipped.profile.party.find(({ definitionId }) => definitionId === 'brann')?.equipment[
+        item.slot
+      ]?.id,
+    ).toBe(item.id);
+    expect(equipped.tutorialStep).toBe('forge_loot');
+  });
+
+  it('starts the same hunt again from rewards after the first-session tutorial', () => {
+    const skipped = reduce(createGuildRpgState(), {
+      type: 'SET_TUTORIAL',
+      tutorial: 'skipped',
+    });
+    const won = winFirstHunt(skipped);
+
+    const replayed = reduce(won, { type: 'REPLAY_HUNT' });
+
+    expect(replayed).toMatchObject({
+      screen: 'battle',
+      rewards: undefined,
+      battle: { questId: 'border_pack', status: 'active' },
+    });
+  });
 });

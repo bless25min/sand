@@ -1048,7 +1048,43 @@
   background: rgb(3 12 10 / 96%);
 }
 
+.gr-battle-guide-strip {
+  display: grid;
+  min-width: 0;
+  min-height: 32px;
+  grid-template-columns: auto auto minmax(0, 1fr);
+  gap: 6px;
+  align-items: center;
+  margin-bottom: 4px;
+  padding: 3px 7px;
+  border: 1px solid rgb(255 211 111 / 38%);
+  border-radius: 7px;
+  color: #f2d89d;
+  background: rgb(68 42 16 / 91%);
+}
+
+.gr-battle-guide-strip > b {
+  color: #ffd36d;
+  font-size: 10px;
+}
+
+.gr-battle-guide-strip > span {
+  font-size: 11px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.gr-battle-guide-strip > small {
+  min-width: 0;
+  overflow: hidden;
+  color: #d7c9aa;
+  font-size: 9px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .gr-skill-outcome-preview {
+  position: relative;
   display: grid;
   min-height: 68px;
   grid-template-columns: minmax(0, 1fr) auto;
@@ -1074,14 +1110,6 @@
   font-size: 10px;
 }
 
-.gr-skill-outcome-preview > header .gr-preview-link {
-  min-width: 0;
-  overflow: hidden;
-  color: #d8e6dc;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
 .gr-skill-outcome-preview > header strong {
   overflow: hidden;
   font-size: 13px;
@@ -1096,6 +1124,74 @@
     900 17px/1 'Arial Black',
     'Noto Sans TC',
     sans-serif;
+}
+
+.gr-causal-chain {
+  display: grid;
+  min-width: 0;
+  grid-column: 1;
+  grid-template-columns: repeat(7, auto);
+  gap: 4px;
+  align-items: center;
+  justify-content: start;
+  overflow: hidden;
+  font-size: 10px;
+  white-space: nowrap;
+}
+
+.gr-causal-chain > span,
+.gr-causal-chain > strong {
+  padding: 3px 5px;
+  overflow: hidden;
+  border-radius: 5px;
+  background: rgb(255 255 255 / 8%);
+  text-overflow: ellipsis;
+}
+
+.gr-causal-chain > span[data-trigger-ready='true'],
+.gr-causal-chain > strong {
+  color: #fff0a6;
+  background: rgb(135 82 24 / 74%);
+}
+
+.gr-causal-chain > i {
+  color: #d5b36c;
+  font-style: normal;
+}
+
+.gr-preview-details {
+  grid-column: 2;
+  align-self: center;
+}
+
+.gr-preview-details > summary {
+  min-width: 44px;
+  min-height: 32px;
+  padding: 7px 6px;
+  color: #d8e6dc;
+  cursor: pointer;
+  font-size: 10px;
+  list-style: none;
+  text-align: center;
+}
+
+.gr-preview-details[open] {
+  position: absolute;
+  z-index: 8;
+  right: 4px;
+  bottom: calc(100% + 5px);
+  left: 4px;
+  display: grid;
+  gap: 6px;
+  padding: 8px;
+  border: 1px solid rgb(255 211 111 / 62%);
+  border-radius: 8px;
+  background: rgb(3 12 10 / 98%);
+  box-shadow: 0 -8px 24px rgb(0 0 0 / 38%);
+}
+
+.gr-preview-details[open] > summary {
+  justify-self: end;
 }
 
 .gr-preview-formula,

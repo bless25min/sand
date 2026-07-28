@@ -95,6 +95,10 @@ export function SkillLoadoutPanel({
           );
         })}
       </div>
+      <div className="gr-skill-selection-context" role="status">
+        <strong>目前技能格：{state.selectedSkillSlot + 1}</strong>
+        <span>{currentSkill?.name ?? '尚未裝備技能'}</span>
+      </div>
       <div className="gr-skill-slots" aria-label={`${hero.name}已裝備技能`}>
         {member.skillIds.map((skillId, index) => {
           const skill = state.profile.skillInventory.find(({ id }) => id === skillId);

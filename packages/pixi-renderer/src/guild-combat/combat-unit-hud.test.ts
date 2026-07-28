@@ -28,14 +28,12 @@ const target: GuildCombatSceneUnit = {
 };
 
 describe('combat unit HUD', () => {
-  it('shows exact HP, battle stats, and projected changes on the unit', () => {
+  it('keeps only identity-critical HP and compact projected changes on the unit', () => {
     expect(createCombatUnitHud(target)).toEqual({
-      hpLabel: '136 / 175',
-      statLabel: '攻 34 · 防 12',
+      hpLabel: '136/175',
       projectedHpLabel: '136 → 81',
-      statuses: ['燃3→7', '毒2', '削防4'],
-      damage: 55,
-      healing: 0,
+      statusPips: ['燃3', '毒2'],
+      impactLabel: '−55',
     });
   });
 
@@ -43,11 +41,10 @@ describe('combat unit HUD', () => {
     const withoutPreview = { ...target };
     delete withoutPreview.preview;
     expect(createCombatUnitHud(withoutPreview)).toMatchObject({
-      hpLabel: '136 / 175',
+      hpLabel: '136/175',
       projectedHpLabel: undefined,
-      statuses: ['燃3', '毒2'],
-      damage: 0,
-      healing: 0,
+      statusPips: ['燃3', '毒2'],
+      impactLabel: undefined,
     });
   });
 });

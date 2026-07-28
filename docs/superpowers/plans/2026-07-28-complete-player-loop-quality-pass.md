@@ -13,6 +13,7 @@
 ## Task 1: Simulation-owned combat playback
 
 **Files:**
+
 - Create: `packages/simulation-core/src/guild-rpg/battle/project-battle-playback.ts`
 - Create: `packages/simulation-core/src/guild-rpg/battle/project-battle-playback.test.ts`
 - Modify: `packages/simulation-core/src/guild-rpg/index.ts`
@@ -29,6 +30,7 @@
 ## Task 2: Compact battlefield HUD and causal skill controls
 
 **Files:**
+
 - Modify: `packages/pixi-renderer/src/guild-combat/draw-units.ts`
 - Modify: `packages/pixi-renderer/src/guild-combat/combat-unit-hud.ts`
 - Modify: `packages/pixi-renderer/src/guild-combat/combat-unit-hud.test.ts`
@@ -47,6 +49,7 @@
 ## Task 3: Twenty-item reward summary
 
 **Files:**
+
 - Modify: `apps/web/src/guild-rpg/components/RewardScreen.tsx`
 - Modify: `apps/web/src/guild-rpg/state/game-reducer.ts`
 - Modify: `apps/web/src/styles/guild-rewards.css`
@@ -62,6 +65,7 @@
 ## Task 4: Preparation and onboarding progressive disclosure
 
 **Files:**
+
 - Modify: `apps/web/src/guild-rpg/components/GuildScreen.tsx`
 - Modify: `apps/web/src/guild-rpg/components/SkillLoadoutPanel.tsx`
 - Modify: `apps/web/src/guild-rpg/components/EquipmentWorkbench.tsx`
@@ -79,6 +83,7 @@
 ## Task 5: One-screen regression gate and release
 
 **Files:**
+
 - Modify: `apps/web/e2e/guild-rpg-release.spec.ts`
 - Modify: responsive CSS only where failures demonstrate a need
 

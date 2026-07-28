@@ -2,6 +2,7 @@ export { advanceGuildBattle } from './battle/advance-battle';
 export { calculateAdventurerStats } from './battle/calculate-stats';
 export { chooseAutoAction } from './battle/choose-auto-action';
 export { createGuildBattle } from './battle/create-battle';
+export { projectBattlePlayback } from './battle/project-battle-playback';
 export { resolveGuildBattleAction, submitLeaderAction } from './battle/resolve-action';
 export { advanceComposition } from './combo/advance-composition';
 export { compileBuild } from './combo/compile-build';

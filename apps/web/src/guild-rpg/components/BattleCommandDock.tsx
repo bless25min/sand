@@ -57,6 +57,15 @@ export function BattleCommandDock({
         </div>
       ) : (
         <>
+          {coach && !playback.isPlaying && (
+            <aside className="gr-battle-guide-strip" role="status">
+              <b>
+                {coach.stepNumber}/{coach.stepTotal}
+              </b>
+              <span>{coach.title}</span>
+              <small>{coach.message}</small>
+            </aside>
+          )}
           {preview && actor && target && skill ? (
             <SkillOutcomePreviewPanel
               actor={actor}

@@ -32,15 +32,19 @@ function Coach({
   if (!coach) return null;
   return (
     <aside className="gr-coach" role="status" data-guide-step={coach.step}>
-      <div>
-        <span>
-          實戰引導 {coach.stepNumber}/{coach.stepTotal}
-        </span>
+      <b>
+        {coach.stepNumber}/{coach.stepTotal}
+      </b>
+      <span>
         <strong>{coach.title}</strong>
-        <p>{coach.message}</p>
-      </div>
-      <button type="button" onClick={() => dispatch({ type: 'SET_TUTORIAL', tutorial: 'skipped' })}>
-        略過引導
+        <small>{coach.message}</small>
+      </span>
+      <button
+        type="button"
+        aria-label="略過新手引導"
+        onClick={() => dispatch({ type: 'SET_TUTORIAL', tutorial: 'skipped' })}
+      >
+        ×
       </button>
     </aside>
   );
@@ -79,10 +83,10 @@ export function GuildScreen({
           </span>
         </div>
       </header>
+      <Coach state={state} dispatch={dispatch} />
       <details className="gr-help-drawer">
         <summary aria-label="開啟教學與進度">?</summary>
         <div>
-          <Coach state={state} dispatch={dispatch} />
           <GuildTrainingChecklist state={state} />
           <aside className="gr-help-basics" aria-label="基本操作">
             <strong>四個固定入口</strong>

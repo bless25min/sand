@@ -1,4 +1,5 @@
 import { GUILD_GAME_CONTENT } from '@expedition/game-data';
+import type { GuildSkillItem, HuntEquipmentItem } from '@expedition/shared-types';
 import { useState } from 'react';
 
 import {
@@ -19,6 +20,17 @@ const RARITY_SCORE = {
   legendary: 5,
 } as const;
 
+type LootEntry =
+  | { kind: 'equipment'; id: string; item: HuntEquipmentItem }
+  | { kind: 'skill'; id: string; skill: GuildSkillItem };
+
+const equipmentCores = (item: HuntEquipmentItem) =>
+  item.cores?.length
+    ? item.cores
+    : item.coreId
+      ? [{ id: item.coreId, strength: item.coreStrength ?? 0 }]
+      : [];
+
 export function RewardScreen({
   state,
   dispatch,
@@ -26,12 +38,11 @@ export function RewardScreen({
   state: GuildRpgState;
   dispatch: React.Dispatch<GuildRpgAction>;
 }) {
-  const [lootIndex, setLootIndex] = useState(0);
   const rewards = state.rewards!;
-  const lootCount = rewards.items.length + rewards.skillDrops.length;
-  const coach = createFirstHuntCoach(state.preferences.tutorial, state.tutorialStep, {
-    surface: 'rewards',
-  });
+  const entries: readonly LootEntry[] = [
+    ...rewards.items.map((item) => ({ kind: 'equipment' as const, id: item.id, item })),
+    ...rewards.skillDrops.map((skill) => ({ kind: 'skill' as const, id: skill.id, skill })),
+  ];
   const recommendedItem = [...rewards.items].sort(
     (left, right) =>
       RARITY_SCORE[right.rarity] - RARITY_SCORE[left.rarity] ||
@@ -48,195 +59,195 @@ export function RewardScreen({
         0,
       ),
   )[0];
-  const recommendedCore = recommendedItem
-    ? GUILD_GAME_CONTENT.equipmentCores.find(
-        ({ id }) => id === (recommendedItem.cores?.[0]?.id ?? recommendedItem.coreId),
-      )
-    : undefined;
+  const recommendedIds = new Set([recommendedItem?.id, recommendedSkill?.id]);
+  const [selectedId, setSelectedId] = useState<string>();
+  const selected = entries.find(({ id }) => id === selectedId);
+  const coach = createFirstHuntCoach(state.preferences.tutorial, state.tutorialStep, {
+    surface: 'rewards',
+  });
+  const density = entries.length > 14 ? 'max' : entries.length > 8 ? 'dense' : 'normal';
 
   return (
-    <main className="gr-rewards" data-shell="single-screen">
+    <main
+      className="gr-rewards"
+      data-shell="single-screen"
+      data-loot-count={entries.length}
+      data-loot-density={density}
+    >
       <header className="gr-reward-hero">
-        <span>HUNT COMPLETE · LOOT SECURED</span>
-        <h1>接力殲滅完成</h1>
-        <p>
-          {rewards.items.length} 件裝備、{rewards.skillDrops.length} 張技能已安全收入。
-        </p>
+        <div>
+          <span>HUNT COMPLETE</span>
+          <h1>戰利品入袋</h1>
+        </div>
+        <strong>
+          {rewards.items.length} 裝備 · {rewards.skillDrops.length} 技能
+        </strong>
       </header>
 
       {coach && (
-        <aside className="gr-coach gr-sr-only" role="status">
-          <div>
-            <span>
-              實戰引導 {coach.stepNumber}/{coach.stepTotal}
-            </span>
-            <strong>{coach.title}</strong>
-            <p>{coach.message}</p>
-          </div>
+        <aside className="gr-reward-coach" role="status">
+          <b>
+            {coach.stepNumber}/{coach.stepTotal}
+          </b>
+          <span>{coach.title}</span>
+          <small>{coach.message}</small>
         </aside>
       )}
 
-      <section className="gr-loot-showcase" aria-label="本次主要戰利品">
+      <section className="gr-loot-showcase" aria-label="本次全部戰利品">
         <header>
-          <div>
-            <span>DROP REVEAL</span>
-            <h2>本次主要掉落</h2>
-          </div>
-          <strong>{rewards.items.length + rewards.skillDrops.length} 份</strong>
+          <h2>全部掉落</h2>
+          <span>點一下查看詳情</span>
         </header>
         <div className="gr-loot-grid">
-          {rewards.items.map((item, index) => {
-            const coreRolls = item.cores?.length
-              ? item.cores
-              : item.coreId
-                ? [{ id: item.coreId, strength: item.coreStrength ?? 0 }]
-                : [];
+          {entries.map((entry, index) => {
+            const equipment = entry.kind === 'equipment' ? entry.item : undefined;
+            const skill = entry.kind === 'skill' ? entry.skill : undefined;
+            const first = skill?.components[0];
+            const selectedEntry = entry.id === selected?.id;
             return (
-              <article
-                data-loot-reveal={item.id}
-                data-loot-active={lootIndex === index}
-                data-rarity={item.rarity}
-                hidden={lootIndex !== index}
-                key={item.id}
+              <button
+                type="button"
+                data-loot-item={entry.id}
+                data-loot-active={selectedEntry}
+                data-rarity={equipment?.rarity ?? 'skill'}
+                data-element={first?.element}
+                aria-pressed={selectedEntry}
+                aria-label={`查看${equipment?.name ?? skill?.name}詳情`}
+                key={entry.id}
                 style={{ '--reveal-order': index } as React.CSSProperties}
+                onClick={() => setSelectedId(entry.id)}
               >
-                <b aria-hidden="true">{equipmentSlotName(item.slot).slice(0, 1)}</b>
-                <span>
-                  {rarityName(item.rarity)} · {equipmentSlotName(item.slot)}
-                </span>
-                <strong>{item.name}</strong>
+                <b aria-hidden="true">
+                  {equipment
+                    ? equipmentSlotName(equipment.slot).slice(0, 1)
+                    : elementName(first!.element).slice(0, 1)}
+                </b>
+                <strong>{equipment?.name ?? skill?.name}</strong>
                 <small>
-                  {item.mainStat.stat} +{item.mainStat.value}
+                  {equipment
+                    ? `${rarityName(equipment.rarity)} · ${equipment.mainStat.value}`
+                    : `${skill!.stars}★ · ${first!.power}`}
                 </small>
-                {coreRolls.slice(0, 2).map(({ id, strength }) => {
+                {recommendedIds.has(entry.id) && <i aria-label="推薦">★</i>}
+              </button>
+            );
+          })}
+        </div>
+      </section>
+
+      <div className="gr-material-strip" data-material-count={rewards.materials.length}>
+        <span>素材</span>
+        {rewards.materials.map((material) => (
+          <b key={material.id}>
+            {material.name} +{material.quantity}
+          </b>
+        ))}
+      </div>
+
+      {selected && (
+        <aside className="gr-loot-detail-drawer" aria-live="polite">
+          <button
+            type="button"
+            aria-label="收起戰利品詳情"
+            onClick={() => setSelectedId(undefined)}
+          >
+            ×
+          </button>
+          {selected.kind === 'equipment' ? (
+            <>
+              <span>
+                {rarityName(selected.item.rarity)} · {equipmentSlotName(selected.item.slot)}
+              </span>
+              <strong>{selected.item.name}</strong>
+              <p>
+                {selected.item.mainStat.stat} +{selected.item.mainStat.value}
+              </p>
+              <div>
+                {equipmentCores(selected.item).map(({ id, strength }) => {
                   const core = GUILD_GAME_CONTENT.equipmentCores.find(
                     (candidate) => candidate.id === id,
                   );
                   return (
-                    <em key={id}>
-                      {core?.name ?? id} +{strength}
-                    </em>
+                    <small key={id}>
+                      {core?.name ?? id} +{strength} · {core?.description}
+                    </small>
                   );
                 })}
-              </article>
-            );
-          })}
-          {rewards.skillDrops.map((skill, index) => {
-            const first = skill.components[0];
-            return (
-              <article
-                data-loot-reveal={skill.id}
-                data-loot-active={lootIndex === rewards.items.length + index}
-                data-element={first.element}
-                data-rarity="skill"
-                hidden={lootIndex !== rewards.items.length + index}
-                key={skill.id}
-                style={{ '--reveal-order': rewards.items.length + index } as React.CSSProperties}
+              </div>
+              <button
+                type="button"
+                className="gr-drawer-action"
+                data-guide-id="reward:equipment"
+                data-guide-active={isFirstHuntCoachFocus(
+                  state.preferences.tutorial,
+                  state.tutorialStep,
+                  'reward:equipment',
+                )}
+                onClick={() =>
+                  dispatch({
+                    type: 'EQUIP_REWARD_ITEM',
+                    itemId: selected.item.id,
+                    adventurerId: state.selectedHeroId,
+                  })
+                }
               >
-                <b aria-hidden="true">{elementName(first.element).slice(0, 1)}</b>
-                <span>
-                  {skill.stars}★ · {elementName(first.element)}技能
-                </span>
-                <strong>{skill.name}</strong>
-                <small>
-                  {specializationName(first.specializationId)} · {triggerName(first.triggerId)}
-                </small>
-                <em>
-                  基礎 {first.power} · 追加 {first.triggerAddition} · {first.repeatCount} 擊
-                </em>
-              </article>
-            );
-          })}
-        </div>
-        <nav className="gr-collection-pager" data-pager="loot" aria-label="切換戰利品">
-          <button
-            type="button"
-            disabled={lootIndex === 0}
-            onClick={() => setLootIndex((value) => Math.max(0, value - 1))}
-          >
-            ←
-          </button>
-          <span>
-            {lootIndex + 1} / {lootCount}
-          </span>
-          <button
-            type="button"
-            disabled={lootIndex >= lootCount - 1}
-            onClick={() => setLootIndex((value) => Math.min(lootCount - 1, value + 1))}
-          >
-            →
-          </button>
-        </nav>
-      </section>
-
-      <details className="gr-loot-recommendation" data-loot-recommendation="true">
-        <summary>
-          <span>NEXT POWER SPIKE</span>
-          <strong>這次最值得先試</strong>
-        </summary>
-        <section>
-          <div>
-            <b>裝備</b>
-            <strong>{recommendedItem?.name ?? '本次裝備'}</strong>
-            <small>
-              {recommendedItem
-                ? `${equipmentSlotName(recommendedItem.slot)} · ${rarityName(recommendedItem.rarity)} · ${recommendedCore?.name ?? '屬性核心'}`
-                : '完成下一場狩獵取得裝備'}
-            </small>
-          </div>
-          <div>
-            <b>技能</b>
-            <strong>{recommendedSkill?.name ?? '本次技能'}</strong>
-            <small>
-              {recommendedSkill
-                ? `${specializationName(recommendedSkill.components[0].specializationId)}接上${triggerName(recommendedSkill.components[0].triggerId)}`
-                : '完成下一場狩獵取得技能'}
-            </small>
-          </div>
-          <p>
-            <strong>為什麼有用：</strong>
-            {recommendedCore?.description ??
-              '先把新裝備穿上，再到技能頁比較新觸發，最快看見下一場的連鎖差異。'}
-          </p>
-        </section>
-      </details>
-
-      <details className="gr-material-rewards">
-        <summary>素材與完整數量 · {rewards.materials.length} 種</summary>
-        <div>
-          {rewards.materials.map((material) => (
-            <span key={material.id}>
-              {material.name} <strong>+{material.quantity}</strong>
-            </span>
-          ))}
-        </div>
-      </details>
+                立即裝給目前角色
+              </button>
+            </>
+          ) : (
+            <>
+              <span>
+                {selected.skill.stars}★ · {elementName(selected.skill.components[0].element)}
+              </span>
+              <strong>{selected.skill.name}</strong>
+              <p>
+                {specializationName(selected.skill.components[0].specializationId)} →{' '}
+                {triggerName(selected.skill.components[0].triggerId)}
+              </p>
+              <div>
+                {selected.skill.components.map((component) => (
+                  <small key={component.id}>
+                    威力 {component.power} · 疊層 {component.layerStrength} · 追加{' '}
+                    {component.triggerAddition}
+                  </small>
+                ))}
+              </div>
+              <button
+                type="button"
+                className="gr-drawer-action"
+                disabled={
+                  state.preferences.tutorial === 'active' && state.tutorialStep === 'equip_loot'
+                }
+                onClick={() => dispatch({ type: 'GO_TO_FUSION' })}
+              >
+                前往配置技能
+              </button>
+            </>
+          )}
+        </aside>
+      )}
 
       <div className="gr-reward-actions">
-        <button
-          type="button"
-          className="gr-primary-action"
-          data-guide-id="reward:equipment"
-          data-guide-active={isFirstHuntCoachFocus(
-            state.preferences.tutorial,
-            state.tutorialStep,
-            'reward:equipment',
-          )}
-          onClick={() => dispatch({ type: 'GO_TO_EQUIPMENT' })}
-        >
-          先穿上推薦裝備
+        <button type="button" onClick={() => dispatch({ type: 'GO_TO_EQUIPMENT' })}>
+          整理裝備
         </button>
         <button
           type="button"
           disabled={state.preferences.tutorial === 'active' && state.tutorialStep === 'equip_loot'}
           onClick={() => dispatch({ type: 'GO_TO_FUSION' })}
         >
-          {state.preferences.tutorial === 'active' && state.tutorialStep === 'equip_loot'
-            ? '穿裝後開放技能融合'
-            : '前往技能融合'}
+          配置技能
+        </button>
+        <button
+          type="button"
+          disabled={state.preferences.tutorial === 'active' && state.tutorialStep !== 'complete'}
+          onClick={() => dispatch({ type: 'REPLAY_HUNT' })}
+        >
+          再刷一次
         </button>
       </div>
-      <p className="gr-status-line" role="status">
+      <p className="gr-status-line gr-sr-only" role="status">
         {state.message}
       </p>
     </main>

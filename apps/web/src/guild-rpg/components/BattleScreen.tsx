@@ -1,5 +1,9 @@
 import { GUILD_GAME_CONTENT } from '@expedition/game-data';
-import { previewSkillOutcome, type SkillOutcomePreview } from '@expedition/simulation-core';
+import {
+  previewSkillOutcome,
+  projectBattlePlayback,
+  type SkillOutcomePreview,
+} from '@expedition/simulation-core';
 import { useEffect, useMemo, useState } from 'react';
 
 import { useCombatPlayback } from '../hooks/use-combat-playback';
@@ -37,6 +41,18 @@ export function BattleScreen({
         ? Math.max(1, order.actedIds.length)
         : Math.min(6, order.actedIds.length + 1);
   const playback = useCombatPlayback(state.recentEvents, relay, state.preferences);
+  const displayBattle =
+    playback.isPlaying && state.playbackStartBattle
+      ? projectBattlePlayback(
+          state.playbackStartBattle,
+          battle,
+          state.recentEvents,
+          playback.visibleBeats.length,
+        )
+      : battle;
+  const displayTargetHp = displayBattle.units.find(
+    ({ id }) => id === displayBattle.selectedTargetId,
+  )?.currentHp;
   const actingActorId = playback.isPlaying && recentActorId ? recentActorId : activeActorId;
   const nextActorId = victory
     ? undefined
@@ -95,7 +111,12 @@ export function BattleScreen({
   };
 
   return (
-    <main className="gr-battle" data-playback={playback.isPlaying} data-shell="single-screen">
+    <main
+      className="gr-battle"
+      data-playback={playback.isPlaying}
+      data-shell="single-screen"
+      data-display-target-hp={displayTargetHp}
+    >
       <header className="gr-battle__header">
         <div>
           <span>QUEST</span>
@@ -140,7 +161,7 @@ export function BattleScreen({
       </header>
 
       <CombatBattlefield
-        battle={battle}
+        battle={displayBattle}
         preferences={state.preferences}
         tutorialStep={state.tutorialStep}
         currentBeat={playback.currentBeat}

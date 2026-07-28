@@ -121,38 +121,19 @@ function drawIdentity(root: Container, unit: GuildCombatSceneUnit) {
   hpLabel.position.set(0, 58);
   root.addChild(hpLabel);
 
-  const stats = new Text({
-    text: hud.statLabel,
-    style: {
-      fill: 0xb8c6bd,
-      fontFamily: '"Noto Sans TC", "Microsoft JhengHei", sans-serif',
-      fontSize: 15,
-      fontWeight: '700',
-      stroke: { color: 0x07110e, width: 3 },
-    },
-  });
-  stats.anchor.set(0.5);
-  stats.position.set(0, 76);
-  root.addChild(stats);
-
-  if (unit.preview) {
+  if (hud.impactLabel) {
     const change = new Text({
-      text: [
-        hud.damage > 0 ? `−${hud.damage}` : hud.healing > 0 ? `+${hud.healing}` : '',
-        ...hud.statuses,
-      ]
-        .filter(Boolean)
-        .join(' · '),
+      text: hud.impactLabel,
       style: {
         fill: 0xffd86f,
         fontFamily: '"Noto Sans TC", "Microsoft JhengHei", sans-serif',
-        fontSize: 16,
+        fontSize: 18,
         fontWeight: '900',
         stroke: { color: 0x1b0903, width: 3 },
       },
     });
     change.anchor.set(0.5);
-    change.position.set(0, 94);
+    change.position.set(0, 80);
     root.addChild(change);
   }
 }
