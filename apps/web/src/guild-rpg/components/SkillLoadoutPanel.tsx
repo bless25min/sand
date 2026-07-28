@@ -1,5 +1,5 @@
 import { GUILD_GAME_CONTENT } from '@expedition/game-data';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { elementName, specializationName, triggerName } from '../content-labels';
 import { isFirstHuntCoachFocus } from '../onboarding/first-hunt-coach';
@@ -16,7 +16,7 @@ export function SkillLoadoutPanel({
   const [specializationFilter, setSpecializationFilter] = useState('all');
   const [triggerFilter, setTriggerFilter] = useState('all');
   const [starFilter, setStarFilter] = useState('all');
-  const [showAll, setShowAll] = useState(false);
+  const [libraryPage, setLibraryPage] = useState(0);
   const member = state.profile.party.find(
     ({ definitionId }) => definitionId === state.selectedHeroId,
   )!;
@@ -49,12 +49,21 @@ export function SkillLoadoutPanel({
       (left, right) =>
         Number(right.id === state.lastFusedSkillId) - Number(left.id === state.lastFusedSkillId),
     );
-  const filtersActive =
-    elementFilter !== 'all' ||
-    specializationFilter !== 'all' ||
-    triggerFilter !== 'all' ||
-    starFilter !== 'all';
-  const visibleSkills = showAll || filtersActive ? filteredSkills : filteredSkills.slice(0, 12);
+  const pageCount = Math.max(1, Math.ceil(filteredSkills.length / 6));
+  const safeLibraryPage = Math.min(libraryPage, pageCount - 1);
+  const visibleSkills = filteredSkills.slice(safeLibraryPage * 6, safeLibraryPage * 6 + 6);
+
+  useEffect(() => {
+    setLibraryPage(0);
+  }, [
+    elementFilter,
+    specializationFilter,
+    starFilter,
+    state.selectedHeroId,
+    state.selectedSkillSlot,
+    triggerFilter,
+  ]);
+
   return (
     <section className="gr-panel" aria-labelledby="skill-loadout-title">
       <header className="gr-panel__header">
@@ -223,7 +232,12 @@ export function SkillLoadoutPanel({
                   ? 'skill:equip'
                   : undefined;
             return (
-              <article className="gr-skill-card" data-element={first.element} key={skill.id}>
+              <article
+                className="gr-skill-card"
+                data-element={first.element}
+                data-skill-library-item={skill.id}
+                key={skill.id}
+              >
                 <div>
                   <span>
                     {skill.stars}★ · {elementName(first.element)}
@@ -301,11 +315,25 @@ export function SkillLoadoutPanel({
             );
           })}
         </div>
-        {!filtersActive && filteredSkills.length > visibleSkills.length && (
-          <button type="button" className="gr-show-all" onClick={() => setShowAll(true)}>
-            顯示全部 {filteredSkills.length} 張技能
+        <nav className="gr-collection-pager" data-pager="skills" aria-label="切換技能頁">
+          <button
+            type="button"
+            disabled={safeLibraryPage === 0}
+            onClick={() => setLibraryPage((value) => Math.max(0, value - 1))}
+          >
+            ←
           </button>
-        )}
+          <span>
+            {safeLibraryPage + 1} / {pageCount}
+          </span>
+          <button
+            type="button"
+            disabled={safeLibraryPage >= pageCount - 1}
+            onClick={() => setLibraryPage((value) => Math.min(pageCount - 1, value + 1))}
+          >
+            →
+          </button>
+        </nav>
       </section>
     </section>
   );

@@ -99,6 +99,7 @@ export function QuestBoard({
       questIds.some((id) => state.profile.unlockedQuestIds.includes(id)),
     ) ?? GUILD_GAME_CONTENT.zones[0]!;
   const [selectedZoneId, setSelectedZoneId] = useState(defaultZone.id);
+  const [huntIndex, setHuntIndex] = useState(0);
   const selectedZone =
     GUILD_GAME_CONTENT.zones.find(({ id }) => id === selectedZoneId) ??
     GUILD_GAME_CONTENT.zones[0]!;
@@ -108,6 +109,8 @@ export function QuestBoard({
   const completedInZone = selectedZone.questIds.filter(
     (questId) => (state.profile.questRecords[questId]?.clears ?? 0) > 0,
   ).length;
+  const safeHuntIndex = Math.min(huntIndex, Math.max(0, hunts.length - 1));
+
   return (
     <section className="gr-panel gr-quest-board" aria-labelledby="quest-board-title">
       <header className="gr-panel__header">
@@ -135,7 +138,10 @@ export function QuestBoard({
                 data-zone-tab={zone.id}
                 aria-current={zone.id === selectedZone.id ? 'page' : undefined}
                 key={zone.id}
-                onClick={() => setSelectedZoneId(zone.id)}
+                onClick={() => {
+                  setSelectedZoneId(zone.id);
+                  setHuntIndex(0);
+                }}
               >
                 <span>區域 {index + 1}</span>
                 <strong>{zone.name}</strong>
@@ -160,10 +166,34 @@ export function QuestBoard({
               <strong>本區 3 個任務 · {completedInZone}/3 完成</strong>
             </header>
             <div className="gr-hunt-grid">
-              {hunts.map((hunt) => (
-                <HuntCard hunt={hunt} state={state} dispatch={dispatch} key={hunt.id} />
-              ))}
+              {hunts[safeHuntIndex] && (
+                <HuntCard
+                  hunt={hunts[safeHuntIndex]}
+                  state={state}
+                  dispatch={dispatch}
+                  key={hunts[safeHuntIndex].id}
+                />
+              )}
             </div>
+            <nav className="gr-collection-pager" data-pager="hunts" aria-label="切換區域任務">
+              <button
+                type="button"
+                disabled={safeHuntIndex === 0}
+                onClick={() => setHuntIndex((value) => Math.max(0, value - 1))}
+              >
+                ←
+              </button>
+              <span>
+                {safeHuntIndex + 1} / {hunts.length}
+              </span>
+              <button
+                type="button"
+                disabled={safeHuntIndex >= hunts.length - 1}
+                onClick={() => setHuntIndex((value) => Math.min(hunts.length - 1, value + 1))}
+              >
+                →
+              </button>
+            </nav>
           </section>
         )}
       </div>

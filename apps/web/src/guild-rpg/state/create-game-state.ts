@@ -18,6 +18,7 @@ export function createGuildRpgState(
   return {
     screen: 'guild',
     page: 'quest',
+    skillWorkspace: 'loadout',
     profile: activeProfile,
     preferences,
     tutorialStep: preferences.tutorial === 'active' ? 'start_hunt' : 'complete',

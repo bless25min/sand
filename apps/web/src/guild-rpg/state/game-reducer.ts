@@ -30,9 +30,11 @@ import type { GuildPreferences, TutorialState } from '../preferences/guild-prefe
 import { reduceHuntResult } from './reduce-hunt-result';
 
 export type GuildPage = 'quest' | 'party' | 'skills' | 'equipment';
+type SkillWorkspace = 'loadout' | 'fusion';
 export interface GuildRpgState {
   screen: 'guild' | 'battle' | 'rewards';
   page: GuildPage;
+  skillWorkspace: SkillWorkspace;
   profile: GuildProfile;
   preferences: GuildPreferences;
   tutorialStep: FirstHuntCoachStep;
@@ -49,6 +51,7 @@ export interface GuildRpgState {
 
 export type GuildRpgAction =
   | { type: 'NAVIGATE'; page: GuildPage }
+  | { type: 'SELECT_SKILL_WORKSPACE'; workspace: SkillWorkspace }
   | { type: 'SELECT_HERO'; adventurerId: string }
   | { type: 'SELECT_SKILL_SLOT'; slotIndex: number }
   | { type: 'EQUIP_SKILL'; skillId: string }
@@ -132,9 +135,19 @@ export function guildRpgReducer(state: GuildRpgState, action: GuildRpgAction): G
     };
   }
   if (action.type === 'NAVIGATE' && state.screen === 'guild') {
-    let next = { ...state, page: action.page };
+    let next = {
+      ...state,
+      page: action.page,
+      skillWorkspace:
+        action.page === 'skills' && state.tutorialStep === 'inspect_skills'
+          ? ('fusion' as const)
+          : ('loadout' as const),
+    };
     if (action.page === 'skills') next = withTutorial(next, 'inspect_skills', 'fuse_skill');
     return next;
+  }
+  if (action.type === 'SELECT_SKILL_WORKSPACE' && state.screen === 'guild') {
+    return { ...state, skillWorkspace: action.workspace };
   }
   if (action.type === 'SELECT_HERO' && state.screen === 'guild') {
     if (!state.profile.party.some(({ definitionId }) => definitionId === action.adventurerId)) {
@@ -223,6 +236,7 @@ export function guildRpgReducer(state: GuildRpgState, action: GuildRpgAction): G
         },
         selectedFusionIds: [],
         lastFusedSkillId: fused.id,
+        skillWorkspace: 'loadout',
         tutorialStep: state.tutorialStep === 'fuse_skill' ? 'equip_fused' : state.tutorialStep,
         message: `${fused.name}融合完成；現在把它裝進角色的六格技能。`,
       };
@@ -526,6 +540,7 @@ export function guildRpgReducer(state: GuildRpgState, action: GuildRpgAction): G
       ...state,
       screen: 'guild',
       page: 'skills',
+      skillWorkspace: 'fusion',
       rewards: undefined,
       tutorialStep: state.tutorialStep === 'equip_loot' ? 'fuse_skill' : state.tutorialStep,
       message: '戰利品已全部收入背包與技能庫；選兩張同屬性一星技能融合。',
@@ -536,6 +551,7 @@ export function guildRpgReducer(state: GuildRpgState, action: GuildRpgAction): G
       ...state,
       screen: 'guild',
       page: action.page ?? 'quest',
+      skillWorkspace: 'loadout',
       battle: undefined,
       rewards: undefined,
       recentEvents: [],

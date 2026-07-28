@@ -1,5 +1,6 @@
 import { GUILD_GAME_CONTENT } from '@expedition/game-data';
 import type { EquipmentItem } from '@expedition/shared-types';
+import { useState } from 'react';
 
 import { equipmentSlotName, rarityName } from '../content-labels';
 import { isFirstHuntCoachFocus } from '../onboarding/first-hunt-coach';
@@ -36,10 +37,17 @@ export function EquipmentWorkbench({
   state: GuildRpgState;
   dispatch: React.Dispatch<GuildRpgAction>;
 }) {
+  const [inventoryPage, setInventoryPage] = useState(0);
   const member = state.profile.party.find(
     ({ definitionId }) => definitionId === state.selectedHeroId,
   )!;
   const hero = GUILD_GAME_CONTENT.adventurers.find(({ id }) => id === member.definitionId)!;
+  const pageCount = Math.max(1, Math.ceil(state.profile.inventory.length / 6));
+  const safeInventoryPage = Math.min(inventoryPage, pageCount - 1);
+  const visibleInventory = state.profile.inventory.slice(
+    safeInventoryPage * 6,
+    safeInventoryPage * 6 + 6,
+  );
   return (
     <section className="gr-panel" aria-labelledby="equipment-title">
       <header className="gr-panel__header">
@@ -145,7 +153,7 @@ export function EquipmentWorkbench({
       </div>
       <div className="gr-equipment-library">
         {state.profile.inventory.length === 0 && <p>完成狩獵後，屬性特化裝備會出現在這裡。</p>}
-        {state.profile.inventory.map((item, index) => {
+        {visibleInventory.map((item, index) => {
           const equippedTarget = member.equipment[item.slot];
           const rolls = coreRolls(item);
           const base = GUILD_GAME_CONTENT.equipmentBases.find(({ id }) => id === item.baseId);
@@ -157,7 +165,11 @@ export function EquipmentWorkbench({
             ['tide-relay', 'relay-prism', 'lone-king-loop', 'toxic-mist'].includes(id),
           );
           return (
-            <article data-selected={state.selectedSalvageIds.includes(item.id)} key={item.id}>
+            <article
+              data-equipment-library-item={item.id}
+              data-selected={state.selectedSalvageIds.includes(item.id)}
+              key={item.id}
+            >
               <div>
                 <span>
                   {equipmentSlotName(item.slot)} · {rarityName(item.rarity)}
@@ -176,96 +188,120 @@ export function EquipmentWorkbench({
                 {item.locked && <span>已鎖定</span>}
                 {item.favorite && <span>已收藏</span>}
               </div>
-              {rolls.map(({ id, strength }) => {
-                const core = GUILD_GAME_CONTENT.equipmentCores.find(
-                  (candidate) => candidate.id === id,
-                );
-                return (
-                  <p key={id}>
-                    {core?.name ?? id} +{strength}
-                    {base ? `（${base.coreStrengthRoll.min}–${base.coreStrengthRoll.max}）` : ''}：
-                    {core?.description}
-                  </p>
-                );
-              })}
-              <div>
-                <button
-                  type="button"
-                  data-guide-id={index === 0 ? 'equipment:equip' : undefined}
-                  data-guide-active={
-                    index === 0
-                      ? isFirstHuntCoachFocus(
-                          state.preferences.tutorial,
-                          state.tutorialStep,
-                          'equipment:equip',
-                        )
-                      : undefined
-                  }
-                  onClick={() =>
-                    dispatch({
-                      type: 'EQUIP_STORED',
-                      itemId: item.id,
-                      adventurerId: member.definitionId,
-                    })
-                  }
-                >
-                  裝備給{hero.name}
-                </button>
-                {equippedTarget && item.coreId && (
+              <button
+                type="button"
+                data-guide-id={index === 0 ? 'equipment:equip' : undefined}
+                data-guide-active={
+                  index === 0
+                    ? isFirstHuntCoachFocus(
+                        state.preferences.tutorial,
+                        state.tutorialStep,
+                        'equipment:equip',
+                      )
+                    : undefined
+                }
+                onClick={() =>
+                  dispatch({
+                    type: 'EQUIP_STORED',
+                    itemId: item.id,
+                    adventurerId: member.definitionId,
+                  })
+                }
+              >
+                裝備給{hero.name}
+              </button>
+              <details className="gr-equipment-card-details">
+                <summary>數值與更多操作</summary>
+                <div>
+                  {rolls.map(({ id, strength }) => {
+                    const core = GUILD_GAME_CONTENT.equipmentCores.find(
+                      (candidate) => candidate.id === id,
+                    );
+                    return (
+                      <p key={id}>
+                        {core?.name ?? id} +{strength}
+                        {base
+                          ? `（${base.coreStrengthRoll.min}–${base.coreStrengthRoll.max}）`
+                          : ''}
+                        ：{core?.description}
+                      </p>
+                    );
+                  })}
+                  {equippedTarget && item.coreId && (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        dispatch({
+                          type: 'FORGE_ITEM',
+                          itemId: equippedTarget.id,
+                          forgeAction: 'transplant',
+                          options: { sourceItemId: item.id },
+                        })
+                      }
+                    >
+                      移植到目前{equipmentSlotName(item.slot)}
+                    </button>
+                  )}
                   <button
                     type="button"
+                    aria-pressed={Boolean(item.locked)}
                     onClick={() =>
-                      dispatch({
-                        type: 'FORGE_ITEM',
-                        itemId: equippedTarget.id,
-                        forgeAction: 'transplant',
-                        options: { sourceItemId: item.id },
-                      })
+                      dispatch({ type: 'TOGGLE_ITEM_FLAG', itemId: item.id, flag: 'locked' })
                     }
                   >
-                    移植到目前{equipmentSlotName(item.slot)}
+                    {item.locked ? '解除鎖定' : '鎖定'}
                   </button>
-                )}
-                <button
-                  type="button"
-                  aria-pressed={Boolean(item.locked)}
-                  onClick={() =>
-                    dispatch({ type: 'TOGGLE_ITEM_FLAG', itemId: item.id, flag: 'locked' })
-                  }
-                >
-                  {item.locked ? '解除鎖定' : '鎖定'}
-                </button>
-                <button
-                  type="button"
-                  aria-pressed={Boolean(item.favorite)}
-                  onClick={() =>
-                    dispatch({ type: 'TOGGLE_ITEM_FLAG', itemId: item.id, flag: 'favorite' })
-                  }
-                >
-                  {item.favorite ? '取消收藏' : '收藏'}
-                </button>
-                <button
-                  type="button"
-                  aria-pressed={state.selectedSalvageIds.includes(item.id)}
-                  disabled={item.locked || item.favorite}
-                  onClick={() => dispatch({ type: 'TOGGLE_SALVAGE_SELECTION', itemId: item.id })}
-                >
-                  {state.selectedSalvageIds.includes(item.id) ? '移出分解' : '加入分解'}
-                </button>
-                <button
-                  type="button"
-                  disabled={item.locked || item.favorite}
-                  onClick={() =>
-                    dispatch({ type: 'FORGE_ITEM', itemId: item.id, forgeAction: 'salvage' })
-                  }
-                >
-                  主動拆解
-                </button>
-              </div>
+                  <button
+                    type="button"
+                    aria-pressed={Boolean(item.favorite)}
+                    onClick={() =>
+                      dispatch({ type: 'TOGGLE_ITEM_FLAG', itemId: item.id, flag: 'favorite' })
+                    }
+                  >
+                    {item.favorite ? '取消收藏' : '收藏'}
+                  </button>
+                  <button
+                    type="button"
+                    aria-pressed={state.selectedSalvageIds.includes(item.id)}
+                    disabled={item.locked || item.favorite}
+                    onClick={() => dispatch({ type: 'TOGGLE_SALVAGE_SELECTION', itemId: item.id })}
+                  >
+                    {state.selectedSalvageIds.includes(item.id) ? '移出分解' : '加入分解'}
+                  </button>
+                  <button
+                    type="button"
+                    disabled={item.locked || item.favorite}
+                    onClick={() =>
+                      dispatch({ type: 'FORGE_ITEM', itemId: item.id, forgeAction: 'salvage' })
+                    }
+                  >
+                    主動拆解
+                  </button>
+                </div>
+              </details>
             </article>
           );
         })}
       </div>
+      <nav className="gr-collection-pager" data-pager="equipment" aria-label="切換裝備頁">
+        <button
+          type="button"
+          disabled={safeInventoryPage === 0}
+          onClick={() => setInventoryPage((value) => Math.max(0, value - 1))}
+        >
+          ←
+        </button>
+        <span>
+          {safeInventoryPage + 1} / {pageCount}
+        </span>
+        <button
+          type="button"
+          disabled={safeInventoryPage >= pageCount - 1}
+          onClick={() => setInventoryPage((value) => Math.min(pageCount - 1, value + 1))}
+        >
+          →
+        </button>
+      </nav>
     </section>
   );
 }

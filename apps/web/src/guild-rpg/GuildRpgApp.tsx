@@ -28,21 +28,13 @@ export function GuildRpgApp() {
   }, [state.preferences]);
 
   useEffect(() => {
-    if (state.screen === 'battle') return;
-    const target = document.querySelector<HTMLElement>('[data-guide-active="true"]');
-    if (!target) return;
-    const rect = target.getBoundingClientRect();
-    if (rect.top < 0 || rect.bottom > window.innerHeight) {
-      target.scrollIntoView({
-        behavior: state.preferences.motion === 'reduced' ? 'auto' : 'smooth',
-        block: 'center',
-      });
-    }
-  }, [state.preferences.motion, state.screen, state.tutorialStep]);
-
-  useEffect(() => {
-    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
-  }, [state.screen]);
+    document.documentElement.dataset.guildScreen = state.screen;
+    document.documentElement.dataset.guildPage = state.page;
+    return () => {
+      delete document.documentElement.dataset.guildScreen;
+      delete document.documentElement.dataset.guildPage;
+    };
+  }, [state.page, state.screen]);
 
   if (state.screen === 'battle') return <BattleScreen state={state} dispatch={dispatch} />;
   if (state.screen === 'rewards') return <RewardScreen state={state} dispatch={dispatch} />;

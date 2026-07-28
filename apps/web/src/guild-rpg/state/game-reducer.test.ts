@@ -198,12 +198,14 @@ describe('deterministic six-hero game flow', () => {
     expect(state).toMatchObject({ page: 'equipment', tutorialStep: 'inspect_skills' });
     state = reduce(state, { type: 'NAVIGATE', page: 'skills' });
     expect(state.tutorialStep).toBe('fuse_skill');
+    expect(state.skillWorkspace).toBe('fusion');
     for (const skillId of rewardSkillIds) {
       state = reduce(state, { type: 'TOGGLE_FUSION_SKILL', skillId });
     }
     state = reduce(state, { type: 'FUSE_SELECTED' });
     expect(state.lastFusedSkillId).toBeTruthy();
     expect(state.tutorialStep).toBe('equip_fused');
+    expect(state.skillWorkspace).toBe('loadout');
 
     const fusedId = state.lastFusedSkillId!;
     const beforeOrder = state.profile.skillInventory

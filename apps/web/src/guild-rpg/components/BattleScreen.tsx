@@ -5,7 +5,6 @@ import { createFirstHuntCoach } from '../onboarding/first-hunt-coach';
 import type { GuildRpgAction, GuildRpgState } from '../state/game-reducer';
 import { BattleCommandDock } from './BattleCommandDock';
 import { CombatBattlefield } from './CombatBattlefield';
-import { TurnOrderRail } from './TurnOrderRail';
 
 const heroDefinition = (id?: string) =>
   GUILD_GAME_CONTENT.adventurers.find((hero) => hero.id === id);
@@ -41,7 +40,6 @@ export function BattleScreen({
       : order.currentOrder.find(
           (heroId) => heroId !== order.activeAdventurerId && !order.actedIds.includes(heroId),
         );
-  const actor = heroDefinition(actingActorId);
   const commandActor = heroDefinition(order.activeAdventurerId);
   const battleCoachStep =
     state.tutorialStep === 'select_target' ||
@@ -55,53 +53,50 @@ export function BattleScreen({
     : undefined;
 
   return (
-    <main className="gr-battle" data-playback={playback.isPlaying}>
+    <main className="gr-battle" data-playback={playback.isPlaying} data-shell="single-screen">
       <header className="gr-battle__header">
         <div>
-          <span>QUEST · {quest.name}</span>
-          <h1>
-            {victory ? '終結者' : playback.isPlaying ? '正在出招' : '目前出手'}：
-            {actor?.name ?? '等待結算'}
-          </h1>
+          <span>QUEST</span>
+          <h1>{quest.name}</h1>
         </div>
         {victory ? (
           <strong className="gr-finisher-badge">第六棒 · 終結完成</strong>
         ) : (
-          <div className="gr-battle-header-actions">
-            <button
-              type="button"
-              disabled={playback.isPlaying}
-              aria-label="恢復本回合預設順序"
-              onClick={() => dispatch({ type: 'RESET_CURRENT_ORDER' })}
-            >
-              重排
-            </button>
-            <button
-              type="button"
-              disabled={playback.isPlaying}
-              aria-label="切換是否沿用目前順序到下回合"
-              aria-pressed={order.carryCurrentOrder}
-              onClick={() =>
-                dispatch({
-                  type: 'SET_CARRY_ORDER',
-                  enabled: !order.carryCurrentOrder,
-                })
-              }
-            >
-              {order.carryCurrentOrder ? '沿用中' : '沿用'}
-            </button>
-            <button
-              type="button"
-              disabled={playback.isPlaying}
-              onClick={() => dispatch({ type: 'ABANDON_HUNT' })}
-            >
-              撤離
-            </button>
-          </div>
+          <details className="gr-battle-menu">
+            <summary aria-label="更多戰鬥選項">⋯</summary>
+            <div>
+              <button
+                type="button"
+                disabled={playback.isPlaying}
+                onClick={() => dispatch({ type: 'RESET_CURRENT_ORDER' })}
+              >
+                重設順序
+              </button>
+              <button
+                type="button"
+                disabled={playback.isPlaying}
+                aria-pressed={order.carryCurrentOrder}
+                onClick={() =>
+                  dispatch({
+                    type: 'SET_CARRY_ORDER',
+                    enabled: !order.carryCurrentOrder,
+                  })
+                }
+              >
+                {order.carryCurrentOrder ? '取消沿用' : '沿用順序'}
+              </button>
+              <button
+                type="button"
+                disabled={playback.isPlaying}
+                onClick={() => dispatch({ type: 'ABANDON_HUNT' })}
+              >
+                撤離
+              </button>
+            </div>
+          </details>
         )}
       </header>
 
-      <TurnOrderRail state={state} dispatch={dispatch} locked={playback.isPlaying} />
       <CombatBattlefield
         battle={battle}
         preferences={state.preferences}
@@ -113,6 +108,7 @@ export function BattleScreen({
         relay={relay}
         locked={playback.isPlaying}
         onSelectTarget={(targetId) => dispatch({ type: 'SELECT_TARGET', targetId })}
+        onChooseHero={(adventurerId) => dispatch({ type: 'CHOOSE_NEXT_HERO', adventurerId })}
       />
 
       <BattleCommandDock
@@ -123,7 +119,7 @@ export function BattleScreen({
         commandActorName={commandActor?.name}
         coach={coach}
       />
-      <p className="gr-status-line" role="status">
+      <p className="gr-status-line gr-sr-only" role="status">
         {playback.isPlaying ? playback.currentBeat?.label : state.message}
       </p>
     </main>

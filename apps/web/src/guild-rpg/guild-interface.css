@@ -599,6 +599,20 @@
   white-space: nowrap;
 }
 
+.gr-equipment-card-details > summary {
+  min-height: 34px;
+  color: #d9bc82;
+  font-size: 9px;
+  font-weight: 900;
+  line-height: 34px;
+  cursor: pointer;
+}
+
+.gr-equipment-card-details > div {
+  display: grid;
+  gap: 4px;
+}
+
 .gr-forge-actions {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -819,5 +833,505 @@
 
   .gr-coach button {
     min-height: 42px;
+  }
+}
+
+/* Fixed App Shell: one viewport, one active workspace, paged collections. */
+html[data-guild-screen],
+html[data-guild-screen] body,
+html[data-guild-screen] #root {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.gr-shell[data-shell='single-screen'] {
+  position: relative;
+  display: grid;
+  width: 100%;
+  max-width: none;
+  height: 100dvh;
+  min-height: 0;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  gap: 0;
+  margin: 0;
+  padding: max(5px, env(safe-area-inset-top)) 6px max(5px, env(safe-area-inset-bottom));
+  overflow: hidden;
+}
+
+.gr-shell[data-shell='single-screen'] .gr-topbar {
+  display: flex;
+  min-height: 48px;
+  gap: 6px;
+  padding: 3px 2px 5px;
+}
+
+.gr-shell[data-shell='single-screen'] .gr-brand {
+  min-width: 0;
+}
+
+.gr-shell[data-shell='single-screen'] .gr-brand > span {
+  font-size: 8px;
+}
+
+.gr-shell[data-shell='single-screen'] .gr-brand > strong {
+  font-size: clamp(14px, 4vw, 19px);
+}
+
+.gr-shell[data-shell='single-screen'] .gr-resources {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 3px;
+}
+
+.gr-shell[data-shell='single-screen'] .gr-resources > span {
+  display: flex;
+  min-width: 38px;
+  align-items: center;
+  gap: 3px;
+  padding: 3px 5px;
+  font-size: 9px;
+}
+
+.gr-shell[data-shell='single-screen'] .gr-resources strong {
+  font-size: 11px;
+}
+
+.gr-page-viewport {
+  position: relative;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.gr-page-viewport > .gr-panel {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  margin: 0;
+  overflow: hidden;
+}
+
+.gr-page-viewport[data-page-viewport='skills'] {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+}
+
+.gr-page-viewport[data-page-viewport='skills'] > .gr-panel {
+  border-radius: 0 0 10px 10px;
+}
+
+.gr-workspace-tabs {
+  z-index: 2;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  padding: 3px;
+  border: 1px solid rgb(239 188 98 / 18%);
+  border-radius: 10px 10px 0 0;
+  background: #07110e;
+}
+
+.gr-workspace-tabs button {
+  min-height: 38px;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  color: #b9c6bf;
+  background: transparent;
+  font-weight: 900;
+}
+
+.gr-workspace-tabs button[aria-current='page'] {
+  border-color: #e8af50;
+  color: #241606;
+  background: linear-gradient(135deg, #ffe4a1, #d79a3d);
+}
+
+.gr-shell[data-shell='single-screen'] .gr-main-nav {
+  position: relative;
+  z-index: 35;
+  top: auto;
+  grid-row: 3;
+  margin: 4px 0 0;
+  padding: 3px;
+  padding-bottom: max(3px, env(safe-area-inset-bottom));
+}
+
+.gr-shell[data-shell='single-screen'] .gr-main-nav button {
+  min-height: 48px;
+}
+
+.gr-help-drawer {
+  position: absolute;
+  z-index: 80;
+  top: max(8px, env(safe-area-inset-top));
+  left: 8px;
+}
+
+.gr-help-drawer > summary {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  place-items: center;
+  border: 1px solid #dba34b;
+  border-radius: 50%;
+  color: #ffe39c;
+  background: rgb(4 13 11 / 92%);
+  font-weight: 900;
+  list-style: none;
+  cursor: pointer;
+}
+
+.gr-help-drawer > summary::-webkit-details-marker {
+  display: none;
+}
+
+.gr-help-drawer > div {
+  position: fixed;
+  z-index: 90;
+  top: max(54px, calc(env(safe-area-inset-top) + 48px));
+  right: 8px;
+  left: 8px;
+  max-height: calc(100dvh - 130px);
+  padding: 8px;
+  overflow: auto;
+  border: 1px solid #dba34b;
+  border-radius: 10px;
+  background: rgb(4 13 11 / 98%);
+  box-shadow: 0 18px 60px #000;
+}
+
+.gr-help-basics {
+  display: grid;
+  gap: 5px;
+  margin-top: 6px;
+  padding: 9px;
+  border: 1px solid rgb(239 188 98 / 18%);
+  border-radius: 8px;
+  color: #bac8c0;
+  font-size: 11px;
+}
+
+.gr-help-basics > strong {
+  color: #f1cb82;
+}
+
+.gr-collection-pager {
+  display: grid;
+  width: min(210px, 100%);
+  grid-template-columns: 48px 1fr 48px;
+  gap: 4px;
+  align-items: center;
+  margin: 5px auto 0;
+}
+
+.gr-collection-pager button {
+  min-height: 38px;
+  border: 1px solid rgb(239 188 98 / 22%);
+  border-radius: 7px;
+  background: rgb(239 188 98 / 6%);
+}
+
+.gr-collection-pager span {
+  color: #e8ca8c;
+  font-size: 11px;
+  font-weight: 900;
+  text-align: center;
+}
+
+@media (max-width: 620px) {
+  .gr-shell[data-shell='single-screen'] .gr-topbar {
+    grid-template-columns: none;
+  }
+
+  .gr-shell[data-shell='single-screen'] .gr-brand {
+    padding-left: 44px;
+  }
+
+  .gr-page-viewport > .gr-panel {
+    padding: 6px;
+  }
+
+  .gr-page-viewport .gr-panel__header {
+    min-height: 39px;
+    margin-bottom: 4px;
+  }
+
+  .gr-page-viewport .gr-panel__header p,
+  .gr-page-viewport .gr-panel__header > span,
+  .gr-page-viewport .gr-workflow-steps {
+    display: none;
+  }
+
+  .gr-page-viewport .gr-panel__header h2 {
+    margin: 0;
+    font-size: 17px;
+  }
+
+  .gr-zone-tabs {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    margin-top: 2px;
+  }
+
+  .gr-zone-tabs button {
+    min-height: 46px;
+    padding: 4px;
+    text-align: center;
+  }
+
+  .gr-zone-tabs button > span,
+  .gr-zone-tabs button > small {
+    display: none;
+  }
+
+  .gr-zone-tabs button > strong {
+    font-size: 10px;
+  }
+
+  .gr-zone-missions {
+    margin-top: 4px;
+    padding: 6px;
+  }
+
+  .gr-zone-missions > header {
+    min-height: 43px;
+    margin-bottom: 4px;
+  }
+
+  .gr-zone-missions > header p,
+  .gr-zone-missions > header > strong {
+    display: none;
+  }
+
+  .gr-zone-missions h3 {
+    margin: 0;
+    font-size: 16px;
+  }
+
+  .gr-hunt-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .gr-hunt-card {
+    gap: 5px;
+    padding: 8px;
+  }
+
+  .gr-hunt-card > p {
+    max-height: 34px;
+    overflow: hidden;
+  }
+
+  .gr-hunt-card summary {
+    min-height: 34px;
+    line-height: 34px;
+  }
+
+  .gr-first-session {
+    display: grid;
+    gap: 5px;
+  }
+
+  .gr-first-session__mission {
+    padding: 10px;
+  }
+
+  .gr-first-session__mission h3 {
+    margin-block: 4px;
+    font-size: 20px;
+  }
+
+  .gr-first-session__briefing {
+    max-height: 42px;
+    overflow: auto;
+  }
+
+  .gr-party-context {
+    grid-template-columns: 1fr auto;
+    padding: 6px;
+  }
+
+  .gr-party-context > p {
+    display: none;
+  }
+
+  .gr-party-quick-actions {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .gr-hero-order {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 4px;
+  }
+
+  .gr-hero-order__card > button {
+    min-height: 62px;
+  }
+
+  .gr-hero-tabs {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 3px;
+    margin-bottom: 4px;
+  }
+
+  .gr-hero-tabs button {
+    min-height: 40px;
+    padding: 3px;
+    font-size: 10px;
+  }
+
+  .gr-skill-slots {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 3px;
+  }
+
+  .gr-skill-slots button {
+    min-height: 45px;
+    padding: 3px;
+  }
+
+  .gr-skill-slots button > span {
+    display: none;
+  }
+
+  .gr-skill-slots button > strong {
+    font-size: 9px;
+  }
+
+  .gr-skill-slots button > small {
+    display: none;
+  }
+
+  .gr-progressive-library {
+    margin-top: 5px;
+    padding-top: 4px;
+  }
+
+  .gr-library-heading {
+    margin-bottom: 3px;
+  }
+
+  .gr-library-heading > strong {
+    font-size: 13px;
+  }
+
+  .gr-library-heading > span {
+    font-size: 8px;
+  }
+
+  .gr-filter-drawer {
+    margin-bottom: 4px;
+  }
+
+  .gr-filter-drawer > summary {
+    min-height: 32px;
+    line-height: 32px;
+  }
+
+  .gr-skill-library,
+  .gr-equipment-library {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 4px;
+  }
+
+  .gr-skill-card,
+  .gr-equipment-library > article {
+    gap: 3px;
+    min-height: 82px;
+    padding: 5px;
+  }
+
+  .gr-skill-card > div:first-child > span,
+  .gr-skill-card small,
+  .gr-equipment-library > article > div:first-child > span,
+  .gr-equipment-library small,
+  .gr-skill-card .gr-item-tags,
+  .gr-equipment-library .gr-item-tags,
+  .gr-equipment-library > article > p,
+  .gr-skill-numbers {
+    display: none;
+  }
+
+  .gr-skill-card > div:first-child > strong,
+  .gr-equipment-library > article > div:first-child > strong {
+    font-size: 10px;
+  }
+
+  .gr-skill-card > button,
+  .gr-equipment-library > article button {
+    min-height: 34px;
+    padding: 2px;
+    font-size: 8px;
+  }
+
+  .gr-equipment-next-action,
+  .gr-subheading,
+  .gr-batch-actions {
+    display: none;
+  }
+
+  .gr-equipment-slots {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 3px;
+  }
+
+  .gr-equipment-slots > article {
+    min-height: 55px;
+    padding: 5px;
+  }
+
+  .gr-equipment-slots > article > span,
+  .gr-equipment-slots > article > small {
+    display: none;
+  }
+
+  .gr-equipment-slots > article > strong {
+    font-size: 10px;
+  }
+
+  .gr-equipment-card-details > summary {
+    min-height: 28px;
+    overflow: hidden;
+    line-height: 28px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .gr-equipment-card-details[open] > div {
+    position: fixed;
+    z-index: 95;
+    right: 8px;
+    bottom: 64px;
+    left: 8px;
+    max-height: calc(100dvh - 140px);
+    padding: 10px;
+    overflow: auto;
+    border: 1px solid #dba34b;
+    border-radius: 10px;
+    background: #07110e;
+    box-shadow: 0 18px 55px #000;
+  }
+
+  .gr-forge-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+    margin-top: 3px;
+  }
+
+  .gr-forge-actions button {
+    min-height: 30px;
+  }
+
+  .gr-forge-actions button:not(:first-child) {
+    display: none;
+  }
+
+  .gr-fusion {
+    height: 100%;
+    margin: 0;
+    overflow: hidden;
+  }
+
+  .gr-fusion__candidates {
+    max-height: calc(100dvh - 260px);
   }
 }

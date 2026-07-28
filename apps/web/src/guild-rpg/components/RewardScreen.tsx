@@ -1,4 +1,5 @@
 import { GUILD_GAME_CONTENT } from '@expedition/game-data';
+import { useState } from 'react';
 
 import {
   elementName,
@@ -25,7 +26,9 @@ export function RewardScreen({
   state: GuildRpgState;
   dispatch: React.Dispatch<GuildRpgAction>;
 }) {
+  const [lootIndex, setLootIndex] = useState(0);
   const rewards = state.rewards!;
+  const lootCount = rewards.items.length + rewards.skillDrops.length;
   const coach = createFirstHuntCoach(state.preferences.tutorial, state.tutorialStep, {
     surface: 'rewards',
   });
@@ -52,7 +55,7 @@ export function RewardScreen({
     : undefined;
 
   return (
-    <main className="gr-rewards">
+    <main className="gr-rewards" data-shell="single-screen">
       <header className="gr-reward-hero">
         <span>HUNT COMPLETE · LOOT SECURED</span>
         <h1>接力殲滅完成</h1>
@@ -62,7 +65,7 @@ export function RewardScreen({
       </header>
 
       {coach && (
-        <aside className="gr-coach" role="status">
+        <aside className="gr-coach gr-sr-only" role="status">
           <div>
             <span>
               實戰引導 {coach.stepNumber}/{coach.stepTotal}
@@ -91,7 +94,9 @@ export function RewardScreen({
             return (
               <article
                 data-loot-reveal={item.id}
+                data-loot-active={lootIndex === index}
                 data-rarity={item.rarity}
+                hidden={lootIndex !== index}
                 key={item.id}
                 style={{ '--reveal-order': index } as React.CSSProperties}
               >
@@ -121,8 +126,10 @@ export function RewardScreen({
             return (
               <article
                 data-loot-reveal={skill.id}
+                data-loot-active={lootIndex === rewards.items.length + index}
                 data-element={first.element}
                 data-rarity="skill"
+                hidden={lootIndex !== rewards.items.length + index}
                 key={skill.id}
                 style={{ '--reveal-order': rewards.items.length + index } as React.CSSProperties}
               >
@@ -141,37 +148,58 @@ export function RewardScreen({
             );
           })}
         </div>
+        <nav className="gr-collection-pager" data-pager="loot" aria-label="切換戰利品">
+          <button
+            type="button"
+            disabled={lootIndex === 0}
+            onClick={() => setLootIndex((value) => Math.max(0, value - 1))}
+          >
+            ←
+          </button>
+          <span>
+            {lootIndex + 1} / {lootCount}
+          </span>
+          <button
+            type="button"
+            disabled={lootIndex >= lootCount - 1}
+            onClick={() => setLootIndex((value) => Math.min(lootCount - 1, value + 1))}
+          >
+            →
+          </button>
+        </nav>
       </section>
 
-      <section className="gr-loot-recommendation" data-loot-recommendation="true">
-        <header>
+      <details className="gr-loot-recommendation" data-loot-recommendation="true">
+        <summary>
           <span>NEXT POWER SPIKE</span>
-          <h2>這次最值得先試</h2>
-        </header>
-        <div>
-          <b>裝備</b>
-          <strong>{recommendedItem?.name ?? '本次裝備'}</strong>
-          <small>
-            {recommendedItem
-              ? `${equipmentSlotName(recommendedItem.slot)} · ${rarityName(recommendedItem.rarity)} · ${recommendedCore?.name ?? '屬性核心'}`
-              : '完成下一場狩獵取得裝備'}
-          </small>
-        </div>
-        <div>
-          <b>技能</b>
-          <strong>{recommendedSkill?.name ?? '本次技能'}</strong>
-          <small>
-            {recommendedSkill
-              ? `${specializationName(recommendedSkill.components[0].specializationId)}接上${triggerName(recommendedSkill.components[0].triggerId)}`
-              : '完成下一場狩獵取得技能'}
-          </small>
-        </div>
-        <p>
-          <strong>為什麼有用：</strong>
-          {recommendedCore?.description ??
-            '先把新裝備穿上，再到技能頁比較新觸發，最快看見下一場的連鎖差異。'}
-        </p>
-      </section>
+          <strong>這次最值得先試</strong>
+        </summary>
+        <section>
+          <div>
+            <b>裝備</b>
+            <strong>{recommendedItem?.name ?? '本次裝備'}</strong>
+            <small>
+              {recommendedItem
+                ? `${equipmentSlotName(recommendedItem.slot)} · ${rarityName(recommendedItem.rarity)} · ${recommendedCore?.name ?? '屬性核心'}`
+                : '完成下一場狩獵取得裝備'}
+            </small>
+          </div>
+          <div>
+            <b>技能</b>
+            <strong>{recommendedSkill?.name ?? '本次技能'}</strong>
+            <small>
+              {recommendedSkill
+                ? `${specializationName(recommendedSkill.components[0].specializationId)}接上${triggerName(recommendedSkill.components[0].triggerId)}`
+                : '完成下一場狩獵取得技能'}
+            </small>
+          </div>
+          <p>
+            <strong>為什麼有用：</strong>
+            {recommendedCore?.description ??
+              '先把新裝備穿上，再到技能頁比較新觸發，最快看見下一場的連鎖差異。'}
+          </p>
+        </section>
+      </details>
 
       <details className="gr-material-rewards">
         <summary>素材與完整數量 · {rewards.materials.length} 種</summary>

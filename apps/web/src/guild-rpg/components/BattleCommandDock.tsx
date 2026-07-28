@@ -19,8 +19,12 @@ export function BattleCommandDock({
   coach?: FirstHuntCoach | undefined;
 }) {
   const victory = state.battle?.status === 'victory';
+  const targetName = state.battle?.units.find(
+    ({ id }) => id === state.battle?.selectedTargetId,
+  )?.name;
+
   return (
-    <section className="gr-command-dock" data-locked={playback.isPlaying}>
+    <section className="gr-command-dock" data-locked={playback.isPlaying} data-relay={relay}>
       {victory ? (
         <div className="gr-finisher-dock" role="status">
           <header>
@@ -43,29 +47,16 @@ export function BattleCommandDock({
         </div>
       ) : (
         <>
-          <header className={coach ? 'gr-battle-guide-strip' : undefined} role="status">
-            <div>
-              <span>
-                {coach
-                  ? `實戰引導 ${coach.stepNumber}/${coach.stepTotal} · ${coach.title}`
-                  : `${playback.isPlaying ? '技能演出中' : '點擊後立即結算'} · 接力 ${relay}/6`}
-              </span>
-              <strong>
-                {playback.isPlaying
-                  ? playback.currentBeat?.label
-                  : (coach?.message ?? `${commandActorName}可從六個技能中自由選擇`)}
-              </strong>
-            </div>
-            {coach && (
-              <button
-                type="button"
-                disabled={playback.isPlaying}
-                onClick={() => dispatch({ type: 'SET_TUTORIAL', tutorial: 'skipped' })}
-              >
-                略過
-              </button>
-            )}
+          <header className="gr-command-context">
+            <strong>{commandActorName ?? '選擇角色'}</strong>
+            <span aria-hidden="true">→</span>
+            <strong>{targetName ?? '選擇目標'}</strong>
           </header>
+          <p className="gr-sr-only" role="status">
+            {playback.isPlaying
+              ? playback.currentBeat?.label
+              : (coach?.message ?? `${commandActorName}可從六個技能中自由選擇`)}
+          </p>
           <SixSkillControls state={state} dispatch={dispatch} locked={playback.isPlaying} />
         </>
       )}
