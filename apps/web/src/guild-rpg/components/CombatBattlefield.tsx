@@ -20,11 +20,11 @@ interface CombatBattlefieldProps {
   preferences: GuildPreferences;
   tutorialStep: FirstHuntCoachStep;
   currentBeat?: CombatBeat | undefined;
-  visibleBeats: readonly CombatBeat[];
   actingActorId?: string | undefined;
   nextActorId?: string | undefined;
   relay: number;
   preview?: SkillOutcomePreview | undefined;
+  executionWindow: boolean;
   locked: boolean;
   onSelectTarget(targetId: string): void;
   onChooseHero(adventurerId: string): void;
@@ -35,11 +35,11 @@ export function CombatBattlefield({
   preferences,
   tutorialStep,
   currentBeat,
-  visibleBeats,
   actingActorId,
   nextActorId,
   relay,
   preview,
+  executionWindow,
   locked,
   onSelectTarget,
   onChooseHero,
@@ -53,6 +53,7 @@ export function CombatBattlefield({
     ...(nextActorId ? { nextActorId } : {}),
     ...(currentBeat ? { event: currentBeat.visual } : {}),
     ...(preview ? { preview } : {}),
+    ...(executionWindow ? { executionWindow: true } : {}),
   });
   return (
     <section
@@ -66,6 +67,7 @@ export function CombatBattlefield({
       data-next-actor={nextActorId}
       data-animation-first="true"
       data-battlefield-layout={layout}
+      data-execution-window={executionWindow}
     >
       <div className="gr-relay-energy" aria-label={`接力能量 ${stage.relay} / 6`}>
         {Array.from({ length: 6 }, (_, index) => (
@@ -78,7 +80,20 @@ export function CombatBattlefield({
         ))}
       </div>
 
-      <BattleFocusHud battle={battle} actorId={actingActorId} preview={preview} />
+      <BattleFocusHud
+        battle={battle}
+        actorId={actingActorId}
+        preview={preview}
+        executionWindow={executionWindow}
+      />
+
+      {executionWindow && (
+        <div className="gr-execution-window" role="status">
+          <span>EXECUTION WINDOW</span>
+          <strong>敵軍破勢</strong>
+          <small>選擇第六棒終結型態</small>
+        </div>
+      )}
 
       <Suspense
         fallback={
@@ -120,8 +135,7 @@ export function CombatBattlefield({
             )}
           </div>
           <p className="gr-sr-only" role="status">
-            {currentBeat.visual.headline}。{currentBeat.visual.detail}。已播放 {visibleBeats.length}{' '}
-            個事件。
+            {currentBeat.label}
           </p>
         </>
       )}

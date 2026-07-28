@@ -100,11 +100,24 @@ async function castVisibleSkill(page: Page, castOnBattlefieldTarget = false) {
   const actorId = await page
     .locator('[data-combat-battlefield]')
     .getAttribute('data-current-actor');
-  const skill = page.locator('button[data-battle-skill]:not([disabled])').first();
+  const availableSkills = page.locator('button[data-battle-skill]:not([disabled])');
+  const strongestSkillIndex = await availableSkills.evaluateAll(
+    (buttons) =>
+      buttons.reduce(
+        (best, button, index) => {
+          const total = Number(button.getAttribute('data-skill-total') ?? 0);
+          return total > best.total ? { index, total } : best;
+        },
+        { index: 0, total: Number.NEGATIVE_INFINITY },
+      ).index,
+  );
+  const skill = availableSkills.nth(strongestSkillIndex);
   await expect(skill).toBeVisible();
   await expect(skill).toHaveAttribute('data-skill-segments', /\d+/);
   await expect(skill).toHaveAttribute('data-skill-total', /\d+/);
   await expect(skill).toHaveAttribute('data-trigger-summary', /→|連招/);
+  const execution = (await skill.getAttribute('data-execution')) === 'true';
+  const finalExecution = (await skill.getAttribute('data-final-execution')) === 'true';
   expect(
     (await page.locator('button[data-battle-skill]').allTextContents()).join(''),
   ).not.toContain('×');
@@ -112,18 +125,39 @@ async function castVisibleSkill(page: Page, castOnBattlefieldTarget = false) {
   await expect(battle).toHaveAttribute('data-playback', 'false');
   await expect(skill).toHaveAttribute('data-armed', 'true');
   await expect(page.locator('[data-skill-preview]')).toBeVisible();
-  expect(await page.locator('[data-skill-preview] [data-combo-step]').count()).toBeGreaterThan(0);
-  await expect(page.locator('[data-skill-preview] [data-causal-step]')).toHaveCount(0);
-  await expect(page.locator('[data-skill-preview] .gr-preview-details')).not.toHaveAttribute(
-    'open',
-    '',
-  );
-  await expect(page.locator('[data-skill-preview] [data-preview-total]')).toHaveCount(1);
-  await expect(page.locator('[data-skill-preview]')).toContainText('本次：');
-  await expect(page.locator('[data-skill-preview]')).toContainText('段');
-  await expect(page.locator('[data-skill-preview]')).toContainText('追擊');
-  await expect(page.locator('[data-skill-preview]')).toContainText('總傷');
-  await expect(page.locator('[data-skill-preview]')).toContainText('接棒：');
+  if (execution) {
+    await expect(page.locator('[data-combat-battlefield]')).toHaveAttribute(
+      'data-execution-window',
+      'true',
+    );
+    if (finalExecution) {
+      await expect(page.locator('[data-execution-preview]')).toContainText('處刑預演');
+      await expect(page.locator('[data-execution-preview]')).toContainText('回收5次');
+      await expect(page.locator('[data-execution-preview]')).toContainText(/處刑\d+/);
+    } else {
+      await expect(page.locator('[data-execution-preview]')).toContainText('餘震回收');
+      await expect(page.locator('[data-execution-preview]')).toContainText(/回收[1-4]次/);
+      await expect(page.locator('[data-execution-preview]')).toContainText('第六棒蓄勢');
+      await expect(page.locator('[data-execution-preview]')).not.toContainText('處刑0');
+    }
+    await expect(page.locator('[data-execution-preview]')).toContainText(/OVERKILL \+\d+/);
+    await expect(page.locator('[data-skill-preview] [data-combo-step]')).toHaveCount(0);
+    await expect(page.locator('[data-skill-preview]')).not.toContainText('0段');
+    await expect(page.locator('[data-skill-preview]')).not.toContainText('基本命中');
+  } else {
+    expect(await page.locator('[data-skill-preview] [data-combo-step]').count()).toBeGreaterThan(0);
+    await expect(page.locator('[data-skill-preview] [data-causal-step]')).toHaveCount(0);
+    await expect(page.locator('[data-skill-preview] .gr-preview-details')).not.toHaveAttribute(
+      'open',
+      '',
+    );
+    await expect(page.locator('[data-skill-preview] [data-preview-total]')).toHaveCount(1);
+    await expect(page.locator('[data-skill-preview]')).toContainText('本次：');
+    await expect(page.locator('[data-skill-preview]')).toContainText('段');
+    await expect(page.locator('[data-skill-preview]')).toContainText('追擊');
+    await expect(page.locator('[data-skill-preview]')).toContainText('總傷');
+    await expect(page.locator('[data-skill-preview]')).toContainText('接棒：');
+  }
   expect(await page.locator('[data-skill-preview]').innerText()).not.toContain('×');
   await expect(page.locator('[data-pixi-combat-stage="true"]')).toHaveAttribute(
     'data-preview-total',
@@ -143,15 +177,19 @@ async function castVisibleSkill(page: Page, castOnBattlefieldTarget = false) {
   }
   await expect(battle).toHaveAttribute('data-playback', 'true');
   const stage = page.locator('[data-pixi-combat-stage="true"]');
-  await expect(stage).toHaveAttribute('data-effect-element', /fire|grass|water/);
-  await expect(stage).toHaveAttribute(
-    'data-effect-specialization',
-    /blast|stack|weaken|chain|empower|multistrike/,
-  );
-  await expect(stage).toHaveAttribute(
-    'data-effect-phase',
-    /windup|travel|impact|aftermath|finisher/,
-  );
+  if (execution) {
+    await expect(stage).toHaveAttribute('data-effect-phase', 'finisher');
+  } else {
+    await expect(stage).toHaveAttribute('data-effect-element', /fire|grass|water/);
+    await expect(stage).toHaveAttribute(
+      'data-effect-specialization',
+      /blast|stack|weaken|chain|empower|multistrike/,
+    );
+    await expect(stage).toHaveAttribute(
+      'data-effect-phase',
+      /windup|travel|impact|aftermath|finisher/,
+    );
+  }
   const relay = Number(
     await page.locator('[data-combat-battlefield]').getAttribute('data-relay-tier'),
   );
@@ -170,7 +208,7 @@ async function castVisibleSkill(page: Page, castOnBattlefieldTarget = false) {
       actorId ?? '',
     );
   }
-  return { actorId, relay };
+  return { actorId, relay, execution, finalExecution };
 }
 
 test('a new player understands combat, sees six escalating relays, and completes the loot loop', async ({
@@ -229,11 +267,16 @@ test('a new player understands combat, sees six escalating relays, and completes
   await page.getByRole('button', { name: /灰牙斥候/ }).click();
   await expect(page.locator('[data-battle-side="enemies"][data-targeted="true"]')).toHaveCount(1);
 
-  const firstRelays: { actorId: string | null; relay: number }[] = [];
+  const firstRelays: {
+    actorId: string | null;
+    relay: number;
+    execution: boolean;
+    finalExecution: boolean;
+  }[] = [];
   for (let turn = 0; turn < 60; turn += 1) {
     const collect = page.getByRole('button', { name: '收下全部戰利品' });
     if (await collect.isVisible().catch(() => false)) break;
-    const result = await castVisibleSkill(page, turn === 0);
+    const result = await castVisibleSkill(page);
     if (firstRelays.length < 6) firstRelays.push(result);
   }
 
@@ -246,6 +289,15 @@ test('a new player understands combat, sees six escalating relays, and completes
     'kyro',
   ]);
   expect(firstRelays.map(({ relay }) => relay)).toEqual([1, 2, 3, 4, 5, 6]);
+  const firstExecution = firstRelays.findIndex(({ execution }) => execution);
+  expect(firstExecution).toBeGreaterThanOrEqual(0);
+  expect(firstRelays.slice(firstExecution).every(({ execution }) => execution)).toBe(true);
+  expect(firstRelays.some(({ execution, finalExecution }) => execution && !finalExecution)).toBe(
+    true,
+  );
+  expect(firstRelays.at(-1)?.finalExecution).toBe(true);
+  await expect(page.locator('body')).not.toContainText('battle_open');
+  await expect(page.locator('body')).not.toContainText('已播放');
   await expect(page.getByRole('button', { name: '收下全部戰利品' })).toBeEnabled();
   await page.getByRole('button', { name: '收下全部戰利品' }).click();
 

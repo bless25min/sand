@@ -38,9 +38,18 @@ export function SixSkillControls({
           const presentation =
             skill && preview ? createSkillTilePresentation(skill, preview) : undefined;
           const status = presentation?.statusDelta;
-          const totalLabel = presentation?.primaryKind === 'healing' ? '總療' : '總傷';
+          const totalLabel =
+            presentation?.execution && presentation.primaryKind !== 'finisher'
+              ? '溢傷'
+              : presentation?.primaryKind === 'healing'
+                ? '總療'
+                : presentation?.primaryKind === 'finisher'
+                  ? '處刑'
+                  : '總傷';
           const skillLabel = presentation
-            ? `${index + 1}，${presentation.intentName}，${presentation.segments}段，${totalLabel}${presentation.primaryValue}，${presentation.triggerSummary}${status ? `，${STATUS_LABELS[status.kind]}${status.amount >= 0 ? '增加' : '消耗'}${Math.abs(status.amount)}` : ''}`
+            ? presentation.execution
+              ? `${index + 1}，${presentation.intentName}，回收${presentation.segments}次，${totalLabel}${presentation.primaryValue}，${presentation.triggerSummary}`
+              : `${index + 1}，${presentation.intentName}，${presentation.segments}段，${totalLabel}${presentation.primaryValue}，${presentation.triggerSummary}${status ? `，${STATUS_LABELS[status.kind]}${status.amount >= 0 ? '增加' : '消耗'}${Math.abs(status.amount)}` : ''}`
             : `${index + 1}，未裝備`;
           return (
             <div className="gr-battle-skill-slot" key={`${skillId}:${index}`}>
@@ -50,6 +59,8 @@ export function SixSkillControls({
                 aria-pressed={armedSkillId === skillId}
                 data-battle-skill={index + 1}
                 data-element={first?.element}
+                data-execution={presentation?.execution}
+                data-final-execution={presentation?.primaryKind === 'finisher'}
                 data-trigger-readiness={presentation?.readiness}
                 data-armed={armedSkillId === skillId}
                 data-skill-total={presentation?.primaryValue}
@@ -78,7 +89,13 @@ export function SixSkillControls({
                 <strong>{presentation?.intentName ?? '空位'}</strong>
                 {presentation && (
                   <small className="gr-skill-outcome">
-                    {presentation.segments > 0 && <span>{presentation.segments}段</span>}
+                    {presentation.segments > 0 && (
+                      <span>
+                        {presentation.execution
+                          ? `回收${presentation.segments}次`
+                          : `${presentation.segments}段`}
+                      </span>
+                    )}
                     <b>
                       {totalLabel}
                       {presentation.primaryValue}

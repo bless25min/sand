@@ -99,4 +99,79 @@ describe('skill tile presentation', () => {
       '連招 2/3 已亮',
     );
   });
+
+  it('turns all sixth-relay choices into clear execution styles after an early clear', () => {
+    const state = guildRpgReducer(createGuildRpgState(), {
+      type: 'START_QUEST',
+      questId: 'border_pack',
+    });
+    const battle = state.battle!;
+    const actorId = battle.roundOrder!.activeAdventurerId!;
+    const targetId = battle.selectedTargetId!;
+    const member = state.profile.party.find(({ definitionId }) => definitionId === actorId)!;
+    const skill = state.profile.skillInventory.find(({ id }) => id === member.skillIds[0])!;
+    const base = previewSkillOutcome({
+      battle,
+      actorId,
+      targetId,
+      skillId: skill.id,
+      content: createSkillEngineContent(state.profile),
+    });
+    const execution = {
+      ...base,
+      executionWindow: true,
+      finisherPower: 40,
+      relayEchoes: 5,
+      totalDamage: 0,
+      overkill: 40,
+      damageSegments: 0,
+      chaseSegments: 0,
+    };
+
+    expect(createSkillTilePresentation(skill, execution)).toMatchObject({
+      execution: true,
+      primaryKind: 'finisher',
+      primaryValue: 40,
+      segments: 5,
+      triggerSummary: '第六棒✓ → 全軍終結',
+    });
+  });
+
+  it('uses a rising overkill recovery before the sixth relay instead of showing execution zero', () => {
+    const state = guildRpgReducer(createGuildRpgState(), {
+      type: 'START_QUEST',
+      questId: 'border_pack',
+    });
+    const battle = state.battle!;
+    const actorId = battle.roundOrder!.activeAdventurerId!;
+    const targetId = battle.selectedTargetId!;
+    const member = state.profile.party.find(({ definitionId }) => definitionId === actorId)!;
+    const skill = state.profile.skillInventory.find(({ id }) => id === member.skillIds[0])!;
+    const base = previewSkillOutcome({
+      battle,
+      actorId,
+      targetId,
+      skillId: skill.id,
+      content: createSkillEngineContent(state.profile),
+    });
+
+    expect(
+      createSkillTilePresentation(skill, {
+        ...base,
+        executionWindow: true,
+        finisherPower: 0,
+        relayEchoes: 4,
+        totalDamage: 0,
+        overkill: 26,
+        damageSegments: 0,
+        chaseSegments: 0,
+      }),
+    ).toMatchObject({
+      execution: true,
+      primaryKind: 'effect',
+      primaryValue: 26,
+      segments: 4,
+      triggerSummary: '第5棒✓ → 餘震回收',
+    });
+  });
 });

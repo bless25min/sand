@@ -186,4 +186,46 @@ describe('previewSkillOutcome', () => {
       newlyReadySkillIds: [relaySkill.id],
     });
   });
+
+  it('previews an early-clear sixth relay as execution power instead of corpse damage', () => {
+    const state = battle();
+    state.units = state.units.map((entry) =>
+      entry.side === 'enemies'
+        ? {
+            ...entry,
+            currentHp: 0,
+            ...(entry.id === 'enemy-a' ? { statusLayers: { burn: 6, poison: 4, tide: 2 } } : {}),
+          }
+        : entry,
+    );
+    state.roundOrder = {
+      ...state.roundOrder!,
+      actedIds: heroIds.slice(0, 5),
+      activeAdventurerId: 'kyro',
+    };
+
+    const preview = previewSkillOutcome({
+      battle: state,
+      actorId: 'kyro',
+      skillId: skill.id,
+      targetId: 'enemy-a',
+      content: content([skill]),
+    });
+
+    expect(preview).toMatchObject({
+      executionWindow: true,
+      finisherPower: 40,
+      relayEchoes: 5,
+      totalDamage: 0,
+      overkill: 40,
+      damageSegments: 0,
+      chaseSegments: 0,
+    });
+    expect(preview.units.find(({ id }) => id === 'enemy-a')).toMatchObject({
+      beforeHp: 0,
+      afterHp: 0,
+      beforeStatus: { burn: 6, poison: 4, tide: 2 },
+      afterStatus: { burn: 6, poison: 4, tide: 2 },
+    });
+  });
 });

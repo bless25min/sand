@@ -168,4 +168,68 @@ describe('combat beat presentation', () => {
     expect(advanceCombatPlayback(beats, 0)).toEqual({ index: 1, complete: false });
     expect(advanceCombatPlayback(beats, 1)).toEqual({ index: 1, complete: true });
   });
+
+  it('keeps decisive results on top and never exposes engine prose', () => {
+    const decisiveEvents: readonly GuildBattleEvent[] = [
+      {
+        id: 20,
+        kind: 'skill_cast',
+        message: 'battle_open：凱洛選定處刑',
+        actorId: 'kyro',
+        targetId: 'wolf',
+        element: 'fire',
+      },
+      {
+        id: 21,
+        kind: 'damage',
+        message: '造成 9 傷害',
+        actorId: 'kyro',
+        targetId: 'wolf',
+        amount: 9,
+        element: 'fire',
+      },
+      {
+        id: 22,
+        kind: 'unit_defeated',
+        message: 'wolf 被擊破',
+        actorId: 'kyro',
+        targetId: 'wolf',
+      },
+      {
+        id: 23,
+        kind: 'passive',
+        message: '燼刃壓軸留下 8 點殘響',
+        actorId: 'kyro',
+        targetId: 'wolf',
+        amount: 8,
+      },
+      {
+        id: 24,
+        kind: 'overkill',
+        message: '接力餘震 OVERKILL +15',
+        actorId: 'kyro',
+        targetId: 'wolf',
+        amount: 15,
+      },
+    ];
+
+    const beats = createCombatBeats(decisiveEvents, 6);
+
+    expect(beats.map(({ eventKind }) => eventKind)).toEqual([
+      'skill_cast',
+      'damage',
+      'unit_defeated',
+      'overkill',
+    ]);
+    expect(beats.at(-1)).toMatchObject({
+      sourceEventIds: [23, 24],
+      kind: 'finisher',
+      label: 'OVERKILL +15',
+      visual: expect.objectContaining({ number: 15, detail: 'OVERKILL +15' }),
+    });
+    expect(JSON.stringify(beats)).not.toContain('battle_open');
+    expect(beats.flatMap(({ sourceEventIds }) => sourceEventIds).sort((a, b) => a - b)).toEqual([
+      20, 21, 22, 23, 24,
+    ]);
+  });
 });

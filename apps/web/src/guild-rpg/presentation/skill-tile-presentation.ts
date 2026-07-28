@@ -111,11 +111,12 @@ interface SkillComboStepPresentation {
 
 export interface SkillTilePresentation {
   intentName: string;
-  primaryKind: 'damage' | 'healing' | 'effect';
+  primaryKind: 'damage' | 'healing' | 'effect' | 'finisher';
   primaryValue: number;
   segments: number;
   chases: number;
   statusDelta?: { kind: StatusLayer; amount: number } | undefined;
+  execution: boolean;
   readiness: TriggerReadiness;
   readyCount: number;
   stepCount: number;
@@ -168,6 +169,24 @@ export function createSkillTilePresentation(
   });
   const readyCount = comboSteps.filter(({ readiness }) => readiness === 'ready').length;
   const summaryStep = (comboSteps.find(({ readiness }) => readiness === 'ready') ?? comboSteps[0])!;
+  if (preview.executionWindow) {
+    const finalExecution = preview.finisherPower > 0;
+    return {
+      intentName: INTENT_NAMES[first.element][first.specializationId],
+      primaryKind: finalExecution ? 'finisher' : 'effect',
+      primaryValue: finalExecution ? preview.finisherPower : preview.overkill,
+      segments: preview.relayEchoes,
+      chases: 0,
+      execution: true,
+      readiness: 'ready',
+      readyCount: 1,
+      stepCount: 1,
+      triggerSummary: finalExecution
+        ? '第六棒✓ → 全軍終結'
+        : `第${preview.relayEchoes + 1}棒✓ → 餘震回收`,
+      comboSteps,
+    };
+  }
   const mark =
     summaryStep.readiness === 'ready'
       ? '✓'
@@ -186,6 +205,7 @@ export function createSkillTilePresentation(
     segments: preview.damageSegments,
     chases: preview.chaseSegments,
     statusDelta: statusDelta(preview),
+    execution: false,
     readiness:
       readyCount > 0
         ? 'ready'

@@ -88,6 +88,31 @@ describe('battle scene projection', () => {
     expect(scene.relay).toBe(6);
   });
 
+  it('keeps zero-hp enemies visibly broken while the sixth relay is still available', () => {
+    const profile = createGuildProfile(GUILD_GAME_CONTENT);
+    const original = startGuildQuest(profile, 'border_pack', GUILD_GAME_CONTENT);
+    const battle = {
+      ...original,
+      units: original.units.map((unit) =>
+        unit.side === 'enemies' ? { ...unit, currentHp: 0 } : unit,
+      ),
+    };
+
+    const scene = createBattleScene(battle, {
+      relay: 6,
+      executionWindow: true,
+    });
+
+    expect(scene.units.filter(({ side }) => side === 'enemies')).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          state: 'broken',
+          hpRatio: 0,
+        }),
+      ]),
+    );
+  });
+
   it('projects exact numeric stats and armed-skill outcomes into the battlefield HUD', () => {
     const profile = createGuildProfile(GUILD_GAME_CONTENT);
     const battle = startGuildQuest(profile, 'border_pack', GUILD_GAME_CONTENT);

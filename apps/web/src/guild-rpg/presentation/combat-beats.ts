@@ -66,6 +66,55 @@ const DELAY_BY_KIND: Readonly<Record<CombatBeatKind, number>> = {
   info: 100,
 };
 
+const DECISIVE_EVENTS = new Set<BattleEventKind>([
+  'unit_defeated',
+  'overkill',
+  'finisher',
+  'victory',
+]);
+
+const SECONDARY_EVENTS = new Set<BattleEventKind>(['passive', 'strengthen', 'healing', 'guard']);
+
+const safeBeatLabel = (event: GuildBattleEvent, visual: VisualEvent) => {
+  if (event.kind === 'overkill') return `OVERKILL +${Math.abs(event.amount ?? 0)}`;
+  if (visual.number === undefined) return visual.headline;
+  const sign = visual.number > 0 ? '+' : '';
+  return `${visual.headline} ${sign}${visual.number}`;
+};
+
+const mergeSecondaryIntoDecisive = (beats: readonly CombatBeat[]): readonly CombatBeat[] => {
+  const decisiveIndexes = beats
+    .map(({ eventKind }, index) => (DECISIVE_EVENTS.has(eventKind) ? index : -1))
+    .filter((index) => index >= 0);
+  if (decisiveIndexes.length === 0) return beats;
+
+  const mergedIds = new Map<number, number[]>();
+  beats.forEach((beat, index) => {
+    if (!SECONDARY_EVENTS.has(beat.eventKind)) return;
+    const targetIndex = decisiveIndexes.reduce((best, candidate) => {
+      const candidateDistance = Math.abs(candidate - index);
+      const bestDistance = Math.abs(best - index);
+      return candidateDistance <= bestDistance ? candidate : best;
+    });
+    mergedIds.set(targetIndex, [...(mergedIds.get(targetIndex) ?? []), ...beat.sourceEventIds]);
+  });
+
+  return beats
+    .filter(({ eventKind }) => !SECONDARY_EVENTS.has(eventKind))
+    .map((beat) => {
+      const originalIndex = beats.indexOf(beat);
+      const secondaryIds = mergedIds.get(originalIndex);
+      return secondaryIds
+        ? {
+            ...beat,
+            sourceEventIds: [...secondaryIds, ...beat.sourceEventIds].sort(
+              (left, right) => left - right,
+            ),
+          }
+        : beat;
+    });
+};
+
 export function relayPresentation(relay: number): RelayPresentation {
   const normalized = Math.max(1, Math.min(6, Math.trunc(relay)));
   return {
@@ -120,14 +169,15 @@ export function createCombatBeats(
     const kind = mergedTrigger ? 'chain' : (KIND_BY_EVENT[event.kind] ?? 'info');
     const sourceEventIds = mergedTrigger ? [mergedTrigger.id, event.id] : [event.id];
     const baseVisual = visuals[index]!;
-    const visual =
+    const rawVisual =
       mergedTrigger && comboIndex !== undefined
         ? {
             ...baseVisual,
             headline: `追擊 ${comboIndex}`,
-            detail: event.message,
           }
         : baseVisual;
+    const label = safeBeatLabel(event, rawVisual);
+    const visual = { ...rawVisual, detail: label };
     projected.push({
       componentId: event.componentId,
       isComboDamage,
@@ -135,10 +185,7 @@ export function createCombatBeats(
         id: `${sourceEventIds.join('+')}:${kind}`,
         sourceEventIds,
         kind,
-        label:
-          mergedTrigger && comboIndex !== undefined
-            ? `追擊 ${comboIndex} · ${event.message}`
-            : event.message,
+        label,
         relay:
           event.kind === 'relay' && event.amount !== undefined
             ? relayPresentation(event.amount).relay
@@ -155,13 +202,14 @@ export function createCombatBeats(
     });
   });
 
-  return projected.map(({ beat, componentId, isComboDamage }, index) => {
+  const timed = projected.map(({ beat, componentId, isComboDamage }, index) => {
     if (reducedMotion || !isComboDamage || !componentId) return beat;
     const hasLaterSegment = projected
       .slice(index + 1)
       .some((entry) => entry.isComboDamage && entry.componentId === componentId);
     return { ...beat, delayMs: hasLaterSegment ? 70 : 170 };
   });
+  return mergeSecondaryIntoDecisive(timed);
 }
 
 export function advanceCombatPlayback(

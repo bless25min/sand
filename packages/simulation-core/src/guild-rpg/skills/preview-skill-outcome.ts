@@ -5,6 +5,7 @@ import type {
   TriggerCondition,
 } from '@expedition/shared-types';
 
+import { isExecutionWindow } from '../battle/is-execution-window';
 import { resolveSkill, type ResolveSkillInput } from './resolve-skill';
 import { previewTriggerReadiness, type TriggerReadiness } from './preview-trigger-readiness';
 
@@ -46,6 +47,9 @@ export interface SkillOutcomePreview {
   totalDamage: number;
   totalHealing: number;
   overkill: number;
+  executionWindow: boolean;
+  finisherPower: number;
+  relayEchoes: number;
   damageSegments: number;
   chaseSegments: number;
   comboSteps: readonly SkillComboStepPreview[];
@@ -104,6 +108,7 @@ const unitPreview = (
 });
 
 export function previewSkillOutcome(input: ResolveSkillInput): SkillOutcomePreview {
+  const executionWindow = isExecutionWindow(input.battle);
   const resolved = resolveSkill(input);
   const skill = input.content.skills[input.skillId]!;
   const readiness = new Map<string, TriggerReadiness>(
@@ -167,6 +172,15 @@ export function previewSkillOutcome(input: ResolveSkillInput): SkillOutcomePrevi
     totalDamage: eventTotal(resolved.events, new Set(['damage', 'reaction'])),
     totalHealing: units.reduce((sum, unit) => sum + unit.healing, 0),
     overkill: eventTotal(resolved.events, new Set(['overkill'])),
+    executionWindow,
+    finisherPower:
+      resolved.events
+        .slice()
+        .reverse()
+        .find(({ kind }) => kind === 'finisher')?.amount ?? 0,
+    relayEchoes: executionWindow
+      ? resolved.events.filter(({ kind }) => kind === 'overkill').length
+      : 0,
     damageSegments: allDamageEvents.length,
     chaseSegments: chaseEvents.length,
     comboSteps,

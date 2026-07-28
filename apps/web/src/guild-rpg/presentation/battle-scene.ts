@@ -18,6 +18,7 @@ export interface BattleSceneContext {
   nextActorId?: string;
   event?: VisualEvent;
   preview?: SkillOutcomePreview;
+  executionWindow?: boolean;
 }
 
 const HERO_POSITIONS = [
@@ -71,7 +72,9 @@ export function createBattleScene(
     const hit = context.event?.targetId === unit.id && context.event.phase === 'impact';
     const state: GuildCombatUnitState =
       unit.currentHp <= 0
-        ? 'defeated'
+        ? context.executionWindow && unit.side === 'enemies'
+          ? 'broken'
+          : 'defeated'
         : hit
           ? 'hit'
           : unit.id === context.actingActorId
@@ -125,10 +128,14 @@ export function createBattleScene(
       ? {
           preview: {
             actorId: context.preview.actorId,
-            targetIds: context.preview.units
-              .filter(({ side, damage }) => side === 'enemies' && damage > 0)
-              .map(({ id }) => id),
-            totalDamage: context.preview.totalDamage,
+            targetIds: context.preview.executionWindow
+              ? [context.preview.targetId]
+              : context.preview.units
+                  .filter(({ side, damage }) => side === 'enemies' && damage > 0)
+                  .map(({ id }) => id),
+            totalDamage: context.preview.executionWindow
+              ? context.preview.finisherPower
+              : context.preview.totalDamage,
             ...(context.preview.events.find(({ element }) => element !== undefined)?.element
               ? {
                   element: context.preview.events.find(({ element }) => element !== undefined)!

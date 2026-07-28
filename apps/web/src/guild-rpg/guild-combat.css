@@ -110,6 +110,13 @@
     0 0 48px rgb(255 199 91 / 28%);
 }
 
+.gr-combat-battlefield[data-execution-window='true'] {
+  background: radial-gradient(circle at 72% 34%, rgb(255 99 47 / 19%), transparent 32%), #07120f;
+  box-shadow:
+    inset 0 0 75px rgb(255 118 42 / 22%),
+    0 0 36px rgb(255 199 91 / 18%);
+}
+
 .gr-pixi-combat-stage,
 .gr-pixi-combat-stage > div {
   width: 100%;
@@ -957,6 +964,14 @@
   text-align: right;
 }
 
+.gr-combat-battlefield[data-execution-window='true'] .gr-focus-card--target {
+  border-color: #ffe57b;
+  background: rgb(45 13 9 / 88%);
+  box-shadow:
+    inset -3px 0 #ff7b43,
+    0 0 18px rgb(255 111 49 / 32%);
+}
+
 .gr-focus-card strong {
   font-size: clamp(12px, 3.4vw, 16px);
 }
@@ -1083,6 +1098,40 @@
     0 0 18px currentcolor;
 }
 
+.gr-execution-window {
+  position: absolute;
+  z-index: 26;
+  top: max(126px, calc(env(safe-area-inset-top) + 122px));
+  left: 50%;
+  display: grid;
+  min-width: 150px;
+  place-items: center;
+  padding: 5px 14px 6px;
+  transform: translateX(-50%);
+  border: 1px solid rgb(255 219 102 / 78%);
+  border-radius: 999px;
+  background: rgb(44 11 8 / 82%);
+  box-shadow:
+    inset 0 0 15px rgb(255 205 77 / 13%),
+    0 0 22px rgb(255 94 39 / 31%);
+  color: #fff1b2;
+  line-height: 1.05;
+  pointer-events: none;
+  animation: gr-execution-pulse 800ms ease-in-out infinite alternate;
+}
+
+.gr-execution-window span,
+.gr-execution-window small {
+  color: #ffb35f;
+  font-size: 8px;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+}
+
+.gr-execution-window strong {
+  font-size: 16px;
+}
+
 .gr-battle[data-shell='single-screen'] .gr-command-dock {
   position: relative;
   z-index: 35;
@@ -1093,6 +1142,14 @@
     max(6px, env(safe-area-inset-left));
   border-width: 1px 0 0;
   background: rgb(3 12 10 / 96%);
+}
+
+.gr-command-dock[data-execution='true'] {
+  border-color: #ffd96c;
+  background: linear-gradient(90deg, rgb(84 24 12 / 78%), rgb(5 16 13 / 96%) 44%), #07110f;
+  box-shadow:
+    0 -8px 26px rgb(255 91 35 / 16%),
+    inset 0 1px rgb(255 225 127 / 24%);
 }
 
 .gr-battle-guide-strip {
@@ -1162,6 +1219,53 @@
   font-size: 13px;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.gr-skill-outcome-preview--execution {
+  min-height: 82px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  border-color: #ffe279;
+  background: linear-gradient(110deg, rgb(111 31 13 / 91%), rgb(9 16 13 / 96%) 58%), #07110f;
+  box-shadow:
+    inset 0 0 26px rgb(255 187 55 / 16%),
+    0 0 18px rgb(255 98 40 / 18%);
+}
+
+.gr-execution-preview-title {
+  margin-left: auto;
+  color: #fff0a6;
+  font-size: 13px;
+}
+
+.gr-execution-preview-rail {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 5px;
+  overflow: hidden;
+  color: #ffd56c;
+  font-size: 10px;
+  white-space: nowrap;
+}
+
+.gr-execution-preview-rail span,
+.gr-execution-preview-rail strong,
+.gr-execution-preview-rail b {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.gr-execution-preview-rail i {
+  color: #ff7548;
+  font-style: normal;
+}
+
+.gr-preview-totals--execution {
+  margin: 0;
+}
+
+.gr-preview-totals--execution > strong {
+  color: #ffbd62;
 }
 
 .gr-preview-totals {
@@ -1404,6 +1508,17 @@
   box-shadow: inset 0 0 12px rgb(255 185 66 / 13%);
 }
 
+.gr-battle[data-shell='single-screen']
+  .gr-battle-skills
+  [data-battle-skill][data-execution='true'] {
+  border-color: #ffe680;
+  background: linear-gradient(135deg, rgb(97 25 12 / 95%), rgb(16 25 20 / 97%) 65%), #111;
+  box-shadow:
+    inset 0 0 18px rgb(255 184 61 / 16%),
+    0 0 12px rgb(255 91 40 / 22%);
+  animation: gr-execution-skill 650ms ease-in-out infinite alternate;
+}
+
 .gr-skill-glyph {
   display: grid;
   width: 24px;
@@ -1473,6 +1588,49 @@
   font-style: normal;
   font-weight: 900;
   text-shadow: 0 0 8px #ff8a42;
+}
+
+@keyframes gr-execution-pulse {
+  from {
+    transform: translateX(-50%) scale(0.98);
+    box-shadow:
+      inset 0 0 12px rgb(255 205 77 / 11%),
+      0 0 12px rgb(255 94 39 / 21%);
+  }
+
+  to {
+    transform: translateX(-50%) scale(1.02);
+    box-shadow:
+      inset 0 0 19px rgb(255 205 77 / 18%),
+      0 0 28px rgb(255 94 39 / 42%);
+  }
+}
+
+@keyframes gr-execution-skill {
+  from {
+    filter: brightness(0.96);
+  }
+
+  to {
+    filter: brightness(1.13);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gr-execution-window,
+  .gr-battle[data-shell='single-screen']
+    .gr-battle-skills
+    [data-battle-skill][data-execution='true'] {
+    animation: none;
+  }
+}
+
+html[data-guild-motion='reduced'] .gr-execution-window,
+html[data-guild-motion='reduced']
+  .gr-battle[data-shell='single-screen']
+  .gr-battle-skills
+  [data-battle-skill][data-execution='true'] {
+  animation: none;
 }
 
 @media (min-width: 760px) {

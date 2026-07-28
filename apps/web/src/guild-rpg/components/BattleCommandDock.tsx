@@ -16,6 +16,7 @@ export function BattleCommandDock({
   armedSkillId,
   preview,
   skillPreviews,
+  executionWindow,
   onChooseSkill,
 }: {
   state: GuildRpgState;
@@ -27,6 +28,7 @@ export function BattleCommandDock({
   armedSkillId?: string | undefined;
   preview?: SkillOutcomePreview | undefined;
   skillPreviews: ReadonlyMap<string, SkillOutcomePreview>;
+  executionWindow: boolean;
   onChooseSkill(skillId: string): void;
 }) {
   const victory = state.battle?.status === 'victory';
@@ -36,7 +38,12 @@ export function BattleCommandDock({
   const skill = state.profile.skillInventory.find(({ id }) => id === armedSkillId);
 
   return (
-    <section className="gr-command-dock" data-locked={playback.isPlaying} data-relay={relay}>
+    <section
+      className="gr-command-dock"
+      data-locked={playback.isPlaying}
+      data-relay={relay}
+      data-execution={executionWindow}
+    >
       {victory ? (
         <div className="gr-finisher-dock" role="status">
           <header>
@@ -80,13 +87,15 @@ export function BattleCommandDock({
             <header className="gr-command-context">
               <strong>{commandActorName ?? '選擇角色'}</strong>
               <span aria-hidden="true">→</span>
-              <strong>{target?.name ?? '選擇目標'}</strong>
+              <strong>{executionWindow ? '敵軍破勢' : (target?.name ?? '選擇目標')}</strong>
             </header>
           )}
           <p className="gr-sr-only" role="status">
             {playback.isPlaying
               ? playback.currentBeat?.label
-              : (coach?.message ?? `${commandActorName}可從六個技能中自由選擇`)}
+              : executionWindow
+                ? `${commandActorName}可選擇第六棒終結方式`
+                : (coach?.message ?? `${commandActorName}可從六個技能中自由選擇`)}
           </p>
           <SixSkillControls
             state={state}

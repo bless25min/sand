@@ -13,6 +13,7 @@ import {
   equipStoredItem,
   forgeEquipmentItem,
   fuseSkills,
+  isExecutionWindow,
   replaceFusedComponent,
   resetCurrentRoundOrder,
   resolveSkill,
@@ -430,7 +431,12 @@ export function guildRpgReducer(state: GuildRpgState, action: GuildRpgAction): G
             ...next,
             message: '第六棒終結完成。確認戰果後，收下全部戰利品。',
           }
-        : next;
+        : isExecutionWindow(result.battle)
+          ? {
+              ...next,
+              message: `敵軍已破勢；由${heroName(result.battle.roundOrder!.activeAdventurerId!)}選擇第六棒終結方式。`,
+            }
+          : next;
     } catch (error) {
       return { ...state, message: error instanceof Error ? error.message : '技能無法施放。' };
     }

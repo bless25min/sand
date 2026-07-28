@@ -156,6 +156,22 @@ function drawState(root: Container, unit: GuildCombatSceneUnit, relay: number) {
         .stroke({ color: accent, width: 8, alpha: 0.9 }),
     );
   }
+  if (unit.state === 'broken') {
+    root.addChildAt(
+      new Graphics()
+        .ellipse(0, 7, 70, 26)
+        .stroke({ color: 0xffd669, width: 6, alpha: 0.88 })
+        .moveTo(-48, -75)
+        .lineTo(-15, -32)
+        .lineTo(-35, 0)
+        .stroke({ color: 0xff7045, width: 5, alpha: 0.82 })
+        .moveTo(42, -70)
+        .lineTo(12, -25)
+        .lineTo(38, 2)
+        .stroke({ color: 0xff7045, width: 5, alpha: 0.82 }),
+      0,
+    );
+  }
 }
 
 export function drawCombatUnits(
@@ -184,6 +200,11 @@ export function drawCombatUnits(
       figure.alpha = 0.3;
       figure.rotation = unit.side === 'enemies' ? Math.PI / 2 : -Math.PI / 2;
       figure.position.y = 5;
+    } else if (unit.state === 'broken') {
+      figure.alpha = 0.76;
+      figure.rotation = unit.side === 'enemies' ? 0.12 : -0.12;
+      figure.position.y = 14;
+      figure.scale.set(0.95);
     }
     root.addChild(figure);
     drawStatusPips(root, unit);

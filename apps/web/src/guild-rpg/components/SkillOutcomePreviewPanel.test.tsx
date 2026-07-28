@@ -56,4 +56,98 @@ describe('SkillOutcomePreviewPanel', () => {
     expect(markup).toContain('結果');
     expect(markup).toContain('計算');
   });
+
+  it('shows a finisher forecast instead of zero damage against a broken target', () => {
+    const state = guildRpgReducer(createGuildRpgState(), {
+      type: 'START_QUEST',
+      questId: 'border_pack',
+    });
+    const battle = state.battle!;
+    const actorId = battle.roundOrder!.activeAdventurerId!;
+    const target = battle.units.find(({ side }) => side === 'enemies')!;
+    const actor = battle.units.find(({ id }) => id === actorId)!;
+    const member = state.profile.party.find(({ definitionId }) => definitionId === actorId)!;
+    const skill = state.profile.skillInventory.find(({ id }) => id === member.skillIds[0])!;
+    const base = previewSkillOutcome({
+      battle,
+      actorId,
+      skillId: skill.id,
+      targetId: target.id,
+      content: createSkillEngineContent(state.profile),
+    });
+    const preview = {
+      ...base,
+      executionWindow: true,
+      finisherPower: 40,
+      relayEchoes: 5,
+      totalDamage: 0,
+      overkill: 40,
+      damageSegments: 0,
+      chaseSegments: 0,
+      nextRelay: undefined,
+    };
+
+    const markup = renderToStaticMarkup(
+      <SkillOutcomePreviewPanel
+        actor={actor}
+        target={{ ...target, currentHp: 0 }}
+        skill={skill}
+        preview={preview}
+        units={battle.units}
+      />,
+    );
+
+    expect(markup).toContain('處刑預演');
+    expect(markup).toContain('回收5次');
+    expect(markup).toContain('處刑40');
+    expect(markup).toContain('OVERKILL +40');
+    expect(markup).not.toContain('0段');
+    expect(markup).not.toContain('基本命中');
+  });
+
+  it('shows an escalating recovery state when enemies break before the sixth relay', () => {
+    const state = guildRpgReducer(createGuildRpgState(), {
+      type: 'START_QUEST',
+      questId: 'border_pack',
+    });
+    const battle = state.battle!;
+    const actorId = battle.roundOrder!.activeAdventurerId!;
+    const target = battle.units.find(({ side }) => side === 'enemies')!;
+    const actor = battle.units.find(({ id }) => id === actorId)!;
+    const member = state.profile.party.find(({ definitionId }) => definitionId === actorId)!;
+    const skill = state.profile.skillInventory.find(({ id }) => id === member.skillIds[0])!;
+    const base = previewSkillOutcome({
+      battle,
+      actorId,
+      skillId: skill.id,
+      targetId: target.id,
+      content: createSkillEngineContent(state.profile),
+    });
+
+    const markup = renderToStaticMarkup(
+      <SkillOutcomePreviewPanel
+        actor={actor}
+        target={{ ...target, currentHp: 0 }}
+        skill={skill}
+        preview={{
+          ...base,
+          executionWindow: true,
+          finisherPower: 0,
+          relayEchoes: 4,
+          totalDamage: 0,
+          overkill: 26,
+          damageSegments: 0,
+          chaseSegments: 0,
+          nextRelay: undefined,
+        }}
+        units={battle.units}
+      />,
+    );
+
+    expect(markup).toContain('餘震回收');
+    expect(markup).toContain('回收4次');
+    expect(markup).toContain('OVERKILL +26');
+    expect(markup).toContain('第六棒蓄勢');
+    expect(markup).not.toContain('處刑0');
+  });
 });

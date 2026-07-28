@@ -51,6 +51,44 @@ export function SkillOutcomePreviewPanel({
     : undefined;
   const totalLabel = presentation.primaryKind === 'healing' ? '總療' : '總傷';
 
+  if (preview.executionWindow) {
+    const finalExecution = preview.finisherPower > 0;
+    return (
+      <section
+        className="gr-skill-outcome-preview gr-skill-outcome-preview--execution"
+        data-skill-preview
+        data-execution-preview
+        data-final-execution={finalExecution}
+        data-skill-id={skill.id}
+        aria-live="polite"
+      >
+        <header>
+          <span aria-hidden="true">{skill.stars}★</span>
+          <strong>{presentation.intentName}</strong>
+          <b className="gr-execution-preview-title">{finalExecution ? '處刑預演' : '餘震回收'}</b>
+        </header>
+        <div
+          className="gr-execution-preview-rail"
+          aria-label={finalExecution ? '第六棒處刑流程' : '破勢接力流程'}
+        >
+          <span>敵軍破勢</span>
+          <i aria-hidden="true">→</i>
+          <strong>回收{preview.relayEchoes}次</strong>
+          <i aria-hidden="true">→</i>
+          <b>{finalExecution ? '全軍終結' : '第六棒蓄勢'}</b>
+        </div>
+        <div className="gr-preview-totals gr-preview-totals--execution">
+          <b>
+            {finalExecution ? '處刑' : '餘震'}
+            {finalExecution ? preview.finisherPower : preview.overkill}
+          </b>
+          <strong>OVERKILL +{preview.overkill}</strong>
+        </div>
+        <small>{finalExecution ? '再點此技能立即處刑' : '再點此技能回收餘震'}</small>
+      </section>
+    );
+  }
+
   return (
     <section
       className="gr-skill-outcome-preview"

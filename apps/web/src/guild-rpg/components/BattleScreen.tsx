@@ -1,5 +1,6 @@
 import { GUILD_GAME_CONTENT } from '@expedition/game-data';
 import {
+  isExecutionWindow,
   previewSkillOutcome,
   projectBattlePlayback,
   type SkillOutcomePreview,
@@ -94,6 +95,8 @@ export function BattleScreen({
     );
   }, [actor, battle, commandMember, state.profile, target]);
   const skillPreview = armedSkillId ? skillPreviews.get(armedSkillId) : undefined;
+  const executionWindow = isExecutionWindow(battle);
+  const displayExecutionWindow = executionWindow && !playback.isPlaying;
 
   useEffect(() => {
     setArmedSkillId(undefined);
@@ -175,11 +178,11 @@ export function BattleScreen({
         preferences={state.preferences}
         tutorialStep={state.tutorialStep}
         currentBeat={playback.currentBeat}
-        visibleBeats={playback.visibleBeats}
         actingActorId={actingActorId}
         nextActorId={nextActorId}
         relay={relay}
         preview={skillPreview}
+        executionWindow={displayExecutionWindow}
         locked={playback.isPlaying}
         onSelectTarget={chooseTarget}
         onChooseHero={(adventurerId) => {
@@ -198,6 +201,7 @@ export function BattleScreen({
         armedSkillId={armedSkillId}
         preview={skillPreview}
         skillPreviews={skillPreviews}
+        executionWindow={displayExecutionWindow}
         onChooseSkill={chooseSkill}
       />
       <p className="gr-status-line gr-sr-only" role="status">

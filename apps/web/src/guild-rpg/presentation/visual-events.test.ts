@@ -113,4 +113,18 @@ describe('visual battle events', () => {
       '全軍終結',
     ]);
   });
+
+  it('presents overkill as accumulated power instead of negative damage', () => {
+    const overkill = projectVisualEvents(
+      [{ id: 15, kind: 'overkill', message: 'OVERKILL', amount: 15 }],
+      6,
+      false,
+    )[0]!;
+
+    expect(overkill).toMatchObject({
+      headline: '過量殲滅',
+      number: 15,
+      phase: 'finisher',
+    });
+  });
 });

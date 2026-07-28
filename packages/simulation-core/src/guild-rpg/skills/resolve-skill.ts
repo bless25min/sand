@@ -8,6 +8,7 @@ import type {
   TriggerConditionDefinition,
 } from '@expedition/shared-types';
 
+import { isExecutionWindow } from '../battle/is-execution-window';
 import { completeTurn } from '../round-order/complete-turn';
 import { resolveDeliveryPassive } from './resolve-delivery-passive';
 import { resolveSkillComponent } from './resolve-skill-component';
@@ -45,10 +46,13 @@ export function resolveSkill(input: ResolveSkillInput): {
 
   const openingComponent = skill.components[0]!;
   const closingComponent = skill.components.at(-1)!;
+  const executionWindow = isExecutionWindow(input.battle);
   const drafts: Omit<GuildBattleEvent, 'id'>[] = [
     {
       kind: 'skill_cast',
-      message: `${actor.name}立即施放「${skill.name}」。`,
+      message: executionWindow
+        ? `${actor.name}選定「${skill.name}」作為第六棒處刑。`
+        : `${actor.name}立即施放「${skill.name}」。`,
       actorId: actor.id,
       targetId: input.targetId,
       skillId: skill.id,
@@ -73,15 +77,17 @@ export function resolveSkill(input: ResolveSkillInput): {
   let units = input.battle.units.map((unit) => ({ ...unit }));
   let componentBattle = input.battle;
   for (const component of skill.components) {
-    const result = resolveSkillComponent({
-      battle: componentBattle,
-      units,
-      actorId: actor.id,
-      preferredTargetId: input.targetId,
-      component,
-    });
-    units = result.units;
-    drafts.push(...result.events);
+    if (!executionWindow) {
+      const result = resolveSkillComponent({
+        battle: componentBattle,
+        units,
+        actorId: actor.id,
+        preferredTargetId: input.targetId,
+        component,
+      });
+      units = result.units;
+      drafts.push(...result.events);
+    }
     history.push({
       actorId: actor.id,
       skillId: skill.id,
@@ -89,6 +95,19 @@ export function resolveSkill(input: ResolveSkillInput): {
       roundIndex,
     });
     componentBattle = { ...componentBattle, units, skillHistory: history };
+  }
+
+  if (!executionWindow) {
+    const passive = resolveDeliveryPassive({
+      battle: input.battle,
+      units,
+      actorId: actor.id,
+      targetId: input.targetId,
+      element: closingComponent.element,
+      relayIndex,
+    });
+    units = [...passive.units];
+    drafts.push(...passive.events);
   }
 
   let relayDamage = 0;
@@ -151,16 +170,6 @@ export function resolveSkill(input: ResolveSkillInput): {
       triggerId: closingComponent.triggerId,
     });
   }
-  const passive = resolveDeliveryPassive({
-    battle: input.battle,
-    units,
-    actorId: actor.id,
-    targetId: input.targetId,
-    element: closingComponent.element,
-    relayIndex,
-  });
-  units = [...passive.units];
-  drafts.push(...passive.events);
 
   const roundOrder = completeTurn(input.battle.roundOrder, actor.id);
   const startedNewRound = roundOrder.actedIds.length === 0;

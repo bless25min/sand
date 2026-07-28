@@ -121,6 +121,21 @@ describe('deterministic skill engine', () => {
     expect(
       turns.slice(1).every(({ events }) => events.some(({ kind }) => kind === 'overkill')),
     ).toBe(true);
+    expect(turns[4]!.battle).toMatchObject({
+      status: 'active',
+      roundOrder: {
+        activeAdventurerId: 'kyro',
+        actedIds: ['brann', 'lyra', 'elin', 'seph', 'lorne'],
+      },
+    });
+    expect(
+      turns[4]!.battle.units.filter(({ side, currentHp }) => side === 'enemies' && currentHp > 0),
+    ).toHaveLength(0);
+    expect(
+      turns[5]!.events.some(({ kind }) =>
+        ['damage', 'reaction', 'status_applied', 'passive'].includes(kind),
+      ),
+    ).toBe(false);
     expect(turns[5]!.events).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ kind: 'relay', amount: 6 }),
@@ -128,6 +143,7 @@ describe('deterministic skill engine', () => {
         expect.objectContaining({ kind: 'victory' }),
       ]),
     );
+    expect(turns[5]!.events.slice(-2).map(({ kind }) => kind)).toEqual(['finisher', 'victory']);
     expect(state).toMatchObject({ status: 'victory', selectedTargetId: 'enemy-a' });
     expect(state.skillHistory).toHaveLength(6);
   });

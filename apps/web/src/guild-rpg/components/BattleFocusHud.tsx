@@ -17,10 +17,12 @@ export function BattleFocusHud({
   battle,
   actorId,
   preview,
+  executionWindow = false,
 }: {
   battle: GuildBattleState;
   actorId?: string | undefined;
   preview?: SkillOutcomePreview | undefined;
+  executionWindow?: boolean;
 }) {
   const actor = battle.units.find(({ id }) => id === actorId);
   const target = battle.units.find(({ id }) => id === battle.selectedTargetId);
@@ -44,11 +46,14 @@ export function BattleFocusHud({
         <article className="gr-focus-card gr-focus-card--target" data-focus-target={target.id}>
           <strong>{target.name}</strong>
           <span>
-            HP {target.currentHp}
-            {targetPreview ? ` → ${targetPreview.afterHp}` : `/${target.stats.hp}`}
+            {executionWindow
+              ? '破勢'
+              : `HP ${target.currentHp}${targetPreview ? ` → ${targetPreview.afterHp}` : `/${target.stats.hp}`}`}
           </span>
           <small>
-            防 {Math.max(0, target.stats.defense - (target.defenseReduction ?? 0))}
+            {executionWindow
+              ? '等待處刑'
+              : `防 ${Math.max(0, target.stats.defense - (target.defenseReduction ?? 0))}`}
             {statusText(target) ? ` · ${statusText(target)}` : ''}
           </small>
         </article>

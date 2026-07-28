@@ -6,7 +6,8 @@ import type {
   TriggerCondition,
 } from '@expedition/shared-types';
 
-export type GuildCombatUnitState = 'idle' | 'acting' | 'next' | 'targeted' | 'hit' | 'defeated';
+export type GuildCombatUnitState =
+  'idle' | 'acting' | 'next' | 'targeted' | 'hit' | 'broken' | 'defeated';
 
 export interface GuildHeroVisual {
   id: string;
