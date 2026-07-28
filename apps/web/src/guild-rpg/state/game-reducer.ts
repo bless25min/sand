@@ -45,6 +45,7 @@ export interface GuildRpgState {
   selectedFusionIds: readonly string[];
   selectedSalvageIds: readonly string[];
   lastFusedSkillId?: string;
+  lastForgeEventId?: string | undefined;
   battle?: GuildBattleState | undefined;
   playbackStartBattle?: GuildBattleState | undefined;
   rewards?: HuntRewards | undefined;
@@ -136,9 +137,10 @@ export function guildRpgReducer(state: GuildRpgState, action: GuildRpgAction): G
     };
   }
   if (action.type === 'NAVIGATE' && state.screen === 'guild') {
-    let next = {
+    let next: GuildRpgState = {
       ...state,
       page: action.page,
+      lastForgeEventId: action.page === 'equipment' ? state.lastForgeEventId : undefined,
       skillWorkspace:
         action.page === 'skills' && state.tutorialStep === 'inspect_skills'
           ? ('fusion' as const)
@@ -574,10 +576,14 @@ export function guildRpgReducer(state: GuildRpgState, action: GuildRpgAction): G
     );
     const completedCoachForge =
       result.profile !== state.profile && state.tutorialStep === 'forge_loot';
+    const latestForgeEvent = result.profile.progressionEvents
+      .filter(({ kind }) => kind === 'forge')
+      .at(-1);
     return {
       ...state,
       profile: result.profile,
       page: state.page,
+      lastForgeEventId: result.profile !== state.profile ? latestForgeEvent?.id : undefined,
       tutorialStep: completedCoachForge ? 'inspect_skills' : state.tutorialStep,
       message: completedCoachForge
         ? `${result.message} 接著打開技能頁，查看這次取得的新技能。`

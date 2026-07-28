@@ -19,6 +19,7 @@ const item = (id: string, coreId = 'toxic-mist'): EquipmentItem => ({
   forgeMaterialId: 'scout_fang',
   coreId,
   coreStrength: 3,
+  cores: [{ id: coreId, strength: 3 }],
 });
 
 function forgeProfile() {
@@ -50,11 +51,27 @@ describe('v4 equipment forge', () => {
     expect(stored(result.profile).mainStat.value).toBeGreaterThanOrEqual(range.min);
     expect(stored(result.profile).mainStat.value).toBeLessThanOrEqual(range.max);
     expect(stored(result.profile).forgeRank).toBeUndefined();
+    expect(result.message).toMatch(/速度 3 → \d/);
   });
 
-  it('reforges an affix, locks a field, and transplants an authored core', () => {
+  it('makes core protection real and transplants the active modern core after unlocking', () => {
+    const profile = forgeProfile();
+    const modernProfile = {
+      ...profile,
+      inventory: profile.inventory.map((entry) =>
+        entry.id === 'target'
+          ? {
+              ...entry,
+              cores: [
+                { id: 'toxic-mist', strength: 3 },
+                { id: 'tide-relay', strength: 2 },
+              ],
+            }
+          : entry,
+      ),
+    };
     const reforged = forgeEquipmentItem(
-      forgeProfile(),
+      modernProfile,
       'target',
       'reforge',
       GUILD_GAME_CONTENT,
@@ -72,7 +89,7 @@ describe('v4 equipment forge', () => {
     );
     expect(locked.profile.forgeLocks.target).toContain('core');
 
-    const transplanted = forgeEquipmentItem(
+    const blocked = forgeEquipmentItem(
       locked.profile,
       'target',
       'transplant',
@@ -80,9 +97,38 @@ describe('v4 equipment forge', () => {
       createSeededRandom('transplant'),
       { sourceItemId: 'donor' },
     );
+    expect(stored(blocked.profile).cores?.[0]?.id).toBe('toxic-mist');
+    expect(blocked.profile.inventory.some(({ id }) => id === 'donor')).toBe(true);
+    expect(blocked.message).toContain('核心已鎖定');
+
+    const unlocked = forgeEquipmentItem(
+      blocked.profile,
+      'target',
+      'lock',
+      GUILD_GAME_CONTENT,
+      createSeededRandom('unlock'),
+      { lockField: 'core' },
+    );
+    expect(unlocked.profile.forgeLocks.target ?? []).not.toContain('core');
+    expect(unlocked.profile.gold).toBe(blocked.profile.gold);
+    expect(unlocked.profile.materials.scout_fang).toBe(blocked.profile.materials.scout_fang);
+
+    const transplanted = forgeEquipmentItem(
+      unlocked.profile,
+      'target',
+      'transplant',
+      GUILD_GAME_CONTENT,
+      createSeededRandom('transplant'),
+      { sourceItemId: 'donor' },
+    );
     expect(stored(transplanted.profile).coreId).toBe('lone-king-loop');
+    expect(stored(transplanted.profile).cores).toEqual([
+      { id: 'lone-king-loop', strength: 3 },
+      { id: 'tide-relay', strength: 2 },
+    ]);
     expect(transplanted.profile.inventory.some(({ id }) => id === 'donor')).toBe(false);
     expect(transplanted.profile.discoveredCoreIds).toContain('lone-king-loop');
+    expect(transplanted.message).toContain('毒霧 → 孤王迴路');
   });
 
   it('salvages deliberately without auto-selling a full inventory', () => {
@@ -111,6 +157,23 @@ describe('v4 equipment forge', () => {
     ).toMatchObject({
       materialId: 'scout_fang',
       resultLabel: expect.stringContaining('孤王迴路核心'),
+    });
+
+    const protectedProfile = forgeEquipmentItem(
+      forgeProfile(),
+      'target',
+      'lock',
+      GUILD_GAME_CONTENT,
+      createSeededRandom('lock-preview'),
+      { lockField: 'core' },
+    ).profile;
+    expect(
+      previewForgeEquipmentItem(protectedProfile, 'target', 'lock', GUILD_GAME_CONTENT, {
+        lockField: 'core',
+      }),
+    ).toMatchObject({
+      cost: 0,
+      resultLabel: '解除核心保護',
     });
   });
 

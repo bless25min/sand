@@ -3,6 +3,7 @@ import type {
   GuildElement,
   GuildEquipmentSlot,
   GuildItemRarity,
+  GuildStatKey,
   SkillSpecialization,
   TriggerCondition,
 } from '@expedition/shared-types';
@@ -27,3 +28,6 @@ export const rarityName = (rarity: GuildItemRarity) =>
     epic: '史詩',
     legendary: '傳奇',
   })[rarity];
+
+export const statName = (stat: GuildStatKey) =>
+  ({ hp: '生命', attack: '攻擊', defense: '防禦', speed: '速度', healing: '治療' })[stat];

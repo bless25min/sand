@@ -685,6 +685,47 @@
   grid-template-columns: minmax(180px, auto) 1fr;
 }
 
+.gr-forge-feedback {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border: 1px solid rgb(101 213 174 / 42%);
+  border-radius: 9px;
+  color: #dfffee;
+  background: linear-gradient(90deg, rgb(32 116 86 / 44%), rgb(8 30 24 / 88%));
+  box-shadow: 0 0 24px rgb(80 224 171 / 16%);
+  animation: gr-forge-confirm 420ms ease-out both;
+}
+
+.gr-forge-feedback b {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 50%;
+  color: #052017;
+  background: #79e4bd;
+  box-shadow: 0 0 18px rgb(121 228 189 / 48%);
+}
+
+.gr-forge-feedback span {
+  display: grid;
+}
+
+.gr-forge-feedback small {
+  color: #a9d8c6;
+  font-size: 9px;
+}
+
+@keyframes gr-forge-confirm {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.98);
+  }
+}
+
 .gr-equipment-slots > article {
   min-width: 0;
   padding: 11px;
@@ -716,21 +757,78 @@
   gap: 4px;
 }
 
-.gr-forge-actions {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 4px;
+.gr-forge-workbench {
   margin-top: 8px;
 }
 
-.gr-forge-actions button {
+.gr-forge-workbench > summary {
   min-height: 40px;
-  padding: 4px;
+  padding: 0 8px;
   border: 1px solid rgb(239 188 98 / 17%);
   border-radius: 5px;
   color: #d8c49a;
   background: rgb(255 255 255 / 3%);
+  cursor: pointer;
+  font-size: 10px;
+  font-weight: 900;
+  line-height: 40px;
+}
+
+.gr-forge-workbench > summary[data-core-protected='true'] {
+  border-color: #65d5ae;
+  color: #8ef0ce;
+}
+
+.gr-forge-workbench__panel {
+  display: grid;
+  gap: 8px;
+  margin-top: 6px;
+  padding: 9px;
+  border: 1px solid rgb(239 188 98 / 20%);
+  border-radius: 8px;
+  background: #07110e;
+}
+
+.gr-forge-workbench__panel header,
+.gr-forge-workbench__resources {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.gr-forge-workbench__panel header span,
+.gr-forge-workbench__resources {
+  color: #91a69b;
   font-size: 9px;
+}
+
+.gr-forge-workbench__actions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 5px;
+}
+
+.gr-forge-workbench__actions button {
+  display: grid;
+  min-height: 72px;
+  align-content: center;
+  gap: 3px;
+  padding: 7px;
+  border: 1px solid rgb(239 188 98 / 18%);
+  border-radius: 6px;
+  color: #e8cb91;
+  text-align: left;
+  background: rgb(239 188 98 / 5%);
+}
+
+.gr-forge-workbench__actions button span,
+.gr-forge-workbench__actions button small {
+  color: #a9b9b0;
+  font-size: 8px;
+}
+
+.gr-forge-workbench__actions button:disabled {
+  opacity: 0.42;
 }
 
 .gr-fusion {
@@ -1462,6 +1560,17 @@ html[data-guild-screen] #root {
     display: none;
   }
 
+  .gr-forge-feedback {
+    position: fixed;
+    z-index: 98;
+    top: 66px;
+    right: 8px;
+    left: 8px;
+    min-height: 50px;
+    pointer-events: none;
+    animation: gr-forge-toast 3.2s ease both;
+  }
+
   .gr-equipment-slots {
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 3px;
@@ -1504,18 +1613,42 @@ html[data-guild-screen] #root {
     box-shadow: 0 18px 55px #000;
   }
 
-  .gr-forge-actions {
-    display: grid;
-    grid-template-columns: 1fr;
+  .gr-forge-workbench {
     margin-top: 3px;
   }
 
-  .gr-forge-actions button {
+  .gr-forge-workbench > summary {
     min-height: 30px;
+    overflow: hidden;
+    font-size: 8px;
+    line-height: 30px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
-  .gr-forge-actions button:not(:first-child) {
-    display: none;
+  .gr-forge-workbench[open] > .gr-forge-workbench__panel {
+    position: fixed;
+    z-index: 96;
+    right: 8px;
+    bottom: 64px;
+    left: 8px;
+    max-height: calc(100dvh - 140px);
+    overflow: auto;
+    border-color: #dba34b;
+    box-shadow: 0 18px 55px #000;
+  }
+
+  .gr-forge-workbench__panel header,
+  .gr-forge-workbench__resources {
+    align-items: flex-start;
+  }
+
+  .gr-forge-workbench__actions {
+    grid-template-columns: 1fr;
+  }
+
+  .gr-forge-workbench__actions button {
+    min-height: 58px;
   }
 
   .gr-fusion {
@@ -1526,5 +1659,19 @@ html[data-guild-screen] #root {
 
   .gr-fusion__candidates {
     max-height: calc(100dvh - 260px);
+  }
+}
+
+@keyframes gr-forge-toast {
+  0%,
+  100% {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+
+  8%,
+  82% {
+    opacity: 1;
+    transform: translateY(0);
   }
 }

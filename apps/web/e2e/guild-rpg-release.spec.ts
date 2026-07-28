@@ -319,7 +319,19 @@ test('a new player understands combat, sees six escalating relays, and completes
   await page.locator('.gr-help-drawer > summary').click();
   await expect(page.getByRole('region', { name: '公會訓練清單' })).toBeVisible();
   await page.locator('.gr-help-drawer > summary').click();
-  await page.getByRole('button', { name: '校準' }).first().click();
+  const forgeWorkbench = page.locator('[data-forge-workbench][open]');
+  await expect(forgeWorkbench).toHaveCount(1);
+  await expect(forgeWorkbench).toContainText('斥候狼牙');
+  await expect(forgeWorkbench.locator('[data-forge-action="calibrate"]')).toContainText('/ 1');
+  await expect(forgeWorkbench).toContainText('30 金幣');
+  await expect(forgeWorkbench).toContainText('→');
+  const calibrateButton = page.getByRole('button', { name: '校準' });
+  await expect(calibrateButton).toHaveCount(1);
+  await calibrateButton.click();
+  await expect(page.locator('[data-forge-feedback="true"]')).toContainText('→');
+  await expect(page.locator('[data-forge-feedback="true"]')).toContainText('30 金幣 + 1 素材');
+  await expectSingleScreen(page);
+  await expectNoHorizontalCrop(page);
   await page.locator('[data-guide-id="nav:skills"]').click();
 
   await page.locator('[data-workspace-tab="fusion"]').click();

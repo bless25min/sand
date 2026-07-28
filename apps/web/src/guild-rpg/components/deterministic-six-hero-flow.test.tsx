@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { GUILD_GAME_CONTENT } from '@expedition/game-data';
+import type { EquipmentItem } from '@expedition/shared-types';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
@@ -85,6 +86,87 @@ describe('deterministic six-hero interface', () => {
     expect(equipmentMarkup).toContain('1 選角色');
     expect(equipmentMarkup).toContain('2 看三個欄位');
     expect(equipmentMarkup).toContain('3 比較並裝備');
+  });
+
+  it('explains forge costs, results, protection, and transplant safety before spending', () => {
+    const equipped: EquipmentItem = {
+      id: 'equipped-core',
+      baseId: 'wolf_charm',
+      name: '試作狼牙護符',
+      slot: 'accessory',
+      rarity: 'rare',
+      mainStat: { stat: 'speed', value: 3, sourceId: 'wolf_charm', label: '狼牙護符' },
+      affixes: [{ stat: 'attack', value: 4, sourceId: 'savage', label: '兇猛' }],
+      sellValue: 40,
+      forgeMaterialId: 'scout_fang',
+      coreId: 'toxic-mist',
+      coreStrength: 3,
+      cores: [{ id: 'toxic-mist', strength: 3 }],
+    };
+    const donor: EquipmentItem = {
+      ...equipped,
+      id: 'donor-core',
+      name: '孤王核心護符',
+      coreId: 'lone-king-loop',
+      cores: [{ id: 'lone-king-loop', strength: 4 }],
+    };
+    const base = guildRpgReducer(createGuildRpgState(), {
+      type: 'SET_TUTORIAL',
+      tutorial: 'skipped',
+    });
+    const state = {
+      ...base,
+      page: 'equipment' as const,
+      profile: {
+        ...base.profile,
+        gold: 100,
+        materials: { scout_fang: 1 },
+        inventory: [donor],
+        party: base.profile.party.map((member) =>
+          member.definitionId === 'brann'
+            ? { ...member, equipment: { ...member.equipment, accessory: equipped } }
+            : member,
+        ),
+      },
+    };
+
+    const markup = renderToStaticMarkup(<GuildScreen state={state} dispatch={dispatch} />);
+
+    expect(markup).toContain('data-forge-workbench="equipped-core"');
+    expect(markup).toContain('速度 3 → 2–5');
+    expect(markup).toContain('斥候狼牙 1 / 1');
+    expect(markup).toContain('30 金幣');
+    expect(markup).toContain('重鑄第一詞綴');
+    expect(markup).toContain('保護核心');
+    expect(markup).toContain('data-core-protected="false"');
+
+    const forgedState = guildRpgReducer(state, {
+      type: 'FORGE_ITEM',
+      itemId: equipped.id,
+      forgeAction: 'calibrate',
+    });
+    const forgedMarkup = renderToStaticMarkup(
+      <GuildScreen state={forgedState} dispatch={dispatch} />,
+    );
+    expect(forgedMarkup).toContain('data-forge-feedback="true"');
+    expect(forgedMarkup).toMatch(/速度 3 → \d/);
+    expect(forgedMarkup).toContain('30 金幣 + 1 素材');
+
+    const protectedMarkup = renderToStaticMarkup(
+      <GuildScreen
+        state={{
+          ...state,
+          profile: {
+            ...state.profile,
+            forgeLocks: { 'equipped-core': ['core'] },
+          },
+        }}
+        dispatch={dispatch}
+      />,
+    );
+    expect(protectedMarkup).toContain('核心已保護');
+    expect(protectedMarkup).toContain('解除保護 · 0');
+    expect(protectedMarkup).toContain('data-transplant-blocked="true"');
   });
 
   it('shows four discoverable zones while keeping each mission choice compact', () => {

@@ -2,9 +2,10 @@ import { GUILD_GAME_CONTENT } from '@expedition/game-data';
 import type { EquipmentItem } from '@expedition/shared-types';
 import { useState } from 'react';
 
-import { equipmentSlotName, rarityName } from '../content-labels';
+import { equipmentSlotName, rarityName, statName } from '../content-labels';
 import { isFirstHuntCoachFocus } from '../onboarding/first-hunt-coach';
 import type { GuildRpgAction, GuildRpgState } from '../state/game-reducer';
+import { EquipmentForgeActions } from './EquipmentForgeActions';
 
 const coreRolls = (item: EquipmentItem) =>
   item.cores?.length
@@ -24,7 +25,7 @@ const coreLabel = (item: EquipmentItem) =>
 const comparisonLabel = (item: EquipmentItem, equipped?: EquipmentItem) => {
   if (!equipped) return '此欄位目前空白';
   if (equipped.mainStat.stat !== item.mainStat.stat) {
-    return `${equipped.mainStat.stat} → ${item.mainStat.stat}`;
+    return `${statName(equipped.mainStat.stat)} → ${statName(item.mainStat.stat)}`;
   }
   const difference = item.mainStat.value - equipped.mainStat.value;
   return `相較目前 ${difference >= 0 ? '+' : ''}${difference}`;
@@ -42,6 +43,9 @@ export function EquipmentWorkbench({
     ({ definitionId }) => definitionId === state.selectedHeroId,
   )!;
   const hero = GUILD_GAME_CONTENT.adventurers.find(({ id }) => id === member.definitionId)!;
+  const forgeFeedback = state.profile.progressionEvents.find(
+    ({ id }) => id === state.lastForgeEventId,
+  );
   const pageCount = Math.max(1, Math.ceil(state.profile.inventory.length / 6));
   const safeInventoryPage = Math.min(inventoryPage, pageCount - 1);
   const visibleInventory = state.profile.inventory.slice(
@@ -82,6 +86,15 @@ export function EquipmentWorkbench({
             : '目前沒有背包裝備。完成狩獵後，戰利品會安全保留在這裡。'}
         </span>
       </aside>
+      {forgeFeedback && (
+        <aside className="gr-forge-feedback" data-forge-feedback="true" role="status">
+          <b aria-hidden="true">✓</b>
+          <span>
+            <strong>{forgeFeedback.label}</strong>
+            <small>{forgeFeedback.detail}</small>
+          </span>
+        </aside>
+      )}
       <div className="gr-equipment-slots">
         {(['weapon', 'armor', 'accessory'] as const).map((slot) => {
           const item = member.equipment[slot];
@@ -91,48 +104,10 @@ export function EquipmentWorkbench({
               <strong>{item?.name ?? '尚未裝備'}</strong>
               <small>
                 {item
-                  ? `${item.mainStat.stat} +${item.mainStat.value} · ${coreLabel(item) || '無核心'}`
+                  ? `${statName(item.mainStat.stat)} +${item.mainStat.value} · ${coreLabel(item) || '無核心'}`
                   : '從下方戰利品選擇'}
               </small>
-              {item && (
-                <div className="gr-forge-actions">
-                  <button
-                    type="button"
-                    data-guide-id="equipment:forge"
-                    data-guide-active={isFirstHuntCoachFocus(
-                      state.preferences.tutorial,
-                      state.tutorialStep,
-                      'equipment:forge',
-                    )}
-                    onClick={() =>
-                      dispatch({ type: 'FORGE_ITEM', itemId: item.id, forgeAction: 'calibrate' })
-                    }
-                  >
-                    校準
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      dispatch({ type: 'FORGE_ITEM', itemId: item.id, forgeAction: 'reforge' })
-                    }
-                  >
-                    重鑄
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      dispatch({
-                        type: 'FORGE_ITEM',
-                        itemId: item.id,
-                        forgeAction: 'lock',
-                        options: { lockField: 'core' },
-                      })
-                    }
-                  >
-                    鎖核心
-                  </button>
-                </div>
-              )}
+              {item && <EquipmentForgeActions item={item} state={state} dispatch={dispatch} />}
             </article>
           );
         })}
@@ -176,7 +151,7 @@ export function EquipmentWorkbench({
                 </span>
                 <strong>{item.name}</strong>
                 <small>
-                  {item.mainStat.stat} +{item.mainStat.value}
+                  {statName(item.mainStat.stat)} +{item.mainStat.value}
                   {base ? `（${base.mainStatRoll.min}–${base.mainStatRoll.max}）` : ''} ·
                   {comparisonLabel(item, equippedTarget)}
                 </small>
@@ -227,9 +202,15 @@ export function EquipmentWorkbench({
                       </p>
                     );
                   })}
-                  {equippedTarget && item.coreId && (
+                  {equippedTarget && coreRolls(item).length > 0 && (
                     <button
                       type="button"
+                      data-transplant-blocked={
+                        state.profile.forgeLocks[equippedTarget.id]?.includes('core') ?? false
+                      }
+                      disabled={
+                        state.profile.forgeLocks[equippedTarget.id]?.includes('core') ?? false
+                      }
                       onClick={() =>
                         dispatch({
                           type: 'FORGE_ITEM',
@@ -239,7 +220,9 @@ export function EquipmentWorkbench({
                         })
                       }
                     >
-                      移植到目前{equipmentSlotName(item.slot)}
+                      {state.profile.forgeLocks[equippedTarget.id]?.includes('core')
+                        ? '核心已保護，先解除'
+                        : `移植到目前${equipmentSlotName(item.slot)}`}
                     </button>
                   )}
                   <button
