@@ -6,6 +6,7 @@ export type TriggerReadiness = 'ready' | 'pending-impact' | 'not-ready';
 
 const IMPACT_TRIGGERS = new Set<TriggerCondition>([
   'after_skill',
+  'on_hit',
   'on_repeat_hit',
   'on_bounce',
   'on_echo',
@@ -23,7 +24,7 @@ export function previewTriggerReadiness(input: {
     if (IMPACT_TRIGGERS.has(component.triggerId)) {
       return { componentId: component.id, readiness: 'pending-impact' as const };
     }
-    const readiness = triggerMatches(component.triggerId, {
+    const readiness: TriggerReadiness = triggerMatches(component.triggerId, {
       battle: input.battle,
       actorId: input.actorId,
       targetId: input.targetId,

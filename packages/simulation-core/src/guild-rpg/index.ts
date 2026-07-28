@@ -23,6 +23,8 @@ export {
 } from './skills/resolve-skill';
 export {
   previewSkillOutcome,
+  type SkillComboStepPreview,
+  type SkillNextRelayPreview,
   type SkillOutcomePreview,
   type SkillOutcomeUnitPreview,
 } from './skills/preview-skill-outcome';

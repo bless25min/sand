@@ -73,6 +73,23 @@ const skill: OwnedSkill = {
   components: [component],
 };
 
+const relaySkill: OwnedSkill = {
+  id: 'relay-skill',
+  name: '接續火勢',
+  stars: 1,
+  components: [
+    {
+      ...component,
+      id: 'grass-stack-previous-fire',
+      formId: 'grass.stack.previous-fire',
+      element: 'grass',
+      specializationId: 'stack',
+      triggerId: 'previous_fire',
+      repeatCount: 1,
+    },
+  ],
+};
+
 const content = (skills: GuildSkillItem[]) => ({
   skills: Object.fromEntries(skills.map((entry) => [entry.id, entry])),
   elements: GUILD_ELEMENTS,
@@ -136,5 +153,37 @@ describe('previewSkillOutcome', () => {
     });
     expect(enemyA?.afterHp).toBe(444);
     expect(enemyB?.afterHp).toBe(272);
+  });
+
+  it('separates total damage segments from trigger chases and previews the next relay', () => {
+    const state = battle();
+    state.units = state.units.map((entry) =>
+      entry.id === 'lyra' ? { ...entry, skillIds: [relaySkill.id] } : entry,
+    );
+
+    const preview = previewSkillOutcome({
+      battle: state,
+      actorId: 'brann',
+      skillId: skill.id,
+      targetId: 'enemy-a',
+      content: content([skill, relaySkill]),
+    });
+
+    expect(preview.damageSegments).toBe(6);
+    expect(preview.chaseSegments).toBe(3);
+    expect(preview.comboSteps).toEqual([
+      expect.objectContaining({
+        componentId: component.id,
+        triggerId: 'on_hit',
+        readiness: 'pending-impact',
+        damageSegments: 6,
+        chaseSegments: 3,
+        chaseDamage: 12,
+      }),
+    ]);
+    expect(preview.nextRelay).toEqual({
+      actorId: 'lyra',
+      newlyReadySkillIds: [relaySkill.id],
+    });
   });
 });

@@ -1,10 +1,11 @@
 import { previewSkillOutcome } from '@expedition/simulation-core';
+import type { GuildSkillItem } from '@expedition/shared-types';
 import { describe, expect, it } from 'vitest';
 
 import { createGuildRpgState } from '../state/create-game-state';
 import { createSkillEngineContent } from '../state/create-skill-engine-content';
 import { guildRpgReducer } from '../state/game-reducer';
-import { createSkillTilePresentation, previewCause } from './skill-tile-presentation';
+import { createSkillTilePresentation } from './skill-tile-presentation';
 
 describe('skill tile presentation', () => {
   it('shows the current outcome instead of engine fields', () => {
@@ -25,14 +26,77 @@ describe('skill tile presentation', () => {
       content: createSkillEngineContent(state.profile),
     });
 
-    expect(createSkillTilePresentation(skill, preview)).toEqual({
+    expect(createSkillTilePresentation(skill, preview)).toMatchObject({
       intentName: '引火',
       primaryKind: 'damage',
       primaryValue: preview.totalDamage,
-      hits: 2,
+      segments: 2,
+      chases: 1,
       statusDelta: { kind: 'burn', amount: 3 },
       readiness: 'ready',
+      readyCount: 1,
+      stepCount: 1,
+      triggerSummary: '開戰✓ → 追傷6',
+      comboSteps: [
+        {
+          conditionLabel: '開戰',
+          readiness: 'ready',
+          readinessLabel: '已成立',
+          effectLabel: '追傷6',
+        },
+      ],
     });
-    expect(previewCause(preview)).toBe('因為這是戰鬥第一招，額外效果已發動');
+  });
+
+  it('summarizes fused skills by how many combo conditions are already lit', () => {
+    const state = guildRpgReducer(createGuildRpgState(), {
+      type: 'START_QUEST',
+      questId: 'border_pack',
+    });
+    const battle = state.battle!;
+    const actorId = battle.roundOrder!.activeAdventurerId!;
+    const targetId = battle.selectedTargetId!;
+    const member = state.profile.party.find(({ definitionId }) => definitionId === actorId)!;
+    const skill = state.profile.skillInventory.find(({ id }) => id === member.skillIds[0])!;
+    const preview = previewSkillOutcome({
+      battle,
+      actorId,
+      targetId,
+      skillId: skill.id,
+      content: createSkillEngineContent(state.profile),
+    });
+    const first = skill.components[0]!;
+    const fusedSkill = {
+      ...skill,
+      stars: 3,
+      components: [
+        first,
+        { ...first, id: `${first.id}:2`, triggerId: 'previous_fire' },
+        { ...first, id: `${first.id}:3`, triggerId: 'target_burning' },
+      ],
+    } as GuildSkillItem;
+    const fusedPreview = {
+      ...preview,
+      comboSteps: [
+        preview.comboSteps[0]!,
+        {
+          ...preview.comboSteps[0]!,
+          componentId: `${first.id}:2`,
+          triggerId: 'previous_fire' as const,
+        },
+        {
+          ...preview.comboSteps[0]!,
+          componentId: `${first.id}:3`,
+          triggerId: 'target_burning' as const,
+          readiness: 'not-ready' as const,
+          chaseSegments: 0,
+          chaseDamage: 0,
+        },
+      ],
+    };
+
+    expect(createSkillTilePresentation(fusedSkill, fusedPreview).triggerSummary).toBe(
+      '連招 2/3 已亮',
+    );
   });
 });

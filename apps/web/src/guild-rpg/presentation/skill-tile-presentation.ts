@@ -1,4 +1,4 @@
-import type { SkillOutcomePreview } from '@expedition/simulation-core';
+import type { SkillOutcomePreview, TriggerReadiness } from '@expedition/simulation-core';
 import type {
   GuildElement,
   GuildSkillItem,
@@ -35,46 +35,92 @@ const INTENT_NAMES: Readonly<Record<GuildElement, Readonly<Record<SkillSpecializ
     },
   };
 
-const TRIGGER_REASONS: Readonly<Record<TriggerCondition, string>> = {
-  battle_open: '因為這是戰鬥第一招，額外效果已發動',
-  round_open: '本回合剛開始，因此多一次效果',
-  first_actor: '本回合第一位出手，因此多一次效果',
-  final_actor: '本回合最後一位出手，因此多一次效果',
-  after_skill: '本回合已有人出手，因此多一次效果',
-  target_burning: '目標正在燃燒，因此多一次效果',
-  target_poisoned: '目標帶有毒素，因此多一次效果',
-  target_tide: '目標帶有蓄潮，因此多一次效果',
-  actor_strengthened: '角色目前已強化，因此多一次效果',
-  target_weakened: '目標防禦已削弱，因此多一次效果',
-  layer_threshold: '目標狀態已累積足夠，因此多一次效果',
-  consume_burn: '消耗目標燃燒，因此產生額外效果',
-  consume_poison: '消耗目標毒素，因此產生額外效果',
-  consume_tide: '消耗目標蓄潮，因此產生額外效果',
-  consume_all_burn: '消耗全部燃燒，因此產生額外效果',
-  consume_all_poison: '消耗全部毒素，因此產生額外效果',
-  consume_all_tide: '消耗全部蓄潮，因此產生額外效果',
-  consume_mixed: '消耗目標狀態，因此產生額外效果',
-  on_hit: '命中目標，因此產生額外效果',
-  on_repeat_hit: '連續命中，因此產生額外效果',
-  on_bounce: '攻擊彈向其他目標，因此產生額外效果',
-  on_echo: '攻擊回到原目標，因此產生額外效果',
-  on_defeat: '這次攻擊會擊破目標，因此產生額外效果',
-  on_overkill: '傷害超過剩餘生命，因此產生額外效果',
-  previous_fire: '上一位使用火屬技能，因此多一次效果',
-  previous_grass: '上一位使用草屬技能，因此多一次效果',
-  previous_water: '上一位使用水屬技能，因此多一次效果',
-  ally_same_element: '隊友使用相同屬性，因此多一次效果',
-  team_three_elements: '隊伍已接續三種屬性，因此多一次效果',
-  lone_target: '場上只剩一個目標，因此效果折返回來',
+const TRIGGER_LABELS: Readonly<Record<TriggerCondition, string>> = {
+  battle_open: '開戰',
+  round_open: '回合開幕',
+  first_actor: '先鋒位',
+  final_actor: '壓軸位',
+  after_skill: '技能結束',
+  target_burning: '目標燃燒',
+  target_poisoned: '目標中毒',
+  target_tide: '目標蓄潮',
+  actor_strengthened: '自身強化',
+  target_weakened: '目標破防',
+  layer_threshold: '狀態5層',
+  consume_burn: '消耗燃燒',
+  consume_poison: '消耗毒素',
+  consume_tide: '消耗蓄潮',
+  consume_all_burn: '燃燒全爆',
+  consume_all_poison: '毒素全爆',
+  consume_all_tide: '蓄潮全爆',
+  consume_mixed: '雙屬狀態',
+  on_hit: '命中後',
+  on_repeat_hit: '第2段起',
+  on_bounce: '彈射後',
+  on_echo: '迴響後',
+  on_defeat: '擊破後',
+  on_overkill: '溢傷後',
+  previous_fire: '上一棒火',
+  previous_grass: '上一棒草',
+  previous_water: '上一棒水',
+  ally_same_element: '同屬接力',
+  team_three_elements: '三相接力',
+  lone_target: '孤王單體',
 };
+
+const MISSING_LABELS: Readonly<Record<TriggerCondition, string>> = {
+  battle_open: '缺開戰時機',
+  round_open: '缺回合開幕',
+  first_actor: '缺先鋒位',
+  final_actor: '缺壓軸位',
+  after_skill: '缺前一位出手',
+  target_burning: '缺燃燒',
+  target_poisoned: '缺毒素',
+  target_tide: '缺蓄潮',
+  actor_strengthened: '缺強化',
+  target_weakened: '缺破防',
+  layer_threshold: '缺5層狀態',
+  consume_burn: '缺燃燒',
+  consume_poison: '缺毒素',
+  consume_tide: '缺蓄潮',
+  consume_all_burn: '缺燃燒',
+  consume_all_poison: '缺毒素',
+  consume_all_tide: '缺蓄潮',
+  consume_mixed: '缺雙屬狀態',
+  on_hit: '出招時判定',
+  on_repeat_hit: '出招時判定',
+  on_bounce: '出招時判定',
+  on_echo: '出招時判定',
+  on_defeat: '出招時判定',
+  on_overkill: '出招時判定',
+  previous_fire: '缺上一棒火屬',
+  previous_grass: '缺上一棒草屬',
+  previous_water: '缺上一棒水屬',
+  ally_same_element: '缺同屬隊友',
+  team_three_elements: '缺三種屬性',
+  lone_target: '缺單一敵人',
+};
+
+interface SkillComboStepPresentation {
+  componentId: string;
+  conditionLabel: string;
+  readiness: TriggerReadiness;
+  readinessLabel: string;
+  effectLabel: string;
+}
 
 export interface SkillTilePresentation {
   intentName: string;
   primaryKind: 'damage' | 'healing' | 'effect';
   primaryValue: number;
-  hits: number;
+  segments: number;
+  chases: number;
   statusDelta?: { kind: StatusLayer; amount: number } | undefined;
-  readiness: 'ready' | 'base';
+  readiness: TriggerReadiness;
+  readyCount: number;
+  stepCount: number;
+  triggerSummary: string;
+  comboSteps: readonly SkillComboStepPresentation[];
 }
 
 const statusDelta = (preview: SkillOutcomePreview): SkillTilePresentation['statusDelta'] => {
@@ -92,11 +138,42 @@ export function createSkillTilePresentation(
   preview: SkillOutcomePreview,
 ): SkillTilePresentation {
   const first = skill.components[0];
-  const hits = preview.events.filter(
-    ({ kind, amount }) => (kind === 'damage' || kind === 'reaction') && (amount ?? 0) > 0,
-  ).length;
   const primaryKind =
     preview.totalDamage > 0 ? 'damage' : preview.totalHealing > 0 ? 'healing' : 'effect';
+  const components = new Map(skill.components.map((component) => [component.id, component]));
+  const comboSteps = preview.comboSteps.map((step): SkillComboStepPresentation => {
+    const component = components.get(step.componentId)!;
+    const effectValue = step.chaseDamage || component.triggerAddition;
+    const effectLabel = (
+      ['consume_all_burn', 'consume_all_poison', 'consume_all_tide'] as TriggerCondition[]
+    ).includes(step.triggerId)
+      ? `每層爆發${component.triggerAddition}`
+      : step.triggerId === 'on_repeat_hit'
+        ? `每段追傷${component.triggerAddition}`
+        : step.triggerId === 'on_bounce' || step.triggerId === 'on_echo'
+          ? `每跳追傷${component.triggerAddition}`
+          : `追傷${effectValue}`;
+    return {
+      componentId: step.componentId,
+      conditionLabel: TRIGGER_LABELS[step.triggerId],
+      readiness: step.readiness,
+      readinessLabel:
+        step.readiness === 'ready'
+          ? '已成立'
+          : step.readiness === 'pending-impact'
+            ? '出招時判定'
+            : MISSING_LABELS[step.triggerId],
+      effectLabel,
+    };
+  });
+  const readyCount = comboSteps.filter(({ readiness }) => readiness === 'ready').length;
+  const summaryStep = (comboSteps.find(({ readiness }) => readiness === 'ready') ?? comboSteps[0])!;
+  const mark =
+    summaryStep.readiness === 'ready'
+      ? '✓'
+      : summaryStep.readiness === 'pending-impact'
+        ? '•'
+        : '缺';
   return {
     intentName: INTENT_NAMES[first.element][first.specializationId],
     primaryKind,
@@ -106,13 +183,21 @@ export function createSkillTilePresentation(
         : primaryKind === 'healing'
           ? preview.totalHealing
           : 0,
-    hits,
+    segments: preview.damageSegments,
+    chases: preview.chaseSegments,
     statusDelta: statusDelta(preview),
-    readiness: preview.events.some(({ kind }) => kind === 'triggered') ? 'ready' : 'base',
+    readiness:
+      readyCount > 0
+        ? 'ready'
+        : comboSteps.some(({ readiness }) => readiness === 'pending-impact')
+          ? 'pending-impact'
+          : 'not-ready',
+    readyCount,
+    stepCount: comboSteps.length,
+    triggerSummary:
+      comboSteps.length === 1
+        ? `${summaryStep.conditionLabel}${mark} → ${summaryStep.effectLabel}`
+        : `連招 ${readyCount}/${comboSteps.length} 已亮`,
+    comboSteps,
   };
-}
-
-export function previewCause(preview: SkillOutcomePreview): string | undefined {
-  const triggerId = preview.events.find(({ kind }) => kind === 'triggered')?.triggerId;
-  return triggerId ? TRIGGER_REASONS[triggerId] : undefined;
 }

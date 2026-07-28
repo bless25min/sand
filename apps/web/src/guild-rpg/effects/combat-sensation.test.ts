@@ -6,6 +6,7 @@ import { playCombatSensation } from './combat-sensation';
 
 const beat = (relay: number, kind: CombatBeat['kind']): CombatBeat => ({
   id: `${relay}:${kind}`,
+  sourceEventIds: [relay],
   kind,
   label: kind,
   relay,

@@ -116,7 +116,12 @@ export async function mountGuildCombatStage(
     const now = performance.now();
     const elapsed = (now - nodes.effectStartedAt) / 1_000;
     const duration = Math.max(0.12, (currentScene.event?.durationMs ?? 180) / 1_000);
-    const progress = Math.min(1, elapsed / duration);
+    const holdsImpact =
+      currentScene.event?.phase === 'impact' || currentScene.event?.phase === 'finisher';
+    const hitStop = holdsImpact ? Math.min(duration - 0.05, currentPlan.hitStopMs / 1_000) : 0;
+    const effectElapsed = Math.max(0, elapsed - hitStop);
+    const activeDuration = Math.max(0.05, duration - hitStop);
+    const progress = Math.min(1, effectElapsed / activeDuration);
     if (!input.reducedMotion) {
       for (const ambient of nodes.ambient) {
         ambient.node.position.set(
@@ -137,7 +142,7 @@ export async function mountGuildCombatStage(
         });
         unit.node.position.set(
           unit.baseX + motion.x,
-          unit.baseY + motion.y + Math.sin(elapsed * 2.2 + index) * activeBoost,
+          unit.baseY + motion.y + Math.sin(effectElapsed * 2.2 + index) * activeBoost,
         );
         unit.node.scale.set(motion.scale);
         unit.node.rotation = motion.rotation;
@@ -145,8 +150,8 @@ export async function mountGuildCombatStage(
       if (currentPlan.shakePx > 0 && currentScene.event?.camera !== 'none') {
         const decay = 1 - progress;
         nodes.world.position.set(
-          nodes.cameraX + Math.sin(elapsed * 64) * currentPlan.shakePx * decay,
-          nodes.cameraY + Math.cos(elapsed * 53) * currentPlan.shakePx * decay,
+          nodes.cameraX + Math.sin(effectElapsed * 64) * currentPlan.shakePx * decay,
+          nodes.cameraY + Math.cos(effectElapsed * 53) * currentPlan.shakePx * decay,
         );
       }
     }

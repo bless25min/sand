@@ -92,17 +92,20 @@ export function createCombatEffectPlan(scene: GuildCombatScene): CombatEffectPla
   const relay = Math.max(1, Math.min(6, Math.trunc(scene.relay)));
   const motif = specializationMotif(scene);
   return {
-    ambientParticles: 8 + relay * 8,
-    impactParticles: 12 + relay * 10,
-    impactRings: relay + 1 + (motif === 'detonation' ? 2 : 0),
+    ambientParticles: 8 + relay * relay * 3,
+    impactParticles: 12 + relay * relay * 5,
+    impactRings: relay + Math.floor((relay * relay) / 4) + 1 + (motif === 'detonation' ? 2 : 0),
     impactTargetIds: impactTargetIds(scene),
-    cameraZoom: relay === 6 ? 1.08 : 1 + (relay - 1) * 0.008,
-    shakePx: relay === 1 ? 0 : relay * 1.5,
-    hitStopMs: 18 + relay * 8,
+    cameraZoom: 1 + relay * relay * 0.0025,
+    shakePx: relay === 1 ? 0 : relay * relay * 0.45,
+    hitStopMs: 18 + relay * relay * 3,
     finisher: relay === 6,
     elementMotif: elementMotif(scene),
     specializationMotif: motif,
-    signatureMarks: relay + (motif === 'rapid-strikes' ? 4 : motif === 'layer-orbit' ? 2 : 1),
+    signatureMarks:
+      relay +
+      Math.floor((relay * relay) / 3) +
+      (motif === 'rapid-strikes' ? 4 : motif === 'layer-orbit' ? 2 : 1),
     route: eventRoute(scene),
   };
 }

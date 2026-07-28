@@ -65,6 +65,12 @@ const scene = (relay: number): GuildCombatScene => ({
 describe('Pixi guild combat effect plan', () => {
   it('strictly increases ambient and impact density across all six relays', () => {
     const plans = [1, 2, 3, 4, 5, 6].map((relay) => createCombatEffectPlan(scene(relay)));
+    const impactGains = plans
+      .slice(1)
+      .map(({ impactParticles }, index) => impactParticles - plans[index]!.impactParticles);
+    const hitStopGains = plans
+      .slice(1)
+      .map(({ hitStopMs }, index) => hitStopMs - plans[index]!.hitStopMs);
 
     expect(
       plans.every(
@@ -77,7 +83,13 @@ describe('Pixi guild combat effect plan', () => {
         ({ impactRings }, index) => index === 0 || impactRings > plans[index - 1]!.impactRings,
       ),
     ).toBe(true);
-    expect(plans[5]).toMatchObject({ finisher: true, cameraZoom: 1.08 });
+    expect(impactGains.every((gain, index) => index === 0 || gain > impactGains[index - 1]!)).toBe(
+      true,
+    );
+    expect(
+      hitStopGains.every((gain, index) => index === 0 || gain > hitStopGains[index - 1]!),
+    ).toBe(true);
+    expect(plans[5]).toMatchObject({ finisher: true, cameraZoom: 1.09, hitStopMs: 126 });
   });
 
   it('builds a same-target bounce path that visibly leaves and returns to the target', () => {

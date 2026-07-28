@@ -38,8 +38,9 @@ export function SixSkillControls({
           const presentation =
             skill && preview ? createSkillTilePresentation(skill, preview) : undefined;
           const status = presentation?.statusDelta;
+          const totalLabel = presentation?.primaryKind === 'healing' ? '總療' : '總傷';
           const skillLabel = presentation
-            ? `${index + 1}，${presentation.intentName}，預計${presentation.primaryValue}${presentation.primaryKind === 'healing' ? '治療' : '傷害'}，${presentation.hits}次命中${status ? `，${STATUS_LABELS[status.kind]}${status.amount >= 0 ? '增加' : '消耗'}${Math.abs(status.amount)}` : ''}`
+            ? `${index + 1}，${presentation.intentName}，${presentation.segments}段，${totalLabel}${presentation.primaryValue}，${presentation.triggerSummary}${status ? `，${STATUS_LABELS[status.kind]}${status.amount >= 0 ? '增加' : '消耗'}${Math.abs(status.amount)}` : ''}`
             : `${index + 1}，未裝備`;
           return (
             <div className="gr-battle-skill-slot" key={`${skillId}:${index}`}>
@@ -52,7 +53,11 @@ export function SixSkillControls({
                 data-trigger-readiness={presentation?.readiness}
                 data-armed={armedSkillId === skillId}
                 data-skill-total={presentation?.primaryValue}
-                data-skill-hits={presentation?.hits}
+                data-skill-segments={presentation?.segments}
+                data-trigger-summary={presentation?.triggerSummary}
+                data-combo-ready={
+                  presentation ? `${presentation.readyCount}/${presentation.stepCount}` : undefined
+                }
                 data-guide-id={index === 0 ? 'battle:skill' : undefined}
                 data-guide-active={
                   index === 0
@@ -73,8 +78,11 @@ export function SixSkillControls({
                 <strong>{presentation?.intentName ?? '空位'}</strong>
                 {presentation && (
                   <small className="gr-skill-outcome">
-                    <b>{presentation.primaryValue}</b>
-                    {presentation.hits > 0 && <span>×{presentation.hits}</span>}
+                    {presentation.segments > 0 && <span>{presentation.segments}段</span>}
+                    <b>
+                      {totalLabel}
+                      {presentation.primaryValue}
+                    </b>
                     {status && (
                       <span>
                         {STATUS_LABELS[status.kind]}
@@ -84,9 +92,12 @@ export function SixSkillControls({
                     )}
                   </small>
                 )}
+                {presentation && (
+                  <small className="gr-skill-trigger">{presentation.triggerSummary}</small>
+                )}
                 {presentation?.readiness === 'ready' && (
                   <i className="gr-skill-ready" aria-hidden="true">
-                    +
+                    ✓
                   </i>
                 )}
               </button>

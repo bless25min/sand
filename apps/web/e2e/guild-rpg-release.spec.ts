@@ -94,28 +94,50 @@ async function expectBattlefieldVisible(page: Page, viewportLabel = 'current vie
 
 async function castVisibleSkill(page: Page, castOnBattlefieldTarget = false) {
   const battle = page.locator('.gr-battle');
+  let castTargetId: string | null = null;
+  let castTargetHpBefore: number | undefined;
   await expect(battle).toHaveAttribute('data-playback', 'false', { timeout: 12_000 });
   const actorId = await page
     .locator('[data-combat-battlefield]')
     .getAttribute('data-current-actor');
   const skill = page.locator('button[data-battle-skill]:not([disabled])').first();
   await expect(skill).toBeVisible();
+  await expect(skill).toHaveAttribute('data-skill-segments', /\d+/);
+  await expect(skill).toHaveAttribute('data-skill-total', /\d+/);
+  await expect(skill).toHaveAttribute('data-trigger-summary', /→|連招/);
+  expect(
+    (await page.locator('button[data-battle-skill]').allTextContents()).join(''),
+  ).not.toContain('×');
   await skill.click();
   await expect(battle).toHaveAttribute('data-playback', 'false');
   await expect(skill).toHaveAttribute('data-armed', 'true');
   await expect(page.locator('[data-skill-preview]')).toBeVisible();
+  expect(await page.locator('[data-skill-preview] [data-combo-step]').count()).toBeGreaterThan(0);
   await expect(page.locator('[data-skill-preview] [data-causal-step]')).toHaveCount(0);
   await expect(page.locator('[data-skill-preview] .gr-preview-details')).not.toHaveAttribute(
     'open',
     '',
   );
   await expect(page.locator('[data-skill-preview] [data-preview-total]')).toHaveCount(1);
+  await expect(page.locator('[data-skill-preview]')).toContainText('本次：');
+  await expect(page.locator('[data-skill-preview]')).toContainText('段');
+  await expect(page.locator('[data-skill-preview]')).toContainText('追擊');
+  await expect(page.locator('[data-skill-preview]')).toContainText('總傷');
+  await expect(page.locator('[data-skill-preview]')).toContainText('接棒：');
+  expect(await page.locator('[data-skill-preview]').innerText()).not.toContain('×');
   await expect(page.locator('[data-pixi-combat-stage="true"]')).toHaveAttribute(
     'data-preview-total',
     /\d+/,
   );
   if (castOnBattlefieldTarget) {
-    await page.locator('[data-battle-side="enemies"]:not([disabled])').last().click();
+    const alternativeTarget = page
+      .locator('[data-battle-side="enemies"]:not([disabled]):not([data-targeted="true"])')
+      .last();
+    castTargetId = await alternativeTarget.getAttribute('data-battle-unit');
+    castTargetHpBefore = Number(
+      (await alternativeTarget.getAttribute('aria-label'))?.match(/生命 (\d+) \//)?.[1],
+    );
+    await alternativeTarget.click();
   } else {
     await skill.click();
   }
@@ -130,11 +152,24 @@ async function castVisibleSkill(page: Page, castOnBattlefieldTarget = false) {
     'data-effect-phase',
     /windup|travel|impact|aftermath|finisher/,
   );
-  await expect(page.locator('button[data-battle-skill]:not([disabled])')).toHaveCount(0);
   const relay = Number(
     await page.locator('[data-combat-battlefield]').getAttribute('data-relay-tier'),
   );
   await expect(battle).toHaveAttribute('data-playback', 'false', { timeout: 12_000 });
+  if (castTargetId && castTargetHpBefore !== undefined) {
+    const hpAfter = Number(
+      (
+        await page.locator(`[data-battle-unit="${castTargetId}"]`).getAttribute('aria-label')
+      )?.match(/生命 (\d+) \//)?.[1],
+    );
+    expect(hpAfter).toBeLessThan(castTargetHpBefore);
+  }
+  if ((await page.locator('[data-combat-battlefield]').getAttribute('data-finisher')) !== 'true') {
+    await expect(page.locator('[data-combat-battlefield]')).not.toHaveAttribute(
+      'data-current-actor',
+      actorId ?? '',
+    );
+  }
   return { actorId, relay };
 }
 
@@ -172,9 +207,11 @@ test('a new player understands combat, sees six escalating relays, and completes
   await expectSingleScreen(page);
   await expect(page.locator('.gr-battle-guide-strip')).toBeVisible();
   await expect(page.locator('button[data-battle-skill]')).toHaveCount(6);
-  expect((await page.locator('button[data-battle-skill]').allTextContents()).join('')).not.toMatch(
-    /威力|疊層|開戰|追燃/,
-  );
+  const skillText = (await page.locator('button[data-battle-skill]').allTextContents()).join('');
+  expect(skillText).not.toMatch(/威力|疊層|追燃|×/);
+  expect(skillText).toContain('段');
+  expect(skillText).toContain('總傷');
+  expect(skillText).toContain('開戰');
   await expectMinTouchTarget(page, 'button[data-battle-skill]');
   await expectFullyInViewport(page, 'button[data-battle-skill="6"]');
   await expect(page.locator('[data-combat-battlefield]')).toHaveAttribute(

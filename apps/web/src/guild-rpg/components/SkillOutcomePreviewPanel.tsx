@@ -1,7 +1,7 @@
 import type { SkillOutcomePreview } from '@expedition/simulation-core';
 import type { BattleUnit, GuildSkillItem, StatusLayers } from '@expedition/shared-types';
 
-import { createSkillTilePresentation, previewCause } from '../presentation/skill-tile-presentation';
+import { createSkillTilePresentation } from '../presentation/skill-tile-presentation';
 
 const STATUS_LABELS: Readonly<Record<keyof StatusLayers, string>> = {
   burn: '燃',
@@ -46,7 +46,10 @@ export function SkillOutcomePreviewPanel({
       unit.beforeDefenseReduction !== unit.afterDefenseReduction ||
       unit.beforeStrengthened !== unit.afterStrengthened,
   );
-  const cause = previewCause(preview);
+  const relay = preview.nextRelay
+    ? units.find(({ id }) => id === preview.nextRelay?.actorId)
+    : undefined;
+  const totalLabel = presentation.primaryKind === 'healing' ? '總療' : '總傷';
 
   return (
     <section
@@ -58,17 +61,46 @@ export function SkillOutcomePreviewPanel({
       <header>
         <span aria-hidden="true">{skill.stars}★</span>
         <strong>{presentation.intentName}</strong>
-        <b data-preview-total={preview.totalDamage}>{presentation.primaryValue}</b>
-        <i aria-hidden="true">×{presentation.hits}</i>
-        {presentation.statusDelta && (
-          <em aria-hidden="true">
-            {STATUS_LABELS[presentation.statusDelta.kind]}
-            {presentation.statusDelta.amount > 0 ? '+' : ''}
-            {presentation.statusDelta.amount}
-          </em>
-        )}
+        <div className="gr-preview-totals">
+          <span>本次：</span>
+          <b>{presentation.segments}段</b>
+          <b>{presentation.chases}追擊</b>
+          <strong data-preview-total={preview.totalDamage}>
+            {totalLabel}
+            {presentation.primaryValue}
+          </strong>
+          {presentation.statusDelta && (
+            <em aria-hidden="true">
+              {STATUS_LABELS[presentation.statusDelta.kind]}
+              {presentation.statusDelta.amount > 0 ? '+' : ''}
+              {presentation.statusDelta.amount}
+            </em>
+          )}
+        </div>
       </header>
-      {cause && <p className="gr-preview-cause">{cause}</p>}
+      <div className="gr-preview-combo-rail" aria-label="技能觸發與效果">
+        {presentation.comboSteps.map((step, index) => (
+          <div
+            className="gr-preview-combo-step"
+            data-combo-step={step.componentId}
+            data-readiness={step.readiness}
+            key={step.componentId}
+          >
+            <span>{step.conditionLabel}</span>
+            <i>{step.readinessLabel}</i>
+            <b>→ {step.effectLabel}</b>
+            {index < presentation.comboSteps.length - 1 && <em aria-hidden="true">＋</em>}
+          </div>
+        ))}
+      </div>
+      {relay && preview.nextRelay && (
+        <p className="gr-preview-relay">
+          接棒：{relay.name}
+          {preview.nextRelay.newlyReadySkillIds.length > 0
+            ? `新亮${preview.nextRelay.newlyReadySkillIds.length}招`
+            : '，暫無新亮技能'}
+        </p>
+      )}
       <details className="gr-preview-details">
         <summary>詳細</summary>
         <div className="gr-preview-result" data-preview-section="result">

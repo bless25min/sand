@@ -7,6 +7,7 @@ type CombatBeatKind =
 
 export interface CombatBeat {
   id: string;
+  sourceEventIds: readonly number[];
   kind: CombatBeatKind;
   label: string;
   relay: number;
@@ -17,6 +18,7 @@ export interface CombatBeat {
   element?: GuildBattleEvent['element'];
   eventKind: BattleEventKind;
   visual: VisualEvent;
+  comboIndex?: number;
 }
 
 export interface RelayPresentation {
@@ -69,9 +71,9 @@ export function relayPresentation(relay: number): RelayPresentation {
   return {
     relay: normalized,
     label: normalized === 6 ? '終結 6 / 6' : `接力 ${normalized} / 6`,
-    visualPower: normalized * 18,
-    trailCount: normalized + 1,
-    shakePx: normalized === 1 ? 0 : normalized * 1.5,
+    visualPower: 14 + normalized * normalized * 5,
+    trailCount: 1 + (normalized * (normalized + 1)) / 2,
+    shakePx: normalized === 1 ? 0 : normalized * normalized * 0.45,
     finisher: normalized === 6,
   };
 }
@@ -83,25 +85,82 @@ export function createCombatBeats(
 ): readonly CombatBeat[] {
   const normalizedRelay = relayPresentation(relay).relay;
   const visuals = projectVisualEvents(events, normalizedRelay, reducedMotion);
-  return events.map((event, index) => {
-    const kind = KIND_BY_EVENT[event.kind] ?? 'info';
-    const visual = visuals[index]!;
-    return {
-      id: `${event.id}:${kind}`,
-      kind,
-      label: event.message,
-      relay:
-        event.kind === 'relay' && event.amount !== undefined
-          ? relayPresentation(event.amount).relay
-          : normalizedRelay,
-      delayMs: reducedMotion ? 0 : Math.min(DELAY_BY_KIND[kind], visual.durationMs),
-      eventKind: event.kind,
-      visual,
-      ...(event.actorId ? { actorId: event.actorId } : {}),
-      ...(event.targetId ? { targetId: event.targetId } : {}),
-      ...(event.amount !== undefined ? { amount: event.amount } : {}),
-      ...(event.element ? { element: event.element } : {}),
-    };
+  const causalParents = new Map(
+    events
+      .filter(({ causalId }) => causalId !== undefined)
+      .map((event) => [event.causalId!, event]),
+  );
+  const causalIdsWithChildren = new Set(
+    events
+      .map(({ parentCausalId }) => parentCausalId)
+      .filter((causalId): causalId is string => causalId !== undefined),
+  );
+  const comboCounts = new Map<string, number>();
+  const projected: {
+    beat: CombatBeat;
+    componentId?: string | undefined;
+    isComboDamage: boolean;
+  }[] = [];
+
+  events.forEach((event, index) => {
+    const isTriggerNarration = event.kind === 'triggered' || event.kind === 'core_triggered';
+    if (isTriggerNarration && event.causalId && causalIdsWithChildren.has(event.causalId)) return;
+
+    const parent = event.parentCausalId ? causalParents.get(event.parentCausalId) : undefined;
+    const mergedTrigger =
+      parent?.kind === 'triggered' || parent?.kind === 'core_triggered' ? parent : undefined;
+    const isComboDamage = event.kind === 'damage' || event.kind === 'reaction';
+    const comboIndex =
+      isComboDamage && event.componentId
+        ? (comboCounts.get(event.componentId) ?? 0) + 1
+        : undefined;
+    if (comboIndex !== undefined && event.componentId) {
+      comboCounts.set(event.componentId, comboIndex);
+    }
+    const kind = mergedTrigger ? 'chain' : (KIND_BY_EVENT[event.kind] ?? 'info');
+    const sourceEventIds = mergedTrigger ? [mergedTrigger.id, event.id] : [event.id];
+    const baseVisual = visuals[index]!;
+    const visual =
+      mergedTrigger && comboIndex !== undefined
+        ? {
+            ...baseVisual,
+            headline: `追擊 ${comboIndex}`,
+            detail: event.message,
+          }
+        : baseVisual;
+    projected.push({
+      componentId: event.componentId,
+      isComboDamage,
+      beat: {
+        id: `${sourceEventIds.join('+')}:${kind}`,
+        sourceEventIds,
+        kind,
+        label:
+          mergedTrigger && comboIndex !== undefined
+            ? `追擊 ${comboIndex} · ${event.message}`
+            : event.message,
+        relay:
+          event.kind === 'relay' && event.amount !== undefined
+            ? relayPresentation(event.amount).relay
+            : normalizedRelay,
+        delayMs: reducedMotion ? 0 : Math.min(DELAY_BY_KIND[kind], visual.durationMs),
+        eventKind: event.kind,
+        visual,
+        ...(comboIndex !== undefined ? { comboIndex } : {}),
+        ...(event.actorId ? { actorId: event.actorId } : {}),
+        ...(event.targetId ? { targetId: event.targetId } : {}),
+        ...(event.amount !== undefined ? { amount: event.amount } : {}),
+        ...(event.element ? { element: event.element } : {}),
+      },
+    });
+  });
+
+  return projected.map(({ beat, componentId, isComboDamage }, index) => {
+    if (reducedMotion || !isComboDamage || !componentId) return beat;
+    const hasLaterSegment = projected
+      .slice(index + 1)
+      .some((entry) => entry.isComboDamage && entry.componentId === componentId);
+    return { ...beat, delayMs: hasLaterSegment ? 70 : 170 };
   });
 }
 

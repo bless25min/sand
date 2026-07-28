@@ -49,6 +49,7 @@ export function resolveSkillComponent(input: {
 }): { units: BattleUnit[]; events: EventDraft[] } {
   let units = input.units.map((unit) => ({ ...unit }));
   const events: EventDraft[] = [];
+  const causalPrefix = `skill:${input.battle.sequence}:${input.component.id}`;
   const actor = units.find(({ id }) => id === input.actorId);
   if (!actor) throw new Error(`Unknown skill actor: ${input.actorId}`);
   const coreStrength = (coreId: string) =>
@@ -69,6 +70,7 @@ export function resolveSkillComponent(input: {
   const initialLayers = target.statusLayers ?? { burn: 0, poison: 0, tide: 0 };
 
   const applyCoreDamage = (coreName: string, targetIds: readonly string[], amount: number) => {
+    const coreCausalId = `${causalPrefix}:core:${coreName}`;
     events.push({
       kind: 'core_triggered',
       message: `${coreName}建立 ${targetIds.length} 次獨立傷害事件。`,
@@ -79,8 +81,9 @@ export function resolveSkillComponent(input: {
       element: input.component.element,
       specializationId: input.component.specializationId,
       triggerId: input.component.triggerId,
+      causalId: coreCausalId,
     });
-    for (const targetId of targetIds) {
+    for (const [routeIndex, targetId] of targetIds.entries()) {
       const coreTarget = units.find(({ id }) => id === targetId);
       if (!coreTarget) continue;
       if (coreTarget.currentHp <= 0) {
@@ -90,6 +93,7 @@ export function resolveSkillComponent(input: {
           actorId: actor.id,
           targetId,
           amount,
+          parentCausalId: coreCausalId,
         });
         continue;
       }
@@ -106,6 +110,8 @@ export function resolveSkillComponent(input: {
         element: input.component.element,
         specializationId: input.component.specializationId,
         triggerId: input.component.triggerId,
+        causalId: `${coreCausalId}:damage:${routeIndex}`,
+        parentCausalId: coreCausalId,
       });
       if (nextHp === 0) {
         events.push({
@@ -133,6 +139,7 @@ export function resolveSkillComponent(input: {
   );
   replaceUnit(units, { ...target, statusLayers: consumed.layers });
   if (consumed.amount > 0) {
+    const consumeCausalId = `${causalPrefix}:consume`;
     events.push({
       kind: 'triggered',
       message: `消耗 ${consumed.amount} 層狀態，建立 ${consumed.amount} 次獨立爆發。`,
@@ -143,6 +150,7 @@ export function resolveSkillComponent(input: {
       element: input.component.element,
       specializationId: input.component.specializationId,
       triggerId: input.component.triggerId,
+      causalId: consumeCausalId,
     });
     for (let layerIndex = 0; layerIndex < consumed.amount; layerIndex += 1) {
       const burstTarget = units.find(({ id }) => id === target!.id)!;
@@ -168,6 +176,8 @@ export function resolveSkillComponent(input: {
         element: input.component.element,
         specializationId: input.component.specializationId,
         triggerId: input.component.triggerId,
+        causalId: `${consumeCausalId}:damage:${layerIndex}`,
+        parentCausalId: consumeCausalId,
       });
     }
   }
@@ -411,6 +421,7 @@ export function resolveSkillComponent(input: {
       element: input.component.element,
       specializationId: input.component.specializationId,
       triggerId: input.component.triggerId,
+      causalId: `${causalPrefix}:base:${hitIndex}`,
     });
     if (nextHp === 0 && liveTarget.currentHp > 0) {
       events.push({
@@ -448,6 +459,7 @@ export function resolveSkillComponent(input: {
         overkill: overflow,
       });
     if (matched) {
+      const triggerCausalId = `${causalPrefix}:trigger:${hitIndex}`;
       events.push({
         kind: 'triggered',
         message: `${input.component.triggerId} 建立獨立追加事件 +${input.component.triggerAddition}。`,
@@ -458,6 +470,7 @@ export function resolveSkillComponent(input: {
         element: input.component.element,
         specializationId: input.component.specializationId,
         triggerId: input.component.triggerId,
+        causalId: triggerCausalId,
       });
       const triggerTarget = units.find(({ id }) => id === liveTarget.id)!;
       if (triggerTarget.currentHp > 0) {
@@ -477,6 +490,8 @@ export function resolveSkillComponent(input: {
           element: input.component.element,
           specializationId: input.component.specializationId,
           triggerId: input.component.triggerId,
+          causalId: `${triggerCausalId}:damage`,
+          parentCausalId: triggerCausalId,
         });
         if (triggerHp === 0) {
           events.push({
