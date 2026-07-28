@@ -49,6 +49,8 @@ export interface GuildRpgState {
   playbackStartBattle?: GuildBattleState | undefined;
   rewards?: HuntRewards | undefined;
   recentEvents: readonly GuildBattleEvent[];
+  newChallengeIds: readonly string[];
+  recordHighlights: readonly string[];
   message: string;
 }
 
@@ -74,7 +76,7 @@ export type GuildRpgAction =
       direction: -1 | 1;
     }
   | { type: 'DISMANTLE_SKILL'; skillId: string }
-  | { type: 'START_QUEST'; questId: string }
+  | { type: 'START_QUEST'; questId: string; ascensionId?: string }
   | { type: 'SELECT_TARGET'; targetId: string }
   | { type: 'CHOOSE_NEXT_HERO'; adventurerId: string }
   | { type: 'RESET_CURRENT_ORDER' }
@@ -118,6 +120,8 @@ const finishBattle = (state: GuildRpgState, battle: GuildBattleState): GuildRpgS
     battle,
     rewards: result.rewards,
     profile: result.profile,
+    newChallengeIds: result.newChallengeIds,
+    recordHighlights: result.recordHighlights,
     tutorialStep: state.preferences.tutorial === 'active' ? 'equip_loot' : state.tutorialStep,
     message: result.message,
   };
@@ -312,7 +316,13 @@ export function guildRpgReducer(state: GuildRpgState, action: GuildRpgAction): G
   }
   if (action.type === 'START_QUEST' && state.screen === 'guild') {
     try {
-      const battle = startGuildQuest(state.profile, action.questId, GUILD_GAME_CONTENT);
+      const battle = startGuildQuest(
+        state.profile,
+        action.questId,
+        GUILD_GAME_CONTENT,
+        false,
+        action.ascensionId,
+      );
       const completingReplay = state.tutorialStep === 'replay';
       return {
         ...state,
@@ -328,6 +338,8 @@ export function guildRpgReducer(state: GuildRpgState, action: GuildRpgAction): G
         rewards: undefined,
         playbackStartBattle: undefined,
         recentEvents: [],
+        newChallengeIds: [],
+        recordHighlights: [],
         tutorialStep:
           state.tutorialStep === 'start_hunt'
             ? 'select_target'
@@ -468,7 +480,13 @@ export function guildRpgReducer(state: GuildRpgState, action: GuildRpgAction): G
       return { ...state, message: '先完成第一次裝備與技能配置，之後即可從這裡直接再戰。' };
     }
     try {
-      const battle = startGuildQuest(state.profile, state.rewards.questId, GUILD_GAME_CONTENT);
+      const battle = startGuildQuest(
+        state.profile,
+        state.rewards.questId,
+        GUILD_GAME_CONTENT,
+        false,
+        state.battle?.ascension?.id,
+      );
       return {
         ...state,
         screen: 'battle',
@@ -483,6 +501,8 @@ export function guildRpgReducer(state: GuildRpgState, action: GuildRpgAction): G
         playbackStartBattle: undefined,
         rewards: undefined,
         recentEvents: [],
+        newChallengeIds: [],
+        recordHighlights: [],
         message: '再次出征；鎖定目標並開始六人接力。',
       };
     } catch (error) {
@@ -601,6 +621,8 @@ export function guildRpgReducer(state: GuildRpgState, action: GuildRpgAction): G
       playbackStartBattle: undefined,
       rewards: undefined,
       recentEvents: [],
+      newChallengeIds: [],
+      recordHighlights: [],
       message: '已返回整備介面，所有掉落均已保留。',
     };
   }

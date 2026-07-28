@@ -132,7 +132,7 @@ export function BattleScreen({
     >
       <header className="gr-battle__header">
         <div>
-          <span>QUEST</span>
+          <span>{battle.ascension ? `ASCENSION · ${battle.ascension.name}` : 'QUEST'}</span>
           <h1>{quest.name}</h1>
         </div>
         {victory ? (

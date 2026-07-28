@@ -12,10 +12,16 @@ function HuntCard({
   hunt,
   state,
   dispatch,
+  campaignComplete,
+  ascensionId,
+  onSelectAscension,
 }: {
   hunt: Hunt;
   state: GuildRpgState;
   dispatch: React.Dispatch<GuildRpgAction>;
+  campaignComplete: boolean;
+  ascensionId: string | undefined;
+  onSelectAscension: (ascensionId?: string) => void;
 }) {
   const quest = GUILD_GAME_CONTENT.quests.find(({ id }) => id === hunt.questId)!;
   const unlocked = state.profile.unlockedQuestIds.includes(quest.id);
@@ -28,6 +34,13 @@ function HuntCard({
         : 'hunt:start'
       : undefined;
   const boss = quest.enemies.find(({ id }) => id === hunt.bossEnemyId);
+  const challenges = GUILD_GAME_CONTENT.challenges.filter(
+    (challenge) => challenge.questId === quest.id,
+  );
+  const completedChallenges = challenges.filter((challenge) =>
+    state.profile.completedChallengeIds.includes(challenge.id),
+  );
+  const selectedAscension = GUILD_GAME_CONTENT.ascensions.find(({ id }) => id === ascensionId);
   return (
     <article
       className="gr-hunt-card"
@@ -46,6 +59,60 @@ function HuntCard({
         <span>保證 {hunt.guaranteedBossDrops ?? 1} 張</span>
         <span>{hunt.coreDropIds?.length ?? 0} 核心</span>
       </div>
+      <details className="gr-hunt-mastery" data-hunt-mastery={quest.id}>
+        <summary>
+          <strong>
+            挑戰 {completedChallenges.length}/{challenges.length}
+          </strong>
+          <span>
+            OVERKILL {record?.bestOverkill ?? 0} · 最長連鎖 {record?.bestChain ?? 0}
+          </span>
+        </summary>
+        <ul>
+          {challenges.map((challenge) => (
+            <li
+              data-challenge-complete={state.profile.completedChallengeIds.includes(challenge.id)}
+              key={challenge.id}
+            >
+              <b>{state.profile.completedChallengeIds.includes(challenge.id) ? '✓' : '○'}</b>
+              <span>
+                <strong>{challenge.name.split(' · ').at(-1)}</strong>
+                <small>{challenge.description}</small>
+              </span>
+            </li>
+          ))}
+        </ul>
+      </details>
+      {campaignComplete && (
+        <section className="gr-ascension-picker" data-ascension-picker="true">
+          <header>
+            <strong>昇華再戰</strong>
+            <span>{selectedAscension?.routeLabel ?? '原始難度與掉落'}</span>
+          </header>
+          <div>
+            <button
+              type="button"
+              data-ascension-mode="standard"
+              aria-pressed={!ascensionId}
+              onClick={() => onSelectAscension(undefined)}
+            >
+              標準
+            </button>
+            {GUILD_GAME_CONTENT.ascensions.map((ascension) => (
+              <button
+                type="button"
+                data-ascension-mode={ascension.id}
+                aria-pressed={ascension.id === ascensionId}
+                title={ascension.description}
+                key={ascension.id}
+                onClick={() => onSelectAscension(ascension.id)}
+              >
+                {ascension.name}
+              </button>
+            ))}
+          </div>
+        </section>
+      )}
       <details>
         <summary>看敵人、攻略與掉落池</summary>
         <dl>
@@ -77,9 +144,21 @@ function HuntCard({
             : undefined
         }
         disabled={!unlocked}
-        onClick={() => dispatch({ type: 'START_QUEST', questId: quest.id })}
+        onClick={() =>
+          dispatch({
+            type: 'START_QUEST',
+            questId: quest.id,
+            ...(ascensionId ? { ascensionId } : {}),
+          })
+        }
       >
-        {!unlocked ? '完成前一區解鎖' : cleared ? '再次狩獵' : '開始狩獵'}
+        {!unlocked
+          ? '完成前一區解鎖'
+          : selectedAscension
+            ? `挑戰 ${selectedAscension.name}`
+            : cleared
+              ? '再次狩獵'
+              : '開始狩獵'}
       </button>
     </article>
   );
@@ -100,6 +179,7 @@ export function QuestBoard({
     ) ?? GUILD_GAME_CONTENT.zones[0]!;
   const [selectedZoneId, setSelectedZoneId] = useState(defaultZone.id);
   const [huntIndex, setHuntIndex] = useState(0);
+  const [ascensionId, setAscensionId] = useState<string>();
   const selectedZone =
     GUILD_GAME_CONTENT.zones.find(({ id }) => id === selectedZoneId) ??
     GUILD_GAME_CONTENT.zones[0]!;
@@ -110,6 +190,9 @@ export function QuestBoard({
     (questId) => (state.profile.questRecords[questId]?.clears ?? 0) > 0,
   ).length;
   const safeHuntIndex = Math.min(huntIndex, Math.max(0, hunts.length - 1));
+  const campaignComplete = GUILD_GAME_CONTENT.quests.every(
+    ({ id }) => (state.profile.questRecords[id]?.clears ?? 0) > 0,
+  );
 
   return (
     <section className="gr-panel gr-quest-board" aria-labelledby="quest-board-title">
@@ -171,6 +254,9 @@ export function QuestBoard({
                   hunt={hunts[safeHuntIndex]}
                   state={state}
                   dispatch={dispatch}
+                  campaignComplete={campaignComplete}
+                  ascensionId={ascensionId}
+                  onSelectAscension={setAscensionId}
                   key={hunts[safeHuntIndex].id}
                 />
               )}

@@ -27,6 +27,8 @@ export function createGuildRpgState(
     selectedFusionIds: [],
     selectedSalvageIds: [],
     recentEvents: [],
+    newChallengeIds: [],
+    recordHighlights: [],
     message: profile ? '公會紀錄已載入。' : '新的遠征公會已成立。',
   };
 }

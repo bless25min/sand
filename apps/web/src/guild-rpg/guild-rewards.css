@@ -612,6 +612,54 @@
   background: rgb(64 40 16 / 92%);
 }
 
+.gr-reward-feedback {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px;
+}
+
+.gr-reward-feedback > :only-child {
+  grid-column: 1 / -1;
+}
+
+.gr-reward-achievements {
+  display: flex;
+  min-width: 0;
+  min-height: 34px;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  overflow: hidden;
+  border: 1px solid rgb(117 224 173 / 34%);
+  border-radius: 8px;
+  color: #dff9e9;
+  background:
+    radial-gradient(circle at 10% 50%, rgb(65 213 148 / 18%), transparent 42%), rgb(5 34 26 / 94%);
+}
+
+.gr-reward-achievements > strong,
+.gr-reward-achievements > span,
+.gr-reward-achievements > b {
+  overflow: hidden;
+  font-size: 10px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gr-reward-achievements > strong {
+  color: #ffe08e;
+}
+
+.gr-reward-achievements > span {
+  color: #8ff0bb;
+  font-weight: 900;
+}
+
+.gr-reward-achievements > b {
+  color: #d5e8dc;
+}
+
 .gr-reward-coach b {
   color: #ffcf68;
   font-size: 11px;
@@ -882,5 +930,15 @@
   .gr-loot-grid > button > b {
     width: 20px;
     height: 20px;
+  }
+
+  .gr-reward-achievements > b {
+    display: none;
+  }
+}
+
+@media (max-width: 620px) {
+  .gr-reward-feedback {
+    grid-template-columns: 1fr;
   }
 }

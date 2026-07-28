@@ -65,6 +65,13 @@ export function RewardScreen({
   const coach = createFirstHuntCoach(state.preferences.tutorial, state.tutorialStep, {
     surface: 'rewards',
   });
+  const completedChallenges = state.newChallengeIds
+    .map((id) => GUILD_GAME_CONTENT.challenges.find((challenge) => challenge.id === id))
+    .filter((challenge) => challenge !== undefined);
+  const showAchievements =
+    completedChallenges.length > 0 ||
+    state.recordHighlights.length > 0 ||
+    Boolean(state.battle?.ascension);
   const density = entries.length > 14 ? 'max' : entries.length > 8 ? 'dense' : 'normal';
 
   return (
@@ -84,14 +91,34 @@ export function RewardScreen({
         </strong>
       </header>
 
-      {coach && (
-        <aside className="gr-reward-coach" role="status">
-          <b>
-            {coach.stepNumber}/{coach.stepTotal}
-          </b>
-          <span>{coach.title}</span>
-          <small>{coach.message}</small>
-        </aside>
+      {(coach || showAchievements) && (
+        <div className="gr-reward-feedback">
+          {coach && (
+            <aside className="gr-reward-coach" role="status">
+              <b>
+                {coach.stepNumber}/{coach.stepTotal}
+              </b>
+              <span>{coach.title}</span>
+              <small>{coach.message}</small>
+            </aside>
+          )}
+          {showAchievements && (
+            <aside className="gr-reward-achievements" data-reward-achievements="true">
+              {state.battle?.ascension && <strong>昇華制霸 · {state.battle.ascension.name}</strong>}
+              {completedChallenges.length > 0 && (
+                <span>
+                  新完成 ·{' '}
+                  {completedChallenges
+                    .map((challenge) => challenge.name.split(' · ').at(-1))
+                    .join(' / ')}
+                </span>
+              )}
+              {state.recordHighlights.map((highlight) => (
+                <b key={highlight}>{highlight}</b>
+              ))}
+            </aside>
+          )}
+        </div>
       )}
 
       <section className="gr-loot-showcase" aria-label="本次全部戰利品">

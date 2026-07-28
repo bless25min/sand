@@ -379,6 +379,109 @@
   margin-top: auto;
 }
 
+.gr-hunt-mastery > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  line-height: 1.2;
+  list-style: none;
+}
+
+.gr-hunt-mastery > summary::-webkit-details-marker {
+  display: none;
+}
+
+.gr-hunt-mastery > summary > span {
+  overflow: hidden;
+  color: #aebcb4;
+  font-size: 9px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gr-hunt-mastery > ul {
+  display: grid;
+  gap: 4px;
+  margin: 0 0 7px;
+  padding: 0;
+  list-style: none;
+}
+
+.gr-hunt-mastery li {
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr);
+  gap: 5px;
+  align-items: start;
+  padding: 5px;
+  border-radius: 6px;
+  color: #95a69d;
+  background: rgb(255 255 255 / 3%);
+}
+
+.gr-hunt-mastery li[data-challenge-complete='true'] {
+  color: #f3ce81;
+  background: rgb(239 188 98 / 8%);
+}
+
+.gr-hunt-mastery li > span {
+  display: grid;
+}
+
+.gr-hunt-mastery li strong,
+.gr-hunt-mastery li small {
+  overflow: hidden;
+  font-size: 9px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gr-ascension-picker {
+  display: grid;
+  gap: 4px;
+}
+
+.gr-ascension-picker > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  color: #f2ca79;
+  font-size: 10px;
+}
+
+.gr-ascension-picker > header > span {
+  overflow: hidden;
+  color: #9eafa6;
+  font-size: 9px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gr-ascension-picker > div {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 3px;
+}
+
+.gr-ascension-picker button {
+  min-width: 0;
+  min-height: 40px;
+  padding: 4px 2px;
+  border: 1px solid rgb(239 188 98 / 18%);
+  border-radius: 6px;
+  color: #aebdb5;
+  background: rgb(255 255 255 / 3%);
+  font-size: 9px;
+  font-weight: 900;
+}
+
+.gr-ascension-picker button[aria-pressed='true'] {
+  border-color: #efbc62;
+  color: #1d1205;
+  background: linear-gradient(135deg, #ffe4a1, #cf8e31);
+}
+
 .gr-first-session {
   margin-bottom: 10px;
 }
@@ -1200,6 +1303,14 @@ html[data-guild-screen] #root {
   .gr-hunt-card summary {
     min-height: 34px;
     line-height: 34px;
+  }
+
+  .gr-hunt-mastery > summary {
+    line-height: 1.2;
+  }
+
+  .gr-ascension-picker button {
+    min-height: 36px;
   }
 
   .gr-first-session {

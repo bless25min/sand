@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { GUILD_GAME_CONTENT } from '@expedition/game-data';
 
 import { createGuildRpgState } from './create-game-state';
 import { guildRpgReducer, type GuildRpgAction, type GuildRpgState } from './game-reducer';
@@ -265,5 +266,53 @@ describe('deterministic six-hero game flow', () => {
       rewards: undefined,
       battle: { questId: 'border_pack', status: 'active' },
     });
+  });
+
+  it('starts a completed-campaign hunt with the selected ascension', () => {
+    const initial = reduce(createGuildRpgState(), {
+      type: 'SET_TUTORIAL',
+      tutorial: 'skipped',
+    });
+    const completedCampaign = {
+      ...initial,
+      profile: {
+        ...initial.profile,
+        unlockedQuestIds: GUILD_GAME_CONTENT.quests.map(({ id }) => id),
+        questRecords: Object.fromEntries(
+          GUILD_GAME_CONTENT.quests.map(({ id }) => [id, { clears: 1 }]),
+        ),
+      },
+    };
+
+    const started = reduce(completedCampaign, {
+      type: 'START_QUEST',
+      questId: 'border_pack',
+      ascensionId: 'annihilation_weather',
+    });
+
+    expect(started).toMatchObject({
+      screen: 'battle',
+      battle: {
+        questId: 'border_pack',
+        ascension: {
+          id: 'annihilation_weather',
+          name: '殲滅天候',
+        },
+      },
+    });
+  });
+
+  it('keeps newly completed challenges and record highlights visible at rewards', () => {
+    const skipped = reduce(createGuildRpgState(), {
+      type: 'SET_TUTORIAL',
+      tutorial: 'skipped',
+    });
+    const won = winFirstHunt(skipped);
+
+    expect(won.screen).toBe('rewards');
+    expect(won.newChallengeIds?.length).toBeGreaterThan(0);
+    expect(won.recordHighlights).toEqual(
+      expect.arrayContaining([expect.stringMatching(/OVERKILL|連鎖|裝備品質/)]),
+    );
   });
 });

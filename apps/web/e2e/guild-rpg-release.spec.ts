@@ -435,3 +435,113 @@ test('keeps the semantic WebGL battle readable at wide mobile and desktop sizes'
     await castVisibleSkill(page);
   }
 });
+
+test('exposes campaign mastery and starts the selected ascension without mobile overflow', async ({
+  page,
+}) => {
+  const questIds = [
+    'border_pack',
+    'moonroad_pursuit',
+    'red_fang_den',
+    'abandoned_mine',
+    'blast_gallery',
+    'iron_throne',
+    'dragon_shrine',
+    'ashen_aisle',
+    'solar_nest',
+    'storm_gate',
+    'chain_vault',
+    'skybreaker_crown',
+  ];
+  await page.setViewportSize({ width: 375, height: 667 });
+  await page.addInitScript((completedQuestIds) => {
+    if (sessionStorage.getItem('ascension-e2e-seeded') === 'true') return;
+    sessionStorage.setItem('ascension-e2e-seeded', 'true');
+    localStorage.clear();
+    localStorage.setItem(
+      'expedition:guild-rpg:preferences:v1',
+      JSON.stringify({
+        version: 1,
+        tutorial: 'skipped',
+        masterVolume: 0,
+        musicEnabled: false,
+        hapticsEnabled: false,
+        motion: 'reduced',
+      }),
+    );
+    localStorage.setItem(
+      'expedition:guild-rpg:v3',
+      JSON.stringify({
+        version: 3,
+        leaderId: 'brann',
+        party: ['brann', 'lyra', 'elin'].map((definitionId) => ({
+          definitionId,
+          level: 3,
+          experience: 25,
+          equipment: {},
+        })),
+        inventory: [],
+        materials: {},
+        gold: 999,
+        unlockedQuestIds: completedQuestIds,
+        questRecords: Object.fromEntries(
+          completedQuestIds.map((questId) => [
+            questId,
+            {
+              clears: 1,
+              bestOverkill: questId === 'border_pack' ? 324 : 0,
+              bestChain: questId === 'border_pack' ? 6 : 0,
+            },
+          ]),
+        ),
+        nextLootSeed: 12,
+        selectedBuildId: 'retaliation',
+        loadouts: { retaliation: ['brann_guard', 'lyra_mark'] },
+        completedChallengeIds: [],
+        discoveredEquipmentIds: [],
+        discoveredRuleIds: [],
+        forgeSequence: 0,
+        progressionEvents: [],
+      }),
+    );
+  }, questIds);
+  await page.goto('/');
+  await page.waitForFunction(() => {
+    const profile = JSON.parse(localStorage.getItem('expedition:guild-rpg:v4') ?? 'null');
+    return profile?.version === 4;
+  });
+  await page.waitForTimeout(50);
+  await page.evaluate(() => {
+    const key = 'expedition:guild-rpg:v4';
+    const profile = JSON.parse(localStorage.getItem(key)!);
+    profile.questRecords.border_pack = {
+      ...profile.questRecords.border_pack,
+      bestOverkill: 324,
+      bestChain: 6,
+    };
+    localStorage.setItem(key, JSON.stringify(profile));
+  });
+  expect(
+    await page.evaluate(
+      () =>
+        JSON.parse(localStorage.getItem('expedition:guild-rpg:v4')!).questRecords.border_pack
+          .bestOverkill,
+    ),
+  ).toBe(324);
+  await page.reload();
+
+  await expect(page.locator('[data-hunt-mastery="border_pack"]')).toContainText('挑戰 0/4');
+  await expect(page.locator('[data-hunt-mastery="border_pack"]')).toContainText('OVERKILL 324');
+  await expect(page.locator('[data-hunt-mastery="border_pack"]')).toContainText('最長連鎖 6');
+  await expect(page.locator('[data-ascension-mode]')).toHaveCount(4);
+  await page.locator('[data-ascension-mode="annihilation_weather"]').click();
+  await expect(page.getByRole('button', { name: '挑戰 殲滅天候' })).toBeVisible();
+  await expectSingleScreen(page);
+  await expectNoHorizontalCrop(page);
+
+  await page.getByRole('button', { name: '挑戰 殲滅天候' }).click();
+  await expect(page.locator('.gr-battle__header')).toContainText('ASCENSION · 殲滅天候');
+  await expectBattlefieldVisible(page);
+  await expectSingleScreen(page);
+  await expectNoHorizontalCrop(page);
+});

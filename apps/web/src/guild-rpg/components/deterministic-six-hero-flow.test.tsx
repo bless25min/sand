@@ -1,4 +1,5 @@
 import { readFileSync } from 'node:fs';
+import { GUILD_GAME_CONTENT } from '@expedition/game-data';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 
@@ -98,6 +99,45 @@ describe('deterministic six-hero interface', () => {
     expect(markup.match(/data-hunt-card=/g) ?? []).toHaveLength(1);
     expect(markup).toContain('data-pager="hunts"');
     expect(markup).toContain('本區 3 個任務');
+  });
+
+  it('turns completed hunts into visible challenge and ascension goals', () => {
+    const initial = guildRpgReducer(createGuildRpgState(), {
+      type: 'SET_TUTORIAL',
+      tutorial: 'skipped',
+    });
+    const state = {
+      ...initial,
+      profile: {
+        ...initial.profile,
+        unlockedQuestIds: GUILD_GAME_CONTENT.quests.map(({ id }) => id),
+        questRecords: Object.fromEntries(
+          GUILD_GAME_CONTENT.quests.map(({ id }) => [
+            id,
+            {
+              clears: 1,
+              bestOverkill: id === 'border_pack' ? 324 : 0,
+              bestChain: id === 'border_pack' ? 6 : 0,
+              bestItemQuality: id === 'border_pack' ? 91 : 0,
+            },
+          ]),
+        ),
+        completedChallengeIds: GUILD_GAME_CONTENT.challenges
+          .filter(({ questId }) => questId === 'border_pack')
+          .slice(0, 2)
+          .map(({ id }) => id),
+      },
+    };
+
+    const markup = renderToStaticMarkup(<GuildScreen state={state} dispatch={dispatch} />);
+
+    expect(markup).toContain('data-hunt-mastery="border_pack"');
+    expect(markup).toContain('挑戰 2/4');
+    expect(markup).toContain('OVERKILL 324');
+    expect(markup).toContain('最長連鎖 6');
+    expect(markup).toContain('data-ascension-picker="true"');
+    expect(markup.match(/data-ascension-mode=/g) ?? []).toHaveLength(4);
+    expect(markup).toContain('殲滅天候');
   });
 
   it('keeps guild pages inside one viewport and pages dense collections', () => {

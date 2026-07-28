@@ -1,5 +1,6 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
+import { GUILD_GAME_CONTENT } from '@expedition/game-data';
 
 import { createGuildRpgState } from '../state/create-game-state';
 import { guildRpgReducer, type GuildRpgState } from '../state/game-reducer';
@@ -60,5 +61,25 @@ describe('RewardScreen', () => {
     expect(markup).not.toContain('data-pager="loot"');
     expect(markup).not.toContain('class="gr-loot-detail-drawer"');
     expect(markup).toContain('data-material-count=');
+  });
+
+  it('celebrates newly completed challenges and personal records above loot', () => {
+    const won = winHunt();
+    const challengeId = GUILD_GAME_CONTENT.challenges.find(
+      ({ questId, kind }) => questId === 'border_pack' && kind === 'one_command',
+    )!.id;
+    const state: GuildRpgState = {
+      ...won,
+      newChallengeIds: [challengeId],
+      recordHighlights: ['最高 OVERKILL 324', '最長連鎖 6'],
+    };
+
+    const markup = renderToStaticMarkup(<RewardScreen state={state} dispatch={dispatch} />);
+
+    expect(markup).toContain('data-reward-achievements="true"');
+    expect(markup).toContain('新完成');
+    expect(markup).toContain('一輪全滅');
+    expect(markup).toContain('最高 OVERKILL 324');
+    expect(markup).toContain('最長連鎖 6');
   });
 });

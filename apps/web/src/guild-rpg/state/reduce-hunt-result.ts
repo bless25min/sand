@@ -13,7 +13,33 @@ import {
 interface HuntResult {
   profile: GuildProfile;
   rewards: HuntRewards;
+  newChallengeIds: readonly string[];
+  recordHighlights: readonly string[];
   message: string;
+}
+
+function createRecordHighlights(
+  before: GuildProfile,
+  after: GuildProfile,
+  battle: GuildBattleState,
+) {
+  const previous = before.questRecords[battle.questId];
+  const current = after.questRecords[battle.questId];
+  if (!current) return [];
+  const highlights: string[] = [];
+  if ((current.bestOverkill ?? 0) > (previous?.bestOverkill ?? 0)) {
+    highlights.push(`最高 OVERKILL ${current.bestOverkill}`);
+  }
+  if ((current.bestChain ?? 0) > (previous?.bestChain ?? 0)) {
+    highlights.push(`最長連鎖 ${current.bestChain}`);
+  }
+  if ((current.bestItemQuality ?? 0) > (previous?.bestItemQuality ?? 0)) {
+    highlights.push(`裝備品質 ${current.bestItemQuality}`);
+  }
+  if (battle.ascension && (current.ascendedClears ?? 0) > (previous?.ascendedClears ?? 0)) {
+    highlights.push(`${battle.ascension.name}制霸 ${current.ascendedClears}`);
+  }
+  return highlights;
 }
 
 export function reduceHuntResult(
@@ -32,6 +58,8 @@ export function reduceHuntResult(
   return {
     rewards,
     profile: progression.profile,
+    newChallengeIds: progression.newChallengeIds,
+    recordHighlights: createRecordHighlights(profile, progression.profile, battle),
     message: rewards.successful
       ? `狩獵完成：獲得 ${rewards.items.length} 件裝備、${rewards.skillDrops.length} 張技能與 ${rewards.gold} 金幣。${
           progression.newChallengeIds.length > 0
