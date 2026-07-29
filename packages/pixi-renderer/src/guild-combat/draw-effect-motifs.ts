@@ -36,6 +36,48 @@ export function drawProjectile(plan: CombatEffectPlan, color: number) {
       .circle(0, 0, 20)
       .stroke({ color: 0xffffff, width: 3, alpha: 0.55 });
   }
+  if (plan.deliveryMotif === 'shield-wave') {
+    projectile.arc(-12, 0, 32, -0.9, 0.9).stroke({ color: 0xffe1a0, width: 7, alpha: 0.8 });
+  } else if (plan.deliveryMotif === 'arrow-shot') {
+    projectile
+      .moveTo(-34, 0)
+      .lineTo(30, 0)
+      .stroke({ color: 0xffffff, width: 4, alpha: 0.92 })
+      .poly([30, 0, 14, -9, 14, 9])
+      .fill({ color, alpha: 0.96 });
+  } else if (plan.deliveryMotif === 'staff-orbit') {
+    projectile
+      .circle(0, 0, 30)
+      .stroke({ color: 0xffffff, width: 3, alpha: 0.7 })
+      .circle(0, 0, 38)
+      .stroke({ color, width: 2, alpha: 0.45 });
+  } else if (plan.deliveryMotif === 'flask-lob') {
+    projectile
+      .roundRect(-12, -22, 24, 34, 8)
+      .stroke({ color: 0xf3ffd0, width: 4, alpha: 0.86 })
+      .rect(-6, -30, 12, 9)
+      .fill({ color, alpha: 0.9 });
+  } else if (plan.deliveryMotif === 'tome-rune') {
+    projectile
+      .poly([0, -30, 28, 0, 0, 30, -28, 0])
+      .stroke({ color: 0xffffff, width: 3, alpha: 0.74 })
+      .circle(0, 0, 13)
+      .stroke({ color, width: 4, alpha: 0.82 });
+  } else if (plan.deliveryMotif === 'twin-slash') {
+    projectile
+      .moveTo(-28, 22)
+      .lineTo(28, -22)
+      .moveTo(-20, -25)
+      .lineTo(34, 17)
+      .stroke({ color: 0xffffff, width: 5, alpha: 0.9 });
+  } else if (plan.deliveryMotif === 'enemy-strike') {
+    projectile
+      .moveTo(-20, -18)
+      .lineTo(22, 18)
+      .moveTo(-7, -28)
+      .lineTo(30, 8)
+      .stroke({ color: 0xff704f, width: 5, alpha: 0.86 });
+  }
   return projectile;
 }
 

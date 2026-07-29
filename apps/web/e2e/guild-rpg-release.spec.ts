@@ -168,6 +168,8 @@ async function castVisibleSkill(page: Page, castOnBattlefieldTarget = false) {
   }
   await expect(battle).toHaveAttribute('data-playback', 'true');
   const stage = page.locator('[data-pixi-combat-stage="true"]');
+  const delivery = await stage.getAttribute('data-effect-delivery');
+  expect(delivery).toMatch(/shield|bow|staff|flask|tome|blades|enemy/);
   if (execution) {
     await expect(stage).toHaveAttribute('data-effect-phase', 'finisher');
   } else {
@@ -199,7 +201,7 @@ async function castVisibleSkill(page: Page, castOnBattlefieldTarget = false) {
       actorId ?? '',
     );
   }
-  return { actorId, relay, execution, finalExecution };
+  return { actorId, relay, execution, finalExecution, delivery };
 }
 
 test('a new player understands combat, sees six escalating relays, and completes the loot loop', async ({
@@ -262,6 +264,7 @@ test('a new player understands combat, sees six escalating relays, and completes
     relay: number;
     execution: boolean;
     finalExecution: boolean;
+    delivery: string | null;
   }[] = [];
   for (let turn = 0; turn < 60; turn += 1) {
     const collect = page.getByRole('button', { name: '收下全部戰利品' });
@@ -277,6 +280,14 @@ test('a new player understands combat, sees six escalating relays, and completes
     'seph',
     'lorne',
     'kyro',
+  ]);
+  expect(firstRelays.map(({ delivery }) => delivery)).toEqual([
+    'shield',
+    'bow',
+    'staff',
+    'flask',
+    'tome',
+    'blades',
   ]);
   expect(firstRelays[0]?.relay).toBe(1);
   expect(Math.max(...firstRelays.map(({ relay }) => relay))).toBeGreaterThanOrEqual(3);

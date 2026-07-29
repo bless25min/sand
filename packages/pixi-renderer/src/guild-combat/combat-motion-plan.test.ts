@@ -63,4 +63,28 @@ describe('combat motion plan', () => {
     );
     expect(recoils[5]).toBeGreaterThan(50);
   });
+
+  it('gives all six hero weapons a distinct casting posture and travel distance', () => {
+    const weapons = ['shield', 'bow', 'staff', 'flask', 'tome', 'blades'] as const;
+    const motions = weapons.map((weapon) =>
+      createCombatMotion({
+        side: 'heroes',
+        state: 'acting',
+        phase: 'travel',
+        relay: 4,
+        progress: 0.5,
+        finisher: false,
+        weapon,
+      }),
+    );
+    const signatures = motions.map(
+      ({ x, y, scale, rotation }) =>
+        `${x.toFixed(2)}:${y.toFixed(2)}:${scale.toFixed(3)}:${rotation.toFixed(3)}`,
+    );
+
+    expect(new Set(signatures).size).toBe(weapons.length);
+    expect(motions[5]!.x).toBeGreaterThan(motions[0]!.x);
+    expect(motions[2]!.y).toBeLessThan(motions[1]!.y);
+    expect(Math.abs(motions[3]!.rotation)).toBeGreaterThan(Math.abs(motions[4]!.rotation));
+  });
 });

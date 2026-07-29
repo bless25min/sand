@@ -21,6 +21,7 @@ const plan = (
   finisher: false,
   elementMotif,
   specializationMotif,
+  deliveryMotif: 'neutral',
   signatureMarks,
   route: [],
 });

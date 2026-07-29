@@ -26,6 +26,15 @@ export interface CombatEffectPlan {
     | 'relay-aura'
     | 'rapid-strikes'
     | 'impact';
+  deliveryMotif:
+    | 'shield-wave'
+    | 'arrow-shot'
+    | 'staff-orbit'
+    | 'flask-lob'
+    | 'tome-rune'
+    | 'twin-slash'
+    | 'enemy-strike'
+    | 'neutral';
   signatureMarks: number;
   route: readonly CombatEffectPoint[];
 }
@@ -33,6 +42,60 @@ export interface CombatEffectPlan {
 const pointFor = (scene: GuildCombatScene, id: string | undefined) => {
   const unit = scene.units.find((candidate) => candidate.id === id);
   return unit ? { x: unit.x, y: unit.y - 40 } : undefined;
+};
+
+const deliveryMotif = (scene: GuildCombatScene): CombatEffectPlan['deliveryMotif'] => {
+  const actor = scene.units.find(({ id }) => id === scene.event?.actorId);
+  if (actor?.hero?.weapon === 'shield') return 'shield-wave';
+  if (actor?.hero?.weapon === 'bow') return 'arrow-shot';
+  if (actor?.hero?.weapon === 'staff') return 'staff-orbit';
+  if (actor?.hero?.weapon === 'flask') return 'flask-lob';
+  if (actor?.hero?.weapon === 'tome') return 'tome-rune';
+  if (actor?.hero?.weapon === 'blades') return 'twin-slash';
+  if (actor?.side === 'enemies') return 'enemy-strike';
+  return 'neutral';
+};
+
+const directRoute = (
+  scene: GuildCombatScene,
+  actor: CombatEffectPoint,
+  target: CombatEffectPoint,
+): readonly CombatEffectPoint[] => {
+  const delivery = deliveryMotif(scene);
+  const dx = target.x - actor.x;
+  const dy = target.y - actor.y;
+  const elevated = Math.max(48, Math.min(actor.y, target.y));
+  if (delivery === 'shield-wave') {
+    return [actor, { x: actor.x + dx * 0.44, y: target.y + 34 }, target];
+  }
+  if (delivery === 'staff-orbit') {
+    return [actor, { x: actor.x + dx * 0.5, y: elevated - 138 }, target];
+  }
+  if (delivery === 'flask-lob') {
+    return [
+      actor,
+      { x: actor.x + dx * 0.38, y: elevated - 182 },
+      { x: actor.x + dx * 0.72, y: elevated - 112 },
+      target,
+    ];
+  }
+  if (delivery === 'tome-rune') {
+    return [
+      actor,
+      { x: actor.x + dx * 0.32, y: actor.y - 104 },
+      { x: actor.x + dx * 0.68, y: target.y + 76 },
+      target,
+    ];
+  }
+  if (delivery === 'twin-slash') {
+    return [
+      actor,
+      { x: target.x - 58, y: target.y - 62 },
+      { x: actor.x + Math.max(72, dx * 0.24), y: actor.y + Math.sign(dy || 1) * 48 },
+      target,
+    ];
+  }
+  return [actor, target];
 };
 
 function eventRoute(scene: GuildCombatScene): readonly CombatEffectPoint[] {
@@ -52,7 +115,7 @@ function eventRoute(scene: GuildCombatScene): readonly CombatEffectPoint[] {
   if (event.route === 'echo') {
     return [actor, target, { x: target.x - 90, y: target.y - 105 }, target];
   }
-  return [actor, target];
+  return directRoute(scene, actor, target);
 }
 
 const elementMotif = (scene: GuildCombatScene): CombatEffectPlan['elementMotif'] => {
@@ -111,6 +174,7 @@ export function createCombatEffectPlan(scene: GuildCombatScene): CombatEffectPla
     finisher: relay === 6,
     elementMotif: elementMotif(scene),
     specializationMotif: motif,
+    deliveryMotif: deliveryMotif(scene),
     signatureMarks:
       relay +
       Math.floor((relay * relay) / 3) +

@@ -17,6 +17,7 @@ export function PixiCombatStage({
   const latestSceneRef = useRef(scene);
   const [renderer, setRenderer] = useState<string>();
   const [error, setError] = useState(false);
+  const actingUnit = scene.units.find(({ id }) => id === scene.event?.actorId);
 
   useEffect(() => {
     const host = hostRef.current;
@@ -62,6 +63,7 @@ export function PixiCombatStage({
       data-render-error={error}
       data-effect-element={scene.event?.element}
       data-effect-specialization={scene.event?.specializationId}
+      data-effect-delivery={actingUnit?.hero?.weapon ?? (actingUnit?.enemy ? 'enemy' : undefined)}
       data-effect-phase={scene.event?.phase}
       data-preview-total={scene.preview?.totalDamage}
       data-preview-targets={scene.preview?.targetIds.length}

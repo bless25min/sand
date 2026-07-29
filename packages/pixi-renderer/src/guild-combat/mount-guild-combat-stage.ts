@@ -142,9 +142,10 @@ export async function mountGuildCombatStage(
           side: sceneUnit?.side ?? 'heroes',
           state: unit.state,
           ...(currentScene.event?.phase ? { phase: currentScene.event.phase } : {}),
-          relay: currentScene.relay,
+          relay: currentScene.event?.causalDepth ?? currentScene.event?.relay ?? currentScene.relay,
           progress,
           finisher: currentPlan.finisher && currentScene.event?.phase === 'finisher',
+          ...(sceneUnit?.hero?.weapon ? { weapon: sceneUnit.hero.weapon } : {}),
         });
         unit.node.position.set(
           unit.baseX + motion.x,

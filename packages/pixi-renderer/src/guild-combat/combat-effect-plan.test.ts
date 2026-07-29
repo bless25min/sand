@@ -247,6 +247,53 @@ describe('Pixi guild combat effect plan', () => {
     ]);
   });
 
+  it('gives all six hero weapons distinct delivery motifs and direct attack routes', () => {
+    const weapons = ['shield', 'bow', 'staff', 'flask', 'tome', 'blades'] as const;
+    const plans = weapons.map((weapon, index) =>
+      createCombatEffectPlan({
+        ...scene(3),
+        units: [
+          {
+            ...scene(3).units[0]!,
+            hero: { ...scene(3).units[0]!.hero!, weapon },
+          },
+          scene(3).units[1]!,
+        ],
+        event: {
+          id: `visual:weapon:${weapon}`,
+          sourceEventId: 70 + index,
+          eventKind: 'damage',
+          phase: 'travel',
+          headline: '武器軌跡',
+          detail: '武器軌跡',
+          relay: 3,
+          intensity: 50,
+          durationMs: 170,
+          polarity: 'damage',
+          route: 'direct',
+          camera: 'track',
+          actorId: 'brann',
+          targetId: 'wolf_alpha',
+          element: 'fire',
+        },
+      }),
+    );
+    const routeSignatures = plans.map(({ route }) =>
+      route.map(({ x, y }) => `${x}:${y}`).join('|'),
+    );
+
+    expect(plans.map(({ deliveryMotif }) => deliveryMotif)).toEqual([
+      'shield-wave',
+      'arrow-shot',
+      'staff-orbit',
+      'flask-lob',
+      'tome-rune',
+      'twin-slash',
+    ]);
+    expect(new Set(routeSignatures).size).toBe(weapons.length);
+    expect(plans.every(({ route }) => route.length >= 2)).toBe(true);
+  });
+
   it('turns a targetless sixth finisher into an impact on every enemy including just-defeated targets', () => {
     const plan = createCombatEffectPlan({
       ...scene(6),

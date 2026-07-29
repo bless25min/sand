@@ -104,11 +104,9 @@ export function drawCombatEffects(
 
     for (let index = 0; index < plan.afterimageCount; index += 1) {
       const point = routePoint(plan, (index + 1) / (plan.afterimageCount + 1));
-      const afterimage = new Graphics()
-        .circle(0, 0, 7 + scene.relay * 1.8)
-        .fill({ color: index % 3 === 0 ? 0xffffff : color, alpha: 0.72 });
+      const afterimage = drawProjectile(plan, index % 3 === 0 ? 0xffffff : color);
       afterimage.position.set(point.x, point.y);
-      afterimage.scale.set(0.65 + index * 0.04);
+      afterimage.scale.set(0.28 + index * 0.025);
       afterimage.alpha = 0.18 + (index / Math.max(1, plan.afterimageCount - 1)) * 0.34;
       container.addChild(afterimage);
       afterimages.push(afterimage);

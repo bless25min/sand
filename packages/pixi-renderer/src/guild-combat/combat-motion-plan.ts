@@ -1,4 +1,4 @@
-import type { GuildCombatSceneUnit, GuildCombatVisualEvent } from './contracts';
+import type { GuildCombatSceneUnit, GuildCombatVisualEvent, GuildHeroVisual } from './contracts';
 
 export interface CombatMotionInput {
   side: GuildCombatSceneUnit['side'];
@@ -7,6 +7,7 @@ export interface CombatMotionInput {
   relay: number;
   progress: number;
   finisher: boolean;
+  weapon?: GuildHeroVisual['weapon'];
 }
 
 export interface CombatMotion {
@@ -33,6 +34,41 @@ export function createCombatMotion(input: CombatMotionInput): CombatMotion {
     x += direction * (16 + relay * 7) * pulse;
     y -= (3 + relay) * pulse;
     scale += (0.025 + relay * 0.006) * pulse;
+  }
+  if (
+    input.side === 'heroes' &&
+    input.state === 'acting' &&
+    (input.phase === 'windup' || input.phase === 'travel' || input.phase === 'finisher')
+  ) {
+    if (input.weapon === 'shield') {
+      x *= 0.78;
+      y += (2 + relay * 0.8) * pulse;
+      scale += 0.08 * pulse;
+      rotation -= 0.035 * pulse;
+    } else if (input.weapon === 'bow') {
+      x *= 0.42;
+      y -= (5 + relay * 0.5) * pulse;
+      rotation += 0.085 * pulse;
+    } else if (input.weapon === 'staff') {
+      x *= 0.58;
+      y -= (15 + relay * 1.6) * pulse;
+      scale += 0.045 * pulse;
+      rotation -= 0.065 * pulse;
+    } else if (input.weapon === 'flask') {
+      x *= 0.64;
+      y -= (20 + relay * 1.9) * pulse;
+      rotation -= 0.2 * pulse;
+    } else if (input.weapon === 'tome') {
+      x *= 0.28;
+      y -= (9 + relay) * pulse;
+      scale += 0.1 * pulse;
+      rotation += 0.018 * pulse;
+    } else if (input.weapon === 'blades') {
+      x *= 1.38;
+      y -= (4 + relay * 0.7) * pulse;
+      scale += 0.025 * pulse;
+      rotation += 0.13 * pulse;
+    }
   }
   if (input.state === 'hit') {
     x -= direction * (20 + relay * 6) * pulse;
