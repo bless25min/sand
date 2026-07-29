@@ -26,12 +26,19 @@ describe('skill tile presentation', () => {
       content: createSkillEngineContent(state.profile),
     });
 
+    const chaseDamage = preview.comboSteps.reduce((sum, step) => sum + step.chaseDamage, 0);
     expect(createSkillTilePresentation(skill, preview)).toMatchObject({
       intentName: '引火',
       primaryKind: 'damage',
       primaryValue: preview.totalDamage,
       segments: 2,
       chases: 1,
+      baseSegments: 1,
+      baseDamage: preview.totalDamage - chaseDamage,
+      chaseDamage,
+      hitLabel: '2擊',
+      totalLabel: `總${preview.totalDamage}`,
+      chaseLabel: '追1擊',
       statusDelta: { kind: 'burn', amount: 1 },
       readiness: 'ready',
       readyCount: 1,
@@ -45,6 +52,23 @@ describe('skill tile presentation', () => {
           readinessLabel: '已亮',
           effectLabel: '追加1',
         },
+      ],
+      cueStages: [
+        expect.objectContaining({
+          kind: 'opening',
+          label: '起手',
+          detail: `1擊 · 傷${preview.totalDamage - chaseDamage}`,
+        }),
+        expect.objectContaining({
+          kind: 'condition',
+          label: '開戰',
+          detail: '已亮 · 追1擊',
+        }),
+        expect.objectContaining({
+          kind: 'result',
+          label: '結果',
+          detail: `2擊 · 總${preview.totalDamage} · 燃+1`,
+        }),
       ],
     });
   });

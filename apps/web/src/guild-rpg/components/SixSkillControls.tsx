@@ -49,7 +49,7 @@ export function SixSkillControls({
           const skillLabel = presentation
             ? presentation.execution
               ? `${index + 1}，${presentation.intentName}，${totalLabel}${presentation.primaryValue}，${presentation.triggerSummary}`
-              : `${index + 1}，${presentation.intentName}，${totalLabel}${presentation.primaryValue}，${presentation.segments}次獨立效果，${presentation.triggerSummary}${status ? `，${STATUS_LABELS[status.kind]}${status.amount >= 0 ? '增加' : '消耗'}${Math.abs(status.amount)}` : ''}`
+              : `${index + 1}，${presentation.intentName}，${presentation.hitLabel}，${presentation.totalLabel}，${presentation.triggerSummary}${status ? `，${STATUS_LABELS[status.kind]}${status.amount >= 0 ? '增加' : '消耗'}${Math.abs(status.amount)}` : ''}`
             : `${index + 1}，未裝備`;
           return (
             <div className="gr-battle-skill-slot" key={`${skillId}:${index}`}>
@@ -88,17 +88,9 @@ export function SixSkillControls({
                 <strong>{presentation?.intentName ?? '空位'}</strong>
                 {presentation && (
                   <small className="gr-skill-outcome">
-                    <b>
-                      {totalLabel}
-                      {presentation.primaryValue}
-                    </b>
-                    <span
-                      className="gr-skill-hit-pips"
-                      aria-label={`${presentation.segments} 次獨立效果`}
-                    >
-                      {Array.from({ length: Math.min(6, presentation.segments) }, (_, pipIndex) => (
-                        <i data-skill-hit-pip={pipIndex + 1} aria-hidden="true" key={pipIndex} />
-                      ))}
+                    <b data-skill-hit-label={presentation.segments}>{presentation.hitLabel}</b>
+                    <span data-skill-total-label={presentation.primaryValue}>
+                      {presentation.totalLabel}
                     </span>
                     {status && (
                       <em>
@@ -112,16 +104,17 @@ export function SixSkillControls({
                 {presentation && (
                   <span className="gr-skill-nodes" aria-label={presentation.triggerSummary}>
                     {presentation.comboSteps.map((step, stepIndex) => (
-                      <i
+                      <span
                         data-combo-node={stepIndex + 1}
                         data-node-active={stepIndex === 0 || step.readiness === 'ready'}
                         data-readiness={step.readiness}
                         title={`${step.conditionLabel}：${step.readinessLabel}`}
-                        aria-hidden="true"
                         key={step.componentId}
                       >
-                        {step.conditionGlyph}
-                      </i>
+                        <i aria-hidden="true">{step.conditionGlyph}</i>
+                        <b>{step.conditionLabel}</b>
+                        <em>{step.readinessLabel}</em>
+                      </span>
                     ))}
                   </span>
                 )}

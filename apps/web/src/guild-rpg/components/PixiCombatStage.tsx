@@ -80,6 +80,8 @@ export function PixiCombatStage({
       data-effect-specialization={scene.event?.specializationId}
       data-effect-delivery={actingUnit?.hero?.weapon ?? (actingUnit?.enemy ? 'enemy' : undefined)}
       data-effect-phase={scene.event?.phase}
+      data-effect-trigger={effectPlan.triggerMotif}
+      data-effect-combo-tier={effectPlan.comboTier}
       data-enemy-reaction={effectPlan.enemyReaction.kind}
       data-enemy-attack={effectPlan.enemyAttack.active ? effectPlan.enemyAttack.motif : undefined}
       data-enemy-attack-phase={

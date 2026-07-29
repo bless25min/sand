@@ -94,6 +94,7 @@ export function BattleCommandDock({
               actor={actor}
               target={target}
               skill={skill}
+              skills={state.profile.skillInventory}
               preview={preview}
               units={state.battle!.units}
             />

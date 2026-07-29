@@ -20,6 +20,7 @@ export interface CombatEffectPlan {
   afterimageCount: number;
   screenFlashAlpha: number;
   impactScale: number;
+  comboTier: number;
   finisher: boolean;
   elementMotif: 'ember-shards' | 'toxic-spores' | 'tidal-ribbons' | 'neutral-sparks';
   specializationMotif:
@@ -39,6 +40,15 @@ export interface CombatEffectPlan {
     | 'twin-slash'
     | 'enemy-strike'
     | 'neutral';
+  triggerMotif:
+    | 'none'
+    | 'timing-seal'
+    | 'layer-burst'
+    | 'consume-collapse'
+    | 'repeat-slash'
+    | 'ricochet-route'
+    | 'echo-route'
+    | 'relay-link';
   enemyAttack: EnemyAttackPlan;
   enemyReaction: EnemyReactionPlan;
   signatureMarks: number;
@@ -146,6 +156,31 @@ const specializationMotif = (scene: GuildCombatScene): CombatEffectPlan['special
   return 'impact';
 };
 
+const triggerMotif = (scene: GuildCombatScene): CombatEffectPlan['triggerMotif'] => {
+  const trigger = scene.event?.triggerId;
+  if (!trigger) return 'none';
+  if (trigger.startsWith('consume')) return 'consume-collapse';
+  if (
+    trigger === 'target_burning' ||
+    trigger === 'target_poisoned' ||
+    trigger === 'target_tide' ||
+    trigger === 'layer_threshold'
+  ) {
+    return 'layer-burst';
+  }
+  if (trigger === 'on_hit' || trigger === 'on_repeat_hit') return 'repeat-slash';
+  if (trigger === 'on_bounce') return 'ricochet-route';
+  if (trigger === 'on_echo' || trigger === 'lone_target') return 'echo-route';
+  if (
+    trigger.startsWith('previous_') ||
+    trigger === 'ally_same_element' ||
+    trigger === 'team_three_elements'
+  ) {
+    return 'relay-link';
+  }
+  return 'timing-seal';
+};
+
 const impactTargetIds = (scene: GuildCombatScene): readonly string[] => {
   if (scene.event?.targetId) return [scene.event.targetId];
   if (scene.event?.phase === 'finisher') {
@@ -169,28 +204,39 @@ export function createCombatEffectPlan(scene: GuildCombatScene): CombatEffectPla
     1,
     Math.min(6, Math.trunc(scene.event?.causalDepth ?? scene.event?.relay ?? scene.relay)),
   );
+  const comboTier = Math.max(1, Math.min(6, Math.trunc(scene.event?.comboIndex ?? 1)));
+  const comboBonus = comboTier - 1;
   const motif = specializationMotif(scene);
   const enemyAttack = createEnemyAttackPlan(scene);
   return {
     ambientParticles: 8 + relay * relay * 3,
-    impactParticles: 12 + relay * relay * 5,
-    impactRings: relay + Math.floor((relay * relay) / 4) + 1 + (motif === 'detonation' ? 2 : 0),
+    impactParticles: 12 + relay * relay * 5 + comboBonus * comboTier * 2,
+    impactRings:
+      relay + Math.floor((relay * relay) / 4) + 1 + comboBonus + (motif === 'detonation' ? 2 : 0),
     impactTargetIds: impactTargetIds(scene),
-    cameraZoom: Number((1 + relay * relay * 0.0045).toFixed(3)),
-    shakePx: relay === 1 ? 0 : relay * relay * 0.7,
-    hitStopMs: 24 + relay * relay * 4,
-    afterimageCount: relay + 1,
-    screenFlashAlpha: Number((0.08 + relay * relay * 0.012 + (relay === 6 ? 0.18 : 0)).toFixed(3)),
-    impactScale: 1 + relay * relay * 0.025,
+    cameraZoom: Number((1 + relay * relay * 0.0045 + comboBonus * 0.003).toFixed(3)),
+    shakePx: (relay === 1 ? 0 : relay * relay * 0.7) + comboBonus * 1.25,
+    hitStopMs: 24 + relay * relay * 4 + comboBonus * 8,
+    afterimageCount: relay + 1 + comboBonus,
+    screenFlashAlpha: Number(
+      Math.min(
+        0.92,
+        0.08 + relay * relay * 0.012 + comboBonus * 0.035 + (relay === 6 ? 0.18 : 0),
+      ).toFixed(3),
+    ),
+    impactScale: 1 + relay * relay * 0.025 + comboBonus * 0.08,
+    comboTier,
     finisher: relay === 6,
     elementMotif: elementMotif(scene),
     specializationMotif: motif,
     deliveryMotif: deliveryMotif(scene),
+    triggerMotif: triggerMotif(scene),
     enemyAttack,
     enemyReaction: createEnemyReactionPlan(scene, relay),
     signatureMarks:
       relay +
       Math.floor((relay * relay) / 3) +
+      comboBonus +
       (motif === 'rapid-strikes' ? 4 : motif === 'layer-orbit' ? 2 : 1),
     route: eventRoute(scene, enemyAttack),
   };

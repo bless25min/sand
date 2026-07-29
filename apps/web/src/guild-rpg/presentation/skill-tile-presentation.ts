@@ -108,6 +108,15 @@ interface SkillComboStepPresentation {
   readiness: TriggerReadiness;
   readinessLabel: string;
   effectLabel: string;
+  chaseSegments: number;
+  chaseDamage: number;
+}
+
+interface SkillCueStagePresentation {
+  kind: 'opening' | 'condition' | 'result';
+  label: string;
+  detail: string;
+  readiness?: TriggerReadiness | undefined;
 }
 
 export interface SkillTilePresentation {
@@ -116,6 +125,12 @@ export interface SkillTilePresentation {
   primaryValue: number;
   segments: number;
   chases: number;
+  baseSegments: number;
+  baseDamage: number;
+  chaseDamage: number;
+  hitLabel: string;
+  totalLabel: string;
+  chaseLabel: string;
   statusDelta?: { kind: StatusLayer; amount: number } | undefined;
   execution: boolean;
   readiness: TriggerReadiness;
@@ -123,6 +138,7 @@ export interface SkillTilePresentation {
   stepCount: number;
   triggerSummary: string;
   comboSteps: readonly SkillComboStepPresentation[];
+  cueStages: readonly SkillCueStagePresentation[];
 }
 
 const statusDelta = (preview: SkillOutcomePreview): SkillTilePresentation['statusDelta'] => {
@@ -150,11 +166,15 @@ const conditionGlyph = (triggerId: TriggerCondition, missing: StatusLayer | unde
   return '時';
 };
 
+export const skillIntentName = (skill: GuildSkillItem): string => {
+  const first = skill.components[0];
+  return first ? INTENT_NAMES[first.element][first.specializationId] : '未裝備';
+};
+
 export function createSkillTilePresentation(
   skill: GuildSkillItem,
   preview: SkillOutcomePreview,
 ): SkillTilePresentation {
-  const first = skill.components[0];
   const primaryKind =
     preview.totalDamage > 0 ? 'damage' : preview.totalHealing > 0 ? 'healing' : 'effect';
   const components = new Map(skill.components.map((component) => [component.id, component]));
@@ -182,24 +202,52 @@ export function createSkillTilePresentation(
             ? '出招亮'
             : MISSING_LABELS[step.triggerId],
       effectLabel,
+      chaseSegments: step.chaseSegments,
+      chaseDamage: step.chaseDamage,
     };
   });
+  const chaseDamage = preview.comboSteps.reduce((sum, step) => sum + step.chaseDamage, 0);
+  const primaryTotal = preview.totalDamage > 0 ? preview.totalDamage : preview.totalHealing;
+  const baseDamage = Math.max(0, primaryTotal - chaseDamage);
+  const baseSegments = Math.max(0, preview.damageSegments - preview.chaseSegments);
+  const delta = statusDelta(preview);
+  const statusLabel = delta
+    ? `${delta.kind === 'burn' ? '燃' : delta.kind === 'poison' ? '毒' : '潮'}${delta.amount > 0 ? '+' : ''}${delta.amount}`
+    : undefined;
+  const resultParts = [
+    preview.damageSegments > 0 ? `${preview.damageSegments}擊` : '效果',
+    primaryKind === 'healing' ? `療${preview.totalHealing}` : `總${preview.totalDamage}`,
+    ...(statusLabel ? [statusLabel] : []),
+  ];
   const readyCount = comboSteps.filter(({ readiness }) => readiness === 'ready').length;
   const summaryStep = (comboSteps.find(({ readiness }) => readiness === 'ready') ?? comboSteps[0])!;
   if (preview.executionWindow) {
     const finalExecution = preview.finisherPower > 0;
     return {
-      intentName: INTENT_NAMES[first.element][first.specializationId],
+      intentName: skillIntentName(skill),
       primaryKind: finalExecution ? 'finisher' : 'effect',
       primaryValue: finalExecution ? preview.finisherPower : preview.overkill,
       segments: preview.damageSegments,
       chases: 0,
+      baseSegments: preview.damageSegments,
+      baseDamage: preview.totalDamage,
+      chaseDamage: 0,
+      hitLabel: `${preview.damageSegments}擊`,
+      totalLabel: finalExecution ? `終${preview.finisherPower}` : `溢${preview.overkill}`,
+      chaseLabel: '無追擊',
       execution: true,
       readiness: 'ready',
       readyCount: 1,
       stepCount: 1,
       triggerSummary: finalExecution ? '本輪因果 → 終結' : '破勢溢傷 · 不新增傷害',
       comboSteps,
+      cueStages: [
+        {
+          kind: 'result',
+          label: finalExecution ? '終結' : '破勢',
+          detail: finalExecution ? `本輪${preview.finisherPower}` : `溢傷${preview.overkill}`,
+        },
+      ],
     };
   }
   const mark =
@@ -209,7 +257,7 @@ export function createSkillTilePresentation(
         ? '•'
         : '缺';
   return {
-    intentName: INTENT_NAMES[first.element][first.specializationId],
+    intentName: skillIntentName(skill),
     primaryKind,
     primaryValue:
       primaryKind === 'damage'
@@ -219,7 +267,18 @@ export function createSkillTilePresentation(
           : 0,
     segments: preview.damageSegments,
     chases: preview.chaseSegments,
-    statusDelta: statusDelta(preview),
+    baseSegments,
+    baseDamage,
+    chaseDamage,
+    hitLabel: `${preview.damageSegments}擊`,
+    totalLabel:
+      primaryKind === 'healing'
+        ? `療${preview.totalHealing}`
+        : primaryKind === 'effect'
+          ? '效果'
+          : `總${preview.totalDamage}`,
+    chaseLabel: preview.chaseSegments > 0 ? `追${preview.chaseSegments}擊` : '無追擊',
+    statusDelta: delta,
     execution: false,
     readiness:
       readyCount > 0
@@ -234,5 +293,25 @@ export function createSkillTilePresentation(
         ? `${summaryStep.conditionLabel}${mark} → ${summaryStep.effectLabel}`
         : `連招 ${readyCount}/${comboSteps.length} 已亮`,
     comboSteps,
+    cueStages: [
+      {
+        kind: 'opening',
+        label: '起手',
+        detail: `${baseSegments}擊 · 傷${baseDamage}`,
+      },
+      ...comboSteps.map((step): SkillCueStagePresentation => ({
+        kind: 'condition',
+        label: step.conditionLabel,
+        detail: `${step.readinessLabel} · ${
+          step.chaseSegments > 0 ? `追${step.chaseSegments}擊` : step.effectLabel
+        }`,
+        readiness: step.readiness,
+      })),
+      {
+        kind: 'result',
+        label: '結果',
+        detail: resultParts.join(' · '),
+      },
+    ],
   };
 }

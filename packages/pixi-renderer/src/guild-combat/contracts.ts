@@ -49,6 +49,7 @@ export interface GuildCombatVisualEvent {
   detail: string;
   relay: number;
   causalDepth?: number;
+  comboIndex?: number;
   intensity: number;
   durationMs: number;
   polarity: 'damage' | 'support' | 'neutral';

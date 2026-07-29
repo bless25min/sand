@@ -328,7 +328,9 @@ describe('deterministic six-hero interface', () => {
     expect(markup.match(/data-skill-total=/g) ?? []).toHaveLength(6);
     expect(markup.match(/data-skill-segments=/g) ?? []).toHaveLength(6);
     expect(markup).toContain('data-combo-node=');
-    expect(markup).toContain('data-skill-hit-pip=');
+    expect(markup).toContain('data-skill-hit-label=');
+    expect(markup).toContain('data-skill-total-label=');
+    expect(markup).not.toContain('data-skill-hit-pip=');
     expect(markup).toContain('傷');
     expect(markup).not.toContain('×2');
     expect(markup).not.toContain('追擊');

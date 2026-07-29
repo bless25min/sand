@@ -7,6 +7,7 @@ import type { GuildCombatScene } from './contracts';
 import { drawEnemyAttack } from './draw-enemy-attacks';
 import { drawEnemyReactions, type EnemyReactionFragmentNode } from './draw-enemy-reactions';
 import { drawMark, drawProjectile, drawRoute } from './draw-effect-motifs';
+import { drawTriggerCues } from './draw-trigger-cues';
 
 export interface EffectNodes {
   projectile?: Graphics;
@@ -15,6 +16,7 @@ export interface EffectNodes {
   number?: Text;
   burst: readonly Graphics[];
   marks: readonly Graphics[];
+  triggerSeals: readonly Graphics[];
   afterimages: readonly Graphics[];
   flashes: readonly Graphics[];
   enemyAttackTelegraphs: readonly Graphics[];
@@ -112,6 +114,7 @@ export function drawCombatEffects(
   const rings: Graphics[] = [];
   const burst: Graphics[] = [];
   const marks: Graphics[] = [];
+  let triggerSeals: readonly Graphics[] = [];
   const flashes: Graphics[] = [];
   let screenFlash: Graphics | undefined;
   const showImpact =
@@ -124,6 +127,7 @@ export function drawCombatEffects(
       .fill({ color: scene.relay === 6 ? 0xffe5a0 : 0xffffff });
     screenFlash.alpha = plan.screenFlashAlpha;
     container.addChild(screenFlash);
+    triggerSeals = drawTriggerCues(container, targets, plan, color);
 
     const particlesPerTarget = Math.max(
       8,
@@ -210,6 +214,7 @@ export function drawCombatEffects(
     ...(number ? { number } : {}),
     burst,
     marks,
+    triggerSeals,
     afterimages,
     flashes,
     enemyAttackTelegraphs: enemyAttack.telegraphs,

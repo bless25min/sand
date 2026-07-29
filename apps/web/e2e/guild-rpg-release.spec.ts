@@ -103,10 +103,14 @@ async function castVisibleSkill(page: Page, castOnBattlefieldTarget = false) {
       __enemyReactionObserver?: MutationObserver;
       __enemyReactionTrace?: string[];
       __enemyAttackTrace?: string[];
+      __effectTriggerTrace?: string[];
+      __effectComboTrace?: number[];
     };
     reactionWindow.__enemyReactionObserver?.disconnect();
     reactionWindow.__enemyReactionTrace = [];
     reactionWindow.__enemyAttackTrace = [];
+    reactionWindow.__effectTriggerTrace = [];
+    reactionWindow.__effectComboTrace = [];
     const collect = () => {
       const value = (node as HTMLElement).dataset.enemyReaction;
       if (value && value !== 'none' && !reactionWindow.__enemyReactionTrace?.includes(value)) {
@@ -120,6 +124,18 @@ async function castVisibleSkill(page: Page, castOnBattlefieldTarget = false) {
       if (attackResult && !reactionWindow.__enemyAttackTrace?.includes(attackResult)) {
         reactionWindow.__enemyAttackTrace?.push(attackResult);
       }
+      const trigger = (node as HTMLElement).dataset.effectTrigger;
+      if (
+        trigger &&
+        trigger !== 'none' &&
+        !reactionWindow.__effectTriggerTrace?.includes(trigger)
+      ) {
+        reactionWindow.__effectTriggerTrace?.push(trigger);
+      }
+      const combo = Number((node as HTMLElement).dataset.effectComboTier ?? 0);
+      if (combo > 0 && !reactionWindow.__effectComboTrace?.includes(combo)) {
+        reactionWindow.__effectComboTrace?.push(combo);
+      }
     };
     const observer = new MutationObserver(collect);
     observer.observe(node, {
@@ -129,9 +145,33 @@ async function castVisibleSkill(page: Page, castOnBattlefieldTarget = false) {
         'data-enemy-attack',
         'data-enemy-attack-phase',
         'data-enemy-attack-outcome',
+        'data-effect-trigger',
+        'data-effect-combo-tier',
       ],
     });
     reactionWindow.__enemyReactionObserver = observer;
+    collect();
+  });
+  await page.locator('[data-combat-battlefield]').evaluate((node) => {
+    const cueWindow = window as typeof window & {
+      __combatCueObserver?: MutationObserver;
+      __combatCueTrace?: string[];
+    };
+    cueWindow.__combatCueObserver?.disconnect();
+    cueWindow.__combatCueTrace = [];
+    const collect = () => {
+      const callout = node.querySelector<HTMLElement>('[data-combat-cue]');
+      const cue = callout?.dataset.combatCue;
+      const trigger = callout?.dataset.triggerId;
+      const combo = callout?.dataset.comboIndex;
+      const signature = cue ? `${cue}:${trigger ?? 'none'}:${combo ?? 'none'}` : undefined;
+      if (signature && !cueWindow.__combatCueTrace?.includes(signature)) {
+        cueWindow.__combatCueTrace?.push(signature);
+      }
+    };
+    const observer = new MutationObserver(collect);
+    observer.observe(node, { attributes: true, childList: true, subtree: true });
+    cueWindow.__combatCueObserver = observer;
     collect();
   });
   const actorId = await page
@@ -143,9 +183,13 @@ async function castVisibleSkill(page: Page, castOnBattlefieldTarget = false) {
       buttons.reduce(
         (best, button, index) => {
           const total = Number(button.getAttribute('data-skill-total') ?? 0);
-          return total > best.total ? { index, total } : best;
+          const [ready = 0] = (button.getAttribute('data-combo-ready') ?? '0/0')
+            .split('/')
+            .map(Number);
+          const score = ready * 100 + total;
+          return score > best.score ? { index, score } : best;
         },
-        { index: 0, total: Number.NEGATIVE_INFINITY },
+        { index: 0, score: Number.NEGATIVE_INFINITY },
       ).index,
   );
   const skill = availableSkills.nth(strongestSkillIndex);
@@ -153,6 +197,9 @@ async function castVisibleSkill(page: Page, castOnBattlefieldTarget = false) {
   await expect(skill).toHaveAttribute('data-skill-segments', /\d+/);
   await expect(skill).toHaveAttribute('data-skill-total', /\d+/);
   await expect(skill).toHaveAttribute('data-combo-ready', /\d+\/\d+/);
+  await expect(skill.locator('[data-skill-hit-label]')).toHaveCount(1);
+  await expect(skill.locator('[data-skill-total-label]')).toHaveCount(1);
+  await expect(skill.locator('[data-skill-hit-pip]')).toHaveCount(0);
   await expect(skill.locator('[data-combo-node]')).not.toHaveCount(0);
   const execution = (await skill.getAttribute('data-execution')) === 'true';
   const finalExecution = (await skill.getAttribute('data-final-execution')) === 'true';
@@ -178,6 +225,11 @@ async function castVisibleSkill(page: Page, castOnBattlefieldTarget = false) {
     await expect(page.locator('[data-skill-preview] [data-combo-node]')).toHaveCount(0);
   } else {
     expect(await page.locator('[data-skill-preview] [data-combo-node]').count()).toBeGreaterThan(0);
+    await expect(page.locator('[data-skill-preview] [data-cue-stage="opening"]')).toHaveCount(1);
+    await expect(page.locator('[data-skill-preview] [data-cue-stage="condition"]')).not.toHaveCount(
+      0,
+    );
+    await expect(page.locator('[data-skill-preview] [data-cue-stage="result"]')).toHaveCount(1);
     await expect(page.locator('[data-skill-preview] .gr-preview-details')).not.toHaveAttribute(
       'open',
       '',
@@ -228,6 +280,10 @@ async function castVisibleSkill(page: Page, castOnBattlefieldTarget = false) {
       __enemyReactionObserver?: MutationObserver;
       __enemyReactionTrace?: string[];
       __enemyAttackTrace?: string[];
+      __effectTriggerTrace?: string[];
+      __effectComboTrace?: number[];
+      __combatCueObserver?: MutationObserver;
+      __combatCueTrace?: string[];
     };
     const value = (node as HTMLElement).dataset.enemyReaction;
     if (value && value !== 'none' && !reactionWindow.__enemyReactionTrace?.includes(value)) {
@@ -236,10 +292,18 @@ async function castVisibleSkill(page: Page, castOnBattlefieldTarget = false) {
     reactionWindow.__enemyReactionObserver?.disconnect();
     const trace = reactionWindow.__enemyReactionTrace ?? [];
     const attackTrace = reactionWindow.__enemyAttackTrace ?? [];
+    const effectTriggers = reactionWindow.__effectTriggerTrace ?? [];
+    const comboTiers = reactionWindow.__effectComboTrace ?? [];
+    const combatCues = reactionWindow.__combatCueTrace ?? [];
+    reactionWindow.__combatCueObserver?.disconnect();
     delete reactionWindow.__enemyReactionObserver;
     delete reactionWindow.__enemyReactionTrace;
     delete reactionWindow.__enemyAttackTrace;
-    return { trace, attackTrace };
+    delete reactionWindow.__effectTriggerTrace;
+    delete reactionWindow.__effectComboTrace;
+    delete reactionWindow.__combatCueObserver;
+    delete reactionWindow.__combatCueTrace;
+    return { trace, attackTrace, effectTriggers, comboTiers, combatCues };
   });
   if (castTargetId && castTargetHpBefore !== undefined) {
     const hpAfter = Number(
@@ -263,6 +327,9 @@ async function castVisibleSkill(page: Page, castOnBattlefieldTarget = false) {
     delivery,
     reactions: reactions.trace,
     enemyAttacks: reactions.attackTrace,
+    effectTriggers: reactions.effectTriggers,
+    comboTiers: reactions.comboTiers,
+    combatCues: reactions.combatCues,
   };
 }
 
@@ -301,9 +368,11 @@ test('a new player understands combat, sees six escalating relays, and completes
   await expect(page.locator('.gr-battle-guide-strip')).toBeVisible();
   await expect(page.locator('button[data-battle-skill]')).toHaveCount(6);
   const skillText = (await page.locator('button[data-battle-skill]').allTextContents()).join('');
-  expect(skillText).not.toMatch(/威力|疊層|追燃|段|總傷|×/);
+  expect(skillText).not.toMatch(/威力|疊層|追燃|總傷|×/);
   await expect(page.locator('button[data-battle-skill] [data-combo-node]')).not.toHaveCount(0);
-  await expect(page.locator('button[data-battle-skill] [data-skill-hit-pip]')).not.toHaveCount(0);
+  await expect(page.locator('button[data-battle-skill] [data-skill-hit-label]')).toHaveCount(6);
+  await expect(page.locator('button[data-battle-skill] [data-skill-total-label]')).toHaveCount(6);
+  await expect(page.locator('button[data-battle-skill] [data-skill-hit-pip]')).toHaveCount(0);
   await expectMinTouchTarget(page, 'button[data-battle-skill]');
   await expectFullyInViewport(page, 'button[data-battle-skill="6"]');
   await expect(page.locator('[data-combat-battlefield]')).toHaveAttribute(
@@ -329,15 +398,24 @@ test('a new player understands combat, sees six escalating relays, and completes
     delivery: string | null;
     reactions: string[];
     enemyAttacks: string[];
+    effectTriggers: string[];
+    comboTiers: number[];
+    combatCues: string[];
   }[] = [];
   const enemyReactions: string[] = [];
   const enemyAttacks: string[] = [];
+  const effectTriggers: string[] = [];
+  const comboTiers: number[] = [];
+  const combatCues: string[] = [];
   for (let turn = 0; turn < 60; turn += 1) {
     const collect = page.getByRole('button', { name: '收下全部戰利品' });
     if (await collect.isVisible().catch(() => false)) break;
     const result = await castVisibleSkill(page);
     enemyReactions.push(...result.reactions);
     enemyAttacks.push(...result.enemyAttacks);
+    effectTriggers.push(...result.effectTriggers);
+    comboTiers.push(...result.comboTiers);
+    combatCues.push(...result.combatCues);
     if (firstRelays.length < 6) firstRelays.push(result);
   }
 
@@ -371,6 +449,9 @@ test('a new player understands combat, sees six escalating relays, and completes
       ),
     ),
   ).toBe(true);
+  expect(effectTriggers.length).toBeGreaterThan(0);
+  expect(Math.max(...comboTiers)).toBeGreaterThanOrEqual(2);
+  expect(combatCues.some((cue) => /^chain:[^:]+:2$/.test(cue))).toBe(true);
   await expect(page.locator('body')).not.toContainText('battle_open');
   await expect(page.locator('body')).not.toContainText('已播放');
   await expect(page.getByRole('button', { name: '收下全部戰利品' })).toBeEnabled();

@@ -6,6 +6,7 @@ import { useBattlefieldLayout } from '../hooks/use-battlefield-layout';
 import type { FirstHuntCoachStep } from '../onboarding/first-hunt-coach';
 import type { GuildPreferences } from '../preferences/guild-preferences';
 import { createBattleScene } from '../presentation/battle-scene';
+import { createCombatBeatCue } from '../presentation/combat-beat-cue';
 import { relayPresentation, type CombatBeat } from '../presentation/combat-beats';
 import { BattlefieldUnitControls } from './BattlefieldUnitControls';
 
@@ -46,6 +47,7 @@ export function CombatBattlefield({
   onChooseHero,
 }: CombatBattlefieldProps) {
   const stage = relayPresentation(relay);
+  const beatCue = currentBeat ? createCombatBeatCue(currentBeat) : undefined;
   const layout = useBattlefieldLayout();
   const scene = createBattleScene(battle, {
     relay,
@@ -120,10 +122,18 @@ export function CombatBattlefield({
           <div
             className="gr-impact-callout"
             data-combat-beat={currentBeat.kind}
+            data-combat-cue={beatCue?.tone}
+            data-trigger-id={currentBeat.visual.triggerId}
+            data-combo-index={currentBeat.comboIndex}
             data-element={currentBeat.element}
             aria-hidden="true"
           >
-            {currentBeat.kind === 'total' && <small>合計</small>}
+            {beatCue && (
+              <small>
+                <span>{beatCue.eyebrow}</span>
+                <b>{beatCue.label}</b>
+              </small>
+            )}
             {currentBeat.visual.number !== undefined && (
               <strong key={currentBeat.id}>
                 {currentBeat.visual.number > 0 ? '+' : ''}

@@ -227,6 +227,14 @@ export async function mountGuildCombatStage(
       ring.scale.set(0.55 + ringProgress * (1.2 + index * 0.04));
       ring.alpha = Math.max(0, 1 - ringProgress);
     }
+    for (const [index, seal] of nodes.effects.triggerSeals.entries()) {
+      const sealProgress = Math.min(1, progress * (1.45 + index * 0.08));
+      seal.scale.set(
+        0.42 + Math.sin(sealProgress * Math.PI) * (0.72 + currentPlan.comboTier * 0.08),
+      );
+      seal.rotation += (index % 2 === 0 ? 1 : -1) * (0.018 + currentPlan.comboTier * 0.004);
+      seal.alpha = Math.max(0, 0.96 - sealProgress * 0.88);
+    }
     for (const [index, particle] of nodes.effects.burst.entries()) {
       const angle = (index / Math.max(1, nodes.effects.burst.length)) * Math.PI * 2;
       particle.x += Math.cos(angle) * (0.6 + currentScene.relay * 0.15);

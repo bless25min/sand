@@ -123,6 +123,7 @@ describe('combat beat presentation', () => {
         element: 'fire',
         componentId: 'combo:fire',
         causalId: 'trigger:12',
+        triggerId: 'on_repeat_hit',
       },
       {
         id: 13,
@@ -150,7 +151,11 @@ describe('combat beat presentation', () => {
       comboIndex: 2,
       kind: 'chain',
       delayMs: 170,
-      visual: expect.objectContaining({ headline: '追擊 2' }),
+      visual: expect.objectContaining({
+        headline: '追擊 2',
+        triggerId: 'on_repeat_hit',
+        comboIndex: 2,
+      }),
     });
     expect(beats[3]).toMatchObject({
       kind: 'total',

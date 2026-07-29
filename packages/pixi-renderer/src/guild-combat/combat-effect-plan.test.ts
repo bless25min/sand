@@ -108,6 +108,51 @@ describe('Pixi guild combat effect plan', () => {
     expect(plans[5]!.screenFlashAlpha).toBeGreaterThanOrEqual(0.68);
   });
 
+  it('makes every later hit in one triggered combo visibly stronger than the previous hit', () => {
+    const plans = [1, 2, 3].map((comboIndex) =>
+      createCombatEffectPlan({
+        ...scene(3),
+        event: {
+          id: `visual:combo:${comboIndex}`,
+          sourceEventId: 200 + comboIndex,
+          eventKind: 'damage',
+          phase: 'impact',
+          headline: `追擊 ${comboIndex}`,
+          detail: `追擊 ${comboIndex}`,
+          relay: 3,
+          comboIndex,
+          triggerId: 'on_repeat_hit',
+          intensity: 48,
+          durationMs: 260,
+          polarity: 'damage',
+          route: 'direct',
+          camera: 'punch',
+          actorId: 'brann',
+          targetId: 'wolf_alpha',
+          number: -1,
+          element: 'fire',
+        },
+      }),
+    );
+
+    expect(plans.map(({ comboTier }) => comboTier)).toEqual([1, 2, 3]);
+    expect(plans.map(({ triggerMotif }) => triggerMotif)).toEqual([
+      'repeat-slash',
+      'repeat-slash',
+      'repeat-slash',
+    ]);
+    for (const field of [
+      'impactRings',
+      'afterimageCount',
+      'hitStopMs',
+      'screenFlashAlpha',
+      'impactScale',
+    ] as const) {
+      expect(plans[1]![field]).toBeGreaterThan(plans[0]![field]);
+      expect(plans[2]![field]).toBeGreaterThan(plans[1]![field]);
+    }
+  });
+
   it('uses the event causal depth instead of the current actor position', () => {
     const plan = createCombatEffectPlan({
       ...scene(6),

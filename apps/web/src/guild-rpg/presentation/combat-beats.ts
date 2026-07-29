@@ -242,8 +242,12 @@ export function createCombatBeats(
         ? {
             ...baseVisual,
             headline: `追擊 ${comboIndex}`,
+            comboIndex,
+            ...(mergedTrigger.triggerId ? { triggerId: mergedTrigger.triggerId } : {}),
           }
-        : baseVisual;
+        : comboIndex !== undefined
+          ? { ...baseVisual, comboIndex }
+          : baseVisual;
     const label = safeBeatLabel(event, rawVisual);
     const visual = { ...rawVisual, detail: label };
     projected.push({

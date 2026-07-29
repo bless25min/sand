@@ -32,6 +32,7 @@ describe('SkillOutcomePreviewPanel', () => {
         actor={actor}
         target={target}
         skill={skill}
+        skills={state.profile.skillInventory}
         preview={preview}
         units={battle.units}
       />,
@@ -40,16 +41,20 @@ describe('SkillOutcomePreviewPanel', () => {
     expect(markup).toContain(`data-preview-total="${preview.totalDamage}"`);
     expect(markup).toContain('data-preview-endpoints="true"');
     expect(markup).toContain('data-preview-route="true"');
-    expect(markup.match(/data-impact-pip=/g) ?? []).toHaveLength(
-      Math.min(6, preview.damageSegments),
-    );
+    expect(markup).toContain('data-cue-stage="opening"');
+    expect(markup).toContain('data-cue-stage="condition"');
+    expect(markup).toContain('data-cue-stage="result"');
+    expect(markup).toContain(`${preview.damageSegments}擊`);
+    expect(markup).toContain(`總${preview.totalDamage}`);
     expect(markup).toContain('data-combo-node=');
     expect(markup).toContain('開戰');
     expect(markup).toContain('已亮');
-    expect(markup).toContain(`傷${preview.totalDamage}`);
     expect(markup).toContain('data-next-relay=');
+    const nextRelay = preview.nextRelays[0]!;
+    const suggestedSkillId = nextRelay.newlyReadySkillIds[0] ?? nextRelay.readySkillIds[0]!;
+    expect(markup).toContain(`data-relay-skill="${suggestedSkillId}"`);
     expect(markup).not.toContain('×2');
-    expect(markup).not.toContain('追擊');
+    expect(markup).not.toContain('data-impact-pip=');
     expect(markup).not.toContain('段');
     expect(markup).not.toContain('本次：');
     expect(markup).toContain(`data-preview-unit="${target.id}"`);
@@ -95,6 +100,7 @@ describe('SkillOutcomePreviewPanel', () => {
         actor={actor}
         target={{ ...target, currentHp: 0 }}
         skill={skill}
+        skills={state.profile.skillInventory}
         preview={preview}
         units={battle.units}
       />,
@@ -131,6 +137,7 @@ describe('SkillOutcomePreviewPanel', () => {
         actor={actor}
         target={{ ...target, currentHp: 0 }}
         skill={skill}
+        skills={state.profile.skillInventory}
         preview={{
           ...base,
           executionWindow: true,

@@ -18,10 +18,12 @@ const plan = (
   afterimageCount: 3,
   screenFlashAlpha: 0.2,
   impactScale: 1.2,
+  comboTier: 1,
   finisher: false,
   elementMotif,
   specializationMotif,
   deliveryMotif: 'neutral',
+  triggerMotif: 'none',
   enemyAttack: {
     active: false,
     phase: 'none',
