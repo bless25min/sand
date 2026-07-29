@@ -1,4 +1,4 @@
-import type { GuildBattleState } from '@expedition/shared-types';
+import type { EnemyPressureIntent, GuildBattleState } from '@expedition/shared-types';
 import type { SkillOutcomePreview } from '@expedition/simulation-core';
 import { lazy, Suspense } from 'react';
 
@@ -23,6 +23,7 @@ interface CombatBattlefieldProps {
   nextActorId?: string | undefined;
   relay: number;
   preview?: SkillOutcomePreview | undefined;
+  enemyIntent?: EnemyPressureIntent | undefined;
   executionWindow: boolean;
   locked: boolean;
   onSelectTarget(targetId: string): void;
@@ -38,6 +39,7 @@ export function CombatBattlefield({
   nextActorId,
   relay,
   preview,
+  enemyIntent,
   executionWindow,
   locked,
   onSelectTarget,
@@ -52,6 +54,7 @@ export function CombatBattlefield({
     ...(nextActorId ? { nextActorId } : {}),
     ...(currentBeat ? { event: currentBeat.visual } : {}),
     ...(preview ? { preview } : {}),
+    ...(enemyIntent ? { enemyIntent } : {}),
     ...(executionWindow ? { executionWindow: true } : {}),
   });
   return (
@@ -67,6 +70,7 @@ export function CombatBattlefield({
       data-animation-first="true"
       data-battlefield-layout={layout}
       data-execution-window={executionWindow}
+      data-enemy-intent={enemyIntent?.outcome}
     >
       <div className="gr-relay-energy" aria-label={`接力能量 ${stage.relay} / 6`}>
         {Array.from({ length: 6 }, (_, index) => (

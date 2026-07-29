@@ -1,5 +1,6 @@
 import type {
   BattleEventKind,
+  EnemyPressureIntent,
   GuildElement,
   SkillSpecialization,
   StatusLayers,
@@ -79,6 +80,7 @@ export interface GuildCombatSceneUnit {
   defenseReduction?: number;
   strengthened?: number;
   comboReady?: boolean;
+  enemyIntentRole?: 'source' | 'target';
   preview?: {
     afterHp: number;
     damage: number;
@@ -108,4 +110,5 @@ export interface GuildCombatScene {
   units: readonly GuildCombatSceneUnit[];
   event?: GuildCombatVisualEvent;
   preview?: GuildCombatScenePreview;
+  enemyIntent?: EnemyPressureIntent;
 }

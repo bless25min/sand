@@ -11,6 +11,7 @@ type CombatBeatKind =
   | 'defeat'
   | 'finisher'
   | 'support'
+  | 'enemy'
   | 'total'
   | 'info';
 
@@ -42,6 +43,8 @@ export interface RelayPresentation {
 const KIND_BY_EVENT: Readonly<Partial<Record<BattleEventKind, CombatBeatKind>>> = {
   skill_cast: 'cast',
   damage: 'hit',
+  enemy_attack: 'enemy',
+  dodge: 'enemy',
   healing: 'support',
   guard: 'support',
   status_applied: 'status',
@@ -54,6 +57,7 @@ const KIND_BY_EVENT: Readonly<Partial<Record<BattleEventKind, CombatBeatKind>>> 
   relay: 'relay',
   core_triggered: 'chain',
   passive: 'chain',
+  boss_phase: 'finisher',
   finisher: 'finisher',
   overkill: 'finisher',
   infinite_engine: 'finisher',
@@ -72,6 +76,7 @@ const DELAY_BY_KIND: Readonly<Record<CombatBeatKind, number>> = {
   defeat: 260,
   finisher: 360,
   support: 150,
+  enemy: 220,
   total: 220,
   info: 100,
 };
@@ -83,7 +88,7 @@ const DECISIVE_EVENTS = new Set<BattleEventKind>([
   'victory',
 ]);
 
-const SECONDARY_EVENTS = new Set<BattleEventKind>(['passive', 'strengthen', 'healing', 'guard']);
+const SECONDARY_EVENTS = new Set<BattleEventKind>(['passive', 'strengthen', 'healing']);
 
 const safeBeatLabel = (event: GuildBattleEvent, visual: VisualEvent) => {
   if (event.kind === 'overkill') return `OVERKILL +${Math.abs(event.amount ?? 0)}`;

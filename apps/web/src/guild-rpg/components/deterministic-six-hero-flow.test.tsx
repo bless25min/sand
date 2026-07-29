@@ -182,6 +182,11 @@ describe('deterministic six-hero interface', () => {
     expect(markup.match(/data-hunt-card=/g) ?? []).toHaveLength(1);
     expect(markup).toContain('data-pager="hunts"');
     expect(markup).toContain('本區 3 個任務');
+    expect(markup).toContain('先擊破護衛');
+    expect(markup).toContain('公開弱點');
+    expect(markup).toContain('連鎖彈射');
+    expect(markup).toContain('追燃');
+    expect(markup).not.toMatch(/Ricochet|CopyNext|反震|聖輝/);
   });
 
   it('turns completed hunts into visible challenge and ascension goals', () => {

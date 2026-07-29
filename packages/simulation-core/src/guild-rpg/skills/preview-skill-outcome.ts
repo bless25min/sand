@@ -1,5 +1,6 @@
 import type {
   BattleUnit,
+  EnemyPressureIntent,
   GuildBattleEvent,
   StatusLayer,
   StatusLayers,
@@ -57,6 +58,7 @@ export interface SkillOutcomePreview {
   targetRoute: readonly string[];
   nextRelays: readonly SkillNextRelayPreview[];
   units: readonly SkillOutcomeUnitPreview[];
+  enemyResponse?: EnemyPressureIntent;
 }
 
 export interface SkillComboStepPreview {
@@ -163,6 +165,11 @@ export function previewSkillOutcome(input: ResolveSkillInput): SkillOutcomePrevi
     return unitPreview(before, after, resolved.events);
   });
   const allDamageEvents = damageEvents(resolved.events);
+  const enemyResponseEvent = resolved.events.find(
+    ({ kind, actorId }) =>
+      (kind === 'enemy_attack' || kind === 'dodge' || kind === 'guard') &&
+      input.battle.units.some(({ id, side }) => id === actorId && side === 'enemies'),
+  );
   const chaseEvents = allDamageEvents.filter(
     ({ parentCausalId }) => parentCausalId !== undefined && chaseCausalIds.has(parentCausalId),
   );
@@ -217,5 +224,20 @@ export function previewSkillOutcome(input: ResolveSkillInput): SkillOutcomePrevi
     targetRoute,
     nextRelays,
     units,
+    ...(enemyResponseEvent?.actorId && enemyResponseEvent.targetId
+      ? {
+          enemyResponse: {
+            enemyId: enemyResponseEvent.actorId,
+            targetId: enemyResponseEvent.targetId,
+            outcome:
+              enemyResponseEvent.kind === 'enemy_attack'
+                ? ('damage' as const)
+                : enemyResponseEvent.kind === 'dodge'
+                  ? ('dodge' as const)
+                  : ('guard' as const),
+            amount: enemyResponseEvent.amount ?? 0,
+          },
+        }
+      : {}),
   };
 }

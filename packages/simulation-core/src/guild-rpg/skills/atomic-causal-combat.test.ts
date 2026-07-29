@@ -227,7 +227,11 @@ describe('atomic causal skill resolution', () => {
     });
 
     expect(first.events.every(({ causalDepth }) => causalDepth === 1)).toBe(true);
-    expect(linked.events.every(({ causalDepth }) => causalDepth === 2)).toBe(true);
+    expect(
+      linked.events
+        .filter(({ kind }) => kind !== 'enemy_attack' && kind !== 'guard' && kind !== 'dodge')
+        .every(({ causalDepth }) => causalDepth === 2),
+    ).toBe(true);
 
     const resetState = battle();
     resetState.roundOrder = completeTurn(resetState.roundOrder!, 'brann');

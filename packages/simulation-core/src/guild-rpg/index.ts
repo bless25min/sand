@@ -16,7 +16,12 @@ export { resolveTriggerQueue } from './combo/resolve-trigger-queue';
 export { createRoundOrder } from './round-order/create-round-order';
 export { chooseNextAdventurer } from './round-order/choose-next-adventurer';
 export { completeTurn } from './round-order/complete-turn';
+export { reconcileLivingOrder } from './round-order/reconcile-living-order';
 export { resetCurrentRoundOrder, setRoundOrderCarry } from './round-order/update-round-order';
+export {
+  previewEnemyPressure,
+  resolveEnemyPressure,
+} from './enemy-pressure/resolve-enemy-pressure';
 export {
   resolveSkill,
   type ResolveSkillInput,

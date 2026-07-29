@@ -17,6 +17,7 @@ export interface CombatSensationPorts {
 const FREQUENCY: Readonly<Record<CombatBeat['kind'], number>> = {
   cast: 220,
   hit: 130,
+  enemy: 92,
   status: 280,
   chain: 330,
   relay: 250,
@@ -33,6 +34,7 @@ function hapticFor(beat: CombatBeat): readonly number[] {
   if (beat.kind === 'total') return [24, 16, 54];
   if (beat.kind === 'chain') return [18, 16, 22, 18, 28 + beat.relay * 3];
   if (beat.kind === 'hit') return [14 + beat.relay * 2, 24];
+  if (beat.kind === 'enemy') return [26, 18, 36];
   return [10 + beat.relay * 2];
 }
 

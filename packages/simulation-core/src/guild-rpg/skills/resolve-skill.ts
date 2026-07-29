@@ -3,15 +3,19 @@ import type {
   GuildBattleState,
   GuildElementDefinition,
   GuildSkillItem,
+  HuntDefinition,
   SkillFormDefinition,
   SkillSpecializationDefinition,
   TriggerConditionDefinition,
 } from '@expedition/shared-types';
 
 import { isExecutionWindow } from '../battle/is-execution-window';
+import { resolveEnemyPressure } from '../enemy-pressure/resolve-enemy-pressure';
 import { completeTurn } from '../round-order/complete-turn';
+import { reconcileLivingOrder } from '../round-order/reconcile-living-order';
 import { previewTriggerReadiness, type TriggerReadiness } from './preview-trigger-readiness';
 import { resolveDeliveryPassive } from './resolve-delivery-passive';
+import { previewBossPhaseActivation } from './resolve-hunt-mechanics';
 import { resolveSkillComponent } from './resolve-skill-component';
 
 const impactTriggerReady = (
@@ -49,6 +53,7 @@ export interface SkillEngineContent {
   specializations: readonly SkillSpecializationDefinition[];
   triggers: readonly TriggerConditionDefinition[];
   forms: readonly SkillFormDefinition[];
+  hunts?: readonly HuntDefinition[];
 }
 
 export interface ResolveSkillInput {
@@ -150,6 +155,9 @@ export function resolveSkill(input: ResolveSkillInput): {
   });
   units = [...passive.units];
   drafts.push(...passive.events);
+  const hunt = input.content.hunts?.find(({ questId }) => questId === input.battle.questId);
+  const bossPhase = previewBossPhaseActivation(units, hunt, input.battle.activatedBossPhaseIds);
+  if (bossPhase) drafts.push(bossPhase.event);
 
   const priorCausalDepth = input.battle.events
     .filter(({ roundIndex: eventRound }) => eventRound === roundIndex)
@@ -219,18 +227,35 @@ export function resolveSkill(input: ResolveSkillInput): {
     roundIndex,
     causalDepth: event.causalDepth ?? causalDepth,
   }));
-  return {
-    battle: {
-      ...input.battle,
-      units,
-      status: victory ? 'victory' : 'active',
-      sequence: input.battle.sequence + events.length,
-      events: [...input.battle.events, ...events],
-      roundOrder,
-      skillHistory: history,
-      roundIndex: startedNewRound ? roundIndex + 1 : roundIndex,
-      selectedTargetId: livingEnemy?.id ?? input.targetId,
-    },
-    events,
+  const playerBattle: GuildBattleState = {
+    ...input.battle,
+    units,
+    status: victory ? 'victory' : 'active',
+    sequence: input.battle.sequence + events.length,
+    events: [...input.battle.events, ...events],
+    roundOrder,
+    skillHistory: history,
+    roundIndex: startedNewRound ? roundIndex + 1 : roundIndex,
+    selectedTargetId:
+      bossPhase?.bossEnemyId ??
+      units.find(({ id, currentHp }) => id === input.targetId && currentHp > 0)?.id ??
+      livingEnemy?.id ??
+      input.targetId,
+    ...(bossPhase
+      ? {
+          activatedBossPhaseIds: [...(input.battle.activatedBossPhaseIds ?? []), bossPhase.phaseId],
+        }
+      : input.battle.activatedBossPhaseIds
+        ? { activatedBossPhaseIds: input.battle.activatedBossPhaseIds }
+        : {}),
   };
+  const response = resolveEnemyPressure(playerBattle);
+  const livingHeroIds = response.battle.units
+    .filter(({ side, currentHp }) => side === 'heroes' && currentHp > 0)
+    .map(({ id }) => id);
+  const battle = {
+    ...response.battle,
+    roundOrder: reconcileLivingOrder(response.battle.roundOrder!, livingHeroIds),
+  };
+  return { battle, events: [...events, ...response.events] };
 }

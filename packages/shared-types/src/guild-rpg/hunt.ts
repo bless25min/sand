@@ -3,7 +3,7 @@ import type { MaterialReward, QuestRewards } from './profile';
 import type { GuildStatKey } from './stats';
 import type { ComboTransformKind } from './combo/rules';
 import type { EnemySpectacleIdentity, HuntSpectacleCue } from './spectacle';
-import type { GuildElement, SkillDropPool } from './skill-build';
+import type { GuildElement, SkillDropPool, SkillSpecialization } from './skill-build';
 
 export interface HuntMaterialDefinition {
   id: string;
@@ -31,6 +31,8 @@ export interface HuntEnemyTrait {
   guardedDamageMultiplier?: number;
   vulnerableTransform?: ComboTransformKind;
   vulnerabilityMultiplier?: number;
+  vulnerableElementIds?: readonly GuildElement[];
+  vulnerableSpecializationIds?: readonly SkillSpecialization[];
 }
 
 export interface HuntEnemyRewards {

@@ -1,6 +1,7 @@
 import type {
   GuildElement,
   HuntDefinition,
+  HuntEnemyTrait,
   SkillDropPool,
   SkillSpecialization,
   TriggerCondition,
@@ -79,12 +80,31 @@ const dropPool = (huntId: string, element: GuildElement): SkillDropPool => ({
   triggerIds: TRIGGERS[element],
 });
 
+const activeWeakness = (transform: HuntEnemyTrait['vulnerableTransform']) => {
+  if (transform === 'ricochet') return { vulnerableSpecializationIds: ['chain'] as const };
+  if (transform === 'repeat') return { vulnerableSpecializationIds: ['multistrike'] as const };
+  if (transform === 'copy_next') return { vulnerableSpecializationIds: ['empower'] as const };
+  if (transform === 'convert_element') return { vulnerableElementIds: ['water'] as const };
+  return {};
+};
+
 export const GUILD_HUNTS: readonly HuntDefinition[] = authoredHunts.map((hunt, index) => {
   const element = HUNT_ELEMENTS[index]!;
   const corePool = CORES[element];
   const coreStart = index % corePool.length;
   return {
     ...hunt,
+    enemies: hunt.enemies.map((enemy) => ({
+      ...enemy,
+      ...(enemy.traits
+        ? {
+            traits: enemy.traits.map((trait) => ({
+              ...trait,
+              ...activeWeakness(trait.vulnerableTransform),
+            })),
+          }
+        : {}),
+    })),
     element,
     skillDropPool: dropPool(hunt.id, element),
     coreDropIds: [corePool[coreStart]!, corePool[(coreStart + 1) % corePool.length]!],

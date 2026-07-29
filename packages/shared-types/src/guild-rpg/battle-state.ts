@@ -21,6 +21,13 @@ import type {
 export type BattleStatus = 'active' | 'victory' | 'defeat';
 export type BattleSide = 'heroes' | 'enemies';
 
+export interface EnemyPressureIntent {
+  enemyId: string;
+  targetId: string;
+  outcome: 'damage' | 'guard' | 'dodge';
+  amount: number;
+}
+
 export interface BattleUnit {
   id: string;
   name: string;
@@ -54,6 +61,8 @@ export type BattleEventKind =
   | 'battle_started'
   | 'skill_cast'
   | 'damage'
+  | 'enemy_attack'
+  | 'dodge'
   | 'healing'
   | 'guard'
   | 'status_applied'
@@ -66,6 +75,7 @@ export type BattleEventKind =
   | 'relay'
   | 'core_triggered'
   | 'passive'
+  | 'boss_phase'
   | 'finisher'
   | 'overkill'
   | 'infinite_engine'
@@ -89,6 +99,8 @@ export interface GuildBattleEvent {
   element?: GuildElement;
   specializationId?: SkillSpecialization;
   triggerId?: TriggerCondition;
+  phaseId?: string;
+  cueId?: string;
 }
 
 export interface GuildBattleState {
@@ -107,6 +119,8 @@ export interface GuildBattleState {
   roundOrder?: RoundOrder;
   skillHistory?: readonly SkillHistoryEntry[];
   roundIndex?: number;
+  enemyResponseCount?: number;
+  activatedBossPhaseIds?: readonly string[];
 }
 
 export interface StartBattleInput {

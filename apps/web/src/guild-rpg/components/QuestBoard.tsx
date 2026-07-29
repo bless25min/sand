@@ -8,6 +8,30 @@ import { FirstSessionCard } from './FirstSessionCard';
 
 type Hunt = (typeof GUILD_GAME_CONTENT.hunts)[number];
 
+const huntMechanicBrief = (hunt: Hunt) => {
+  const quest = GUILD_GAME_CONTENT.quests.find(({ id }) => id === hunt.questId);
+  const guardNames =
+    hunt.guardEnemyIds
+      ?.map((id) => quest?.enemies.find((enemy) => enemy.id === id)?.name)
+      .filter((name): name is string => Boolean(name)) ?? [];
+  const weaknesses = new Set<string>();
+  hunt.enemies.forEach(({ traits = [] }) =>
+    traits.forEach(({ vulnerableElementIds = [], vulnerableSpecializationIds = [] }) => {
+      vulnerableElementIds.forEach((id) => weaknesses.add(`${elementName(id)}屬反應`));
+      vulnerableSpecializationIds.forEach((id) => weaknesses.add(specializationName(id)));
+    }),
+  );
+  const guardBrief =
+    guardNames.length > 0
+      ? `先擊破護衛（${guardNames.join('、')}），首領才會暴露。`
+      : '敵人沒有護衛，可直接選擇集火目標。';
+  const weaknessBrief =
+    weaknesses.size > 0
+      ? `公開弱點：${[...weaknesses].join('、')}；命中會追加 1 點反應。`
+      : '本關沒有額外公開弱點。';
+  return `${guardBrief}${weaknessBrief}`;
+};
+
 function HuntCard({
   hunt,
   state,
@@ -122,7 +146,7 @@ function HuntCard({
           </div>
           <div>
             <dt>這關重點</dt>
-            <dd>{hunt.counterBrief}</dd>
+            <dd>{huntMechanicBrief(hunt)}</dd>
           </div>
           <div>
             <dt>技能特化</dt>

@@ -43,6 +43,22 @@ const RULES: Readonly<Record<BattleEventKind, VisualRule>> = {
     camera: 'punch',
     durationMs: 170,
   },
+  enemy_attack: {
+    phase: 'impact',
+    headline: '敵軍反擊',
+    polarity: 'damage',
+    route: 'direct',
+    camera: 'shake',
+    durationMs: 220,
+  },
+  dodge: {
+    phase: 'aftermath',
+    headline: '高速閃避',
+    polarity: 'support',
+    route: 'direct',
+    camera: 'track',
+    durationMs: 170,
+  },
   healing: {
     phase: 'impact',
     headline: '治療回復',
@@ -138,6 +154,14 @@ const RULES: Readonly<Record<BattleEventKind, VisualRule>> = {
     route: 'area',
     camera: 'none',
     durationMs: 120,
+  },
+  boss_phase: {
+    phase: 'finisher',
+    headline: '首領階段',
+    polarity: 'damage',
+    route: 'area',
+    camera: 'shake',
+    durationMs: 320,
   },
   finisher: {
     phase: 'finisher',

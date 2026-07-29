@@ -8,4 +8,5 @@ export const createSkillEngineContent = (profile: GuildProfile): SkillEngineCont
   specializations: GUILD_GAME_CONTENT.skillSpecializations,
   triggers: GUILD_GAME_CONTENT.triggerConditions,
   forms: GUILD_GAME_CONTENT.skillForms,
+  hunts: GUILD_GAME_CONTENT.hunts,
 });

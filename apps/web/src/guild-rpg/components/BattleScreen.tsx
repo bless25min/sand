@@ -1,6 +1,7 @@
 import { GUILD_GAME_CONTENT } from '@expedition/game-data';
 import {
   isExecutionWindow,
+  previewEnemyPressure,
   previewSkillOutcome,
   projectBattlePlayback,
   type SkillOutcomePreview,
@@ -97,6 +98,9 @@ export function BattleScreen({
   const skillPreview = armedSkillId ? skillPreviews.get(armedSkillId) : undefined;
   const executionWindow = isExecutionWindow(battle);
   const displayExecutionWindow = executionWindow && !playback.isPlaying;
+  const enemyIntent = playback.isPlaying
+    ? undefined
+    : (skillPreview?.enemyResponse ?? previewEnemyPressure(battle));
 
   useEffect(() => {
     setArmedSkillId(undefined);
@@ -182,6 +186,7 @@ export function BattleScreen({
         nextActorId={nextActorId}
         relay={relay}
         preview={skillPreview}
+        enemyIntent={enemyIntent}
         executionWindow={displayExecutionWindow}
         locked={playback.isPlaying}
         onSelectTarget={chooseTarget}

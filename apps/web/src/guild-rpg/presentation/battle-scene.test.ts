@@ -1,6 +1,7 @@
 import { GUILD_GAME_CONTENT } from '@expedition/game-data';
 import {
   createGuildProfile,
+  previewEnemyPressure,
   previewSkillOutcome,
   startGuildQuest,
 } from '@expedition/simulation-core';
@@ -151,5 +152,20 @@ describe('battle scene projection', () => {
           scene.units.find(({ id }) => id === relayActorId)?.comboReady === true,
       ),
     ).toBe(true);
+  });
+
+  it('projects the exact enemy response intent onto battlefield units', () => {
+    const profile = createGuildProfile(GUILD_GAME_CONTENT);
+    const battle = startGuildQuest(profile, 'border_pack', GUILD_GAME_CONTENT);
+    const enemyIntent = previewEnemyPressure(battle)!;
+    const scene = createBattleScene(battle, { relay: 1, enemyIntent });
+
+    expect(scene.enemyIntent).toEqual(enemyIntent);
+    expect(scene.units.find(({ id }) => id === enemyIntent.enemyId)?.enemyIntentRole).toBe(
+      'source',
+    );
+    expect(scene.units.find(({ id }) => id === enemyIntent.targetId)?.enemyIntentRole).toBe(
+      'target',
+    );
   });
 });

@@ -88,4 +88,23 @@ describe('projectBattlePlayback', () => {
   it('returns the authoritative final battle on the final event', () => {
     expect(projectBattlePlayback(before, final, events, events.length)).toBe(final);
   });
+
+  it('shows enemy response damage on the hero before playback completes', () => {
+    const responseEvents: GuildBattleEvent[] = [
+      {
+        id: 10,
+        kind: 'enemy_attack',
+        message: 'enemy counter',
+        actorId: 'enemy',
+        targetId: 'hero',
+        amount: 6,
+      },
+      { id: 11, kind: 'guard', message: 'next event', targetId: 'hero', amount: 0 },
+    ];
+    const responseFinal = battle([unit('hero', 'heroes', 64), unit('enemy', 'enemies', 100)]);
+
+    expect(
+      projectBattlePlayback(before, responseFinal, responseEvents, 1).units[0]?.currentHp,
+    ).toBe(64);
+  });
 });

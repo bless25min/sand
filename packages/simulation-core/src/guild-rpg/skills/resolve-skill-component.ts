@@ -9,6 +9,7 @@ import type {
 } from '@expedition/shared-types';
 
 import { resolveTargetRoute } from './resolve-target-route';
+import { matchesHuntWeakness, resolveGuardedTargetId } from './resolve-hunt-mechanics';
 
 type EventDraft = Omit<GuildBattleEvent, 'id'>;
 type ResolverInput = {
@@ -78,7 +79,8 @@ export function resolveSkillComponent(input: ResolverInput): {
   const component = input.component;
   const prefix = `skill:${input.battle.sequence}:${component.id}`;
   const actor = units.find(({ id }) => id === input.actorId);
-  const initialTarget = units.find(({ id }) => id === input.preferredTargetId);
+  const effectiveTargetId = resolveGuardedTargetId(units, input.preferredTargetId);
+  const initialTarget = units.find(({ id }) => id === effectiveTargetId);
   if (!actor) throw new Error(`Unknown skill actor: ${input.actorId}`);
   if (!initialTarget || initialTarget.side !== 'enemies')
     throw new Error(`Unknown enemy target: ${input.preferredTargetId}`);
@@ -172,7 +174,7 @@ export function resolveSkillComponent(input: ResolverInput): {
   let strength = bounded(actor.strengthened ?? 0);
   if ((actor.strengthened ?? 0) <= 0) strength = 0;
   for (let index = 0; index < hitCount; index += 1) {
-    const route = resolveTargetRoute(units, input.preferredTargetId, previousTargetId, chain);
+    const route = resolveTargetRoute(units, effectiveTargetId, previousTargetId, chain);
     const target = route.target;
     if (!target) {
       events.push({
@@ -212,7 +214,27 @@ export function resolveSkillComponent(input: ResolverInput): {
     previousTargetId = liveTarget.id;
   }
 
-  const liveTarget = units.find(({ id }) => id === initialTarget.id)!;
+  let liveTarget = units.find(({ id }) => id === initialTarget.id)!;
+  if (
+    liveTarget.currentHp > 0 &&
+    matchesHuntWeakness(liveTarget, component.element, component.specializationId)
+  ) {
+    const cause = `${prefix}:weakness`;
+    events.push({
+      kind: 'triggered',
+      message: `${liveTarget.name} 的公開弱點被命中。`,
+      actorId: actor.id,
+      targetId: liveTarget.id,
+      amount: 1,
+      componentId: component.id,
+      element: component.element,
+      specializationId: component.specializationId,
+      triggerId: component.triggerId,
+      causalId: cause,
+    });
+    dealDamage(liveTarget.id, 1, `${cause}:damage`, cause, 'reaction', '弱點反應');
+    liveTarget = units.find(({ id }) => id === initialTarget.id)!;
+  }
   const consumed =
     input.triggerReady === false
       ? { amount: 0, layers: liveTarget.statusLayers ?? emptyLayers() }

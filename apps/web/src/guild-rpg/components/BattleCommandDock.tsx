@@ -32,6 +32,7 @@ export function BattleCommandDock({
   onChooseSkill(skillId: string): void;
 }) {
   const victory = state.battle?.status === 'victory';
+  const defeat = state.battle?.status === 'defeat';
   const actorId = state.battle?.roundOrder?.activeAdventurerId;
   const actor = state.battle?.units.find(({ id }) => id === actorId);
   const target = state.battle?.units.find(({ id }) => id === state.battle?.selectedTargetId);
@@ -62,6 +63,21 @@ export function BattleCommandDock({
             onClick={() => dispatch({ type: 'COLLECT_VICTORY' })}
           >
             {playback.isPlaying ? '終結演出中…' : '收下全部戰利品'}
+          </button>
+        </div>
+      ) : defeat ? (
+        <div className="gr-finisher-dock gr-defeat-dock" role="status">
+          <header>
+            <span>EXPEDITION FAILED</span>
+            <strong>遠征隊失去戰鬥能力</strong>
+            <small>戰場保留最後結果；返回任務後可調整六人技能與出手順序。</small>
+          </header>
+          <button
+            type="button"
+            disabled={playback.isPlaying}
+            onClick={() => dispatch({ type: 'ABANDON_HUNT' })}
+          >
+            {playback.isPlaying ? '戰敗演出中…' : '返回任務'}
           </button>
         </div>
       ) : (

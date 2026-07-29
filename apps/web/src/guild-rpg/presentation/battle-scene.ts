@@ -1,4 +1,4 @@
-import type { GuildBattleState, StatusLayers } from '@expedition/shared-types';
+import type { EnemyPressureIntent, GuildBattleState, StatusLayers } from '@expedition/shared-types';
 import type { SkillOutcomePreview } from '@expedition/simulation-core';
 import type {
   GuildCombatScene,
@@ -18,6 +18,7 @@ export interface BattleSceneContext {
   nextActorId?: string;
   event?: VisualEvent;
   preview?: SkillOutcomePreview;
+  enemyIntent?: EnemyPressureIntent;
   executionWindow?: boolean;
 }
 
@@ -102,6 +103,11 @@ export function createBattleScene(
       defenseReduction: unit.defenseReduction ?? 0,
       strengthened: unit.strengthened ?? 0,
       ...(comboReady ? { comboReady: true } : {}),
+      ...(context.enemyIntent?.enemyId === unit.id
+        ? { enemyIntentRole: 'source' as const }
+        : context.enemyIntent?.targetId === unit.id
+          ? { enemyIntentRole: 'target' as const }
+          : {}),
       ...(preview
         ? {
             preview: {
@@ -126,6 +132,7 @@ export function createBattleScene(
     relay: Math.max(1, Math.min(6, Math.trunc(context.relay))),
     units,
     ...(context.event ? { event: context.event } : {}),
+    ...(context.enemyIntent ? { enemyIntent: context.enemyIntent } : {}),
     ...(context.preview
       ? {
           preview: {

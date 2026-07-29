@@ -978,6 +978,39 @@
   cursor: crosshair;
 }
 
+.gr-enemy-intent-cue {
+  position: absolute;
+  z-index: 3;
+  left: 50%;
+  bottom: -8px;
+  min-width: 34px;
+  padding: 2px 6px;
+  transform: translateX(-50%);
+  border: 1px solid rgb(255 139 92 / 72%);
+  border-radius: 999px;
+  background: rgb(45 8 5 / 88%);
+  color: #ffe7bf;
+  font-size: 9px;
+  font-weight: 900;
+  line-height: 1.2;
+  white-space: nowrap;
+  box-shadow: 0 0 12px rgb(255 76 43 / 48%);
+  animation: gr-intent-pulse 900ms ease-in-out infinite alternate;
+}
+
+.gr-battle-unit-controls > button[data-enemy-intent-target='true'] .gr-enemy-intent-cue {
+  border-color: rgb(255 225 120 / 80%);
+  background: rgb(15 21 18 / 92%);
+  color: #fff0a8;
+}
+
+@keyframes gr-intent-pulse {
+  to {
+    transform: translateX(-50%) scale(1.08);
+    box-shadow: 0 0 20px rgb(255 76 43 / 78%);
+  }
+}
+
 .gr-battle-unit-controls > button:focus-visible::after {
   border-color: #ffe278;
   box-shadow:

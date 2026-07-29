@@ -60,6 +60,24 @@ const drawPreviewRoute = (scene: GuildCombatScene, color: number) => {
   return route;
 };
 
+const drawEnemyIntentRoute = (scene: GuildCombatScene) => {
+  const source = scene.units.find(({ id }) => id === scene.enemyIntent?.enemyId);
+  const target = scene.units.find(({ id }) => id === scene.enemyIntent?.targetId);
+  if (!source || !target) return undefined;
+  return new Graphics()
+    .moveTo(source.x, source.y - 55)
+    .lineTo(target.x, target.y - 55)
+    .stroke({ color: 0xff5b45, width: 3, alpha: 0.66 })
+    .circle(source.x, source.y - 55, 30)
+    .stroke({ color: 0xff8a62, width: 3, alpha: 0.8 })
+    .circle(target.x, target.y - 55, 36)
+    .stroke({
+      color: scene.enemyIntent?.outcome === 'dodge' ? 0x71dcf4 : 0xff5b45,
+      width: 4,
+      alpha: 0.78,
+    });
+};
+
 export function drawCombatEffects(
   container: Container,
   scene: GuildCombatScene,
@@ -69,9 +87,16 @@ export function drawCombatEffects(
   let route: Graphics | undefined;
   let projectile: Graphics | undefined;
   const afterimages: Graphics[] = [];
-  if (!scene.event && scene.preview) {
-    route = drawPreviewRoute(scene, color);
+  if (!scene.event && scene.enemyIntent) {
+    route = drawEnemyIntentRoute(scene);
     if (route) container.addChild(route);
+  }
+  if (!scene.event && scene.preview) {
+    const previewRoute = drawPreviewRoute(scene, color);
+    if (previewRoute) {
+      route = previewRoute;
+      container.addChild(previewRoute);
+    }
   }
   if (plan.route.length >= 2) {
     route = drawRoute(plan, color);

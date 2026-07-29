@@ -40,6 +40,14 @@ export function projectBattlePlayback(
         ...unit,
         currentHp: Math.max(0, unit.currentHp - amount),
       }));
+    } else if (event.kind === 'enemy_attack') {
+      units = updateUnit(units, event.targetId, (unit) => ({
+        ...unit,
+        currentHp: Math.max(0, unit.currentHp - amount),
+        guarding: false,
+      }));
+    } else if (event.kind === 'dodge') {
+      units = updateUnit(units, event.targetId, (unit) => ({ ...unit, guarding: false }));
     } else if (event.kind === 'healing') {
       units = updateUnit(units, event.targetId, (unit) => ({
         ...unit,
@@ -62,9 +70,12 @@ export function projectBattlePlayback(
         strengthened: (unit.strengthened ?? 0) + amount,
       }));
     } else if (event.kind === 'guard') {
+      const enemyResponse = before.units.some(
+        ({ id, side }) => id === event.actorId && side === 'enemies',
+      );
       units = updateUnit(units, event.targetId ?? event.actorId, (unit) => ({
         ...unit,
-        guarding: true,
+        guarding: !enemyResponse,
       }));
     } else if (event.kind === 'unit_defeated') {
       units = updateUnit(units, event.targetId, (unit) => ({ ...unit, currentHp: 0 }));
