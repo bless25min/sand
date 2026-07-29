@@ -1,10 +1,11 @@
 import { GUILD_GAME_CONTENT } from '@expedition/game-data';
 import type { GuildProfile } from '@expedition/shared-types';
-import { migrateProfileV4 } from '@expedition/simulation-core';
+import { migrateProfileV5 } from '@expedition/simulation-core';
 
-export const GUILD_SAVE_KEY = 'expedition:guild-rpg:v4';
-export const GUILD_SAVE_BACKUP_KEY = 'expedition:guild-rpg:v3:backup';
+export const GUILD_SAVE_KEY = 'expedition:guild-rpg:v5';
+export const GUILD_SAVE_BACKUP_KEY = 'expedition:guild-rpg:v4:backup';
 const LEGACY_GUILD_SAVE_KEYS = [
+  'expedition:guild-rpg:v4',
   'expedition:guild-rpg:v3',
   'expedition:guild-rpg:v2',
   'expedition:guild-rpg:v1',
@@ -45,9 +46,9 @@ const isLegacyProfile = (value: unknown) =>
   isStringArray(value.unlockedQuestIds) &&
   isRecord(value.questRecords);
 
-const isV4Profile = (value: unknown): value is GuildProfile =>
+const isCompleteProfile = (value: unknown, version: 4 | 5) =>
   isRecord(value) &&
-  value.version === 4 &&
+  value.version === version &&
   typeof value.leaderId === 'string' &&
   Array.isArray(value.party) &&
   value.party.length === 6 &&
@@ -75,6 +76,9 @@ const isV4Profile = (value: unknown): value is GuildProfile =>
   isRecord(value.forgeLocks) &&
   Array.isArray(value.progressionEvents);
 
+const isV4Profile = (value: unknown) => isCompleteProfile(value, 4);
+const isV5Profile = (value: unknown): value is GuildProfile => isCompleteProfile(value, 5);
+
 export function serializeGuildSave(profile: GuildProfile) {
   return JSON.stringify(profile);
 }
@@ -83,8 +87,9 @@ export function parseGuildSave(serialized: string | null): GuildProfile | undefi
   if (!serialized) return undefined;
   try {
     const parsed: unknown = JSON.parse(serialized);
-    if (isV4Profile(parsed)) return migrateProfileV4(parsed, GUILD_GAME_CONTENT);
-    if (isLegacyProfile(parsed)) return migrateProfileV4(parsed, GUILD_GAME_CONTENT);
+    if (isV5Profile(parsed)) return migrateProfileV5(parsed, GUILD_GAME_CONTENT);
+    if (isV4Profile(parsed)) return migrateProfileV5(parsed, GUILD_GAME_CONTENT);
+    if (isLegacyProfile(parsed)) return migrateProfileV5(parsed, GUILD_GAME_CONTENT);
     return undefined;
   } catch {
     return undefined;

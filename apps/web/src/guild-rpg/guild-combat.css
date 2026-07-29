@@ -824,7 +824,7 @@
   max-width: none;
   height: 100dvh;
   min-height: 0;
-  grid-template-rows: minmax(0, 1fr) auto auto;
+  grid-template-rows: minmax(0, 1fr) auto;
   gap: 0;
   margin: 0;
   padding: 0;
@@ -930,72 +930,6 @@
   border-color: #fff0a6;
   background: linear-gradient(90deg, #ff6c45, #ffd66d);
   box-shadow: 0 0 12px #ff8a42;
-}
-
-.gr-focus-hud {
-  position: relative;
-  z-index: 24;
-  display: flex;
-  align-items: start;
-  justify-content: space-between;
-  gap: 8px;
-  padding: 4px 8px;
-  border-top: 1px solid rgb(245 186 73 / 28%);
-  background: rgb(3 12 10 / 94%);
-  pointer-events: none;
-}
-
-.gr-battle[data-shell='single-screen'] .gr-focus-hud {
-  position: relative;
-  z-index: 34;
-  grid-row: 2;
-}
-
-.gr-focus-card {
-  display: grid;
-  width: min(48%, 180px);
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 1px;
-  padding: 2px 7px;
-  border: 1px solid rgb(99 220 169 / 65%);
-  border-radius: 8px;
-  background: rgb(3 12 10 / 82%);
-  box-shadow: inset 3px 0 #52d19a;
-  color: #f7f2df;
-  text-shadow: 0 1px 2px #000;
-}
-
-.gr-focus-card--target {
-  border-color: rgb(255 116 72 / 72%);
-  box-shadow: inset -3px 0 #ef6848;
-  text-align: right;
-}
-
-.gr-combat-battlefield[data-execution-window='true'] .gr-focus-card--target {
-  border-color: #ffe57b;
-  background: rgb(45 13 9 / 88%);
-  box-shadow:
-    inset -3px 0 #ff7b43,
-    0 0 18px rgb(255 111 49 / 32%);
-}
-
-.gr-focus-card strong {
-  overflow: hidden;
-  font-size: clamp(12px, 3.2vw, 14px);
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.gr-focus-card span {
-  color: #fff0a6;
-  font-size: clamp(10px, 2.8vw, 12px);
-  font-weight: 900;
-}
-
-.gr-focus-card small {
-  grid-column: 1 / -1;
-  color: #c9d5ce;
-  font-size: 9px;
 }
 
 .gr-battle-unit-controls {
@@ -1115,6 +1049,16 @@
     0 0 18px currentcolor;
 }
 
+.gr-battle[data-shell='single-screen'] .gr-impact-callout > small {
+  display: block;
+  color: #fff0a6;
+  font-size: 12px;
+  font-weight: 950;
+  letter-spacing: 0.18em;
+  text-align: center;
+  text-shadow: 0 2px 8px #000;
+}
+
 .gr-execution-window {
   position: absolute;
   z-index: 26;
@@ -1152,7 +1096,7 @@
 .gr-battle[data-shell='single-screen'] .gr-command-dock {
   position: relative;
   z-index: 35;
-  grid-row: 3;
+  grid-row: 2;
   min-height: 0;
   margin: 0;
   padding: 5px max(6px, env(safe-area-inset-right)) max(6px, env(safe-area-inset-bottom))
@@ -1207,9 +1151,9 @@
 .gr-skill-outcome-preview {
   position: relative;
   display: grid;
-  min-height: 82px;
+  min-height: 76px;
   grid-template-columns: minmax(0, 1fr) auto;
-  gap: 3px 6px;
+  gap: 4px 7px;
   align-content: center;
   padding: 5px 7px;
   border: 1px solid rgb(255 211 111 / 62%);
@@ -1219,28 +1163,39 @@
   color: #f8efda;
 }
 
-.gr-skill-outcome-preview > header {
+.gr-preview-endpoints {
   display: flex;
-  grid-column: 1 / -1;
+  min-width: 0;
   align-items: center;
-  gap: 7px;
-}
-
-.gr-skill-outcome-preview > header > span {
-  color: #ffd86f;
-  font-size: 10px;
-}
-
-.gr-skill-outcome-preview > header > strong {
+  gap: 5px;
   overflow: hidden;
-  font-size: 13px;
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.gr-preview-endpoints > strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.gr-preview-endpoints > span {
+  color: #e7a443;
+}
+
+.gr-preview-endpoints > em {
+  padding: 2px 5px;
+  border-radius: 999px;
+  overflow: hidden;
+  color: #ffd86f;
+  background: rgb(255 255 255 / 8%);
+  font-size: 10px;
+  font-style: normal;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .gr-skill-outcome-preview--execution {
-  min-height: 82px;
-  grid-template-columns: minmax(0, 1fr) auto;
+  min-height: 68px;
   border-color: #ffe279;
   background: linear-gradient(110deg, rgb(111 31 13 / 91%), rgb(9 16 13 / 96%) 58%), #07110f;
   box-shadow:
@@ -1248,66 +1203,48 @@
     0 0 18px rgb(255 98 40 / 18%);
 }
 
-.gr-execution-preview-title {
-  margin-left: auto;
-  color: #fff0a6;
-  font-size: 13px;
-}
-
-.gr-execution-preview-rail {
+.gr-execution-summary {
   display: flex;
   min-width: 0;
   align-items: center;
-  gap: 5px;
+  justify-content: flex-end;
+  gap: 6px;
   overflow: hidden;
   color: #ffd56c;
-  font-size: 10px;
+  font-size: 11px;
   white-space: nowrap;
 }
 
-.gr-execution-preview-rail span,
-.gr-execution-preview-rail strong,
-.gr-execution-preview-rail b {
+.gr-execution-summary > * {
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.gr-execution-preview-rail i {
-  color: #ff7548;
+.gr-execution-summary em {
+  color: #ff9a5d;
   font-style: normal;
 }
 
-.gr-preview-totals--execution {
-  margin: 0;
-}
-
-.gr-preview-totals--execution > strong {
-  color: #ffbd62;
-}
-
-.gr-preview-totals {
+.gr-preview-impact {
   display: flex;
   min-width: 0;
   align-items: center;
   gap: 4px;
-  margin-left: auto;
+  justify-content: flex-end;
 }
 
-.gr-preview-totals > b,
-.gr-preview-totals > strong,
-.gr-preview-totals > span,
-.gr-preview-totals > em {
+.gr-preview-impact > strong,
+.gr-preview-impact > em {
   padding: 2px 5px;
   border-radius: 999px;
   background: rgb(255 255 255 / 9%);
   color: #ffe4a3;
-  font-size: 10px;
+  font-size: 11px;
   font-style: normal;
   white-space: nowrap;
 }
 
-.gr-preview-totals > strong {
-  margin-left: auto;
+.gr-preview-impact > strong {
   color: #fff0a6;
   font:
     900 12px/1 'Arial Black',
@@ -1315,8 +1252,25 @@
     sans-serif;
 }
 
+.gr-impact-pips,
+.gr-skill-hit-pips {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.gr-impact-pips i,
+.gr-skill-hit-pips i {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #ffbd58;
+  box-shadow: 0 0 5px rgb(255 134 48 / 72%);
+}
+
 .gr-preview-combo-rail {
   display: flex;
+  grid-column: 1 / -1;
   min-width: 0;
   gap: 3px;
   overflow: hidden;
@@ -1327,7 +1281,7 @@
   display: grid;
   min-width: 0;
   flex: 1 1 0;
-  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-columns: 18px minmax(0, 1fr) auto;
   gap: 0 4px;
   padding: 3px 5px;
   border: 1px solid rgb(255 255 255 / 11%);
@@ -1343,9 +1297,11 @@
   box-shadow: inset 0 0 10px rgb(255 182 52 / 12%);
 }
 
-.gr-preview-combo-step > span,
-.gr-preview-combo-step > b,
-.gr-preview-combo-step > i {
+.gr-preview-combo-step[data-base-ready='true'] {
+  border-left: 3px solid #ffd263;
+}
+
+.gr-preview-combo-step > * {
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1353,45 +1309,76 @@
 }
 
 .gr-preview-combo-step > span {
+  display: grid;
+  width: 18px;
+  height: 18px;
+  grid-row: 1 / 3;
+  place-items: center;
+  border-radius: 50%;
   color: #fff0ba;
+  background: rgb(255 255 255 / 9%);
   font-weight: 900;
 }
 
 .gr-preview-combo-step > i {
+  grid-column: 3;
   color: #c0c9c2;
+  font-size: 9px;
   font-style: normal;
 }
 
 .gr-preview-combo-step > b {
-  grid-column: 1 / -1;
-  color: #ffbf6d;
+  color: #fff1bd;
 }
 
 .gr-preview-combo-step > em {
-  position: absolute;
-  top: 50%;
-  right: -5px;
-  z-index: 1;
+  grid-column: 2 / 4;
   color: #ffd56d;
+  font-size: 9px;
   font-style: normal;
-  transform: translateY(-50%);
 }
 
-.gr-preview-relay {
+.gr-preview-route,
+.gr-preview-relays {
+  display: flex;
   min-width: 0;
+  align-items: center;
+  gap: 3px;
   margin: 0;
   overflow: hidden;
-  color: #9ee9c1;
-  font-size: 10px;
-  font-weight: 800;
+  color: #b9c8bf;
+  font-size: 9px;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
+.gr-preview-route span,
+.gr-preview-relays span {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.gr-preview-route i {
+  color: #e8a843;
+  font-style: normal;
+}
+
+.gr-preview-relays {
+  justify-content: flex-end;
+  padding-right: 42px;
+  color: #9ee9c1;
+}
+
+.gr-preview-relays b {
+  color: #ffe278;
+  font-size: 9px;
+}
+
 .gr-preview-details {
-  grid-column: 2;
-  grid-row: 2 / 4;
-  align-self: center;
+  position: absolute;
+  right: 4px;
+  bottom: 3px;
 }
 
 .gr-preview-details > summary {
@@ -1424,51 +1411,24 @@
   justify-self: end;
 }
 
-.gr-preview-formula,
-.gr-preview-result,
-.gr-preview-deltas {
+.gr-preview-events {
   display: flex;
   min-width: 0;
-  align-items: center;
+  flex-wrap: wrap;
   gap: 4px;
-  overflow: hidden;
   font-size: 10px;
-  white-space: nowrap;
 }
 
-.gr-preview-formula span,
-.gr-preview-formula strong,
-.gr-preview-result span,
-.gr-preview-deltas > span {
+.gr-preview-events > span {
   padding: 2px 4px;
   border-radius: 4px;
   background: rgb(255 255 255 / 7%);
 }
 
-.gr-preview-formula i {
-  color: #d5b36c;
-  font-style: normal;
-}
-
-.gr-preview-result {
-  justify-content: flex-end;
-}
-
-.gr-preview-result strong {
-  color: #ffd36a;
-}
-
-.gr-preview-deltas {
-  grid-column: 1 / -1;
-  color: #e9d9af;
-}
-
 .gr-skill-outcome-preview > small {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
+  grid-column: 1 / -1;
+  color: #aebbb4;
+  font-size: 9px;
 }
 
 .gr-command-context {
@@ -1571,23 +1531,6 @@
   font-size: 10px;
 }
 
-.gr-battle[data-shell='single-screen'] .gr-battle-skills .gr-skill-trigger {
-  justify-content: flex-start;
-  overflow: hidden;
-  color: #b9c6bd;
-  font-size: 10px;
-  font-weight: 800;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.gr-battle[data-shell='single-screen']
-  .gr-battle-skills
-  [data-trigger-readiness='ready']
-  .gr-skill-trigger {
-  color: #ffd779;
-}
-
 .gr-skill-outcome b {
   color: #fff0a6;
   font:
@@ -1596,15 +1539,41 @@
     sans-serif;
 }
 
-.gr-skill-ready {
-  position: absolute;
-  top: 4px;
-  right: 4px;
-  color: #f0c96e;
-  font-size: 14px;
+.gr-skill-outcome em {
+  color: #ffd86f;
   font-style: normal;
   font-weight: 900;
-  text-shadow: 0 0 8px #ff8a42;
+}
+
+.gr-skill-nodes {
+  display: flex;
+  grid-column: 2;
+  width: 100%;
+  gap: 3px;
+}
+
+.gr-skill-nodes > i {
+  display: grid;
+  width: 17px;
+  height: 17px;
+  place-items: center;
+  border: 1px solid rgb(255 255 255 / 22%);
+  border-radius: 50%;
+  color: #839189;
+  background: rgb(255 255 255 / 4%);
+  font-size: 8px;
+  font-style: normal;
+  font-weight: 900;
+}
+
+.gr-skill-nodes > i[data-node-active='true'] {
+  border-color: #ffd66d;
+  color: #fff0a6;
+}
+
+.gr-skill-nodes > i[data-readiness='ready'] {
+  background: #8b5b1e;
+  box-shadow: 0 0 8px rgb(255 174 52 / 46%);
 }
 
 @keyframes gr-execution-pulse {

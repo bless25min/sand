@@ -145,5 +145,11 @@ describe('battle scene projection', () => {
       totalDamage: preview.totalDamage,
     });
     expect(scene.preview?.targetIds).toContain(targetId);
+    expect(
+      preview.nextRelays.every(
+        ({ actorId: relayActorId }) =>
+          scene.units.find(({ id }) => id === relayActorId)?.comboReady === true,
+      ),
+    ).toBe(true);
   });
 });

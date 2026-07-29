@@ -169,13 +169,13 @@ describe('deterministic six-hero game flow', () => {
     );
     state = reduce(state, { type: 'COLLECT_VICTORY' });
     expect(state.screen).toBe('rewards');
-    expect(state.rewards?.items).toHaveLength(4);
+    expect(state.rewards?.items).toHaveLength(5);
   });
 
   it('has no dead end from one skill drop through equip and replay', () => {
     let state = winFirstHunt(createGuildRpgState());
     expect(state.screen).toBe('rewards');
-    expect(state.rewards?.items).toHaveLength(4);
+    expect(state.rewards?.items).toHaveLength(5);
     expect(state.rewards?.skillDrops).toHaveLength(1);
     const rewardSkillIds = state.rewards!.skillDrops.map(({ id }) => id);
     expect(

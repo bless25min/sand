@@ -32,17 +32,18 @@ describe('skill tile presentation', () => {
       primaryValue: preview.totalDamage,
       segments: 2,
       chases: 1,
-      statusDelta: { kind: 'burn', amount: 3 },
+      statusDelta: { kind: 'burn', amount: 1 },
       readiness: 'ready',
       readyCount: 1,
       stepCount: 1,
-      triggerSummary: '開戰✓ → 追傷6',
+      triggerSummary: '開戰✓ → 追加1',
       comboSteps: [
         {
           conditionLabel: '開戰',
+          conditionGlyph: '時',
           readiness: 'ready',
-          readinessLabel: '已成立',
-          effectLabel: '追傷6',
+          readinessLabel: '已亮',
+          effectLabel: '追加1',
         },
       ],
     });
@@ -132,8 +133,8 @@ describe('skill tile presentation', () => {
       execution: true,
       primaryKind: 'finisher',
       primaryValue: 40,
-      segments: 5,
-      triggerSummary: '第六棒✓ → 全軍終結',
+      segments: 0,
+      triggerSummary: '本輪因果 → 終結',
     });
   });
 
@@ -170,8 +171,8 @@ describe('skill tile presentation', () => {
       execution: true,
       primaryKind: 'effect',
       primaryValue: 26,
-      segments: 4,
-      triggerSummary: '第5棒✓ → 餘震回收',
+      segments: 0,
+      triggerSummary: '破勢溢傷 · 不新增傷害',
     });
   });
 });

@@ -11,22 +11,22 @@ const enemies = {
   whelp: {
     id: 'ember_whelp',
     name: '燼火幼龍',
-    stats: { hp: 620, attack: 52, defense: 22, speed: 12, healing: 0 },
+    stats: { hp: 42, attack: 4, defense: 3, speed: 2, healing: 0 },
   },
   drake: {
     id: 'shrine_drake',
     name: '聖祠飛龍',
-    stats: { hp: 440, attack: 46, defense: 18, speed: 15, healing: 0 },
+    stats: { hp: 30, attack: 3, defense: 3, speed: 4, healing: 0 },
   },
   cantor: {
     id: 'ash_cantor',
     name: '灰燼詠唱者',
-    stats: { hp: 650, attack: 78, defense: 27, speed: 17, healing: 26 },
+    stats: { hp: 48, attack: 5, defense: 3, speed: 4, healing: 3 },
   },
   wyvern: {
     id: 'solar_wyvern',
     name: '日輪翼龍',
-    stats: { hp: 1120, attack: 105, defense: 48, speed: 20, healing: 0 },
+    stats: { hp: 90, attack: 5, defense: 4, speed: 5, healing: 0 },
   },
 } satisfies Record<string, EnemyDefinition>;
 

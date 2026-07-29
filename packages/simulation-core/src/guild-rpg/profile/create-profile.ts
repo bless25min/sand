@@ -23,7 +23,7 @@ export function createGuildProfile(content: GuildGameContent): GuildProfile {
   const defaultOrder = content.adventurers.map(({ id }) => id);
 
   return {
-    version: 4,
+    version: 5,
     leaderId: preferredLeader.id,
     party: content.adventurers.map((definition, adventurerIndex) => ({
       definitionId: definition.id,

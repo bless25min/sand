@@ -9,7 +9,7 @@ import { dismantleSkill } from '../skills/dismantle-skill';
 import { fuseSkills } from '../skills/fuse-skills';
 import { replaceFusedComponent } from '../skills/replace-fused-component';
 import { generateSkillDrop } from './generate-skill-drop';
-import { migrateProfileV4 } from './migrate-profile-v4';
+import { migrateProfileV5 } from './migrate-profile-v5';
 import { evaluateHuntChallenges } from './replay-progression';
 
 class FixedRandom implements RandomSource {
@@ -24,13 +24,14 @@ class FixedRandom implements RandomSource {
 
 const component = (id: string, element: SkillComponent['element']): SkillComponent => ({
   id: `${id}:component`,
+  qualityRank: 3,
   formId: `${element}.stack.on_hit`,
   element,
   specializationId: 'stack',
   triggerId: 'on_hit',
-  power: 7,
+  power: 3,
   layerStrength: 3,
-  triggerAddition: 4,
+  triggerAddition: 3,
   repeatCount: 2,
 });
 
@@ -41,11 +42,11 @@ const owned = (id: string, element: SkillComponent['element']): OwnedSkill => ({
   components: [component(id, element)],
 });
 
-describe('version-four progression', () => {
+describe('version-five progression', () => {
   it('creates six heroes with six equipped skills and no character-level or Build gate', () => {
     const profile = createGuildProfile(GUILD_GAME_CONTENT);
 
-    expect(profile.version).toBe(4);
+    expect(profile.version).toBe(5);
     expect(profile.party).toHaveLength(6);
     expect(profile.defaultOrder).toEqual(['brann', 'lyra', 'elin', 'seph', 'lorne', 'kyro']);
     expect(profile.party.every((hero) => hero.skillIds.length === 6)).toBe(true);
@@ -87,7 +88,7 @@ describe('version-four progression', () => {
     expect(result.removedSkill.id).toBe('fire-b');
   });
 
-  it('rolls deterministic skill drops inside every displayed integer range', () => {
+  it('starts deterministic skill drops at atomic quality one', () => {
     const first = generateSkillDrop(
       {
         id: 'test-drop',
@@ -125,16 +126,18 @@ describe('version-four progression', () => {
       ),
     );
     expect(first.components[0]).toMatchObject({
-      power: 4,
-      layerStrength: 2,
-      triggerAddition: 2,
-      repeatCount: 3,
+      qualityRank: 1,
+      power: 1,
+      layerStrength: 1,
+      triggerAddition: 1,
+      repeatCount: 1,
     });
     expect(jackpot.components[0]).toMatchObject({
-      power: 8,
-      layerStrength: 5,
-      triggerAddition: 6,
-      repeatCount: 6,
+      qualityRank: 1,
+      power: 1,
+      layerStrength: 1,
+      triggerAddition: 1,
+      repeatCount: 1,
     });
   });
 
@@ -163,9 +166,9 @@ describe('version-four progression', () => {
       progressionEvents: [],
     };
 
-    const migrated = migrateProfileV4(legacy, GUILD_GAME_CONTENT);
+    const migrated = migrateProfileV5(legacy, GUILD_GAME_CONTENT);
 
-    expect(migrated.version).toBe(4);
+    expect(migrated.version).toBe(5);
     expect(migrated.party).toHaveLength(6);
     expect(migrated.gold).toBe(777);
     expect(migrated.unlockedQuestIds).toEqual(legacy.unlockedQuestIds);

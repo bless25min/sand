@@ -69,6 +69,7 @@ export function createBattleScene(
         : enemyPositions[Math.min(enemyIndex++, enemyPositions.length - 1)]!;
     const selected = battle.selectedTargetId === unit.id;
     const preview = context.preview?.units.find(({ id }) => id === unit.id);
+    const comboReady = context.preview?.nextRelays.some(({ actorId }) => actorId === unit.id);
     const hit = context.event?.targetId === unit.id && context.event.phase === 'impact';
     const state: GuildCombatUnitState =
       unit.currentHp <= 0
@@ -100,6 +101,7 @@ export function createBattleScene(
       statusLayers: unit.statusLayers ?? emptyLayers(),
       defenseReduction: unit.defenseReduction ?? 0,
       strengthened: unit.strengthened ?? 0,
+      ...(comboReady ? { comboReady: true } : {}),
       ...(preview
         ? {
             preview: {

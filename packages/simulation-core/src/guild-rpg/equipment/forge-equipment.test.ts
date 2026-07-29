@@ -13,6 +13,7 @@ const item = (id: string, coreId = 'toxic-mist'): EquipmentItem => ({
   name: `測試狼牙護符 ${id}`,
   slot: 'accessory',
   rarity: 'rare',
+  qualityRank: 3,
   mainStat: { stat: 'speed', value: 3, sourceId: 'wolf_charm', label: '狼牙護符' },
   affixes: [{ stat: 'attack', value: 4, sourceId: 'savage', label: '兇猛' }],
   sellValue: 40,

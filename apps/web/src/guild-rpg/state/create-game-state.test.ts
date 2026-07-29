@@ -11,7 +11,7 @@ describe('guild RPG initial state', () => {
   it('starts a fresh six-hero profile on the real-action onboarding path', () => {
     const state = createGuildRpgState();
 
-    expect(state.profile.version).toBe(4);
+    expect(state.profile.version).toBe(5);
     expect(state.profile.party).toHaveLength(6);
     expect(state.profile.party.every(({ skillIds }) => skillIds.length === 6)).toBe(true);
     expect(state.profile.skillInventory).toHaveLength(36);

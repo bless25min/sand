@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import { GUILD_GAME_CONTENT } from '@expedition/game-data';
-import type { GuildSkillItem } from '@expedition/shared-types';
+import type { OwnedSkill } from '@expedition/shared-types';
 
 import { createGuildRpgState } from '../state/create-game-state';
 import { guildRpgReducer, type GuildRpgState } from '../state/game-reducer';
@@ -42,16 +42,12 @@ describe('RewardScreen', () => {
       ...won,
       rewards: {
         ...won.rewards!,
-        items: Array.from({ length: 12 }, (_, index) => ({
+        items: Array.from({ length: 19 }, (_, index) => ({
           ...item,
           id: `item-${index}`,
           name: `${item.name}${index + 1}`,
         })),
-        skillDrops: Array.from({ length: 8 }, (_, index) => ({
-          ...skill,
-          id: `skill-${index}`,
-          name: `${skill.name}${index + 1}`,
-        })),
+        skillDrops: [{ ...skill, id: 'skill-1', name: `${skill.name}1` }],
       },
     };
 
@@ -63,6 +59,7 @@ describe('RewardScreen', () => {
     expect(markup).not.toContain('data-pager="loot"');
     expect(markup).not.toContain('class="gr-loot-detail-drawer"');
     expect(markup).toContain('data-material-count=');
+    expect(markup.match(/data-loot-kind="skill"/g) ?? []).toHaveLength(1);
   });
 
   it('celebrates newly completed challenges and personal records above loot', () => {
@@ -93,13 +90,19 @@ describe('RewardScreen', () => {
       rewards: {
         ...won.rewards!,
         items: [],
-        skillDrops: ([1, 2, 3] as const).map(
-          (stars) =>
+        skillDrops: ([1, 3, 5] as const).map(
+          (qualityRank) =>
             ({
               ...skill,
-              id: `skill-${stars}`,
-              stars,
-            }) as GuildSkillItem,
+              id: `skill-${qualityRank}`,
+              stars: 1,
+              components: [
+                {
+                  ...skill.components[0],
+                  qualityRank,
+                },
+              ],
+            }) as OwnedSkill,
         ),
       },
     };
@@ -113,5 +116,6 @@ describe('RewardScreen', () => {
     expect(markup).not.toContain('data-rarity="skill"');
     expect(markup).not.toContain('data-element=');
     expect(css).not.toMatch(/\[data-rarity='skill'\]\[data-element=/);
+    expect(css).toContain('grid-template-columns: repeat(4');
   });
 });

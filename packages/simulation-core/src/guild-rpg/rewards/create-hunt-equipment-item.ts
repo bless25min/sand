@@ -6,14 +6,7 @@ import type {
 } from '@expedition/shared-types';
 
 import type { RandomSource } from '../../rng/random-source';
-
-const RARITY_SCALE: Readonly<Record<GuildItemRarity, number>> = {
-  common: 1,
-  uncommon: 1.25,
-  rare: 1.6,
-  epic: 2.1,
-  legendary: 2.8,
-};
+import { QUALITY_RANK_BY_RARITY } from '../progression/quality-rank';
 
 function affixCount(rarity: GuildItemRarity) {
   if (rarity === 'common') return 0;
@@ -42,6 +35,7 @@ export function createHuntEquipmentItem(
   random: RandomSource,
 ): HuntEquipmentItem {
   const rarity = rarityFor(random.next(), qualityScore, jackpot);
+  const qualityRank = QUALITY_RANK_BY_RARITY[rarity];
   const exactCandidates =
     input.content?.equipmentBases.filter(
       (base) => base.slot === definition.slot && base.mainStat === definition.mainStat,
@@ -59,32 +53,21 @@ export function createHuntEquipmentItem(
     (baseCandidates.length > 0
       ? baseCandidates[random.nextInt(0, baseCandidates.length - 1)]
       : undefined);
-  const rolledMainValue = base
-    ? random.nextInt(base.mainStatRoll.min, base.mainStatRoll.max)
-    : Math.max(1, Math.round(definition.baseValue * RARITY_SCALE[rarity] + qualityScore / 40));
-  const mainValue =
-    definition.slot === 'weapon' && definition.mainStat === 'attack'
-      ? Math.min(9, rolledMainValue)
-      : rolledMainValue;
+  const mainValue = qualityRank;
   const coreId =
     base && (input.hunt.coreDropIds?.length ?? base.coreIds.length) > 0
       ? (input.hunt.coreDropIds ?? base.coreIds)[
           random.nextInt(0, (input.hunt.coreDropIds ?? base.coreIds).length - 1)
         ]
       : undefined;
-  const coreStrength = base
-    ? random.nextInt(base.coreStrengthRoll.min, base.coreStrengthRoll.max)
-    : undefined;
+  const coreStrength = base ? random.nextInt(1, qualityRank) : undefined;
   const corePool = [...new Set(input.hunt.coreDropIds ?? base?.coreIds ?? [])];
   const remainingCoreIds = corePool.filter((candidate) => candidate !== coreId);
   const secondCoreId =
     rarity === 'legendary' && remainingCoreIds.length > 0
       ? remainingCoreIds[random.nextInt(0, remainingCoreIds.length - 1)]
       : undefined;
-  const secondCoreStrength =
-    secondCoreId && base
-      ? random.nextInt(base.coreStrengthRoll.min, base.coreStrengthRoll.max)
-      : undefined;
+  const secondCoreStrength = secondCoreId && base ? random.nextInt(1, qualityRank) : undefined;
   const cores = [
     ...(coreId && coreStrength !== undefined ? [{ id: coreId, strength: coreStrength }] : []),
     ...(secondCoreId && secondCoreStrength !== undefined
@@ -97,17 +80,9 @@ export function createHuntEquipmentItem(
     { length: input.equipmentAffixes.length > 0 ? affixCount(rarity) : 0 },
     (_, index) => {
       const affix = input.equipmentAffixes[(affixStart + index) % input.equipmentAffixes.length]!;
-      const statScale = affix.stat === 'hp' ? 4 : affix.stat === 'speed' ? 0.5 : 1;
       return {
         stat: affix.stat,
-        value: Math.max(
-          1,
-          Math.round(
-            (2 + definition.baseValue * 0.35 + qualityScore / 60) *
-              RARITY_SCALE[rarity] *
-              statScale,
-          ),
-        ),
+        value: random.nextInt(1, qualityRank),
         sourceId: affix.id,
         label: affix.name,
       };
@@ -119,6 +94,7 @@ export function createHuntEquipmentItem(
     name: definition.name,
     slot: definition.slot,
     rarity,
+    qualityRank,
     mainStat: {
       stat: definition.mainStat,
       value: mainValue,

@@ -53,33 +53,33 @@ const COPY: Readonly<
     focusId: 'target:first',
   },
   relay_1: {
-    title: '第 1 棒',
-    message: '確認目前角色，點一次技能查看精準傷害；再點技能或戰場敵人即可施放。',
+    title: '先留下一個接力條件',
+    message: '點技能預演：小傷害會留下狀態或強化，讓下一棒有事可接。',
     focusId: 'battle:skill',
   },
   relay_2: {
-    title: '第 2 棒',
-    message: '第二位角色已接力。觀察上一招留下的屬性與狀態，再選六個技能之一。',
+    title: '找亮起的技能節點',
+    message: '上一棒建立的條件會讓節點亮起；選亮起的招，把小效果接成追加事件。',
     focusId: 'battle:skill',
   },
   relay_3: {
-    title: '第 3 棒',
-    message: '連技開始升溫。綠框代表追加條件已成立，仍可自由選擇任何技能。',
+    title: '看條件如何變成效果',
+    message: '亮節點會依序變成追擊、反應或路由；暗節點仍可看見缺少哪個狀態。',
     focusId: 'battle:skill',
   },
   relay_4: {
-    title: '第 4 棒',
-    message: '連鎖效果正在累積；也可點上方尚未行動的角色改成下一棒。',
+    title: '改選能延續的角色',
+    message: '戰場上發光的隊員已有可接技能；也可點其他未行動角色改變順序。',
     focusId: 'battle:skill',
   },
   relay_5: {
-    title: '第 5 棒',
-    message: '進入終結準備。選擇能消耗疊層、擴散或多段命中的技能。',
+    title: '把累積資源轉成事件',
+    message: '優先選消耗層數、擴散或連鎖技能；每層會成為獨立命中。',
     focusId: 'battle:skill',
   },
   relay_6: {
-    title: '第 6 棒',
-    message: '最後一位角色會釋放本回合終結演出；選一招完成六人接力。',
+    title: '釋放真實累積的終結',
+    message: '最後一棒只結算本輪真正建立的因果，不會憑空乘上假倍率。',
     focusId: 'battle:skill',
   },
   collect_reward: {
@@ -156,10 +156,7 @@ export function createFirstHuntCoach(
     ...(relay && context.heroName
       ? {
           title: `第 ${relay} 棒：${context.heroName}`,
-          message:
-            relay === 1
-              ? `目前由${context.heroName}出手。點一次六個技能中的任一招預覽，再點技能或敵人施放。`
-              : `${context.heroName}已接棒。先看目標狀態與預計結果，再選技能延續第 ${relay} 段連技。`,
+          message: `${context.heroName}出手。${COPY[`relay_${relay}` as keyof typeof COPY].message}`,
         }
       : {}),
   };

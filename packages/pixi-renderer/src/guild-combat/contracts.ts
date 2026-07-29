@@ -47,6 +47,7 @@ export interface GuildCombatVisualEvent {
   headline: string;
   detail: string;
   relay: number;
+  causalDepth?: number;
   intensity: number;
   durationMs: number;
   polarity: 'damage' | 'support' | 'neutral';
@@ -77,6 +78,7 @@ export interface GuildCombatSceneUnit {
   statusLayers: StatusLayers;
   defenseReduction?: number;
   strengthened?: number;
+  comboReady?: boolean;
   preview?: {
     afterHp: number;
     damage: number;

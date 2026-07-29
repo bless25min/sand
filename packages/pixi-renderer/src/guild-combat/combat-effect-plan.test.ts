@@ -108,6 +108,38 @@ describe('Pixi guild combat effect plan', () => {
     expect(plans[5]!.screenFlashAlpha).toBeGreaterThanOrEqual(0.68);
   });
 
+  it('uses the event causal depth instead of the current actor position', () => {
+    const plan = createCombatEffectPlan({
+      ...scene(6),
+      event: {
+        id: 'visual:unlinked',
+        sourceEventId: 90,
+        eventKind: 'damage',
+        phase: 'impact',
+        headline: '未接續命中',
+        detail: '未接續命中',
+        relay: 6,
+        causalDepth: 2,
+        intensity: 38,
+        durationMs: 170,
+        polarity: 'damage',
+        route: 'direct',
+        camera: 'punch',
+        actorId: 'brann',
+        targetId: 'wolf_alpha',
+        number: -3,
+      },
+    });
+    const depthTwo = createCombatEffectPlan(scene(2));
+
+    expect(plan).toMatchObject({
+      finisher: false,
+      ambientParticles: depthTwo.ambientParticles,
+      impactParticles: depthTwo.impactParticles,
+      shakePx: depthTwo.shakePx,
+    });
+  });
+
   it('builds a same-target bounce path that visibly leaves and returns to the target', () => {
     const battle = {
       ...scene(4),

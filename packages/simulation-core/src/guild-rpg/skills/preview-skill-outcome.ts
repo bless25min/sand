@@ -1,6 +1,7 @@
 import type {
   BattleUnit,
   GuildBattleEvent,
+  StatusLayer,
   StatusLayers,
   TriggerCondition,
 } from '@expedition/shared-types';
@@ -53,7 +54,8 @@ export interface SkillOutcomePreview {
   damageSegments: number;
   chaseSegments: number;
   comboSteps: readonly SkillComboStepPreview[];
-  nextRelay?: SkillNextRelayPreview | undefined;
+  targetRoute: readonly string[];
+  nextRelays: readonly SkillNextRelayPreview[];
   units: readonly SkillOutcomeUnitPreview[];
 }
 
@@ -64,12 +66,22 @@ export interface SkillComboStepPreview {
   damageSegments: number;
   chaseSegments: number;
   chaseDamage: number;
+  missingStatus?: StatusLayer | undefined;
+  eventIds: readonly number[];
 }
 
 export interface SkillNextRelayPreview {
   actorId: string;
+  readySkillIds: readonly string[];
   newlyReadySkillIds: readonly string[];
 }
+
+const missingStatus = (triggerId: TriggerCondition): StatusLayer | undefined => {
+  if (triggerId === 'target_burning' || triggerId.includes('burn')) return 'burn';
+  if (triggerId === 'target_poisoned' || triggerId.includes('poison')) return 'poison';
+  if (triggerId === 'target_tide' || triggerId.includes('tide')) return 'tide';
+  return undefined;
+};
 
 const damageEvents = (events: readonly GuildBattleEvent[]) =>
   events.filter(
@@ -140,6 +152,10 @@ export function previewSkillOutcome(input: ResolveSkillInput): SkillOutcomePrevi
       damageSegments: segments.length,
       chaseSegments: chases.length,
       chaseDamage: chases.reduce((sum, { amount = 0 }) => sum + amount, 0),
+      ...(readiness.get(component.id) === 'not-ready' && missingStatus(component.triggerId)
+        ? { missingStatus: missingStatus(component.triggerId) }
+        : {}),
+      eventIds: events.map(({ id }) => id),
     };
   });
   const units = input.battle.units.map((before) => {
@@ -150,20 +166,34 @@ export function previewSkillOutcome(input: ResolveSkillInput): SkillOutcomePrevi
   const chaseEvents = allDamageEvents.filter(
     ({ parentCausalId }) => parentCausalId !== undefined && chaseCausalIds.has(parentCausalId),
   );
-  const nextActorId = resolved.battle.roundOrder?.activeAdventurerId;
-  const nextActor = resolved.battle.units.find(
-    ({ id, side, currentHp }) => id === nextActorId && side === 'heroes' && currentHp > 0,
-  );
   const afterTargetId = resolved.battle.selectedTargetId ?? input.targetId;
-  const newlyReadySkillIds =
-    nextActor?.skillIds.filter((skillId) => {
-      const nextSkill = input.content.skills[skillId];
-      if (!nextSkill) return false;
-      return (
-        readyCount(resolved.battle, nextActor.id, afterTargetId, nextSkill) >
-        readyCount(input.battle, nextActor.id, input.targetId, nextSkill)
-      );
-    }) ?? [];
+  const actedIds = new Set(resolved.battle.roundOrder?.actedIds ?? []);
+  const nextRelays = resolved.battle.units
+    .filter(({ id, side, currentHp }) => side === 'heroes' && currentHp > 0 && !actedIds.has(id))
+    .map((candidate): SkillNextRelayPreview => {
+      const readySkillIds = candidate.skillIds.filter((skillId) => {
+        const nextSkill = input.content.skills[skillId];
+        return (
+          nextSkill !== undefined &&
+          readyCount(resolved.battle, candidate.id, afterTargetId, nextSkill) > 0
+        );
+      });
+      const newlyReadySkillIds = readySkillIds.filter((skillId) => {
+        const nextSkill = input.content.skills[skillId]!;
+        return (
+          readyCount(resolved.battle, candidate.id, afterTargetId, nextSkill) >
+          readyCount(input.battle, candidate.id, input.targetId, nextSkill)
+        );
+      });
+      return { actorId: candidate.id, readySkillIds, newlyReadySkillIds };
+    })
+    .filter(({ readySkillIds }) => readySkillIds.length > 0);
+  const targetRoute = resolved.events
+    .filter(
+      ({ kind, targetId, parentCausalId }) =>
+        (kind === 'damage' || kind === 'reaction') && targetId && parentCausalId === undefined,
+    )
+    .map(({ targetId }) => targetId!);
   return {
     actorId: input.actorId,
     skillId: input.skillId,
@@ -184,7 +214,8 @@ export function previewSkillOutcome(input: ResolveSkillInput): SkillOutcomePrevi
     damageSegments: allDamageEvents.length,
     chaseSegments: chaseEvents.length,
     comboSteps,
-    ...(nextActor ? { nextRelay: { actorId: nextActor.id, newlyReadySkillIds } } : {}),
+    targetRoute,
+    nextRelays,
     units,
   };
 }

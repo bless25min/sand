@@ -119,6 +119,7 @@ export function CombatBattlefield({
             data-element={currentBeat.element}
             aria-hidden="true"
           >
+            {currentBeat.kind === 'total' && <small>合計</small>}
             {currentBeat.visual.number !== undefined && (
               <strong key={currentBeat.id}>
                 {currentBeat.visual.number > 0 ? '+' : ''}

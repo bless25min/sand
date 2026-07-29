@@ -1,4 +1,4 @@
-import type { GuildGameContent, SkillDropPool } from '@expedition/shared-types';
+import type { GuildGameContent, QualityRank, SkillDropPool } from '@expedition/shared-types';
 
 import type { RandomSource } from '../../rng/random-source';
 import { createOwnedSkill } from '../skills/create-owned-skill';
@@ -8,6 +8,7 @@ export function generateSkillDrop(
   sequence: number,
   content: GuildGameContent,
   random: RandomSource,
+  qualityRank: QualityRank = 1,
 ) {
   const element = pool.elements[random.nextInt(0, pool.elements.length - 1)]!;
   const specialization =
@@ -18,6 +19,7 @@ export function generateSkillDrop(
     id: `skill:${pool.id}:${sequence}:${formId}`,
     formId,
     content,
+    qualityRank,
     sourceHuntId: pool.id,
     roll: ({ min, max }) => random.nextInt(min, max),
   });

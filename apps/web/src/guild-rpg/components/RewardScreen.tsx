@@ -10,18 +10,22 @@ import {
   triggerName,
 } from '../content-labels';
 import { createFirstHuntCoach, isFirstHuntCoachFocus } from '../onboarding/first-hunt-coach';
+import { recommendEquipment, recommendSkill } from '../presentation/loot-synergy-presentation';
 import type { GuildRpgAction, GuildRpgState } from '../state/game-reducer';
 
-const RARITY_SCORE = {
-  common: 1,
-  uncommon: 2,
-  rare: 3,
-  epic: 4,
-  legendary: 5,
-} as const;
+const SKILL_RARITY: Readonly<Record<number, GuildItemRarity>> = {
+  1: 'common',
+  2: 'uncommon',
+  3: 'rare',
+  4: 'epic',
+  5: 'legendary',
+};
 
-const skillRarity = (stars: number): GuildItemRarity =>
-  stars >= 3 ? 'legendary' : stars === 2 ? 'rare' : 'common';
+const skillQualityRank = (skill: GuildSkillItem) =>
+  Math.max(...skill.components.map(({ qualityRank }) => qualityRank));
+
+const skillRarity = (skill: GuildSkillItem): GuildItemRarity =>
+  SKILL_RARITY[skillQualityRank(skill)] ?? 'common';
 
 type LootEntry =
   | { kind: 'equipment'; id: string; item: HuntEquipmentItem }
@@ -46,23 +50,9 @@ export function RewardScreen({
     ...rewards.items.map((item) => ({ kind: 'equipment' as const, id: item.id, item })),
     ...rewards.skillDrops.map((skill) => ({ kind: 'skill' as const, id: skill.id, skill })),
   ];
-  const recommendedItem = [...rewards.items].sort(
-    (left, right) =>
-      RARITY_SCORE[right.rarity] - RARITY_SCORE[left.rarity] ||
-      right.qualityScore - left.qualityScore,
-  )[0];
-  const recommendedSkill = [...rewards.skillDrops].sort(
-    (left, right) =>
-      right.components.reduce(
-        (sum, component) => sum + component.power + component.triggerAddition,
-        0,
-      ) -
-      left.components.reduce(
-        (sum, component) => sum + component.power + component.triggerAddition,
-        0,
-      ),
-  )[0];
-  const recommendedIds = new Set([recommendedItem?.id, recommendedSkill?.id]);
+  const recommendedItem = recommendEquipment(rewards.items, state.profile, GUILD_GAME_CONTENT);
+  const recommendedSkill = recommendSkill(rewards.skillDrops, state.profile);
+  const recommendedIds = new Set([recommendedItem?.entry.id, recommendedSkill?.entry.id]);
   const [selectedId, setSelectedId] = useState<string>();
   const selected = entries.find(({ id }) => id === selectedId);
   const coach = createFirstHuntCoach(state.preferences.tutorial, state.tutorialStep, {
@@ -124,6 +114,15 @@ export function RewardScreen({
         </div>
       )}
 
+      <div className="gr-material-strip" data-material-count={rewards.materials.length}>
+        <span>素材</span>
+        {rewards.materials.map((material) => (
+          <b key={material.id}>
+            {material.name} +{material.quantity}
+          </b>
+        ))}
+      </div>
+
       <section className="gr-loot-showcase" aria-label="本次全部戰利品">
         <header>
           <h2>全部掉落</h2>
@@ -141,7 +140,7 @@ export function RewardScreen({
                 data-loot-item={entry.id}
                 data-loot-kind={entry.kind}
                 data-loot-active={selectedEntry}
-                data-rarity={equipment?.rarity ?? skillRarity(skill!.stars)}
+                data-rarity={equipment?.rarity ?? skillRarity(skill!)}
                 aria-pressed={selectedEntry}
                 aria-label={`查看${equipment?.name ?? skill?.name}詳情`}
                 key={entry.id}
@@ -157,7 +156,7 @@ export function RewardScreen({
                 <small>
                   {equipment
                     ? `${rarityName(equipment.rarity)} · ${equipment.mainStat.value}`
-                    : `${skill!.stars}★ · ${first!.power}`}
+                    : `${rarityName(skillRarity(skill!))} · ${skill!.stars}★`}
                 </small>
                 {recommendedIds.has(entry.id) && <i aria-label="推薦">★</i>}
               </button>
@@ -165,15 +164,6 @@ export function RewardScreen({
           })}
         </div>
       </section>
-
-      <div className="gr-material-strip" data-material-count={rewards.materials.length}>
-        <span>素材</span>
-        {rewards.materials.map((material) => (
-          <b key={material.id}>
-            {material.name} +{material.quantity}
-          </b>
-        ))}
-      </div>
 
       {selected && (
         <aside className="gr-loot-detail-drawer" aria-live="polite">
@@ -190,6 +180,9 @@ export function RewardScreen({
                 {rarityName(selected.item.rarity)} · {equipmentSlotName(selected.item.slot)}
               </span>
               <strong>{selected.item.name}</strong>
+              {recommendedItem?.entry.id === selected.item.id && (
+                <em>{recommendedItem.explanation}</em>
+              )}
               <p>
                 {selected.item.mainStat.stat} +{selected.item.mainStat.value}
               </p>
@@ -231,6 +224,9 @@ export function RewardScreen({
                 {selected.skill.stars}★ · {elementName(selected.skill.components[0].element)}
               </span>
               <strong>{selected.skill.name}</strong>
+              {recommendedSkill?.entry.id === selected.skill.id && (
+                <em>{recommendedSkill.explanation}</em>
+              )}
               <p>
                 {specializationName(selected.skill.components[0].specializationId)} →{' '}
                 {triggerName(selected.skill.components[0].triggerId)}

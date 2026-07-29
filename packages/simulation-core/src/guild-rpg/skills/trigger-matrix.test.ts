@@ -35,7 +35,7 @@ const unit = (id: string, side: BattleUnit['side'], hp = 160): BattleUnit => ({
   id,
   name: id,
   side,
-  stats: { hp, attack: side === 'heroes' ? 20 : 10, defense: 4, speed: 10, healing: 8 },
+  stats: { hp, attack: 1, defense: 1, speed: 1, healing: 1 },
   currentHp: hp,
   gauge: 0,
   threat: 0,
@@ -69,11 +69,12 @@ const component = (
   overrides: Partial<SkillComponent> = {},
 ): SkillComponent => ({
   id: `${element}-${specializationId}-${triggerId}`,
+  qualityRank: 5,
   formId: `${element}.${specializationId}.${triggerId}`,
   element,
   specializationId,
   triggerId,
-  power: 8,
+  power: 5,
   layerStrength: 3,
   triggerAddition: 4,
   repeatCount: 3,
@@ -131,18 +132,15 @@ describe('deterministic skill engine', () => {
     expect(
       turns[4]!.battle.units.filter(({ side, currentHp }) => side === 'enemies' && currentHp > 0),
     ).toHaveLength(0);
-    expect(
-      turns[5]!.events.some(({ kind }) =>
-        ['damage', 'reaction', 'status_applied', 'passive'].includes(kind),
-      ),
-    ).toBe(false);
+    expect(turns[5]!.events.some(({ kind }) => kind === 'skill_cast')).toBe(true);
+    expect(turns[5]!.events.some(({ kind }) => kind === 'overkill')).toBe(true);
     expect(turns[5]!.events).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ kind: 'relay', amount: 6 }),
-        expect.objectContaining({ kind: 'finisher' }),
+        expect.objectContaining({ kind: 'finisher', causalDepth: 1 }),
         expect.objectContaining({ kind: 'victory' }),
       ]),
     );
+    expect(turns[5]!.events.some(({ kind }) => kind === 'relay')).toBe(false);
     expect(turns[5]!.events.slice(-2).map(({ kind }) => kind)).toEqual(['finisher', 'victory']);
     expect(state).toMatchObject({ status: 'victory', selectedTargetId: 'enemy-a' });
     expect(state.skillHistory).toHaveLength(6);
@@ -176,7 +174,7 @@ describe('deterministic skill engine', () => {
     expect(result.battle.roundOrder?.activeAdventurerId).toBe('lyra');
   });
 
-  it('applies every matched trigger addition as a real independent damage event', () => {
+  it('applies one matched trigger addition per component instead of multiplying it by hit count', () => {
     const selected = skill(component('fire', 'multistrike', 'on_hit'));
     const result = resolveSkill({
       battle: battle(),
@@ -186,9 +184,9 @@ describe('deterministic skill engine', () => {
       content: content([selected]),
     });
 
-    expect(result.events.filter(({ kind }) => kind === 'triggered')).toHaveLength(3);
-    expect(result.events.filter(({ kind }) => kind === 'damage')).toHaveLength(6);
-    expect(result.battle.units.find(({ id }) => id === 'enemy-a')?.currentHp).toBe(76);
+    expect(result.events.filter(({ kind }) => kind === 'triggered')).toHaveLength(1);
+    expect(result.events.filter(({ kind }) => kind === 'damage')).toHaveLength(4);
+    expect(result.battle.units.find(({ id }) => id === 'enemy-a')?.currentHp).toBe(143);
   });
 
   it('turns every consumed layer into one separate additive burst instead of a multiplier', () => {
@@ -211,7 +209,7 @@ describe('deterministic skill engine', () => {
     });
 
     expect(result.events.filter(({ kind }) => kind === 'damage')).toHaveLength(5);
-    expect(result.battle.units.find(({ id }) => id === 'enemy-a')?.currentHp).toBe(476);
+    expect(result.battle.units.find(({ id }) => id === 'enemy-a')?.currentHp).toBe(491);
     expect(result.battle.units.find(({ id }) => id === 'enemy-a')?.statusLayers?.burn).toBe(3);
   });
 
@@ -222,6 +220,9 @@ describe('deterministic skill engine', () => {
       skill(component('water', 'empower', 'target_poisoned')),
     ];
     let state = battle(600);
+    state.units = state.units.map((entry) =>
+      entry.id === 'elin' ? { ...entry, currentHp: 150 } : entry,
+    );
     const allEvents = [];
 
     for (const [index, selected] of skills.entries()) {
@@ -389,7 +390,7 @@ describe('deterministic skill engine', () => {
     expect(result.events.filter(({ kind }) => kind === 'echo').length).toBeGreaterThanOrEqual(2);
   });
 
-  it('adds one more independent relay echo at every hero and ends the sixth with a finisher', () => {
+  it('does not invent relay damage and summarizes only the six actors actual damage', () => {
     const selected = skill(component('fire', 'stack', 'after_skill'));
     let state = battle(4_000);
     const echoCounts: number[] = [];
@@ -412,19 +413,19 @@ describe('deterministic skill engine', () => {
       allEvents.push(...result.events);
     }
 
-    expect(echoCounts).toEqual([0, 1, 2, 3, 4, 5]);
-    expect(allEvents).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          kind: 'finisher',
-          actorId: 'kyro',
-          targetId: 'enemy-a',
-          element: 'fire',
-          specializationId: 'stack',
-          triggerId: 'after_skill',
-        }),
-      ]),
-    );
+    expect(echoCounts).toEqual([0, 0, 0, 0, 0, 0]);
+    const finisher = allEvents.find(({ kind }) => kind === 'finisher');
+    const causalDamage = allEvents
+      .filter(({ kind }) => kind === 'damage' || kind === 'reaction')
+      .reduce((sum, { amount = 0 }) => sum + amount, 0);
+    expect(finisher).toMatchObject({
+      actorId: 'kyro',
+      targetId: 'enemy-a',
+      element: 'fire',
+      specializationId: 'stack',
+      triggerId: 'after_skill',
+      amount: causalDamage,
+    });
   });
 
   it('resolves every hero delivery passive as a real traceable event', () => {
@@ -523,11 +524,9 @@ describe('deterministic skill engine', () => {
   });
 
   it('retargets remaining hits, preserves overkill, and echoes chains on a lone enemy', () => {
-    const selected = skill(
-      component('fire', 'chain', 'lone_target', { repeatCount: 4, power: 30 }),
-    );
-    const state = battle(20);
-    state.units = [...state.units, unit('enemy-b', 'enemies', 20)];
+    const selected = skill(component('fire', 'chain', 'lone_target', { repeatCount: 4, power: 5 }));
+    const state = battle(4);
+    state.units = [...state.units, unit('enemy-b', 'enemies', 4)];
 
     const result = resolveSkill({
       battle: state,
@@ -570,7 +569,7 @@ describe('deterministic skill engine', () => {
     };
     const guard = unit('guard', 'enemies');
 
-    expect(calculateHuntDamage(target, [target, guard], 100, ['ricochet'])).toBe(106);
+    expect(calculateHuntDamage(target, [target, guard], 100, ['ricochet'])).toBe(100);
   });
 
   it('collapses a repeated causal cycle into one finite Infinite Engine event', () => {

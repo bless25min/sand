@@ -88,6 +88,7 @@ export function BattlefieldUnitControls({
             data-targeted={unit.side === 'enemies' && battle.selectedTargetId === unit.id}
             data-current={unit.side === 'heroes' && active}
             data-next={unit.side === 'heroes' && unit.state === 'next'}
+            data-combo-ready={unit.side === 'heroes' && unit.comboReady}
             data-acted={unit.side === 'heroes' && acted}
             data-defeated={defeated}
             data-cast-ready={castReady}

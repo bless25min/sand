@@ -74,20 +74,14 @@ async function expectBattlefieldVisible(page: Page, viewportLabel = 'current vie
   await expect(battlefield).toBeVisible();
   await expect(battlefield.locator('[data-hero-formation]')).toHaveCount(6);
   await expect(battlefield.locator('[data-enemy-formation]')).toHaveCount(3);
-  const focus = page.locator('[data-battle-focus-strip="true"]');
-  await expect(focus).toBeVisible();
-  await expect(focus.locator('[data-focus-actor]')).toHaveCount(1);
-  await expect(focus.locator('[data-focus-target]')).toHaveCount(1);
+  await expect(page.locator('[data-battle-focus-strip="true"]')).toHaveCount(0);
   await expectNoPairwiseOverlap(page, '[data-battle-unit]');
   const box = await battlefield.boundingBox();
   expect(box?.height ?? 0).toBeGreaterThanOrEqual(360);
-  const focusBox = await focus.boundingBox();
   const command = await page.locator('.gr-command-dock').boundingBox();
   expect(command).not.toBeNull();
   expect(box).not.toBeNull();
-  expect(focusBox).not.toBeNull();
-  expect(box!.y + box!.height).toBeLessThanOrEqual(focusBox!.y + 1);
-  expect(focusBox!.y + focusBox!.height).toBeLessThanOrEqual(command!.y + 1);
+  expect(box!.y + box!.height).toBeLessThanOrEqual(command!.y + 1);
   const horizontalOverlap =
     Math.min(command!.x + command!.width, box!.x + box!.width) - Math.max(command!.x, box!.x);
   const verticalOverlap =
@@ -121,7 +115,8 @@ async function castVisibleSkill(page: Page, castOnBattlefieldTarget = false) {
   await expect(skill).toBeVisible();
   await expect(skill).toHaveAttribute('data-skill-segments', /\d+/);
   await expect(skill).toHaveAttribute('data-skill-total', /\d+/);
-  await expect(skill).toHaveAttribute('data-trigger-summary', /→|連招/);
+  await expect(skill).toHaveAttribute('data-combo-ready', /\d+\/\d+/);
+  await expect(skill.locator('[data-combo-node]')).not.toHaveCount(0);
   const execution = (await skill.getAttribute('data-execution')) === 'true';
   const finalExecution = (await skill.getAttribute('data-final-execution')) === 'true';
   expect(
@@ -137,32 +132,22 @@ async function castVisibleSkill(page: Page, castOnBattlefieldTarget = false) {
       'true',
     );
     if (finalExecution) {
-      await expect(page.locator('[data-execution-preview]')).toContainText('處刑預演');
-      await expect(page.locator('[data-execution-preview]')).toContainText('回收5次');
-      await expect(page.locator('[data-execution-preview]')).toContainText(/處刑\d+/);
+      await expect(page.locator('[data-execution-preview]')).toContainText('終結預演');
+      await expect(page.locator('[data-execution-preview]')).toContainText(/本輪\d+/);
     } else {
-      await expect(page.locator('[data-execution-preview]')).toContainText('餘震回收');
-      await expect(page.locator('[data-execution-preview]')).toContainText(/回收[1-4]次/);
-      await expect(page.locator('[data-execution-preview]')).toContainText('第六棒蓄勢');
-      await expect(page.locator('[data-execution-preview]')).not.toContainText('處刑0');
+      await expect(page.locator('[data-execution-preview]')).toContainText('破勢預演');
+      await expect(page.locator('[data-execution-preview]')).toContainText('不新增假傷害');
     }
-    await expect(page.locator('[data-execution-preview]')).toContainText(/OVERKILL \+\d+/);
-    await expect(page.locator('[data-skill-preview] [data-combo-step]')).toHaveCount(0);
-    await expect(page.locator('[data-skill-preview]')).not.toContainText('0段');
-    await expect(page.locator('[data-skill-preview]')).not.toContainText('基本命中');
+    await expect(page.locator('[data-skill-preview] [data-combo-node]')).toHaveCount(0);
   } else {
-    expect(await page.locator('[data-skill-preview] [data-combo-step]').count()).toBeGreaterThan(0);
-    await expect(page.locator('[data-skill-preview] [data-causal-step]')).toHaveCount(0);
+    expect(await page.locator('[data-skill-preview] [data-combo-node]').count()).toBeGreaterThan(0);
     await expect(page.locator('[data-skill-preview] .gr-preview-details')).not.toHaveAttribute(
       'open',
       '',
     );
     await expect(page.locator('[data-skill-preview] [data-preview-total]')).toHaveCount(1);
-    await expect(page.locator('[data-skill-preview]')).toContainText('本次：');
-    await expect(page.locator('[data-skill-preview]')).toContainText('段');
-    await expect(page.locator('[data-skill-preview]')).toContainText('追擊');
-    await expect(page.locator('[data-skill-preview]')).toContainText('總傷');
-    await expect(page.locator('[data-skill-preview]')).toContainText('接棒：');
+    await expect(page.locator('[data-skill-preview] [data-preview-endpoints]')).toHaveCount(1);
+    await expect(page.locator('[data-skill-preview] [data-preview-route]')).toHaveCount(1);
   }
   expect(await page.locator('[data-skill-preview]').innerText()).not.toContain('×');
   await expect(page.locator('[data-pixi-combat-stage="true"]')).toHaveAttribute(
@@ -252,10 +237,9 @@ test('a new player understands combat, sees six escalating relays, and completes
   await expect(page.locator('.gr-battle-guide-strip')).toBeVisible();
   await expect(page.locator('button[data-battle-skill]')).toHaveCount(6);
   const skillText = (await page.locator('button[data-battle-skill]').allTextContents()).join('');
-  expect(skillText).not.toMatch(/威力|疊層|追燃|×/);
-  expect(skillText).toContain('段');
-  expect(skillText).toContain('總傷');
-  expect(skillText).toContain('開戰');
+  expect(skillText).not.toMatch(/威力|疊層|追燃|段|總傷|×/);
+  await expect(page.locator('button[data-battle-skill] [data-combo-node]')).not.toHaveCount(0);
+  await expect(page.locator('button[data-battle-skill] [data-skill-hit-pip]')).not.toHaveCount(0);
   await expectMinTouchTarget(page, 'button[data-battle-skill]');
   await expectFullyInViewport(page, 'button[data-battle-skill="6"]');
   await expect(page.locator('[data-combat-battlefield]')).toHaveAttribute(
@@ -294,14 +278,9 @@ test('a new player understands combat, sees six escalating relays, and completes
     'lorne',
     'kyro',
   ]);
-  expect(firstRelays.map(({ relay }) => relay)).toEqual([1, 2, 3, 4, 5, 6]);
-  const firstExecution = firstRelays.findIndex(({ execution }) => execution);
-  expect(firstExecution).toBeGreaterThanOrEqual(0);
-  expect(firstRelays.slice(firstExecution).every(({ execution }) => execution)).toBe(true);
-  expect(firstRelays.some(({ execution, finalExecution }) => execution && !finalExecution)).toBe(
-    true,
-  );
-  expect(firstRelays.at(-1)?.finalExecution).toBe(true);
+  expect(firstRelays[0]?.relay).toBe(1);
+  expect(Math.max(...firstRelays.map(({ relay }) => relay))).toBeGreaterThanOrEqual(3);
+  expect(firstRelays.every(({ relay }) => relay >= 1 && relay <= 6)).toBe(true);
   await expect(page.locator('body')).not.toContainText('battle_open');
   await expect(page.locator('body')).not.toContainText('已播放');
   await expect(page.getByRole('button', { name: '收下全部戰利品' })).toBeEnabled();
@@ -309,9 +288,12 @@ test('a new player understands combat, sees six escalating relays, and completes
 
   await expect(page.locator('.gr-rewards')).toBeVisible();
   await expect(page.getByText('戰利品入袋', { exact: true })).toBeVisible();
-  await expect(page.locator('[data-loot-item]')).toHaveCount(5);
+  expect(await page.locator('[data-loot-item]').count()).toBeGreaterThanOrEqual(6);
+  expect(await page.locator('[data-loot-item]').count()).toBeLessThanOrEqual(7);
   await expect(page.locator('[data-loot-item][data-loot-kind="skill"]')).toHaveCount(1);
-  await expect(page.locator('[data-loot-item][data-loot-kind="equipment"]')).toHaveCount(4);
+  expect(
+    await page.locator('[data-loot-item][data-loot-kind="equipment"]').count(),
+  ).toBeGreaterThanOrEqual(5);
   await expect(page.locator('[data-pager="loot"]')).toHaveCount(0);
   await expect(page.locator('.gr-loot-detail-drawer')).toHaveCount(0);
   await expectSingleScreen(page);
@@ -393,10 +375,10 @@ test('migrates a v3 save, preserves its backup, and keeps every main page usable
 
   await expect(page.locator('.gr-status-line')).toContainText('公會紀錄已載入。');
   expect(
-    await page.evaluate(() => JSON.parse(localStorage.getItem('expedition:guild-rpg:v4')!).version),
-  ).toBe(4);
+    await page.evaluate(() => JSON.parse(localStorage.getItem('expedition:guild-rpg:v5')!).version),
+  ).toBe(5);
   expect(
-    await page.evaluate(() => localStorage.getItem('expedition:guild-rpg:v3:backup')),
+    await page.evaluate(() => localStorage.getItem('expedition:guild-rpg:v4:backup')),
   ).not.toBeNull();
 
   for (const pageId of ['quest', 'party', 'skills', 'equipment']) {
@@ -518,12 +500,12 @@ test('exposes campaign mastery and starts the selected ascension without mobile 
   }, questIds);
   await page.goto('/');
   await page.waitForFunction(() => {
-    const profile = JSON.parse(localStorage.getItem('expedition:guild-rpg:v4') ?? 'null');
-    return profile?.version === 4;
+    const profile = JSON.parse(localStorage.getItem('expedition:guild-rpg:v5') ?? 'null');
+    return profile?.version === 5;
   });
   await page.waitForTimeout(50);
   await page.evaluate(() => {
-    const key = 'expedition:guild-rpg:v4';
+    const key = 'expedition:guild-rpg:v5';
     const profile = JSON.parse(localStorage.getItem(key)!);
     profile.questRecords.border_pack = {
       ...profile.questRecords.border_pack,
@@ -535,7 +517,7 @@ test('exposes campaign mastery and starts the selected ascension without mobile 
   expect(
     await page.evaluate(
       () =>
-        JSON.parse(localStorage.getItem('expedition:guild-rpg:v4')!).questRecords.border_pack
+        JSON.parse(localStorage.getItem('expedition:guild-rpg:v5')!).questRecords.border_pack
           .bestOverkill,
     ),
   ).toBe(324);

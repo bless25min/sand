@@ -3,7 +3,16 @@ import type { BattleEventKind, GuildBattleEvent } from '@expedition/shared-types
 import { projectVisualEvents, type VisualEvent } from './visual-events';
 
 type CombatBeatKind =
-  'cast' | 'hit' | 'status' | 'chain' | 'relay' | 'defeat' | 'finisher' | 'support' | 'info';
+  | 'cast'
+  | 'hit'
+  | 'status'
+  | 'chain'
+  | 'relay'
+  | 'defeat'
+  | 'finisher'
+  | 'support'
+  | 'total'
+  | 'info';
 
 export interface CombatBeat {
   id: string;
@@ -63,6 +72,7 @@ const DELAY_BY_KIND: Readonly<Record<CombatBeatKind, number>> = {
   defeat: 260,
   finisher: 360,
   support: 150,
+  total: 220,
   info: 100,
 };
 
@@ -113,6 +123,59 @@ const mergeSecondaryIntoDecisive = (beats: readonly CombatBeat[]): readonly Comb
           }
         : beat;
     });
+};
+
+const appendDamageTotal = (
+  beats: readonly CombatBeat[],
+  reducedMotion: boolean,
+): readonly CombatBeat[] => {
+  const damageBeats = beats.filter(
+    ({ eventKind, amount }) =>
+      (eventKind === 'damage' || eventKind === 'reaction') && (amount ?? 0) > 0,
+  );
+  if (damageBeats.length < 2) return beats;
+  const total = damageBeats.reduce((sum, { amount = 0 }) => sum + amount, 0);
+  const last = damageBeats.at(-1)!;
+  const lastIndex = beats.lastIndexOf(last);
+  const sourceEventIds = damageBeats.flatMap(({ sourceEventIds }) => sourceEventIds);
+  const totalBeat: CombatBeat = {
+    id: `${sourceEventIds.join('+')}:total`,
+    sourceEventIds,
+    kind: 'total',
+    label: `合計 ${total}`,
+    relay: Math.max(...damageBeats.map(({ relay }) => relay)),
+    delayMs: reducedMotion ? 0 : DELAY_BY_KIND.total,
+    eventKind: 'damage',
+    amount: total,
+    visual: {
+      ...last.visual,
+      id: `${last.visual.id}:total`,
+      phase: 'aftermath',
+      headline: '合計',
+      detail: `合計 ${total}`,
+      route: 'none',
+      camera: 'punch',
+      durationMs: reducedMotion ? 0 : DELAY_BY_KIND.total,
+      number: -total,
+    },
+    ...(last.actorId ? { actorId: last.actorId } : {}),
+    ...(last.element ? { element: last.element } : {}),
+  };
+  return [...beats.slice(0, lastIndex + 1), totalBeat, ...beats.slice(lastIndex + 1)];
+};
+
+const capPlaybackDuration = (
+  beats: readonly CombatBeat[],
+  reducedMotion: boolean,
+): readonly CombatBeat[] => {
+  if (reducedMotion) return beats.map((beat) => ({ ...beat, delayMs: 0 }));
+  const total = beats.reduce((sum, { delayMs }) => sum + delayMs, 0);
+  if (total <= 2_000) return beats;
+  const scale = 2_000 / total;
+  return beats.map((beat) => ({
+    ...beat,
+    delayMs: Math.max(16, Math.floor(beat.delayMs * scale)),
+  }));
 };
 
 export function relayPresentation(relay: number): RelayPresentation {
@@ -187,9 +250,11 @@ export function createCombatBeats(
         kind,
         label,
         relay:
-          event.kind === 'relay' && event.amount !== undefined
-            ? relayPresentation(event.amount).relay
-            : normalizedRelay,
+          event.causalDepth !== undefined
+            ? relayPresentation(event.causalDepth).relay
+            : event.kind === 'relay' && event.amount !== undefined
+              ? relayPresentation(event.amount).relay
+              : normalizedRelay,
         delayMs: reducedMotion ? 0 : Math.min(DELAY_BY_KIND[kind], visual.durationMs),
         eventKind: event.kind,
         visual,
@@ -212,7 +277,10 @@ export function createCombatBeats(
       delayMs: hasLaterSegment ? Math.max(beat.delayMs, beat.visual.durationMs) : 170,
     };
   });
-  return mergeSecondaryIntoDecisive(timed);
+  return capPlaybackDuration(
+    appendDamageTotal(mergeSecondaryIntoDecisive(timed), reducedMotion),
+    reducedMotion,
+  );
 }
 
 export function advanceCombatPlayback(

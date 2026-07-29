@@ -29,13 +29,16 @@ describe('complete RPG onboarding coach', () => {
     }
   });
 
-  it('names the acting hero, relay count, and six immediately available skills', () => {
+  it('names the acting hero and teaches one visible causal link at a time', () => {
     expect(createFirstHuntCoach('active', 'relay_1', { heroName: '布蘭' })).toMatchObject({
       title: '第 1 棒：布蘭',
       focusId: 'battle:skill',
     });
     expect(createFirstHuntCoach('active', 'relay_1', { heroName: '布蘭' })?.message).toContain(
-      '六個技能',
+      '留下',
+    );
+    expect(createFirstHuntCoach('active', 'relay_2', { heroName: '萊拉' })?.message).toContain(
+      '亮起',
     );
   });
 

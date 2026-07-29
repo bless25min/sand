@@ -1,5 +1,10 @@
 import type { SkillOutcomePreview } from '@expedition/simulation-core';
-import type { BattleUnit, GuildSkillItem, StatusLayers } from '@expedition/shared-types';
+import type {
+  BattleUnit,
+  GuildBattleEvent,
+  GuildSkillItem,
+  StatusLayers,
+} from '@expedition/shared-types';
 
 import { createSkillTilePresentation } from '../presentation/skill-tile-presentation';
 
@@ -9,13 +14,27 @@ const STATUS_LABELS: Readonly<Record<keyof StatusLayers, string>> = {
   tide: '潮',
 };
 
-const statusChanges = (
-  before: StatusLayers,
-  after: StatusLayers,
-): readonly { label: string; before: number; after: number }[] =>
-  (Object.keys(STATUS_LABELS) as (keyof StatusLayers)[])
-    .filter((key) => before[key] !== after[key])
-    .map((key) => ({ label: STATUS_LABELS[key], before: before[key], after: after[key] }));
+const eventLabel = (event: GuildBattleEvent): string => {
+  if (event.kind === 'damage') return `命中 ${event.amount ?? 0}`;
+  if (event.kind === 'reaction') return `反應 ${event.amount ?? 0}`;
+  if (event.kind === 'status_applied') return `留層 ${event.amount ?? 0}`;
+  if (event.kind === 'triggered') return `條件追加 ${event.amount ?? 0}`;
+  if (event.kind === 'core_triggered') return `核心 ${event.amount ?? 0}`;
+  if (event.kind === 'weaken') return `削弱 ${event.amount ?? 0}`;
+  if (event.kind === 'strengthen') return `強化 ${event.amount ?? 0}`;
+  return event.kind;
+};
+
+const statusDelta = (preview: SkillOutcomePreview) => {
+  const target = preview.units.find(({ id }) => id === preview.targetId);
+  if (!target) return [];
+  return (Object.keys(STATUS_LABELS) as (keyof StatusLayers)[])
+    .map((kind) => ({
+      kind,
+      amount: target.afterStatus[kind] - target.beforeStatus[kind],
+    }))
+    .filter(({ amount }) => amount !== 0);
+};
 
 export function SkillOutcomePreviewPanel({
   actor,
@@ -30,64 +49,52 @@ export function SkillOutcomePreviewPanel({
   preview: SkillOutcomePreview;
   units: readonly BattleUnit[];
 }) {
-  const component = skill.components[0];
   const presentation = createSkillTilePresentation(skill, preview);
   const targetPreview = preview.units.find(({ id }) => id === target.id)!;
-  const effectiveDefense = Math.max(0, target.stats.defense - (target.defenseReduction ?? 0));
-  const firstHit = Math.max(
-    0,
-    actor.stats.attack + component.power + (actor.strengthened ?? 0) - effectiveDefense,
-  );
-  const affected = preview.units.filter(
-    (unit) =>
-      unit.damage > 0 ||
-      unit.healing > 0 ||
-      statusChanges(unit.beforeStatus, unit.afterStatus).length > 0 ||
-      unit.beforeDefenseReduction !== unit.afterDefenseReduction ||
-      unit.beforeStrengthened !== unit.afterStrengthened,
-  );
-  const relay = preview.nextRelay
-    ? units.find(({ id }) => id === preview.nextRelay?.actorId)
-    : undefined;
-  const totalLabel = presentation.primaryKind === 'healing' ? '總療' : '總傷';
+  const deltas = statusDelta(preview);
 
   if (preview.executionWindow) {
-    const finalExecution = preview.finisherPower > 0;
+    const hasRoundFinisher = preview.finisherPower > 0;
     return (
       <section
         className="gr-skill-outcome-preview gr-skill-outcome-preview--execution"
         data-skill-preview
         data-execution-preview
-        data-final-execution={finalExecution}
+        data-final-execution={hasRoundFinisher}
         data-skill-id={skill.id}
         aria-live="polite"
       >
-        <header>
-          <span aria-hidden="true">{skill.stars}★</span>
-          <strong>{presentation.intentName}</strong>
-          <b className="gr-execution-preview-title">{finalExecution ? '處刑預演' : '餘震回收'}</b>
-        </header>
-        <div
-          className="gr-execution-preview-rail"
-          aria-label={finalExecution ? '第六棒處刑流程' : '破勢接力流程'}
-        >
-          <span>敵軍破勢</span>
-          <i aria-hidden="true">→</i>
-          <strong>回收{preview.relayEchoes}次</strong>
-          <i aria-hidden="true">→</i>
-          <b>{finalExecution ? '全軍終結' : '第六棒蓄勢'}</b>
+        <div className="gr-preview-endpoints" data-preview-endpoints="true">
+          <strong>{actor.name}</strong>
+          <span aria-hidden="true">→</span>
+          <strong>{target.name}</strong>
+          <em>破勢</em>
         </div>
-        <div className="gr-preview-totals gr-preview-totals--execution">
-          <b>
-            {finalExecution ? '處刑' : '餘震'}
-            {finalExecution ? preview.finisherPower : preview.overkill}
-          </b>
-          <strong>OVERKILL +{preview.overkill}</strong>
+        <div className="gr-execution-summary">
+          <b>{hasRoundFinisher ? '終結預演' : '破勢預演'}</b>
+          {hasRoundFinisher ? (
+            <strong>本輪{preview.finisherPower}</strong>
+          ) : (
+            <span>本招不新增假傷害</span>
+          )}
+          {preview.overkill > 0 && <em>OVERKILL +{preview.overkill}</em>}
         </div>
-        <small>{finalExecution ? '再點此技能立即處刑' : '再點此技能回收餘震'}</small>
+        <small>再點同一技能立即施放</small>
       </section>
     );
   }
+
+  const primaryLabel = presentation.primaryKind === 'healing' ? '療' : '傷';
+  const causalEvents = preview.events.filter(
+    ({ kind }) =>
+      kind === 'damage' ||
+      kind === 'reaction' ||
+      kind === 'status_applied' ||
+      kind === 'triggered' ||
+      kind === 'core_triggered' ||
+      kind === 'weaken' ||
+      kind === 'strengthen',
+  );
 
   return (
     <section
@@ -96,97 +103,90 @@ export function SkillOutcomePreviewPanel({
       data-skill-id={skill.id}
       aria-live="polite"
     >
-      <header>
-        <span aria-hidden="true">{skill.stars}★</span>
-        <strong>{presentation.intentName}</strong>
-        <div className="gr-preview-totals">
-          <span>本次：</span>
-          <b>{presentation.segments}段</b>
-          <b>{presentation.chases}追擊</b>
-          <strong data-preview-total={preview.totalDamage}>
-            {totalLabel}
-            {presentation.primaryValue}
-          </strong>
-          {presentation.statusDelta && (
-            <em aria-hidden="true">
-              {STATUS_LABELS[presentation.statusDelta.kind]}
-              {presentation.statusDelta.amount > 0 ? '+' : ''}
-              {presentation.statusDelta.amount}
-            </em>
-          )}
-        </div>
-      </header>
-      <div className="gr-preview-combo-rail" aria-label="技能觸發與效果">
+      <div className="gr-preview-endpoints" data-preview-endpoints="true">
+        <strong>{actor.name}</strong>
+        <span aria-hidden="true">→</span>
+        <strong>{target.name}</strong>
+        <em data-preview-unit={target.id}>
+          {targetPreview.beforeHp} → {targetPreview.afterHp}
+        </em>
+      </div>
+
+      <div className="gr-preview-impact" data-preview-total={preview.totalDamage}>
+        <strong>
+          {primaryLabel}
+          {presentation.primaryValue}
+        </strong>
+        <span className="gr-impact-pips" aria-label={`${preview.damageSegments} 次獨立效果`}>
+          {Array.from({ length: Math.min(6, preview.damageSegments) }, (_, index) => (
+            <i data-impact-pip={index + 1} aria-hidden="true" key={index} />
+          ))}
+        </span>
+        {deltas.map(({ kind, amount }) => (
+          <em key={kind}>
+            {STATUS_LABELS[kind]}
+            {amount > 0 ? '+' : ''}
+            {amount}
+          </em>
+        ))}
+      </div>
+
+      <div className="gr-preview-combo-rail" aria-label="技能條件路徑">
         {presentation.comboSteps.map((step, index) => (
           <div
             className="gr-preview-combo-step"
-            data-combo-step={step.componentId}
+            data-combo-node={index + 1}
+            data-base-ready={index === 0}
             data-readiness={step.readiness}
             key={step.componentId}
           >
-            <span>{step.conditionLabel}</span>
+            <span aria-hidden="true">{step.conditionGlyph}</span>
+            <b>{step.conditionLabel}</b>
             <i>{step.readinessLabel}</i>
-            <b>→ {step.effectLabel}</b>
-            {index < presentation.comboSteps.length - 1 && <em aria-hidden="true">＋</em>}
+            <em>{step.effectLabel}</em>
           </div>
         ))}
       </div>
-      {relay && preview.nextRelay && (
-        <p className="gr-preview-relay">
-          接棒：{relay.name}
-          {preview.nextRelay.newlyReadySkillIds.length > 0
-            ? `新亮${preview.nextRelay.newlyReadySkillIds.length}招`
-            : '，暫無新亮技能'}
-        </p>
-      )}
-      <details className="gr-preview-details">
-        <summary>詳細</summary>
-        <div className="gr-preview-result" data-preview-section="result">
-          <b>結果</b>
-          <strong>
-            {target.name} {targetPreview.beforeHp} → {targetPreview.afterHp}
-          </strong>
-          {preview.overkill > 0 && <span>OVERKILL +{preview.overkill}</span>}
-        </div>
-        <div className="gr-preview-deltas">
-          {affected.map((unit) => {
-            const source = units.find(({ id }) => id === unit.id);
+
+      <div className="gr-preview-route" data-preview-route="true" aria-label="預計攻擊路徑">
+        {preview.targetRoute.map((targetId, index) => {
+          const routed = units.find(({ id }) => id === targetId);
+          return (
+            <span data-route-target={targetId} key={`${targetId}:${index}`}>
+              {index > 0 && <i aria-hidden="true">›</i>}
+              {routed?.name ?? targetId}
+            </span>
+          );
+        })}
+      </div>
+
+      {preview.nextRelays.length > 0 && (
+        <div className="gr-preview-relays" aria-label="可延續接力">
+          {preview.nextRelays.map((relay) => {
+            const unit = units.find(({ id }) => id === relay.actorId);
             return (
-              <span data-preview-unit={unit.id} key={unit.id}>
-                {source?.name ?? unit.id}
-                {unit.damage > 0 ? ` −${unit.damage} HP` : ''}
-                {unit.healing > 0 ? ` +${unit.healing} HP` : ''}
-                {statusChanges(unit.beforeStatus, unit.afterStatus).map(
-                  (change) => ` · ${change.label} ${change.before}→${change.after}`,
-                )}
-                {unit.beforeDefenseReduction !== unit.afterDefenseReduction
-                  ? ` · 防禦降低 ${unit.beforeDefenseReduction}→${unit.afterDefenseReduction}`
-                  : ''}
-                {unit.beforeStrengthened !== unit.afterStrengthened
-                  ? ` · 攻擊增加 ${unit.beforeStrengthened}→${unit.afterStrengthened}`
-                  : ''}
+              <span data-next-relay={relay.actorId} key={relay.actorId}>
+                {unit?.name ?? relay.actorId}
+                <b aria-label={`${relay.readySkillIds.length} 個可接技能`}>
+                  ⚡{relay.readySkillIds.length}
+                </b>
               </span>
             );
           })}
         </div>
-        <div className="gr-preview-formula" data-preview-section="calculation">
-          <b>計算</b>
-          <span>攻擊 {actor.stats.attack}</span>
-          <i>＋</i>
-          <span>技能 {component.power}</span>
-          {(actor.strengthened ?? 0) > 0 && (
-            <>
-              <i>＋</i>
-              <span>強化 {actor.strengthened}</span>
-            </>
-          )}
-          <i>－</i>
-          <span>防禦 {effectiveDefense}</span>
-          <i>＝</i>
-          <strong>基本命中 {firstHit}</strong>
+      )}
+
+      <details className="gr-preview-details">
+        <summary>事件</summary>
+        <div className="gr-preview-events">
+          {causalEvents.slice(0, 12).map((event) => (
+            <span data-causal-event={event.id} key={event.id}>
+              {eventLabel(event)}
+            </span>
+          ))}
         </div>
       </details>
-      <small>再點此技能施放；點其他敵人可改變目標並施放</small>
+      <small>再點技能施放 · 點敵人換目標並施放</small>
     </section>
   );
 }

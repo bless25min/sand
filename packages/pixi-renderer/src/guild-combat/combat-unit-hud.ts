@@ -3,8 +3,10 @@ import type { StatusLayers } from '@expedition/shared-types';
 import type { GuildCombatSceneUnit } from './contracts';
 
 export interface CombatUnitHud {
+  nameLabel: string;
   hpLabel: string;
   projectedHpLabel: string | undefined;
+  statLabel: string;
   statusPips: readonly string[];
   impactLabel: string | undefined;
 }
@@ -29,8 +31,10 @@ export function createCombatUnitHud(unit: GuildCombatSceneUnit): CombatUnitHud {
         : undefined;
 
   return {
+    nameLabel: unit.name,
     hpLabel: `${currentHp}/${maxHp}`,
     projectedHpLabel: unit.preview ? `${currentHp} → ${unit.preview.afterHp}` : undefined,
+    statLabel: `攻${unit.attack ?? 0} 防${Math.max(0, (unit.defense ?? 0) - (unit.defenseReduction ?? 0))}`,
     statusPips,
     impactLabel,
   };

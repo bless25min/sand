@@ -9,6 +9,7 @@ import type {
 
 import type { RandomSource } from '../../rng/random-source';
 import { generateSkillDrop } from '../progression/generate-skill-drop';
+import { clampQualityRank, QUALITY_RANK_BY_RARITY } from '../progression/quality-rank';
 
 const RARITY_LABEL: Readonly<Record<GuildItemRarity, string>> = {
   common: '樸素',
@@ -41,29 +42,27 @@ export function generateEquipmentItem(
   const base = content.equipmentBases[random.nextInt(0, content.equipmentBases.length - 1)];
   if (!base) throw new Error('Equipment base content is empty');
   const rarity = rarityForRoll(random.next());
+  const qualityRank = QUALITY_RANK_BY_RARITY[rarity];
   const affixStart = random.nextInt(0, content.equipmentAffixes.length - 1);
   const affixes = Array.from({ length: affixCount(rarity) }, (_, index) => {
     const definition =
       content.equipmentAffixes[(affixStart + index) % content.equipmentAffixes.length]!;
-    const statBase = definition.stat === 'hp' ? 10 : definition.stat === 'speed' ? 1 : 3;
     return {
       stat: definition.stat,
-      value: statBase + random.nextInt(0, Math.max(1, questLevel)),
+      value: random.nextInt(1, qualityRank),
       sourceId: definition.id,
       label: definition.name,
     };
   });
-  const mainValue = random.nextInt(base.mainStatRoll.min, base.mainStatRoll.max);
+  const mainValue = qualityRank;
   const coreId = base.coreIds[random.nextInt(0, base.coreIds.length - 1)]!;
-  const coreStrength = random.nextInt(base.coreStrengthRoll.min, base.coreStrengthRoll.max);
+  const coreStrength = random.nextInt(1, qualityRank);
   const remainingCoreIds = base.coreIds.filter((candidate) => candidate !== coreId);
   const secondCoreId =
     rarity === 'legendary' && remainingCoreIds.length > 0
       ? remainingCoreIds[random.nextInt(0, remainingCoreIds.length - 1)]
       : undefined;
-  const secondCoreStrength = secondCoreId
-    ? random.nextInt(base.coreStrengthRoll.min, base.coreStrengthRoll.max)
-    : undefined;
+  const secondCoreStrength = secondCoreId ? random.nextInt(1, qualityRank) : undefined;
 
   return {
     id: itemId,
@@ -71,6 +70,7 @@ export function generateEquipmentItem(
     name: `${RARITY_LABEL[rarity]}的${base.name}`,
     slot: base.slot,
     rarity,
+    qualityRank,
     mainStat: { stat: base.mainStat, value: mainValue },
     affixes,
     sellValue: 10 + mainValue + affixes.reduce((sum, affix) => sum + affix.value, 0),
@@ -115,6 +115,14 @@ export function generateQuestRewards(
         random,
       ),
     ),
-    skillDrops: [generateSkillDrop(pool, profile.nextLootSeed * 10, content, random)],
+    skillDrops: [
+      generateSkillDrop(
+        pool,
+        profile.nextLootSeed * 10,
+        content,
+        random,
+        clampQualityRank(1 + Math.floor((quest.recommendedLevel - 1) / 3)),
+      ),
+    ],
   };
 }

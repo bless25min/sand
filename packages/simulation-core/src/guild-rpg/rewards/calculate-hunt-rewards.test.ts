@@ -267,7 +267,48 @@ describe('hunt reward calculation', () => {
       slot: 'weapon',
       mainStat: { stat: 'attack' },
     });
-    expect(rewards.items[0]!.mainStat.value).toBeLessThanOrEqual(9);
+    expect(rewards.items[0]!.mainStat.value).toBeLessThanOrEqual(5);
+  });
+
+  it('grows a final hunt into sixteen visible non-material drops without adding skill drops', () => {
+    const finalHunt = GUILD_GAME_CONTENT.hunts.find(({ id }) => id === 'skybreaker-hunt')!;
+    const finalQuest = GUILD_GAME_CONTENT.quests.find(({ id }) => id === finalHunt.questId)!;
+    const enemyIds = finalHunt.enemies.map(({ enemyId }) => enemyId);
+    const startRatios = Object.fromEntries(enemyIds.map((enemyId) => [enemyId, 1]));
+    const finalBattle: GuildBattleState = {
+      ...battle('victory', [], {}),
+      questId: finalQuest.id,
+      units: enemyIds.map((id) => ({
+        id,
+        name: id,
+        side: 'enemies' as const,
+        stats: { hp: 100, attack: 1, defense: 1, speed: 1, healing: 0 },
+        currentHp: 0,
+        gauge: 0,
+        threat: 0,
+        guarding: false,
+        isLeader: false,
+        skillIds: [],
+      })),
+      combo: combo(startRatios, 0, 0),
+    };
+
+    const rewards = calculateHuntRewards(
+      {
+        profile,
+        battle: finalBattle,
+        hunt: finalHunt,
+        equipmentAffixes: GUILD_GAME_CONTENT.equipmentAffixes,
+        content: GUILD_GAME_CONTENT,
+      },
+      new FixedRandom(0.2),
+    );
+
+    expect(rewards.items).toHaveLength(15);
+    expect(rewards.skillDrops).toHaveLength(1);
+    expect(
+      rewards.items.map(({ id }) => id).every((id, index, ids) => ids.indexOf(id) === index),
+    ).toBe(true);
   });
 
   it('stacks every annihilation axis and preserves shared overflow in all item quality', () => {
@@ -292,7 +333,7 @@ describe('hunt reward calculation', () => {
       sharedOverflow: 180,
     });
     expect(rewards.axes.quantityMultiplier).toBeGreaterThan(1);
-    expect(rewards.items).toHaveLength(4);
+    expect(rewards.items).toHaveLength(5);
     expect(rewards.items.filter((item) => !item.jackpot).map((item) => item.sourceEnemyId)).toEqual(
       ['guard-a', 'guard-b', 'boss'],
     );
@@ -321,7 +362,7 @@ describe('hunt reward calculation', () => {
     );
 
     expect(rewards.axes.bossChest).toBe(true);
-    expect(rewards.items).toHaveLength(4);
+    expect(rewards.items).toHaveLength(5);
     expect(rewards.items.at(-1)).toMatchObject({
       sourceEnemyId: 'boss',
       jackpot: true,

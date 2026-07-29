@@ -12,7 +12,10 @@ const trigger = (
   family,
   name,
   description,
-  additionRoll: { min, max },
+  additionRoll: {
+    min: Math.max(1, Math.min(5, min)),
+    max: Math.max(1, Math.min(5, max)),
+  },
 });
 
 export const GUILD_TRIGGER_CONDITIONS: readonly TriggerConditionDefinition[] = [

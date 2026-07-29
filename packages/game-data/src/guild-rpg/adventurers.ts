@@ -6,7 +6,7 @@ export const GUILD_ADVENTURERS: readonly AdventurerDefinition[] = [
     name: '布蘭',
     title: '不動鐵壁',
     role: 'vanguard',
-    baseStats: { hp: 280, attack: 24, defense: 21, speed: 10, healing: 0 },
+    baseStats: { hp: 10, attack: 1, defense: 1, speed: 1, healing: 1 },
     skillIds: ['basic_attack', 'shield_wall'],
     starterSkillIds: [
       'fire.stack.battle_open',
@@ -27,7 +27,7 @@ export const GUILD_ADVENTURERS: readonly AdventurerDefinition[] = [
     name: '萊拉',
     title: '破風鷹眼',
     role: 'ranger',
-    baseStats: { hp: 190, attack: 35, defense: 10, speed: 15, healing: 0 },
+    baseStats: { hp: 10, attack: 1, defense: 1, speed: 1, healing: 1 },
     skillIds: ['basic_attack', 'focused_shot'],
     starterSkillIds: [
       'grass.multistrike.first_actor',
@@ -48,7 +48,7 @@ export const GUILD_ADVENTURERS: readonly AdventurerDefinition[] = [
     name: '艾琳',
     title: '晨光祈禱者',
     role: 'cleric',
-    baseStats: { hp: 220, attack: 18, defense: 12, speed: 11, healing: 34 },
+    baseStats: { hp: 10, attack: 1, defense: 1, speed: 1, healing: 1 },
     skillIds: ['basic_attack', 'healing_prayer'],
     starterSkillIds: [
       'water.stack.round_open',
@@ -69,7 +69,7 @@ export const GUILD_ADVENTURERS: readonly AdventurerDefinition[] = [
     name: '賽芙',
     title: '瘴霧鍊金師',
     role: 'alchemist',
-    baseStats: { hp: 205, attack: 27, defense: 12, speed: 13, healing: 12 },
+    baseStats: { hp: 10, attack: 1, defense: 1, speed: 1, healing: 1 },
     skillIds: ['basic_attack'],
     starterSkillIds: [
       'grass.stack.battle_open',
@@ -90,7 +90,7 @@ export const GUILD_ADVENTURERS: readonly AdventurerDefinition[] = [
     name: '洛恩',
     title: '潮汐軍師',
     role: 'tactician',
-    baseStats: { hp: 235, attack: 22, defense: 16, speed: 12, healing: 22 },
+    baseStats: { hp: 10, attack: 1, defense: 1, speed: 1, healing: 1 },
     skillIds: ['basic_attack'],
     starterSkillIds: [
       'water.empower.first_actor',
@@ -111,7 +111,7 @@ export const GUILD_ADVENTURERS: readonly AdventurerDefinition[] = [
     name: '凱洛',
     title: '燼刃決鬥者',
     role: 'duelist',
-    baseStats: { hp: 215, attack: 33, defense: 13, speed: 14, healing: 0 },
+    baseStats: { hp: 10, attack: 1, defense: 1, speed: 1, healing: 1 },
     skillIds: ['basic_attack'],
     starterSkillIds: [
       'fire.multistrike.target_burning',

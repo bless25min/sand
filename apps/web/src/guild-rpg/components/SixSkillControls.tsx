@@ -42,14 +42,14 @@ export function SixSkillControls({
             presentation?.execution && presentation.primaryKind !== 'finisher'
               ? '溢傷'
               : presentation?.primaryKind === 'healing'
-                ? '總療'
+                ? '療'
                 : presentation?.primaryKind === 'finisher'
-                  ? '處刑'
-                  : '總傷';
+                  ? '終'
+                  : '傷';
           const skillLabel = presentation
             ? presentation.execution
-              ? `${index + 1}，${presentation.intentName}，回收${presentation.segments}次，${totalLabel}${presentation.primaryValue}，${presentation.triggerSummary}`
-              : `${index + 1}，${presentation.intentName}，${presentation.segments}段，${totalLabel}${presentation.primaryValue}，${presentation.triggerSummary}${status ? `，${STATUS_LABELS[status.kind]}${status.amount >= 0 ? '增加' : '消耗'}${Math.abs(status.amount)}` : ''}`
+              ? `${index + 1}，${presentation.intentName}，${totalLabel}${presentation.primaryValue}，${presentation.triggerSummary}`
+              : `${index + 1}，${presentation.intentName}，${totalLabel}${presentation.primaryValue}，${presentation.segments}次獨立效果，${presentation.triggerSummary}${status ? `，${STATUS_LABELS[status.kind]}${status.amount >= 0 ? '增加' : '消耗'}${Math.abs(status.amount)}` : ''}`
             : `${index + 1}，未裝備`;
           return (
             <div className="gr-battle-skill-slot" key={`${skillId}:${index}`}>
@@ -65,7 +65,6 @@ export function SixSkillControls({
                 data-armed={armedSkillId === skillId}
                 data-skill-total={presentation?.primaryValue}
                 data-skill-segments={presentation?.segments}
-                data-trigger-summary={presentation?.triggerSummary}
                 data-combo-ready={
                   presentation ? `${presentation.readyCount}/${presentation.stepCount}` : undefined
                 }
@@ -89,33 +88,42 @@ export function SixSkillControls({
                 <strong>{presentation?.intentName ?? '空位'}</strong>
                 {presentation && (
                   <small className="gr-skill-outcome">
-                    {presentation.segments > 0 && (
-                      <span>
-                        {presentation.execution
-                          ? `回收${presentation.segments}次`
-                          : `${presentation.segments}段`}
-                      </span>
-                    )}
                     <b>
                       {totalLabel}
                       {presentation.primaryValue}
                     </b>
+                    <span
+                      className="gr-skill-hit-pips"
+                      aria-label={`${presentation.segments} 次獨立效果`}
+                    >
+                      {Array.from({ length: Math.min(6, presentation.segments) }, (_, pipIndex) => (
+                        <i data-skill-hit-pip={pipIndex + 1} aria-hidden="true" key={pipIndex} />
+                      ))}
+                    </span>
                     {status && (
-                      <span>
+                      <em>
                         {STATUS_LABELS[status.kind]}
                         {status.amount > 0 ? '+' : ''}
                         {status.amount}
-                      </span>
+                      </em>
                     )}
                   </small>
                 )}
                 {presentation && (
-                  <small className="gr-skill-trigger">{presentation.triggerSummary}</small>
-                )}
-                {presentation?.readiness === 'ready' && (
-                  <i className="gr-skill-ready" aria-hidden="true">
-                    ✓
-                  </i>
+                  <span className="gr-skill-nodes" aria-label={presentation.triggerSummary}>
+                    {presentation.comboSteps.map((step, stepIndex) => (
+                      <i
+                        data-combo-node={stepIndex + 1}
+                        data-node-active={stepIndex === 0 || step.readiness === 'ready'}
+                        data-readiness={step.readiness}
+                        title={`${step.conditionLabel}：${step.readinessLabel}`}
+                        aria-hidden="true"
+                        key={step.componentId}
+                      >
+                        {step.conditionGlyph}
+                      </i>
+                    ))}
+                  </span>
                 )}
               </button>
             </div>

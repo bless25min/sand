@@ -835,6 +835,7 @@
 
 .gr-loot-detail-drawer > span,
 .gr-loot-detail-drawer > strong,
+.gr-loot-detail-drawer > em,
 .gr-loot-detail-drawer > p,
 .gr-loot-detail-drawer > div {
   grid-column: 1;
@@ -848,6 +849,13 @@
 
 .gr-loot-detail-drawer > strong {
   font-size: 17px;
+}
+
+.gr-loot-detail-drawer > em {
+  color: #8ff0bb;
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 900;
 }
 
 .gr-loot-detail-drawer > p {

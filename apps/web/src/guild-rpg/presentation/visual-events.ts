@@ -242,9 +242,11 @@ export function projectVisualEvents(
           ? statusHeadline(status, rule.headline)
           : rule.headline;
     const eventRelay =
-      event.kind === 'relay' && event.amount !== undefined
-        ? Math.max(1, Math.min(6, Math.trunc(event.amount)))
-        : normalizedRelay;
+      event.causalDepth !== undefined
+        ? Math.max(1, Math.min(6, Math.trunc(event.causalDepth)))
+        : event.kind === 'relay' && event.amount !== undefined
+          ? Math.max(1, Math.min(6, Math.trunc(event.amount)))
+          : normalizedRelay;
     const intensity =
       rule.phase === 'finisher' && eventRelay === 6 ? 100 : Math.min(94, 14 + eventRelay * 12);
     const number = signedNumber(event, rule.polarity);
@@ -256,6 +258,7 @@ export function projectVisualEvents(
       headline,
       detail: event.message,
       relay: eventRelay,
+      ...(event.causalDepth !== undefined ? { causalDepth: eventRelay } : {}),
       intensity,
       durationMs: reducedMotion ? 0 : rule.durationMs,
       polarity: rule.polarity,

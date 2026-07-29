@@ -92,7 +92,10 @@ const impactTargetIds = (scene: GuildCombatScene): readonly string[] => {
 };
 
 export function createCombatEffectPlan(scene: GuildCombatScene): CombatEffectPlan {
-  const relay = Math.max(1, Math.min(6, Math.trunc(scene.relay)));
+  const relay = Math.max(
+    1,
+    Math.min(6, Math.trunc(scene.event?.causalDepth ?? scene.event?.relay ?? scene.relay)),
+  );
   const motif = specializationMotif(scene);
   return {
     ambientParticles: 8 + relay * relay * 3,

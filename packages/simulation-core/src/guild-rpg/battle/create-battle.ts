@@ -29,7 +29,7 @@ export function createGuildBattle(input: StartBattleInput): GuildBattleState {
       threat: definition.role === 'vanguard' ? 12 : 0,
       guarding: false,
       isLeader: definition.id === input.leaderId,
-      skillIds: definition.skillIds,
+      skillIds: adventurer.skillIds,
       statusLayers: { burn: 0, poison: 0, tide: 0 },
       defenseReduction: 0,
       strengthened: 0,

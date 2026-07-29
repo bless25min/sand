@@ -76,20 +76,42 @@ function generateItems(
   if (input.battle.status !== 'victory') return [];
   const defeated = new Set(defeatedEnemyIds);
   const eligible = input.hunt.enemies.filter((enemy) => defeated.has(enemy.enemyId));
-  const items = eligible.map((enemy, index) => {
+  const questLevel =
+    input.content?.quests.find(({ id }) => id === input.hunt.questId)?.recommendedLevel ?? 1;
+  const dropsPerEnemy = Math.min(4, 1 + Math.floor((Math.max(1, questLevel) - 1) / 3));
+  const items = eligible.flatMap((enemy, enemyIndex) =>
+    Array.from({ length: dropsPerEnemy }, (_, dropIndex) => {
+      const definition =
+        enemy.equipment[random.nextInt(0, enemy.equipment.length - 1)] ?? enemy.equipment[0]!;
+      const qualityScore = (axes.individualOverkill[enemy.enemyId] ?? 0) + axes.sharedOverflow;
+      return createHuntEquipmentItem(
+        input,
+        definition,
+        enemy.enemyId,
+        `${input.hunt.id}-${input.profile.nextLootSeed}-${enemyIndex}-${dropIndex}`,
+        qualityScore,
+        false,
+        random,
+      );
+    }),
+  );
+
+  const boss = eligible.find(({ enemyId }) => enemyId === input.hunt.bossEnemyId);
+  for (let index = 0; boss && index < (input.hunt.guaranteedBossDrops ?? 0); index += 1) {
     const definition =
-      enemy.equipment[random.nextInt(0, enemy.equipment.length - 1)] ?? enemy.equipment[0]!;
-    const qualityScore = (axes.individualOverkill[enemy.enemyId] ?? 0) + axes.sharedOverflow;
-    return createHuntEquipmentItem(
-      input,
-      definition,
-      enemy.enemyId,
-      `${input.hunt.id}-${input.profile.nextLootSeed}-${index}`,
-      qualityScore,
-      false,
-      random,
+      boss.equipment[random.nextInt(0, boss.equipment.length - 1)] ?? boss.equipment[0]!;
+    items.push(
+      createHuntEquipmentItem(
+        input,
+        definition,
+        boss.enemyId,
+        `${input.hunt.id}-${input.profile.nextLootSeed}-boss-${index}`,
+        (axes.individualOverkill[boss.enemyId] ?? 0) + axes.sharedOverflow,
+        false,
+        random,
+      ),
     );
-  });
+  }
 
   if (axes.bossChest && input.hunt.annihilationChest) {
     const sourceEnemyId = huntChestSourceEnemyId(input.hunt);
@@ -100,6 +122,25 @@ function generateItems(
           input.hunt.annihilationChest,
           sourceEnemyId,
           `${input.hunt.id}-${input.profile.nextLootSeed}-jackpot`,
+          axes.sharedOverflow,
+          true,
+          random,
+        ),
+      );
+    }
+  }
+
+  if (axes.perfectAnnihilation) {
+    const source = boss ?? eligible.at(-1);
+    const definition =
+      source?.equipment[random.nextInt(0, source.equipment.length - 1)] ?? source?.equipment[0];
+    if (source && definition) {
+      items.push(
+        createHuntEquipmentItem(
+          input,
+          definition,
+          source.enemyId,
+          `${input.hunt.id}-${input.profile.nextLootSeed}-perfect`,
           axes.sharedOverflow,
           true,
           random,

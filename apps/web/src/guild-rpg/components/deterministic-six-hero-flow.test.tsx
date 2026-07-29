@@ -95,6 +95,7 @@ describe('deterministic six-hero interface', () => {
       name: '試作狼牙護符',
       slot: 'accessory',
       rarity: 'rare',
+      qualityRank: 3,
       mainStat: { stat: 'speed', value: 3, sourceId: 'wolf_charm', label: '狼牙護符' },
       affixes: [{ stat: 'attack', value: 4, sourceId: 'savage', label: '兇猛' }],
       sellValue: 40,
@@ -133,7 +134,7 @@ describe('deterministic six-hero interface', () => {
     const markup = renderToStaticMarkup(<GuildScreen state={state} dispatch={dispatch} />);
 
     expect(markup).toContain('data-forge-workbench="equipped-core"');
-    expect(markup).toContain('速度 3 → 2–5');
+    expect(markup).toContain('速度 3 → 1–5');
     expect(markup).toContain('斥候狼牙 1 / 1');
     expect(markup).toContain('30 金幣');
     expect(markup).toContain('重鑄第一詞綴');
@@ -303,10 +304,8 @@ describe('deterministic six-hero interface', () => {
     expect(markup).not.toContain('戰鬥詳情');
     expect(markup).toContain('data-current-actor="brann"');
     expect(markup).toContain('data-next-actor="lyra"');
-    expect(markup).toContain('data-focus-actor="brann"');
-    expect(markup).toContain(`data-focus-target="${targetId}"`);
     expect(markup).toMatch(
-      /data-combat-battlefield="true"[\s\S]*?<\/section><div class="gr-focus-hud" data-battle-focus-strip="true"[\s\S]*?<section class="gr-command-dock"/,
+      /data-combat-battlefield="true"[\s\S]*?<\/section><section class="gr-command-dock"/,
     );
     expect(markup).toContain('data-animation-first="true"');
     expect(markup).toContain('class="gr-battle-guide-strip"');
@@ -316,16 +315,17 @@ describe('deterministic six-hero interface', () => {
     expect(activeMember.skillIds).toHaveLength(6);
     expect(markup.match(/data-skill-total=/g) ?? []).toHaveLength(6);
     expect(markup.match(/data-skill-segments=/g) ?? []).toHaveLength(6);
-    expect(markup).toContain('data-trigger-summary=');
-    expect(markup).toContain('2段');
-    expect(markup).toContain('總傷');
+    expect(markup).toContain('data-combo-node=');
+    expect(markup).toContain('data-skill-hit-pip=');
+    expect(markup).toContain('傷');
     expect(markup).not.toContain('×2');
+    expect(markup).not.toContain('追擊');
+    expect(markup).not.toContain('段</');
     expect(markup).not.toContain('data-skill-power=');
     expect(markup).not.toContain('data-skill-layers=');
     expect(markup).not.toContain('威力 +');
     expect(markup).not.toContain('疊層 ·');
     expect(markup).toContain('開戰');
-    expect(markup).toContain('追傷');
     expect(markup).not.toContain('gr-skill-info');
     expect(markup).not.toContain('gr-unit-hp');
     expect(markup).not.toContain('gr-unit-status');
@@ -383,7 +383,7 @@ describe('deterministic six-hero interface', () => {
     }
     const markup = renderToStaticMarkup(<RewardScreen state={state} dispatch={dispatch} />);
 
-    expect(markup.match(/data-loot-item=/g) ?? []).toHaveLength(5);
+    expect(markup.match(/data-loot-item=/g) ?? []).toHaveLength(6);
     expect(markup.match(/data-loot-active="true"/g) ?? []).toHaveLength(0);
     expect(markup).not.toContain('data-pager="loot"');
     expect(markup).toContain('data-shell="single-screen"');
@@ -410,11 +410,9 @@ describe('deterministic six-hero interface', () => {
     );
     expect(css).toContain('.gr-battle-unit-controls');
     expect(css).toMatch(
-      /\.gr-battle\[data-shell='single-screen'\]\s*\{[^}]*grid-template-rows:\s*minmax\(0,\s*1fr\)\s+auto\s+auto/,
+      /\.gr-battle\[data-shell='single-screen'\]\s*\{[^}]*grid-template-rows:\s*minmax\(0,\s*1fr\)\s+auto/,
     );
-    expect(css).toMatch(
-      /\.gr-battle\[data-shell='single-screen'\]\s+\.gr-focus-hud\s*\{[^}]*position:\s*relative[^}]*grid-row:\s*2/,
-    );
+    expect(css).not.toContain('.gr-focus-hud');
     expect(css).not.toContain('.gr-coach { position: fixed');
   });
 });

@@ -15,6 +15,7 @@ const item = (id: string, slot: EquipmentItem['slot'] = 'weapon'): EquipmentItem
   name: `測試裝備 ${id}`,
   slot,
   rarity: 'rare',
+  qualityRank: 3,
   mainStat: { stat: slot === 'weapon' ? 'attack' : 'defense', value: 8 },
   affixes: [],
   sellValue: 18,
@@ -33,12 +34,24 @@ const finishedBattle = (status: 'victory' | 'defeat'): GuildBattleState => ({
   events: [],
 });
 
-describe('v4 guild profile and rewards', () => {
+describe('v5 guild profile and rewards', () => {
   it('starts a six-hero loot RPG with no level or Build state', () => {
     const profile = createGuildProfile(GUILD_GAME_CONTENT);
-    expect(profile).toMatchObject({ version: 4, leaderId: 'lyra', gold: 200 });
+    expect(profile).toMatchObject({ version: 5, leaderId: 'lyra', gold: 200 });
     expect(profile.party).toHaveLength(6);
     expect(profile.skillInventory).toHaveLength(36);
+    expect(
+      profile.skillInventory.every((skill) =>
+        skill.components.every(
+          (component) =>
+            component.qualityRank === 1 &&
+            component.power === 1 &&
+            component.layerStrength === 1 &&
+            component.triggerAddition === 1 &&
+            component.repeatCount === (component.specializationId === 'chain' ? 2 : 1),
+        ),
+      ),
+    ).toBe(true);
     expect(profile.unlockedQuestIds).toEqual(['border_pack']);
     expect(profile).not.toHaveProperty('selectedBuildId');
   });
@@ -61,6 +74,16 @@ describe('v4 guild profile and rewards', () => {
     expect(first).toEqual(second);
     expect(first?.items).toHaveLength(2);
     expect(first?.skillDrops).toHaveLength(1);
+    expect(
+      first?.items.every(
+        (reward) =>
+          reward.mainStat.value === reward.qualityRank &&
+          reward.qualityRank >= 1 &&
+          reward.qualityRank <= 5,
+      ),
+    ).toBe(true);
+    expect(first?.skillDrops[0]?.components[0]?.qualityRank).toBeGreaterThanOrEqual(1);
+    expect(first?.skillDrops[0]?.components[0]?.qualityRank).toBeLessThanOrEqual(5);
     expect(first?.items.every(({ coreId, coreStrength }) => coreId && coreStrength)).toBe(true);
     expect(first).not.toHaveProperty('experience');
     expect(

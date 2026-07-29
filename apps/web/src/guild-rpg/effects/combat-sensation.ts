@@ -22,6 +22,7 @@ const FREQUENCY: Readonly<Record<CombatBeat['kind'], number>> = {
   relay: 250,
   defeat: 105,
   finisher: 360,
+  total: 190,
   support: 430,
   info: 180,
 };
@@ -29,6 +30,7 @@ const FREQUENCY: Readonly<Record<CombatBeat['kind'], number>> = {
 function hapticFor(beat: CombatBeat): readonly number[] {
   if (beat.kind === 'finisher') return [48, 30, 108];
   if (beat.kind === 'defeat') return [34, 20, 70];
+  if (beat.kind === 'total') return [24, 16, 54];
   if (beat.kind === 'chain') return [18, 16, 22, 18, 28 + beat.relay * 3];
   if (beat.kind === 'hit') return [14 + beat.relay * 2, 24];
   return [10 + beat.relay * 2];

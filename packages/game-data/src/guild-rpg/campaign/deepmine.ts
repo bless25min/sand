@@ -11,27 +11,27 @@ const enemies = {
   guard: {
     id: 'goblin_guard',
     name: '哥布林盾手',
-    stats: { hp: 185, attack: 25, defense: 15, speed: 8, healing: 0 },
+    stats: { hp: 16, attack: 2, defense: 3, speed: 1, healing: 0 },
   },
   raider: {
     id: 'goblin_raider',
     name: '哥布林襲擊者',
-    stats: { hp: 145, attack: 31, defense: 9, speed: 13, healing: 0 },
+    stats: { hp: 12, attack: 3, defense: 1, speed: 3, healing: 0 },
   },
   slinger: {
     id: 'goblin_slinger',
     name: '哥布林投石手',
-    stats: { hp: 125, attack: 34, defense: 7, speed: 14, healing: 0 },
+    stats: { hp: 10, attack: 3, defense: 1, speed: 4, healing: 0 },
   },
   alchemist: {
     id: 'powder_alchemist',
     name: '黑火煉金師',
-    stats: { hp: 310, attack: 58, defense: 12, speed: 16, healing: 0 },
+    stats: { hp: 34, attack: 4, defense: 2, speed: 4, healing: 0 },
   },
   tyrant: {
     id: 'ore_tyrant',
     name: '礦脈暴君',
-    stats: { hp: 980, attack: 82, defense: 42, speed: 10, healing: 0 },
+    stats: { hp: 75, attack: 5, defense: 4, speed: 2, healing: 0 },
   },
 } satisfies Record<string, EnemyDefinition>;
 

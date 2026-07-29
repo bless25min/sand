@@ -37,7 +37,9 @@ export { fuseSkills } from './skills/fuse-skills';
 export { replaceFusedComponent } from './skills/replace-fused-component';
 export { dismantleSkill } from './skills/dismantle-skill';
 export { generateSkillDrop } from './progression/generate-skill-drop';
+export { clampQualityRank, QUALITY_RANK_BY_RARITY } from './progression/quality-rank';
 export { migrateProfileV4 } from './progression/migrate-profile-v4';
+export { migrateProfileV5, toQualityRank } from './progression/migrate-profile-v5';
 export { equipmentPower, equipmentStatTotals } from './equipment/compare-equipment';
 export { equipStoredItem } from './equipment/equip-stored-item';
 export {

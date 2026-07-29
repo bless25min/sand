@@ -23,7 +23,7 @@ const unit = (id: string, side: BattleUnit['side'], hp: number): BattleUnit => (
   id,
   name: id,
   side,
-  stats: { hp, attack: side === 'heroes' ? 20 : 10, defense: 4, speed: 10, healing: 8 },
+  stats: { hp, attack: 1, defense: 1, speed: 1, healing: 1 },
   currentHp: hp,
   gauge: 0,
   threat: 0,
@@ -56,11 +56,12 @@ const battle = (): GuildBattleState => ({
 
 const component: SkillComponent = {
   id: 'fire-chain-on-hit',
+  qualityRank: 5,
   formId: 'fire.chain.on-hit',
   element: 'fire',
   specializationId: 'chain',
   triggerId: 'on_hit',
-  power: 8,
+  power: 5,
   layerStrength: 3,
   triggerAddition: 4,
   repeatCount: 3,
@@ -141,18 +142,18 @@ describe('previewSkillOutcome', () => {
 
     expect(enemyA).toMatchObject({
       beforeHp: 500,
-      damage: 56,
+      damage: 13,
       beforeStatus: { burn: 0, poison: 0, tide: 0 },
       afterStatus: { burn: 3, poison: 0, tide: 0 },
     });
     expect(enemyB).toMatchObject({
       beforeHp: 300,
-      damage: 28,
+      damage: 4,
       beforeStatus: { burn: 0, poison: 0, tide: 0 },
       afterStatus: { burn: 0, poison: 0, tide: 0 },
     });
-    expect(enemyA?.afterHp).toBe(444);
-    expect(enemyB?.afterHp).toBe(272);
+    expect(enemyA?.afterHp).toBe(487);
+    expect(enemyB?.afterHp).toBe(296);
   });
 
   it('separates total damage segments from trigger chases and previews the next relay', () => {
@@ -169,25 +170,60 @@ describe('previewSkillOutcome', () => {
       content: content([skill, relaySkill]),
     });
 
-    expect(preview.damageSegments).toBe(6);
-    expect(preview.chaseSegments).toBe(3);
+    expect(preview.damageSegments).toBe(4);
+    expect(preview.chaseSegments).toBe(1);
     expect(preview.comboSteps).toEqual([
       expect.objectContaining({
         componentId: component.id,
         triggerId: 'on_hit',
         readiness: 'pending-impact',
-        damageSegments: 6,
-        chaseSegments: 3,
-        chaseDamage: 12,
+        eventIds: expect.any(Array),
+        damageSegments: 4,
+        chaseSegments: 1,
+        chaseDamage: 4,
       }),
     ]);
-    expect(preview.nextRelay).toEqual({
-      actorId: 'lyra',
-      newlyReadySkillIds: [relaySkill.id],
+    expect(preview.comboSteps[0]!.eventIds.length).toBeGreaterThan(0);
+    expect(preview.targetRoute).toEqual(['enemy-a', 'enemy-b', 'enemy-a']);
+    expect(preview.nextRelays).toEqual([
+      {
+        actorId: 'lyra',
+        readySkillIds: [relaySkill.id],
+        newlyReadySkillIds: [relaySkill.id],
+      },
+    ]);
+  });
+
+  it('names the missing status for a dim trigger node', () => {
+    const gatedSkill: OwnedSkill = {
+      ...skill,
+      id: 'gated-skill',
+      components: [
+        {
+          ...component,
+          id: 'grass-stack-target-burning',
+          element: 'grass',
+          specializationId: 'stack',
+          triggerId: 'target_burning',
+          repeatCount: 1,
+        },
+      ],
+    };
+    const preview = previewSkillOutcome({
+      battle: battle(),
+      actorId: 'brann',
+      skillId: gatedSkill.id,
+      targetId: 'enemy-a',
+      content: content([gatedSkill]),
+    });
+
+    expect(preview.comboSteps[0]).toMatchObject({
+      readiness: 'not-ready',
+      missingStatus: 'burn',
     });
   });
 
-  it('previews an early-clear sixth relay as execution power instead of corpse damage', () => {
+  it('previews an early-clear sixth relay as overkill without inventing corpse damage', () => {
     const state = battle();
     state.units = state.units.map((entry) =>
       entry.side === 'enemies'
@@ -214,13 +250,12 @@ describe('previewSkillOutcome', () => {
 
     expect(preview).toMatchObject({
       executionWindow: true,
-      finisherPower: 40,
-      relayEchoes: 5,
+      finisherPower: 0,
       totalDamage: 0,
-      overkill: 40,
       damageSegments: 0,
       chaseSegments: 0,
     });
+    expect(preview.overkill).toBeGreaterThan(0);
     expect(preview.units.find(({ id }) => id === 'enemy-a')).toMatchObject({
       beforeHp: 0,
       afterHp: 0,

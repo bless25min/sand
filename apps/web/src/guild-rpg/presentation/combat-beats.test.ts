@@ -139,7 +139,7 @@ describe('combat beat presentation', () => {
 
     const beats = createCombatBeats(comboEvents, 4);
 
-    expect(beats).toHaveLength(3);
+    expect(beats).toHaveLength(4);
     expect(beats[1]).toMatchObject({
       sourceEventIds: [11],
       comboIndex: 1,
@@ -152,12 +152,37 @@ describe('combat beat presentation', () => {
       delayMs: 170,
       visual: expect.objectContaining({ headline: '追擊 2' }),
     });
+    expect(beats[3]).toMatchObject({
+      kind: 'total',
+      sourceEventIds: [11, 12, 13],
+      amount: 32,
+      label: '合計 32',
+      visual: expect.objectContaining({ headline: '合計', number: -32 }),
+    });
     expect(
       beats
         .filter(({ eventKind }) => eventKind === 'damage')
         .every(({ delayMs, visual }) => delayMs >= visual.durationMs),
     ).toBe(true);
-    expect(beats.flatMap(({ sourceEventIds }) => sourceEventIds)).toEqual([10, 11, 12, 13]);
+    expect(
+      beats.filter(({ kind }) => kind !== 'total').flatMap(({ sourceEventIds }) => sourceEventIds),
+    ).toEqual([10, 11, 12, 13]);
+    expect(beats.reduce((sum, { delayMs }) => sum + delayMs, 0)).toBeLessThanOrEqual(2_000);
+  });
+
+  it('uses resolved causal depth instead of inflating an unlinked late turn', () => {
+    const causalEvents: readonly GuildBattleEvent[] = [
+      { ...events[0]!, causalDepth: 1 },
+      { ...events[1]!, causalDepth: 1 },
+      { ...events[2]!, causalDepth: 2 },
+      { ...events[1]!, id: 6, causalDepth: 2 },
+    ];
+    const beats = createCombatBeats(causalEvents, 6);
+
+    expect(beats.filter(({ kind }) => kind !== 'total').map(({ relay }) => relay)).toEqual([
+      1, 1, 2, 2,
+    ]);
+    expect(beats.find(({ kind }) => kind === 'total')?.relay).toBe(2);
   });
 
   it('keeps reduced-motion timing discrete without delaying interaction for seconds', () => {

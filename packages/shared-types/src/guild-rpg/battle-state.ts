@@ -77,6 +77,8 @@ export interface GuildBattleEvent {
   id: number;
   kind: BattleEventKind;
   message: string;
+  roundIndex?: number;
+  causalDepth?: number;
   actorId?: string;
   targetId?: string;
   amount?: number;

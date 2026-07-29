@@ -68,9 +68,7 @@ export function BattleCommandDock({
         <>
           {coach && !playback.isPlaying && (
             <aside className="gr-battle-guide-strip" role="status">
-              <b>
-                {coach.stepNumber}/{coach.stepTotal}
-              </b>
+              <b>引導</b>
               <span>{coach.title}</span>
               <small>{coach.message}</small>
             </aside>

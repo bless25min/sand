@@ -11,22 +11,22 @@ const enemies = {
   lancer: {
     id: 'tempest_lancer',
     name: '暴風槍騎',
-    stats: { hp: 880, attack: 118, defense: 44, speed: 23, healing: 0 },
+    stats: { hp: 55, attack: 5, defense: 4, speed: 5, healing: 0 },
   },
   sentinel: {
     id: 'coil_sentinel',
     name: '線圈守衛',
-    stats: { hp: 1040, attack: 96, defense: 68, speed: 13, healing: 0 },
+    stats: { hp: 70, attack: 4, defense: 5, speed: 2, healing: 0 },
   },
   magus: {
     id: 'arc_magus',
     name: '裂弧魔導',
-    stats: { hp: 960, attack: 142, defense: 38, speed: 21, healing: 35 },
+    stats: { hp: 62, attack: 5, defense: 3, speed: 5, healing: 4 },
   },
   sovereign: {
     id: 'skybreaker_sovereign',
     name: '裂天帝王',
-    stats: { hp: 1650, attack: 188, defense: 88, speed: 19, healing: 0 },
+    stats: { hp: 120, attack: 5, defense: 5, speed: 4, healing: 0 },
   },
 } satisfies Record<string, EnemyDefinition>;
 

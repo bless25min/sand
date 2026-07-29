@@ -104,6 +104,7 @@ const MISSING_LABELS: Readonly<Record<TriggerCondition, string>> = {
 interface SkillComboStepPresentation {
   componentId: string;
   conditionLabel: string;
+  conditionGlyph: string;
   readiness: TriggerReadiness;
   readinessLabel: string;
   effectLabel: string;
@@ -134,6 +135,21 @@ const statusDelta = (preview: SkillOutcomePreview): SkillTilePresentation['statu
   return changes[0];
 };
 
+const conditionGlyph = (triggerId: TriggerCondition, missing: StatusLayer | undefined): string => {
+  if (missing === 'burn' || triggerId === 'previous_fire') return '燃';
+  if (missing === 'poison' || triggerId === 'previous_grass') return '毒';
+  if (missing === 'tide' || triggerId === 'previous_water') return '潮';
+  if (triggerId.startsWith('consume')) return '爆';
+  if (triggerId === 'on_bounce') return '彈';
+  if (triggerId === 'on_echo') return '迴';
+  if (triggerId === 'on_defeat') return '破';
+  if (triggerId === 'on_overkill') return '溢';
+  if (triggerId === 'on_hit' || triggerId === 'on_repeat_hit') return '擊';
+  if (triggerId === 'target_weakened') return '弱';
+  if (triggerId === 'actor_strengthened') return '強';
+  return '時';
+};
+
 export function createSkillTilePresentation(
   skill: GuildSkillItem,
   preview: SkillOutcomePreview,
@@ -150,19 +166,20 @@ export function createSkillTilePresentation(
     ).includes(step.triggerId)
       ? `每層爆發${component.triggerAddition}`
       : step.triggerId === 'on_repeat_hit'
-        ? `每段追傷${component.triggerAddition}`
+        ? `連擊追加${component.triggerAddition}`
         : step.triggerId === 'on_bounce' || step.triggerId === 'on_echo'
-          ? `每跳追傷${component.triggerAddition}`
-          : `追傷${effectValue}`;
+          ? `路由追加${component.triggerAddition}`
+          : `追加${effectValue}`;
     return {
       componentId: step.componentId,
       conditionLabel: TRIGGER_LABELS[step.triggerId],
+      conditionGlyph: conditionGlyph(step.triggerId, step.missingStatus),
       readiness: step.readiness,
       readinessLabel:
         step.readiness === 'ready'
-          ? '已成立'
+          ? '已亮'
           : step.readiness === 'pending-impact'
-            ? '出招時判定'
+            ? '出招亮'
             : MISSING_LABELS[step.triggerId],
       effectLabel,
     };
@@ -175,15 +192,13 @@ export function createSkillTilePresentation(
       intentName: INTENT_NAMES[first.element][first.specializationId],
       primaryKind: finalExecution ? 'finisher' : 'effect',
       primaryValue: finalExecution ? preview.finisherPower : preview.overkill,
-      segments: preview.relayEchoes,
+      segments: preview.damageSegments,
       chases: 0,
       execution: true,
       readiness: 'ready',
       readyCount: 1,
       stepCount: 1,
-      triggerSummary: finalExecution
-        ? '第六棒✓ → 全軍終結'
-        : `第${preview.relayEchoes + 1}棒✓ → 餘震回收`,
+      triggerSummary: finalExecution ? '本輪因果 → 終結' : '破勢溢傷 · 不新增傷害',
       comboSteps,
     };
   }

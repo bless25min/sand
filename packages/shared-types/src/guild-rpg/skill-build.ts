@@ -1,5 +1,6 @@
 export type GuildElement = 'fire' | 'grass' | 'water';
 export type StatusLayer = 'burn' | 'poison' | 'tide';
+export type QualityRank = 1 | 2 | 3 | 4 | 5;
 
 export type SkillSpecialization =
   'blast' | 'stack' | 'weaken' | 'chain' | 'empower' | 'multistrike';
@@ -77,6 +78,7 @@ export interface SkillFormDefinition {
 
 export interface SkillComponent {
   id: string;
+  qualityRank: QualityRank;
   formId: string;
   element: GuildElement;
   specializationId: SkillSpecialization;

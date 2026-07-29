@@ -13,7 +13,6 @@ import { chooseSkillIntent, chooseTargetIntent } from '../presentation/skill-com
 import { createSkillEngineContent } from '../state/create-skill-engine-content';
 import type { GuildRpgAction, GuildRpgState } from '../state/game-reducer';
 import { BattleCommandDock } from './BattleCommandDock';
-import { BattleFocusHud } from './BattleFocusHud';
 import { CombatBattlefield } from './CombatBattlefield';
 
 const heroDefinition = (id?: string) =>
@@ -33,23 +32,23 @@ export function BattleScreen({
   const quest = GUILD_GAME_CONTENT.quests.find(({ id }) => id === battle.questId)!;
   const recentActorId = state.recentEvents.find(({ kind }) => kind === 'skill_cast')?.actorId;
   const finisherActorId = state.recentEvents.find(({ kind }) => kind === 'finisher')?.actorId;
-  const eventRelay = state.recentEvents.find(({ kind }) => kind === 'relay')?.amount;
   const activeActorId = victory ? finisherActorId : order.activeAdventurerId;
-  const relay = victory
-    ? 6
-    : eventRelay !== undefined
-      ? eventRelay
-      : state.recentEvents.length > 0
-        ? Math.max(1, order.actedIds.length)
-        : Math.min(6, order.actedIds.length + 1);
+  const relay = Math.max(1, ...state.recentEvents.map(({ causalDepth = 1 }) => causalDepth));
   const playback = useCombatPlayback(state.recentEvents, relay, state.preferences);
+  const visibleSourceIds = new Set(
+    playback.visibleBeats.flatMap(({ sourceEventIds }) => sourceEventIds),
+  );
+  const visibleEventCount = state.recentEvents.reduce(
+    (count, { id }, index) => (visibleSourceIds.has(id) ? index + 1 : count),
+    0,
+  );
   const displayBattle =
     playback.isPlaying && state.playbackStartBattle
       ? projectBattlePlayback(
           state.playbackStartBattle,
           battle,
           state.recentEvents,
-          playback.visibleBeats.length,
+          visibleEventCount,
         )
       : battle;
   const displayTargetHp = displayBattle.units.find(
@@ -190,13 +189,6 @@ export function BattleScreen({
           setArmedSkillId(undefined);
           dispatch({ type: 'CHOOSE_NEXT_HERO', adventurerId });
         }}
-      />
-
-      <BattleFocusHud
-        battle={displayBattle}
-        actorId={actingActorId}
-        preview={skillPreview}
-        executionWindow={displayExecutionWindow}
       />
 
       <BattleCommandDock

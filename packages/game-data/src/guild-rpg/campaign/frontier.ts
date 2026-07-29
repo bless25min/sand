@@ -11,27 +11,27 @@ const enemies = {
   scout: {
     id: 'wolf_scout',
     name: '灰牙斥候',
-    stats: { hp: 105, attack: 21, defense: 7, speed: 13, healing: 0 },
+    stats: { hp: 8, attack: 1, defense: 1, speed: 3, healing: 0 },
   },
   hunter: {
     id: 'wolf_hunter',
     name: '灰牙獵手',
-    stats: { hp: 125, attack: 24, defense: 8, speed: 11, healing: 0 },
+    stats: { hp: 10, attack: 2, defense: 1, speed: 2, healing: 0 },
   },
   alpha: {
     id: 'wolf_alpha',
     name: '灰牙首領',
-    stats: { hp: 175, attack: 27, defense: 11, speed: 9, healing: 0 },
+    stats: { hp: 18, attack: 2, defense: 2, speed: 1, healing: 0 },
   },
   nightstalker: {
     id: 'wolf_nightstalker',
     name: '月影獵殺者',
-    stats: { hp: 250, attack: 46, defense: 14, speed: 18, healing: 0 },
+    stats: { hp: 32, attack: 3, defense: 2, speed: 4, healing: 0 },
   },
   matron: {
     id: 'fang_matron',
     name: '赤牙女王',
-    stats: { hp: 720, attack: 65, defense: 28, speed: 16, healing: 0 },
+    stats: { hp: 60, attack: 4, defense: 3, speed: 3, healing: 0 },
   },
 } satisfies Record<string, EnemyDefinition>;
 

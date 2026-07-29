@@ -103,6 +103,49 @@ function drawIdentity(root: Container, unit: GuildCombatSceneUnit) {
   }
   root.addChild(hp);
 
+  const name = new Text({
+    text: hud.nameLabel,
+    style: {
+      fill: 0xfff2cb,
+      fontFamily: '"Noto Sans TC", "Microsoft JhengHei", sans-serif',
+      fontSize: 15,
+      fontWeight: '900',
+      stroke: { color: 0x03100d, width: 3 },
+    },
+  });
+  name.anchor.set(0.5);
+  name.position.set(0, 25);
+  root.addChild(name);
+
+  const hpLabel = new Text({
+    text: hud.projectedHpLabel ?? hud.hpLabel,
+    style: {
+      fill: unit.preview ? 0xffdd70 : 0xf6f0dc,
+      fontFamily: '"Noto Sans TC", "Microsoft JhengHei", sans-serif',
+      fontSize: 10,
+      fontWeight: '900',
+    },
+  });
+  hpLabel.anchor.set(0.5);
+  hpLabel.position.set(0, 42);
+  root.addChild(hpLabel);
+
+  if (unit.state === 'acting' || unit.state === 'targeted' || unit.selected) {
+    const stats = new Text({
+      text: hud.statLabel,
+      style: {
+        fill: 0xb9c9c0,
+        fontFamily: '"Noto Sans TC", "Microsoft JhengHei", sans-serif',
+        fontSize: 10,
+        fontWeight: '700',
+        stroke: { color: 0x03100d, width: 2 },
+      },
+    });
+    stats.anchor.set(0.5);
+    stats.position.set(0, 56);
+    root.addChild(stats);
+  }
+
   if (hud.impactLabel) {
     const change = new Text({
       text: hud.impactLabel,
@@ -115,7 +158,7 @@ function drawIdentity(root: Container, unit: GuildCombatSceneUnit) {
       },
     });
     change.anchor.set(0.5);
-    change.position.set(0, 62);
+    change.position.set(0, unit.side === 'enemies' ? -184 : -144);
     root.addChild(change);
   }
 }
@@ -145,6 +188,16 @@ function drawState(root: Container, unit: GuildCombatSceneUnit, relay: number) {
   if (unit.state === 'next') {
     root.addChildAt(
       new Graphics().ellipse(0, 7, 52, 17).stroke({ color: accent, width: 3, alpha: 0.58 }),
+      0,
+    );
+  }
+  if (unit.comboReady) {
+    root.addChildAt(
+      new Graphics()
+        .circle(0, -48, 70)
+        .stroke({ color: 0x8fffc3, width: 3, alpha: 0.86 })
+        .circle(0, -48, 77)
+        .stroke({ color: 0xffd669, width: 2, alpha: 0.48 }),
       0,
     );
   }

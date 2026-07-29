@@ -1,5 +1,5 @@
 import type { StatModifier } from './stats';
-import type { IntegerRollRange } from './skill-build';
+import type { IntegerRollRange, QualityRank } from './skill-build';
 
 export type GuildEquipmentSlot = 'weapon' | 'armor' | 'accessory';
 export type GuildItemRarity = 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary';
@@ -15,6 +15,7 @@ export interface EquipmentItem {
   name: string;
   slot: GuildEquipmentSlot;
   rarity: GuildItemRarity;
+  qualityRank: QualityRank;
   mainStat: StatModifier;
   affixes: readonly StatModifier[];
   sellValue: number;

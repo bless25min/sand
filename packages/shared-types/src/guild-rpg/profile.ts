@@ -25,7 +25,7 @@ export interface GuildProgressionEvent {
 }
 
 export interface GuildProfile {
-  version: 4;
+  version: 5;
   leaderId: string;
   party: readonly GuildAdventurer[];
   defaultOrder: readonly string[];
