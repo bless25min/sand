@@ -168,4 +168,66 @@ describe('battle scene projection', () => {
       'target',
     );
   });
+
+  it('makes the current event actor perform the attack instead of leaving focus on the prior hero', () => {
+    const profile = createGuildProfile(GUILD_GAME_CONTENT);
+    const battle = startGuildQuest(profile, 'border_pack', GUILD_GAME_CONTENT);
+    const enemy = battle.units.find(({ side }) => side === 'enemies')!;
+    const hero = battle.units.find(({ side }) => side === 'heroes')!;
+    const scene = createBattleScene(battle, {
+      relay: 1,
+      actingActorId: hero.id,
+      event: {
+        id: 'visual:enemy-attack',
+        sourceEventId: 200,
+        eventKind: 'enemy_attack',
+        phase: 'impact',
+        headline: '敵軍反擊',
+        detail: '敵軍反擊',
+        relay: 1,
+        intensity: 26,
+        durationMs: 300,
+        polarity: 'damage',
+        route: 'direct',
+        camera: 'shake',
+        actorId: enemy.id,
+        targetId: hero.id,
+        number: -1,
+      },
+    });
+
+    expect(scene.units.find(({ id }) => id === enemy.id)?.state).toBe('acting');
+    expect(scene.units.find(({ id }) => id === hero.id)?.state).toBe('hit');
+  });
+
+  it('does not mark a hero as hit when the enemy attack was dodged or guarded', () => {
+    const profile = createGuildProfile(GUILD_GAME_CONTENT);
+    const battle = startGuildQuest(profile, 'border_pack', GUILD_GAME_CONTENT);
+    const enemy = battle.units.find(({ side }) => side === 'enemies')!;
+    const hero = battle.units.find(({ side }) => side === 'heroes')!;
+    const resultState = (eventKind: 'dodge' | 'guard') =>
+      createBattleScene(battle, {
+        relay: 1,
+        event: {
+          id: `visual:${eventKind}`,
+          sourceEventId: 210,
+          eventKind,
+          phase: eventKind === 'dodge' ? 'aftermath' : 'impact',
+          headline: eventKind === 'dodge' ? '高速閃避' : '格擋',
+          detail: eventKind,
+          relay: 1,
+          intensity: 26,
+          durationMs: 300,
+          polarity: 'support',
+          route: eventKind === 'dodge' ? 'direct' : 'none',
+          camera: 'track',
+          actorId: enemy.id,
+          targetId: hero.id,
+          number: 0,
+        },
+      }).units.find(({ id }) => id === hero.id)?.state;
+
+    expect(resultState('dodge')).toBe('idle');
+    expect(resultState('guard')).toBe('idle');
+  });
 });

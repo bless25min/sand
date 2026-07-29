@@ -146,6 +146,10 @@ export async function mountGuildCombatStage(
           progress,
           finisher: currentPlan.finisher && currentScene.event?.phase === 'finisher',
           ...(sceneUnit?.hero?.weapon ? { weapon: sceneUnit.hero.weapon } : {}),
+          ...(sceneUnit?.enemy?.archetype ? { enemyArchetype: sceneUnit.enemy.archetype } : {}),
+          enemyAttackOutcome: currentPlan.enemyAttack.outcome,
+          enemyAttackSource: currentPlan.enemyAttack.sourceId === unit.id,
+          enemyAttackTarget: currentPlan.enemyAttack.targetId === unit.id,
           reactionKind: currentPlan.enemyReaction.kind,
           reactionTarget: currentPlan.enemyReaction.targetIds.includes(unit.id),
           reactionFadeTo: currentPlan.enemyReaction.fadeTo,
@@ -170,6 +174,24 @@ export async function mountGuildCombatStage(
       const position = routePosition(currentPlan.route, progress);
       nodes.effects.projectile.position.set(position.x, position.y);
       nodes.effects.projectile.rotation += 0.18;
+    }
+    if (currentPlan.enemyAttack.phase === 'telegraph') {
+      const warningPulse = 0.94 + Math.sin(elapsed * 8) * 0.12;
+      for (const telegraph of nodes.effects.enemyAttackTelegraphs) {
+        telegraph.scale.set(warningPulse);
+        telegraph.alpha = 0.68 + Math.sin(elapsed * 8) * 0.18;
+      }
+      if (nodes.effects.route) nodes.effects.route.alpha = 0.62 + Math.sin(elapsed * 8) * 0.18;
+    } else if (currentPlan.enemyAttack.phase === 'strike') {
+      for (const telegraph of nodes.effects.enemyAttackTelegraphs) {
+        telegraph.scale.set(0.9 + progress * 0.5);
+        telegraph.alpha = Math.max(0, 0.86 - progress * 1.7);
+      }
+      const reveal = Math.max(0, Math.min(1, (progress - 0.52) / 0.2));
+      for (const outcome of nodes.effects.enemyAttackOutcomes) {
+        outcome.scale.set(0.45 + reveal * (0.75 + currentPlan.enemyAttack.force * 0.16));
+        outcome.alpha = Math.max(0, reveal * (1 - Math.max(0, progress - 0.82) * 4.2));
+      }
     }
     for (const [index, afterimage] of nodes.effects.afterimages.entries()) {
       const echo = 0.62 + Math.sin(Math.min(1, progress) * Math.PI) * 0.45;

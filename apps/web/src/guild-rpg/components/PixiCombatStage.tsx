@@ -68,6 +68,13 @@ export function PixiCombatStage({
       data-effect-delivery={actingUnit?.hero?.weapon ?? (actingUnit?.enemy ? 'enemy' : undefined)}
       data-effect-phase={scene.event?.phase}
       data-enemy-reaction={effectPlan.enemyReaction.kind}
+      data-enemy-attack={effectPlan.enemyAttack.active ? effectPlan.enemyAttack.motif : undefined}
+      data-enemy-attack-phase={
+        effectPlan.enemyAttack.active ? effectPlan.enemyAttack.phase : undefined
+      }
+      data-enemy-attack-outcome={
+        effectPlan.enemyAttack.active ? effectPlan.enemyAttack.outcome : undefined
+      }
       data-reaction-targets={effectPlan.enemyReaction.targetIds.join(',')}
       data-reaction-force={effectPlan.enemyReaction.force}
       data-preview-total={scene.preview?.totalDamage}

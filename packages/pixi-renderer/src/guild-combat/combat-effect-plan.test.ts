@@ -475,4 +475,103 @@ describe('Pixi guild combat effect plan', () => {
     });
     expect(plan.enemyReaction.fragmentCount).toBeGreaterThanOrEqual(24);
   });
+
+  it('gives all six enemy archetypes distinct attack silhouettes and routes', () => {
+    const archetypes = ['skirmisher', 'brute', 'guardian', 'artillery', 'boss', 'flying'] as const;
+    const plans = archetypes.map(
+      (archetype, index) =>
+        createCombatEffectPlan({
+          ...scene(1),
+          units: [
+            { ...scene(1).units[0]!, state: 'hit' },
+            {
+              ...scene(1).units[1]!,
+              y: 210,
+              state: 'acting',
+              enemy: { ...scene(1).units[1]!.enemy!, archetype },
+            },
+          ],
+          event: {
+            id: `visual:enemy:${archetype}`,
+            sourceEventId: 100 + index,
+            eventKind: 'enemy_attack',
+            phase: 'impact',
+            headline: '敵軍反擊',
+            detail: '敵軍反擊',
+            relay: 1,
+            intensity: 26,
+            durationMs: 300,
+            polarity: 'damage',
+            route: 'direct',
+            camera: 'shake',
+            actorId: 'wolf_alpha',
+            targetId: 'brann',
+            number: -1,
+          },
+        }).enemyAttack,
+    );
+    const routeSignatures = plans.map(({ route }) =>
+      route.map(({ x, y }) => `${x}:${y}`).join('|'),
+    );
+
+    expect(plans.map(({ motif }) => motif)).toEqual([
+      'dash-slash',
+      'ground-smash',
+      'shield-crush',
+      'arc-volley',
+      'royal-execution',
+      'dive-strike',
+    ]);
+    expect(new Set(routeSignatures).size).toBe(archetypes.length);
+    expect(
+      plans.every(({ route }) =>
+        route.every(({ x, y }) => x >= 24 && x <= 976 && y >= 24 && y <= 536),
+      ),
+    ).toBe(true);
+    expect(plans.every(({ active, phase }) => active && phase === 'strike')).toBe(true);
+  });
+
+  it('turns pressure previews and battle results into readable enemy attack outcomes', () => {
+    const telegraph = createCombatEffectPlan({
+      ...scene(1),
+      enemyIntent: {
+        enemyId: 'wolf_alpha',
+        targetId: 'brann',
+        outcome: 'damage',
+        amount: 1,
+      },
+    }).enemyAttack;
+    const resultFor = (eventKind: 'enemy_attack' | 'guard' | 'dodge') =>
+      createCombatEffectPlan({
+        ...scene(1),
+        event: {
+          id: `visual:enemy:${eventKind}`,
+          sourceEventId: 120,
+          eventKind,
+          phase: eventKind === 'dodge' ? 'aftermath' : 'impact',
+          headline: '敵軍反擊',
+          detail: '敵軍反擊',
+          relay: 1,
+          intensity: 26,
+          durationMs: 300,
+          polarity: eventKind === 'enemy_attack' ? 'damage' : 'support',
+          route: eventKind === 'guard' ? 'none' : 'direct',
+          camera: 'shake',
+          actorId: 'wolf_alpha',
+          targetId: 'brann',
+          number: eventKind === 'enemy_attack' ? -1 : 0,
+        },
+      }).enemyAttack;
+
+    expect(telegraph).toMatchObject({
+      active: true,
+      phase: 'telegraph',
+      outcome: 'damage',
+      sourceId: 'wolf_alpha',
+      targetId: 'brann',
+    });
+    expect(
+      (['enemy_attack', 'guard', 'dodge'] as const).map(resultFor).map(({ outcome }) => outcome),
+    ).toEqual(['damage', 'guard', 'dodge']);
+  });
 });

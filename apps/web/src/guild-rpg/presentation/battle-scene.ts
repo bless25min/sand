@@ -71,7 +71,11 @@ export function createBattleScene(
     const selected = battle.selectedTargetId === unit.id;
     const preview = context.preview?.units.find(({ id }) => id === unit.id);
     const comboReady = context.preview?.nextRelays.some(({ actorId }) => actorId === unit.id);
-    const hit = context.event?.targetId === unit.id && context.event.phase === 'impact';
+    const hit =
+      context.event?.targetId === unit.id &&
+      context.event.phase === 'impact' &&
+      context.event.polarity === 'damage';
+    const actingActorId = context.event?.actorId ?? context.actingActorId;
     const state: GuildCombatUnitState =
       unit.currentHp <= 0
         ? context.executionWindow && unit.side === 'enemies'
@@ -79,7 +83,7 @@ export function createBattleScene(
           : 'defeated'
         : hit
           ? 'hit'
-          : unit.id === context.actingActorId
+          : unit.id === actingActorId
             ? 'acting'
             : unit.id === context.nextActorId
               ? 'next'

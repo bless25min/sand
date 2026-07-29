@@ -1,4 +1,5 @@
 import type { GuildCombatScene } from './contracts';
+import { createEnemyAttackPlan, type EnemyAttackPlan } from './enemy-attack-plan';
 import { createEnemyReactionPlan, type EnemyReactionPlan } from './enemy-reaction-plan';
 
 export type { EnemyReactionKind } from './enemy-reaction-plan';
@@ -38,6 +39,7 @@ export interface CombatEffectPlan {
     | 'twin-slash'
     | 'enemy-strike'
     | 'neutral';
+  enemyAttack: EnemyAttackPlan;
   enemyReaction: EnemyReactionPlan;
   signatureMarks: number;
   route: readonly CombatEffectPoint[];
@@ -102,7 +104,11 @@ const directRoute = (
   return [actor, target];
 };
 
-function eventRoute(scene: GuildCombatScene): readonly CombatEffectPoint[] {
+function eventRoute(
+  scene: GuildCombatScene,
+  enemyAttack: EnemyAttackPlan,
+): readonly CombatEffectPoint[] {
+  if (enemyAttack.phase === 'strike') return enemyAttack.route;
   const event = scene.event;
   if (!event || event.route === 'none' || event.route === 'area') return [];
   const actor = pointFor(scene, event.actorId);
@@ -164,6 +170,7 @@ export function createCombatEffectPlan(scene: GuildCombatScene): CombatEffectPla
     Math.min(6, Math.trunc(scene.event?.causalDepth ?? scene.event?.relay ?? scene.relay)),
   );
   const motif = specializationMotif(scene);
+  const enemyAttack = createEnemyAttackPlan(scene);
   return {
     ambientParticles: 8 + relay * relay * 3,
     impactParticles: 12 + relay * relay * 5,
@@ -179,11 +186,12 @@ export function createCombatEffectPlan(scene: GuildCombatScene): CombatEffectPla
     elementMotif: elementMotif(scene),
     specializationMotif: motif,
     deliveryMotif: deliveryMotif(scene),
+    enemyAttack,
     enemyReaction: createEnemyReactionPlan(scene, relay),
     signatureMarks:
       relay +
       Math.floor((relay * relay) / 3) +
       (motif === 'rapid-strikes' ? 4 : motif === 'layer-orbit' ? 2 : 1),
-    route: eventRoute(scene),
+    route: eventRoute(scene, enemyAttack),
   };
 }

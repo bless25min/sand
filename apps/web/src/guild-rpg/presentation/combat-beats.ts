@@ -46,7 +46,7 @@ const KIND_BY_EVENT: Readonly<Partial<Record<BattleEventKind, CombatBeatKind>>> 
   enemy_attack: 'enemy',
   dodge: 'enemy',
   healing: 'support',
-  guard: 'support',
+  guard: 'enemy',
   status_applied: 'status',
   reaction: 'chain',
   weaken: 'status',
@@ -76,7 +76,7 @@ const DELAY_BY_KIND: Readonly<Record<CombatBeatKind, number>> = {
   defeat: 260,
   finisher: 360,
   support: 150,
-  enemy: 220,
+  enemy: 320,
   total: 220,
   info: 100,
 };

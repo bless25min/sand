@@ -1,5 +1,11 @@
-import type { GuildCombatSceneUnit, GuildCombatVisualEvent, GuildHeroVisual } from './contracts';
+import type {
+  GuildCombatSceneUnit,
+  GuildCombatVisualEvent,
+  GuildEnemyVisual,
+  GuildHeroVisual,
+} from './contracts';
 import type { EnemyReactionKind } from './combat-effect-plan';
+import type { EnemyAttackPlan } from './enemy-attack-plan';
 
 export interface CombatMotionInput {
   side: GuildCombatSceneUnit['side'];
@@ -9,6 +15,10 @@ export interface CombatMotionInput {
   progress: number;
   finisher: boolean;
   weapon?: GuildHeroVisual['weapon'];
+  enemyArchetype?: GuildEnemyVisual['archetype'];
+  enemyAttackOutcome?: EnemyAttackPlan['outcome'];
+  enemyAttackSource?: boolean;
+  enemyAttackTarget?: boolean;
   reactionKind?: EnemyReactionKind;
   reactionTarget?: boolean;
   reactionFadeTo?: number;
@@ -76,10 +86,55 @@ export function createCombatMotion(input: CombatMotionInput): CombatMotion {
       rotation += 0.13 * pulse;
     }
   }
+  if (input.side === 'enemies' && input.enemyAttackSource && input.enemyArchetype) {
+    const strike = Math.sin(Math.max(0, Math.min(1, (progress - 0.12) / 0.88)) * Math.PI);
+    if (input.enemyArchetype === 'skirmisher') {
+      x -= 72 * strike;
+      y -= 16 * strike;
+      rotation -= 0.18 * strike;
+    } else if (input.enemyArchetype === 'brute') {
+      x -= 34 * strike;
+      y += 12 * strike;
+      scale += 0.15 * strike;
+      rotation += 0.06 * strike;
+    } else if (input.enemyArchetype === 'guardian') {
+      x -= 43 * strike;
+      y += 4 * strike;
+      scale += 0.09 * strike;
+      rotation -= 0.11 * strike;
+    } else if (input.enemyArchetype === 'artillery') {
+      x += 18 * strike;
+      y -= 24 * strike;
+      scale += 0.04 * strike;
+      rotation += 0.2 * strike;
+    } else if (input.enemyArchetype === 'boss') {
+      x -= 48 * strike;
+      y -= 9 * strike;
+      scale += 0.2 * strike;
+      rotation -= 0.05 * strike;
+    } else {
+      x -= 56 * strike;
+      y -= 82 * strike;
+      scale += 0.07 * strike;
+      rotation += 0.24 * strike;
+    }
+  }
   if (input.state === 'hit') {
     x -= direction * (20 + relay * 6) * pulse;
     rotation -= direction * (0.05 + relay * 0.012) * pulse;
     scale += (0.05 + relay * 0.006) * pulse;
+  }
+  if (input.enemyAttackTarget && input.enemyAttackOutcome === 'guard') {
+    x -= 9 * pulse;
+    y += 5 * pulse;
+    scale -= 0.12 * pulse;
+    rotation -= 0.035 * pulse;
+  }
+  if (input.enemyAttackTarget && input.enemyAttackOutcome === 'dodge') {
+    x -= 28 * pulse;
+    y -= 52 * pulse;
+    scale += 0.035 * pulse;
+    rotation -= 0.12 * pulse;
   }
   if (input.reactionTarget && input.reactionKind === 'break') {
     y += (18 + relay * 2.5) * pulse;

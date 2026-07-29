@@ -140,4 +140,51 @@ describe('combat motion plan', () => {
     expect(execute.scale).toBeLessThan(0.7);
     expect(execute.alpha).toBeLessThan(0.25);
   });
+
+  it('gives all six enemy archetypes a distinct attack posture', () => {
+    const archetypes = ['skirmisher', 'brute', 'guardian', 'artillery', 'boss', 'flying'] as const;
+    const motions = archetypes.map((enemyArchetype) =>
+      createCombatMotion({
+        side: 'enemies',
+        state: 'acting',
+        phase: 'impact',
+        relay: 1,
+        progress: 0.5,
+        finisher: false,
+        enemyArchetype,
+        enemyAttackSource: true,
+      }),
+    );
+    const signatures = motions.map(
+      ({ x, y, scale, rotation }) =>
+        `${x.toFixed(2)}:${y.toFixed(2)}:${scale.toFixed(3)}:${rotation.toFixed(3)}`,
+    );
+
+    expect(new Set(signatures).size).toBe(archetypes.length);
+    expect(motions[0]!.x).toBeLessThan(motions[1]!.x);
+    expect(motions[5]!.y).toBeLessThan(motions[3]!.y);
+    expect(motions[4]!.scale).toBeGreaterThan(motions[0]!.scale);
+  });
+
+  it('separates damage recoil, guard bracing, and dodge movement', () => {
+    const result = (enemyAttackOutcome: 'damage' | 'guard' | 'dodge') =>
+      createCombatMotion({
+        side: 'heroes',
+        state: enemyAttackOutcome === 'damage' ? 'hit' : 'idle',
+        phase: enemyAttackOutcome === 'dodge' ? 'aftermath' : 'impact',
+        relay: 1,
+        progress: 0.5,
+        finisher: false,
+        enemyAttackOutcome,
+        enemyAttackTarget: true,
+      });
+    const damage = result('damage');
+    const guard = result('guard');
+    const dodge = result('dodge');
+
+    expect(damage.x).toBeLessThan(-10);
+    expect(guard.scale).toBeLessThan(1);
+    expect(Math.abs(dodge.y)).toBeGreaterThan(Math.abs(guard.y));
+    expect(dodge.x).not.toBe(damage.x);
+  });
 });

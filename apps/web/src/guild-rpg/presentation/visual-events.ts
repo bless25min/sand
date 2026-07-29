@@ -49,7 +49,7 @@ const RULES: Readonly<Record<BattleEventKind, VisualRule>> = {
     polarity: 'damage',
     route: 'direct',
     camera: 'shake',
-    durationMs: 220,
+    durationMs: 320,
   },
   dodge: {
     phase: 'aftermath',
@@ -57,7 +57,7 @@ const RULES: Readonly<Record<BattleEventKind, VisualRule>> = {
     polarity: 'support',
     route: 'direct',
     camera: 'track',
-    durationMs: 170,
+    durationMs: 300,
   },
   healing: {
     phase: 'impact',
@@ -73,7 +73,7 @@ const RULES: Readonly<Record<BattleEventKind, VisualRule>> = {
     polarity: 'support',
     route: 'none',
     camera: 'punch',
-    durationMs: 130,
+    durationMs: 280,
   },
   status_applied: {
     phase: 'aftermath',
@@ -244,7 +244,7 @@ const castHeadline = (element: GuildElement | undefined) =>
     : '技能起手';
 
 const signedNumber = (event: GuildBattleEvent, polarity: VisualEventPolarity) => {
-  if (event.amount === undefined) return undefined;
+  if (event.amount === undefined || event.amount === 0) return undefined;
   if (event.kind === 'overkill') return Math.abs(event.amount);
   if (polarity === 'damage' && event.kind !== 'status_applied') return -Math.abs(event.amount);
   return Math.abs(event.amount);

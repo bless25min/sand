@@ -262,4 +262,37 @@ describe('combat beat presentation', () => {
       20, 21, 22, 23, 24,
     ]);
   });
+
+  it('treats every resolved enemy response as a full enemy animation beat', () => {
+    const enemyResponses: readonly GuildBattleEvent[] = [
+      {
+        id: 30,
+        kind: 'enemy_attack',
+        message: '造成傷害',
+        actorId: 'wolf',
+        targetId: 'brann',
+        amount: 1,
+      },
+      {
+        id: 31,
+        kind: 'guard',
+        message: '完全格擋',
+        actorId: 'wolf',
+        targetId: 'brann',
+        amount: 0,
+      },
+      {
+        id: 32,
+        kind: 'dodge',
+        message: '高速閃避',
+        actorId: 'wolf',
+        targetId: 'lyra',
+        amount: 0,
+      },
+    ];
+    const beats = createCombatBeats(enemyResponses, 1);
+
+    expect(beats.map(({ kind }) => kind)).toEqual(['enemy', 'enemy', 'enemy']);
+    expect(beats.map(({ delayMs }) => delayMs)).toEqual([320, 280, 300]);
+  });
 });

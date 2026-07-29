@@ -22,6 +22,15 @@ const plan = (
   elementMotif,
   specializationMotif,
   deliveryMotif: 'neutral',
+  enemyAttack: {
+    active: false,
+    phase: 'none',
+    outcome: 'none',
+    motif: 'ground-smash',
+    accent: 0xff6548,
+    force: 0,
+    route: [],
+  },
   enemyReaction: {
     kind: 'none',
     targetIds: [],

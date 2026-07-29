@@ -127,4 +127,38 @@ describe('visual battle events', () => {
       phase: 'finisher',
     });
   });
+
+  it('holds enemy damage, guard, and dodge long enough to read their distinct outcomes', () => {
+    const enemyResults: readonly GuildBattleEvent[] = [
+      {
+        id: 20,
+        kind: 'enemy_attack',
+        message: '首領撲擊布蘭',
+        actorId: 'wolf_alpha',
+        targetId: 'brann',
+        amount: 1,
+      },
+      {
+        id: 21,
+        kind: 'guard',
+        message: '布蘭完全格擋',
+        actorId: 'wolf_alpha',
+        targetId: 'brann',
+        amount: 0,
+      },
+      {
+        id: 22,
+        kind: 'dodge',
+        message: '萊拉高速閃避',
+        actorId: 'wolf_alpha',
+        targetId: 'lyra',
+        amount: 0,
+      },
+    ];
+    const projected = projectVisualEvents(enemyResults, 1, false);
+
+    expect(projected.map(({ durationMs }) => durationMs)).toEqual([320, 280, 300]);
+    expect(projected.map(({ phase }) => phase)).toEqual(['impact', 'impact', 'aftermath']);
+    expect(projected.map(({ number }) => number)).toEqual([-1, undefined, undefined]);
+  });
 });

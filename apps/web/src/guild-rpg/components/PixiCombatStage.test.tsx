@@ -88,4 +88,38 @@ describe('PixiCombatStage enemy reaction output', () => {
     expect(markup).toContain('data-enemy-reaction="stagger"');
     expect(markup).toContain('data-reaction-targets="wolf"');
   });
+
+  it('exposes the enemy attack motif and result for automated visual verification', () => {
+    const enemyScene: GuildCombatScene = {
+      ...scene(),
+      units: [
+        { ...scene().units[0]!, state: 'hit' },
+        { ...scene().units[1]!, state: 'acting' },
+      ],
+      event: {
+        id: 'visual:enemy-attack',
+        sourceEventId: 91,
+        eventKind: 'enemy_attack',
+        phase: 'impact',
+        headline: '敵軍反擊',
+        detail: '敵軍反擊',
+        relay: 1,
+        intensity: 26,
+        durationMs: 300,
+        polarity: 'damage',
+        route: 'direct',
+        camera: 'shake',
+        actorId: 'wolf',
+        targetId: 'brann',
+        number: -1,
+      },
+    };
+    const markup = renderToStaticMarkup(
+      <PixiCombatStage scene={enemyScene} reducedMotion={false} />,
+    );
+
+    expect(markup).toContain('data-enemy-attack="royal-execution"');
+    expect(markup).toContain('data-enemy-attack-phase="strike"');
+    expect(markup).toContain('data-enemy-attack-outcome="damage"');
+  });
 });
