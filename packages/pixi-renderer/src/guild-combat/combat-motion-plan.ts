@@ -1,4 +1,5 @@
 import type { GuildCombatSceneUnit, GuildCombatVisualEvent, GuildHeroVisual } from './contracts';
+import type { EnemyReactionKind } from './combat-effect-plan';
 
 export interface CombatMotionInput {
   side: GuildCombatSceneUnit['side'];
@@ -8,6 +9,9 @@ export interface CombatMotionInput {
   progress: number;
   finisher: boolean;
   weapon?: GuildHeroVisual['weapon'];
+  reactionKind?: EnemyReactionKind;
+  reactionTarget?: boolean;
+  reactionFadeTo?: number;
 }
 
 export interface CombatMotion {
@@ -15,6 +19,7 @@ export interface CombatMotion {
   y: number;
   scale: number;
   rotation: number;
+  alpha: number;
 }
 
 export function createCombatMotion(input: CombatMotionInput): CombatMotion {
@@ -26,6 +31,7 @@ export function createCombatMotion(input: CombatMotionInput): CombatMotion {
   let y = 0;
   let scale = 1;
   let rotation = 0;
+  let alpha = 1;
 
   if (
     input.state === 'acting' &&
@@ -75,10 +81,30 @@ export function createCombatMotion(input: CombatMotionInput): CombatMotion {
     rotation -= direction * (0.05 + relay * 0.012) * pulse;
     scale += (0.05 + relay * 0.006) * pulse;
   }
+  if (input.reactionTarget && input.reactionKind === 'break') {
+    y += (18 + relay * 2.5) * pulse;
+    scale -= 0.15 * pulse;
+    rotation += direction * 0.24 * pulse;
+  }
+  if (input.reactionTarget && input.reactionKind === 'collapse') {
+    const fadeTo = input.reactionFadeTo ?? 0.3;
+    y += (34 + relay * 3) * progress;
+    scale -= 0.12 * progress;
+    rotation -= direction * (Math.PI / 2) * progress;
+    alpha = Math.max(fadeTo, 1 - progress * (1 - fadeTo));
+  }
+  if (input.reactionTarget && input.reactionKind === 'execute') {
+    const fadeTo = input.reactionFadeTo ?? 0;
+    const lift = Math.sin(Math.min(1, progress) * Math.PI * 0.82);
+    y -= (40 + relay * 3.2) * lift;
+    scale = Math.max(0.18, 1 - progress * (0.48 + relay * 0.015));
+    rotation += direction * progress * (0.42 + relay * 0.04);
+    alpha = Math.max(fadeTo, 1 - progress * (1 - fadeTo) * 1.05);
+  }
   if (input.finisher && input.side === 'heroes') {
     y -= (10 + relay * 1.5) * pulse;
     scale += (0.04 + relay * 0.008) * pulse;
   }
 
-  return { x, y, scale, rotation };
+  return { x, y, scale, rotation, alpha };
 }

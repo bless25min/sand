@@ -338,4 +338,141 @@ describe('Pixi guild combat effect plan', () => {
     expect(plan.impactTargetIds).toEqual(['wolf_alpha', 'wolf_guard']);
     expect(plan.finisher).toBe(true);
   });
+
+  it('visibly escalates a normal hit into a low-health stagger and guard break', () => {
+    const impact = (hpRatio: number, state: 'hit' | 'broken' = 'hit') =>
+      createCombatEffectPlan({
+        ...scene(3),
+        units: [scene(3).units[0]!, { ...scene(3).units[1]!, hpRatio, state }],
+        event: {
+          id: `visual:damage:${hpRatio}`,
+          sourceEventId: 80,
+          eventKind: 'damage',
+          phase: 'impact',
+          headline: '命中',
+          detail: '命中',
+          relay: 3,
+          intensity: 50,
+          durationMs: 170,
+          polarity: 'damage',
+          route: 'direct',
+          camera: 'punch',
+          actorId: 'brann',
+          targetId: 'wolf_alpha',
+          number: -4,
+        },
+      }).enemyReaction;
+    const normal = impact(0.7);
+    const stagger = impact(0.18);
+    const broken = impact(0, 'broken');
+
+    expect(normal).toMatchObject({ kind: 'impact', targetIds: ['wolf_alpha'] });
+    expect(stagger).toMatchObject({ kind: 'stagger', targetIds: ['wolf_alpha'] });
+    expect(broken).toMatchObject({ kind: 'break', targetIds: ['wolf_alpha'] });
+    expect(stagger.force).toBeGreaterThan(normal.force);
+    expect(broken.force).toBeGreaterThan(stagger.force);
+    expect(stagger.fragmentCount).toBeGreaterThan(normal.fragmentCount);
+    expect(broken.fragmentCount).toBeGreaterThan(stagger.fragmentCount);
+  });
+
+  it('turns enemy defeat and overkill into distinct collapse and execution reactions', () => {
+    const defeatedScene = {
+      ...scene(5),
+      units: [
+        scene(5).units[0]!,
+        { ...scene(5).units[1]!, hpRatio: 0, state: 'defeated' as const },
+      ],
+    };
+    const collapse = createCombatEffectPlan({
+      ...defeatedScene,
+      event: {
+        id: 'visual:defeat',
+        sourceEventId: 81,
+        eventKind: 'unit_defeated',
+        phase: 'aftermath',
+        headline: '擊破',
+        detail: '擊破',
+        relay: 5,
+        intensity: 84,
+        durationMs: 190,
+        polarity: 'damage',
+        route: 'none',
+        camera: 'shake',
+        actorId: 'brann',
+        targetId: 'wolf_alpha',
+      },
+    }).enemyReaction;
+    const execute = createCombatEffectPlan({
+      ...defeatedScene,
+      event: {
+        id: 'visual:overkill',
+        sourceEventId: 82,
+        eventKind: 'overkill',
+        phase: 'finisher',
+        headline: 'OVERKILL',
+        detail: 'OVERKILL',
+        relay: 6,
+        intensity: 100,
+        durationMs: 220,
+        polarity: 'damage',
+        route: 'area',
+        camera: 'finisher',
+        actorId: 'brann',
+        targetId: 'wolf_alpha',
+        number: 12,
+      },
+    }).enemyReaction;
+
+    expect(collapse).toMatchObject({
+      kind: 'collapse',
+      targetIds: ['wolf_alpha'],
+      crownLaunch: true,
+    });
+    expect(execute).toMatchObject({
+      kind: 'execute',
+      targetIds: ['wolf_alpha'],
+      fadeTo: 0,
+      crownLaunch: true,
+    });
+    expect(execute.fragmentCount).toBeGreaterThan(collapse.fragmentCount);
+  });
+
+  it('executes every enemy during a targetless sixth finisher', () => {
+    const plan = createCombatEffectPlan({
+      ...scene(6),
+      units: [
+        scene(6).units[0]!,
+        scene(6).units[1]!,
+        {
+          ...scene(6).units[1]!,
+          id: 'wolf_guard',
+          x: 850,
+          y: 390,
+          selected: false,
+        },
+      ],
+      event: {
+        id: 'visual:party-finisher',
+        sourceEventId: 83,
+        eventKind: 'finisher',
+        phase: 'finisher',
+        headline: '終結',
+        detail: '終結',
+        relay: 6,
+        intensity: 100,
+        durationMs: 520,
+        polarity: 'damage',
+        route: 'area',
+        camera: 'finisher',
+        actorId: 'brann',
+      },
+    });
+
+    expect(plan.enemyReaction).toMatchObject({
+      kind: 'execute',
+      targetIds: ['wolf_alpha', 'wolf_guard'],
+      fadeTo: 0,
+    });
+    expect(plan.enemyReaction.fragmentCount).toBeGreaterThanOrEqual(24);
+  });
 });

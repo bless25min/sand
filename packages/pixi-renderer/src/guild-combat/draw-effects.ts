@@ -4,6 +4,7 @@ import type { Container } from 'pixi.js';
 import { createEffectMarks } from './combat-effect-language';
 import type { CombatEffectPlan } from './combat-effect-plan';
 import type { GuildCombatScene } from './contracts';
+import { drawEnemyReactions, type EnemyReactionFragmentNode } from './draw-enemy-reactions';
 import { drawMark, drawProjectile, drawRoute } from './draw-effect-motifs';
 
 export interface EffectNodes {
@@ -15,6 +16,9 @@ export interface EffectNodes {
   marks: readonly Graphics[];
   afterimages: readonly Graphics[];
   flashes: readonly Graphics[];
+  reactionFragments: readonly EnemyReactionFragmentNode[];
+  reactionCores: readonly Graphics[];
+  reactionCrowns: readonly Graphics[];
   screenFlash?: Graphics;
 }
 
@@ -213,6 +217,7 @@ export function drawCombatEffects(
     number.position.set(center.x, center.y - 150);
     container.addChild(number);
   }
+  const reactions = drawEnemyReactions(container, scene, plan, color);
 
   return {
     ...(projectile ? { projectile } : {}),
@@ -223,6 +228,9 @@ export function drawCombatEffects(
     marks,
     afterimages,
     flashes,
+    reactionFragments: reactions.fragments,
+    reactionCores: reactions.cores,
+    reactionCrowns: reactions.crowns,
     ...(screenFlash ? { screenFlash } : {}),
   };
 }

@@ -1,4 +1,7 @@
 import type { GuildCombatScene } from './contracts';
+import { createEnemyReactionPlan, type EnemyReactionPlan } from './enemy-reaction-plan';
+
+export type { EnemyReactionKind } from './enemy-reaction-plan';
 
 export interface CombatEffectPoint {
   x: number;
@@ -35,6 +38,7 @@ export interface CombatEffectPlan {
     | 'twin-slash'
     | 'enemy-strike'
     | 'neutral';
+  enemyReaction: EnemyReactionPlan;
   signatureMarks: number;
   route: readonly CombatEffectPoint[];
 }
@@ -175,6 +179,7 @@ export function createCombatEffectPlan(scene: GuildCombatScene): CombatEffectPla
     elementMotif: elementMotif(scene),
     specializationMotif: motif,
     deliveryMotif: deliveryMotif(scene),
+    enemyReaction: createEnemyReactionPlan(scene, relay),
     signatureMarks:
       relay +
       Math.floor((relay * relay) / 3) +

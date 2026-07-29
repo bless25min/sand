@@ -1,4 +1,5 @@
 import {
+  createCombatEffectPlan,
   mountGuildCombatStage,
   type GuildCombatScene,
   type MountedGuildCombatStage,
@@ -18,6 +19,7 @@ export function PixiCombatStage({
   const [renderer, setRenderer] = useState<string>();
   const [error, setError] = useState(false);
   const actingUnit = scene.units.find(({ id }) => id === scene.event?.actorId);
+  const effectPlan = createCombatEffectPlan(scene);
 
   useEffect(() => {
     const host = hostRef.current;
@@ -65,6 +67,9 @@ export function PixiCombatStage({
       data-effect-specialization={scene.event?.specializationId}
       data-effect-delivery={actingUnit?.hero?.weapon ?? (actingUnit?.enemy ? 'enemy' : undefined)}
       data-effect-phase={scene.event?.phase}
+      data-enemy-reaction={effectPlan.enemyReaction.kind}
+      data-reaction-targets={effectPlan.enemyReaction.targetIds.join(',')}
+      data-reaction-force={effectPlan.enemyReaction.force}
       data-preview-total={scene.preview?.totalDamage}
       data-preview-targets={scene.preview?.targetIds.length}
     >

@@ -87,4 +87,57 @@ describe('combat motion plan', () => {
     expect(motions[2]!.y).toBeLessThan(motions[1]!.y);
     expect(Math.abs(motions[3]!.rotation)).toBeGreaterThan(Math.abs(motions[4]!.rotation));
   });
+
+  it('animates a defeated enemy through collapse instead of instantly showing a static corpse', () => {
+    const collapse = createCombatMotion({
+      side: 'enemies',
+      state: 'defeated',
+      phase: 'aftermath',
+      relay: 5,
+      progress: 0.7,
+      finisher: false,
+      reactionKind: 'collapse',
+      reactionTarget: true,
+      reactionFadeTo: 0.3,
+    });
+
+    expect(collapse.y).toBeGreaterThan(20);
+    expect(Math.abs(collapse.rotation)).toBeGreaterThan(0.55);
+    expect(collapse.alpha).toBeGreaterThan(0.2);
+  });
+
+  it('makes a broken enemy buckle more heavily than an ordinary hit', () => {
+    const broken = createCombatMotion({
+      side: 'enemies',
+      state: 'broken',
+      phase: 'impact',
+      relay: 4,
+      progress: 0.55,
+      finisher: false,
+      reactionKind: 'break',
+      reactionTarget: true,
+    });
+
+    expect(broken.y).toBeGreaterThan(12);
+    expect(broken.scale).toBeLessThan(0.9);
+    expect(Math.abs(broken.rotation)).toBeGreaterThan(0.18);
+  });
+
+  it('lifts then dissolves an enemy during overkill execution', () => {
+    const execute = createCombatMotion({
+      side: 'enemies',
+      state: 'defeated',
+      phase: 'finisher',
+      relay: 6,
+      progress: 0.82,
+      finisher: true,
+      reactionKind: 'execute',
+      reactionTarget: true,
+      reactionFadeTo: 0,
+    });
+
+    expect(execute.y).toBeLessThan(-18);
+    expect(execute.scale).toBeLessThan(0.7);
+    expect(execute.alpha).toBeLessThan(0.25);
+  });
 });

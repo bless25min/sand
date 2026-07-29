@@ -22,6 +22,14 @@ const plan = (
   elementMotif,
   specializationMotif,
   deliveryMotif: 'neutral',
+  enemyReaction: {
+    kind: 'none',
+    targetIds: [],
+    force: 0,
+    fragmentCount: 0,
+    fadeTo: 1,
+    crownLaunch: false,
+  },
   signatureMarks,
   route: [],
 });

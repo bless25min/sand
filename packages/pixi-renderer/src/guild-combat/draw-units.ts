@@ -250,9 +250,15 @@ export function drawCombatUnits(
           },
         );
     if (unit.state === 'defeated') {
-      figure.alpha = 0.3;
-      figure.rotation = unit.side === 'enemies' ? Math.PI / 2 : -Math.PI / 2;
-      figure.position.y = 5;
+      const activelyCollapsing =
+        scene.event?.eventKind === 'unit_defeated' && scene.event.targetId === unit.id;
+      figure.alpha = activelyCollapsing ? 1 : 0.3;
+      figure.rotation = activelyCollapsing
+        ? 0
+        : unit.side === 'enemies'
+          ? Math.PI / 2
+          : -Math.PI / 2;
+      figure.position.y = activelyCollapsing ? 0 : 5;
     } else if (unit.state === 'broken') {
       figure.alpha = 0.76;
       figure.rotation = unit.side === 'enemies' ? 0.12 : -0.12;

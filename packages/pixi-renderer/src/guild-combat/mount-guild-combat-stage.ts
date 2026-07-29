@@ -146,6 +146,9 @@ export async function mountGuildCombatStage(
           progress,
           finisher: currentPlan.finisher && currentScene.event?.phase === 'finisher',
           ...(sceneUnit?.hero?.weapon ? { weapon: sceneUnit.hero.weapon } : {}),
+          reactionKind: currentPlan.enemyReaction.kind,
+          reactionTarget: currentPlan.enemyReaction.targetIds.includes(unit.id),
+          reactionFadeTo: currentPlan.enemyReaction.fadeTo,
         });
         unit.node.position.set(
           unit.baseX + motion.x,
@@ -153,6 +156,7 @@ export async function mountGuildCombatStage(
         );
         unit.node.scale.set(motion.scale);
         unit.node.rotation = motion.rotation;
+        unit.node.alpha = motion.alpha;
       }
       if (currentPlan.shakePx > 0 && currentScene.event?.camera !== 'none') {
         const decay = 1 - progress;
@@ -194,6 +198,28 @@ export async function mountGuildCombatStage(
       particle.x += Math.cos(angle) * (0.6 + currentScene.relay * 0.15);
       particle.y += Math.sin(angle) * (0.6 + currentScene.relay * 0.15);
       particle.alpha = Math.max(0, 1 - progress);
+    }
+    if (!input.reducedMotion) {
+      for (const fragment of nodes.effects.reactionFragments) {
+        fragment.node.position.set(
+          fragment.originX + fragment.velocityX * progress,
+          fragment.originY + fragment.velocityY * progress + progress * progress * 58,
+        );
+        fragment.node.rotation = fragment.spin * progress;
+        fragment.node.alpha = Math.max(0, 1 - progress * 0.92);
+      }
+      for (const core of nodes.effects.reactionCores) {
+        core.scale.set(
+          0.45 + progress * (currentPlan.enemyReaction.kind === 'execute' ? 1.65 : 0.9),
+        );
+        core.alpha = Math.max(0, 1 - progress * 0.9);
+      }
+      for (const [index, crown] of nodes.effects.reactionCrowns.entries()) {
+        crown.y -= 0.9 + currentPlan.enemyReaction.force * 0.25;
+        crown.x += index % 2 === 0 ? 0.45 : -0.45;
+        crown.rotation += index % 2 === 0 ? 0.035 : -0.035;
+        crown.alpha = Math.max(0, 1 - progress * 0.72);
+      }
     }
     for (const [index, mark] of nodes.effects.marks.entries()) {
       const direction = index % 2 === 0 ? 1 : -1;

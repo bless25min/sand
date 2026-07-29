@@ -94,9 +94,31 @@ async function expectBattlefieldVisible(page: Page, viewportLabel = 'current vie
 
 async function castVisibleSkill(page: Page, castOnBattlefieldTarget = false) {
   const battle = page.locator('.gr-battle');
+  const stage = page.locator('[data-pixi-combat-stage="true"]');
   let castTargetId: string | null = null;
   let castTargetHpBefore: number | undefined;
   await expect(battle).toHaveAttribute('data-playback', 'false', { timeout: 12_000 });
+  await stage.evaluate((node) => {
+    const reactionWindow = window as typeof window & {
+      __enemyReactionObserver?: MutationObserver;
+      __enemyReactionTrace?: string[];
+    };
+    reactionWindow.__enemyReactionObserver?.disconnect();
+    reactionWindow.__enemyReactionTrace = [];
+    const collect = () => {
+      const value = (node as HTMLElement).dataset.enemyReaction;
+      if (value && value !== 'none' && !reactionWindow.__enemyReactionTrace?.includes(value)) {
+        reactionWindow.__enemyReactionTrace?.push(value);
+      }
+    };
+    const observer = new MutationObserver(collect);
+    observer.observe(node, {
+      attributes: true,
+      attributeFilter: ['data-enemy-reaction'],
+    });
+    reactionWindow.__enemyReactionObserver = observer;
+    collect();
+  });
   const actorId = await page
     .locator('[data-combat-battlefield]')
     .getAttribute('data-current-actor');
@@ -167,7 +189,6 @@ async function castVisibleSkill(page: Page, castOnBattlefieldTarget = false) {
     await skill.click();
   }
   await expect(battle).toHaveAttribute('data-playback', 'true');
-  const stage = page.locator('[data-pixi-combat-stage="true"]');
   const delivery = await stage.getAttribute('data-effect-delivery');
   expect(delivery).toMatch(/shield|bow|staff|flask|tome|blades|enemy/);
   if (execution) {
@@ -187,6 +208,21 @@ async function castVisibleSkill(page: Page, castOnBattlefieldTarget = false) {
     await page.locator('[data-combat-battlefield]').getAttribute('data-relay-tier'),
   );
   await expect(battle).toHaveAttribute('data-playback', 'false', { timeout: 12_000 });
+  const reactions = await stage.evaluate((node) => {
+    const reactionWindow = window as typeof window & {
+      __enemyReactionObserver?: MutationObserver;
+      __enemyReactionTrace?: string[];
+    };
+    const value = (node as HTMLElement).dataset.enemyReaction;
+    if (value && value !== 'none' && !reactionWindow.__enemyReactionTrace?.includes(value)) {
+      reactionWindow.__enemyReactionTrace?.push(value);
+    }
+    reactionWindow.__enemyReactionObserver?.disconnect();
+    const trace = reactionWindow.__enemyReactionTrace ?? [];
+    delete reactionWindow.__enemyReactionObserver;
+    delete reactionWindow.__enemyReactionTrace;
+    return trace;
+  });
   if (castTargetId && castTargetHpBefore !== undefined) {
     const hpAfter = Number(
       (
@@ -201,7 +237,7 @@ async function castVisibleSkill(page: Page, castOnBattlefieldTarget = false) {
       actorId ?? '',
     );
   }
-  return { actorId, relay, execution, finalExecution, delivery };
+  return { actorId, relay, execution, finalExecution, delivery, reactions };
 }
 
 test('a new player understands combat, sees six escalating relays, and completes the loot loop', async ({
@@ -265,11 +301,14 @@ test('a new player understands combat, sees six escalating relays, and completes
     execution: boolean;
     finalExecution: boolean;
     delivery: string | null;
+    reactions: string[];
   }[] = [];
+  const enemyReactions: string[] = [];
   for (let turn = 0; turn < 60; turn += 1) {
     const collect = page.getByRole('button', { name: '收下全部戰利品' });
     if (await collect.isVisible().catch(() => false)) break;
     const result = await castVisibleSkill(page);
+    enemyReactions.push(...result.reactions);
     if (firstRelays.length < 6) firstRelays.push(result);
   }
 
@@ -292,6 +331,10 @@ test('a new player understands combat, sees six escalating relays, and completes
   expect(firstRelays[0]?.relay).toBe(1);
   expect(Math.max(...firstRelays.map(({ relay }) => relay))).toBeGreaterThanOrEqual(3);
   expect(firstRelays.every(({ relay }) => relay >= 1 && relay <= 6)).toBe(true);
+  expect(enemyReactions.some((reaction) => ['impact', 'stagger', 'break'].includes(reaction))).toBe(
+    true,
+  );
+  expect(enemyReactions.some((reaction) => ['collapse', 'execute'].includes(reaction))).toBe(true);
   await expect(page.locator('body')).not.toContainText('battle_open');
   await expect(page.locator('body')).not.toContainText('已播放');
   await expect(page.getByRole('button', { name: '收下全部戰利品' })).toBeEnabled();
