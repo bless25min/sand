@@ -538,3 +538,72 @@ test('exposes campaign mastery and starts the selected ascension without mobile 
   await expectSingleScreen(page);
   await expectNoHorizontalCrop(page);
 });
+
+test('feedback settings are touchable, persistent, and available during battle', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.addInitScript(() => {
+    if (sessionStorage.getItem('feedback-settings-e2e-seeded') === 'true') return;
+    sessionStorage.setItem('feedback-settings-e2e-seeded', 'true');
+    localStorage.clear();
+    localStorage.setItem(
+      'expedition:guild-rpg:preferences:v1',
+      JSON.stringify({
+        version: 1,
+        tutorial: 'skipped',
+        masterVolume: 0.45,
+        musicEnabled: true,
+        hapticsEnabled: true,
+        motion: 'system',
+      }),
+    );
+  });
+  await page.goto('/');
+
+  await page.getByLabel('開啟教學與遊戲設定').click();
+  const guildSettings = page.locator('[data-feedback-settings="guild"]');
+  await expect(guildSettings).toBeVisible();
+  await expectFullyInViewport(page, '[data-feedback-settings="guild"]');
+  await expectMinTouchTarget(page, '.gr-feedback-toggles button');
+  await guildSettings.getByLabel('主音量').fill('80');
+  await guildSettings.getByRole('button', { name: /戰鬥音效/ }).click();
+  await guildSettings.getByRole('button', { name: /震動回饋/ }).click();
+  await guildSettings.getByRole('button', { name: /精簡動態/ }).click();
+
+  await expect
+    .poll(() =>
+      page.evaluate(() =>
+        JSON.parse(localStorage.getItem('expedition:guild-rpg:preferences:v1') ?? 'null'),
+      ),
+    )
+    .toMatchObject({
+      masterVolume: 0.8,
+      musicEnabled: false,
+      hapticsEnabled: false,
+      motion: 'reduced',
+    });
+  await expectSingleScreen(page);
+  await expectNoHorizontalCrop(page);
+
+  await page.reload();
+  await page.getByLabel('開啟教學與遊戲設定').click();
+  await expect(page.locator('[data-feedback-settings="guild"] [aria-label="主音量"]')).toHaveValue(
+    '80',
+  );
+  await expect(
+    page.locator('[data-feedback-settings="guild"]').getByRole('button', {
+      name: /精簡動態/,
+    }),
+  ).toHaveAttribute('aria-pressed', 'true');
+  await page.getByLabel('開啟教學與遊戲設定').click();
+
+  await page.getByRole('button', { name: '開始狩獵' }).click();
+  await page.getByLabel('更多戰鬥選項').click();
+  const battleSettings = page.locator('[data-feedback-settings="battle"]');
+  await expect(battleSettings).toBeVisible();
+  await expectFullyInViewport(page, '[data-feedback-settings="battle"]');
+  await expect(battleSettings.getByRole('button', { name: '重播新手教學' })).toHaveCount(0);
+  await expectSingleScreen(page);
+  await expectNoHorizontalCrop(page);
+});

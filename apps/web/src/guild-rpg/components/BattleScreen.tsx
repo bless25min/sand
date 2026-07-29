@@ -15,6 +15,7 @@ import { createSkillEngineContent } from '../state/create-skill-engine-content';
 import type { GuildRpgAction, GuildRpgState } from '../state/game-reducer';
 import { BattleCommandDock } from './BattleCommandDock';
 import { CombatBattlefield } from './CombatBattlefield';
+import { GuildFeedbackSettings } from './GuildFeedbackSettings';
 
 const heroDefinition = (id?: string) =>
   GUILD_GAME_CONTENT.adventurers.find((hero) => hero.id === id);
@@ -139,42 +140,50 @@ export function BattleScreen({
           <span>{battle.ascension ? `ASCENSION · ${battle.ascension.name}` : 'QUEST'}</span>
           <h1>{quest.name}</h1>
         </div>
-        {victory ? (
-          <strong className="gr-finisher-badge">第六棒 · 終結完成</strong>
-        ) : (
+        <div className="gr-battle__header-actions">
+          {victory && <strong className="gr-finisher-badge">第六棒 · 終結完成</strong>}
           <details className="gr-battle-menu">
             <summary aria-label="更多戰鬥選項">⋯</summary>
             <div>
-              <button
-                type="button"
-                disabled={playback.isPlaying}
-                onClick={() => dispatch({ type: 'RESET_CURRENT_ORDER' })}
-              >
-                重設順序
-              </button>
-              <button
-                type="button"
-                disabled={playback.isPlaying}
-                aria-pressed={order.carryCurrentOrder}
-                onClick={() =>
-                  dispatch({
-                    type: 'SET_CARRY_ORDER',
-                    enabled: !order.carryCurrentOrder,
-                  })
-                }
-              >
-                {order.carryCurrentOrder ? '取消沿用' : '沿用順序'}
-              </button>
-              <button
-                type="button"
-                disabled={playback.isPlaying}
-                onClick={() => dispatch({ type: 'ABANDON_HUNT' })}
-              >
-                撤離
-              </button>
+              {!victory && (
+                <nav className="gr-battle-menu__actions" aria-label="戰鬥選項">
+                  <button
+                    type="button"
+                    disabled={playback.isPlaying}
+                    onClick={() => dispatch({ type: 'RESET_CURRENT_ORDER' })}
+                  >
+                    重設順序
+                  </button>
+                  <button
+                    type="button"
+                    disabled={playback.isPlaying}
+                    aria-pressed={order.carryCurrentOrder}
+                    onClick={() =>
+                      dispatch({
+                        type: 'SET_CARRY_ORDER',
+                        enabled: !order.carryCurrentOrder,
+                      })
+                    }
+                  >
+                    {order.carryCurrentOrder ? '取消沿用' : '沿用順序'}
+                  </button>
+                  <button
+                    type="button"
+                    disabled={playback.isPlaying}
+                    onClick={() => dispatch({ type: 'ABANDON_HUNT' })}
+                  >
+                    撤離
+                  </button>
+                </nav>
+              )}
+              <GuildFeedbackSettings
+                preferences={state.preferences}
+                dispatch={dispatch}
+                surface="battle"
+              />
             </div>
           </details>
-        )}
+        </div>
       </header>
 
       <CombatBattlefield

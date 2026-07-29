@@ -27,7 +27,11 @@ import {
 } from '@expedition/simulation-core';
 
 import type { FirstHuntCoachStep } from '../onboarding/first-hunt-coach';
-import type { GuildPreferences, TutorialState } from '../preferences/guild-preferences';
+import type {
+  GuildPreferences,
+  MotionPreference,
+  TutorialState,
+} from '../preferences/guild-preferences';
 import { createSkillEngineContent } from './create-skill-engine-content';
 import { reduceHuntResult } from './reduce-hunt-result';
 
@@ -96,6 +100,10 @@ export type GuildRpgAction =
   | { type: 'GO_TO_FUSION' }
   | { type: 'RETURN_GUILD'; page?: GuildPage }
   | { type: 'ABANDON_HUNT' }
+  | { type: 'SET_MASTER_VOLUME'; volume: number }
+  | { type: 'SET_AUDIO_ENABLED'; enabled: boolean }
+  | { type: 'SET_HAPTICS_ENABLED'; enabled: boolean }
+  | { type: 'SET_MOTION'; motion: MotionPreference }
   | { type: 'SET_TUTORIAL'; tutorial: TutorialState };
 
 const heroName = (id: string) =>
@@ -133,6 +141,33 @@ const finishBattle = (state: GuildRpgState, battle: GuildBattleState): GuildRpgS
 };
 
 export function guildRpgReducer(state: GuildRpgState, action: GuildRpgAction): GuildRpgState {
+  if (action.type === 'SET_MASTER_VOLUME') {
+    const masterVolume = Number.isFinite(action.volume)
+      ? Math.max(0, Math.min(1, action.volume))
+      : state.preferences.masterVolume;
+    return {
+      ...state,
+      preferences: { ...state.preferences, masterVolume },
+    };
+  }
+  if (action.type === 'SET_AUDIO_ENABLED') {
+    return {
+      ...state,
+      preferences: { ...state.preferences, musicEnabled: action.enabled },
+    };
+  }
+  if (action.type === 'SET_HAPTICS_ENABLED') {
+    return {
+      ...state,
+      preferences: { ...state.preferences, hapticsEnabled: action.enabled },
+    };
+  }
+  if (action.type === 'SET_MOTION') {
+    return {
+      ...state,
+      preferences: { ...state.preferences, motion: action.motion },
+    };
+  }
   if (action.type === 'SET_TUTORIAL') {
     return {
       ...state,

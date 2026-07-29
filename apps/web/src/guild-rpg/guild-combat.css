@@ -848,6 +848,12 @@
   font-size: clamp(15px, 4vw, 19px);
 }
 
+.gr-battle__header-actions {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
 .gr-battle-menu {
   position: relative;
 }
@@ -875,14 +881,22 @@
   top: 46px;
   right: 0;
   display: grid;
-  width: 150px;
-  gap: 5px;
-  padding: 7px;
+  width: min(330px, calc(100vw - 20px));
+  gap: 7px;
+  padding: 8px;
   border: 1px solid #d99c38;
+  border-radius: 9px;
   background: #07110f;
+  box-shadow: 0 18px 60px #000;
 }
 
-.gr-battle-menu button {
+.gr-battle-menu__actions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 5px;
+}
+
+.gr-battle-menu__actions button {
   min-height: 42px;
 }
 

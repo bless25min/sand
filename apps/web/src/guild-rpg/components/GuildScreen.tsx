@@ -3,6 +3,7 @@ import { GUILD_GAME_CONTENT } from '@expedition/game-data';
 import { createFirstHuntCoach, isFirstHuntCoachFocus } from '../onboarding/first-hunt-coach';
 import type { GuildPage, GuildRpgAction, GuildRpgState } from '../state/game-reducer';
 import { EquipmentWorkbench } from './EquipmentWorkbench';
+import { GuildFeedbackSettings } from './GuildFeedbackSettings';
 import { GuildTrainingChecklist } from './GuildTrainingChecklist';
 import { QuestBoard } from './QuestBoard';
 import { SkillFusionWorkbench } from './SkillFusionWorkbench';
@@ -85,9 +86,15 @@ export function GuildScreen({
       </header>
       <Coach state={state} dispatch={dispatch} />
       <details className="gr-help-drawer">
-        <summary aria-label="開啟教學與進度">?</summary>
+        <summary aria-label="開啟教學與遊戲設定">⚙</summary>
         <div>
           <GuildTrainingChecklist state={state} />
+          <GuildFeedbackSettings
+            preferences={state.preferences}
+            dispatch={dispatch}
+            surface="guild"
+            allowTutorialReplay
+          />
           <aside className="gr-help-basics" aria-label="基本操作">
             <strong>四個固定入口</strong>
             <span>任務：選區域與狩獵目標</span>

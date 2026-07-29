@@ -1,5 +1,5 @@
 export type TutorialState = 'active' | 'complete' | 'skipped';
-type MotionPreference = 'system' | 'reduced';
+export type MotionPreference = 'system' | 'reduced';
 
 export interface GuildPreferences {
   version: 1;

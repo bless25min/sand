@@ -1292,6 +1292,105 @@ html[data-guild-screen] #root {
   color: #f1cb82;
 }
 
+.gr-feedback-settings {
+  display: grid;
+  gap: 7px;
+  padding: 9px;
+  overflow: hidden;
+  border: 1px solid rgb(239 188 98 / 28%);
+  border-radius: 9px;
+  color: #e7eee9;
+  background: rgb(15 30 25 / 92%);
+}
+
+.gr-feedback-settings > header,
+.gr-feedback-volume > span {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.gr-feedback-settings > header strong {
+  color: #f8d58a;
+  font-size: 13px;
+}
+
+.gr-feedback-settings > header small,
+.gr-feedback-volume output {
+  color: #91a79c;
+  font-size: 10px;
+}
+
+.gr-feedback-volume {
+  display: grid;
+  gap: 3px;
+  font-size: 11px;
+}
+
+.gr-feedback-volume label {
+  font-weight: 800;
+}
+
+.gr-feedback-volume input {
+  width: 100%;
+  min-height: 28px;
+  margin: 0;
+  accent-color: #f2b84e;
+  cursor: pointer;
+}
+
+.gr-feedback-toggles {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 5px;
+}
+
+.gr-feedback-toggles button,
+.gr-feedback-tutorial {
+  min-height: 44px;
+  border: 1px solid rgb(239 188 98 / 28%);
+  border-radius: 7px;
+  color: #c8d4cd;
+  background: #081512;
+  cursor: pointer;
+}
+
+.gr-feedback-toggles button {
+  display: grid;
+  gap: 1px;
+  place-content: center;
+  padding: 4px;
+}
+
+.gr-feedback-toggles button span {
+  overflow: hidden;
+  font-size: 10px;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gr-feedback-toggles button small {
+  color: #748b80;
+  font-size: 9px;
+}
+
+.gr-feedback-toggles button[aria-pressed='true'] {
+  border-color: #f0bd5f;
+  color: #ffe6aa;
+  background: rgb(79 55 18 / 54%);
+  box-shadow: inset 0 0 0 1px rgb(255 218 130 / 18%);
+}
+
+.gr-feedback-toggles button[aria-pressed='true'] small {
+  color: #f4cb78;
+}
+
+.gr-feedback-tutorial {
+  color: #f5d28b;
+  font-weight: 800;
+}
+
 .gr-collection-pager {
   display: grid;
   width: min(210px, 100%);

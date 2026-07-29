@@ -33,6 +33,27 @@ const winFirstHunt = (initial: GuildRpgState) => {
 };
 
 describe('deterministic six-hero game flow', () => {
+  it('applies player feedback preferences without disturbing the current game state', () => {
+    let state = createGuildRpgState();
+    const profile = state.profile;
+
+    state = reduce(state, { type: 'SET_MASTER_VOLUME', volume: 0.8 });
+    state = reduce(state, { type: 'SET_AUDIO_ENABLED', enabled: false });
+    state = reduce(state, { type: 'SET_HAPTICS_ENABLED', enabled: false });
+    state = reduce(state, { type: 'SET_MOTION', motion: 'reduced' });
+
+    expect(state.preferences).toMatchObject({
+      masterVolume: 0.8,
+      musicEnabled: false,
+      hapticsEnabled: false,
+      motion: 'reduced',
+    });
+    expect(state.profile).toBe(profile);
+
+    state = reduce(state, { type: 'SET_MASTER_VOLUME', volume: 4 });
+    expect(state.preferences.masterVolume).toBe(1);
+  });
+
   it('starts a fresh player in the hunt instead of forcing a pre-battle menu tour', () => {
     let state = createGuildRpgState();
 

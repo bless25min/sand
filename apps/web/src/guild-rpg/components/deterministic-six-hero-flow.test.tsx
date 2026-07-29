@@ -237,6 +237,9 @@ describe('deterministic six-hero interface', () => {
     expect(markup).toContain('data-shell="single-screen"');
     expect(markup).toContain('data-page-viewport="quest"');
     expect(markup).toContain('class="gr-help-drawer"');
+    expect(markup).toContain('data-feedback-settings="guild"');
+    expect(markup).toContain('aria-label="主音量"');
+    expect(markup).toContain('重播新手教學');
 
     state = guildRpgReducer(state, { type: 'NAVIGATE', page: 'skills' });
     markup = renderToStaticMarkup(<GuildScreen state={state} dispatch={dispatch} />);
@@ -254,6 +257,7 @@ describe('deterministic six-hero interface', () => {
       /\.gr-shell\[data-shell='single-screen'\]\s*\{[^}]*height:\s*100dvh[^}]*overflow:\s*hidden/,
     );
     expect(css).toMatch(/\.gr-page-viewport\s*\{[^}]*overflow:\s*hidden/);
+    expect(css).toMatch(/\.gr-feedback-settings\s*\{[^}]*display:\s*grid[^}]*overflow:\s*hidden/);
   });
 
   it('equips one skill then automatically advances to the next hero', () => {
@@ -313,6 +317,9 @@ describe('deterministic six-hero interface', () => {
       /data-combat-battlefield="true"[\s\S]*?<\/section><section class="gr-command-dock"/,
     );
     expect(markup).toContain('data-animation-first="true"');
+    expect(markup).toContain('data-feedback-settings="battle"');
+    expect(markup).toContain('aria-label="主音量"');
+    expect(markup).not.toContain('重播新手教學');
     expect(markup).toContain('class="gr-battle-guide-strip"');
     const activeMember = state.profile.party.find(
       ({ definitionId }) => definitionId === state.battle?.roundOrder?.activeAdventurerId,
