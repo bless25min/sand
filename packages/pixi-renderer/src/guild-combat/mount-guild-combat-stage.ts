@@ -161,6 +161,18 @@ export async function mountGuildCombatStage(
         unit.node.scale.set(motion.scale);
         unit.node.rotation = motion.rotation;
         unit.node.alpha = motion.alpha;
+        for (const aura of unit.auras) {
+          const wave = Math.sin(effectElapsed * (aura.kind === 'burn' ? 4.8 : 2.1) + aura.phase);
+          aura.node.position.y =
+            aura.baseY +
+            (aura.kind === 'poison' ? wave * 4 : aura.kind === 'burn' ? wave * 1.8 : 0);
+          aura.node.scale.set(
+            aura.kind === 'tide' ? 1 + wave * 0.045 : 1 + Math.max(0, wave) * 0.065,
+          );
+          aura.node.rotation =
+            aura.kind === 'poison' ? wave * 0.025 : aura.kind === 'burn' ? wave * 0.012 : 0;
+          aura.node.alpha = Math.min(1, (aura.preview ? 0.82 : 0.9) + wave * 0.08);
+        }
       }
       if (currentPlan.shakePx > 0 && currentScene.event?.camera !== 'none') {
         const decay = 1 - progress;

@@ -87,6 +87,34 @@ describe('PixiCombatStage enemy reaction output', () => {
 
     expect(markup).toContain('data-enemy-reaction="stagger"');
     expect(markup).toContain('data-reaction-targets="wolf"');
+    expect(markup).toContain('data-status-auras="wolf:burn-1"');
+  });
+
+  it('exposes projected aura escalation before the player confirms a skill', () => {
+    const previewScene: GuildCombatScene = {
+      ...scene(),
+      units: scene().units.map((unit) =>
+        unit.id === 'wolf'
+          ? {
+              ...unit,
+              preview: {
+                afterHp: 9,
+                damage: 5,
+                healing: 0,
+                afterStatus: { burn: 5, poison: 2, tide: 0 },
+                afterDefenseReduction: 0,
+                afterStrengthened: 0,
+              },
+            }
+          : unit,
+      ),
+    };
+
+    const markup = renderToStaticMarkup(
+      <PixiCombatStage scene={previewScene} reducedMotion={false} />,
+    );
+
+    expect(markup).toContain('data-status-auras="wolf:burn-1&gt;2,poison-0&gt;1"');
   });
 
   it('exposes the enemy attack motif and result for automated visual verification', () => {

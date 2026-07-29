@@ -519,6 +519,43 @@ test('keeps the semantic WebGL battle readable at wide mobile and desktop sizes'
   }
 });
 
+test('previews and commits escalating elemental status directly on the battlefield', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.addInitScript(() => {
+    localStorage.clear();
+    localStorage.setItem(
+      'expedition:guild-rpg:preferences:v1',
+      JSON.stringify({
+        version: 1,
+        tutorial: 'skipped',
+        masterVolume: 0,
+        musicEnabled: false,
+        hapticsEnabled: false,
+        motion: 'reduced',
+      }),
+    );
+  });
+  await page.goto('/');
+  await page.locator('[data-hunt-card="border_pack"] .gr-primary-action').click();
+
+  const stage = page.locator('[data-pixi-combat-stage="true"]');
+  const statusSkill = page.locator('button[data-battle-skill="1"]');
+  await expect(statusSkill).toHaveAttribute('aria-label', /燃增加\d+/);
+  await statusSkill.click();
+  await expect(stage).toHaveAttribute('data-status-auras', /burn-0>1/);
+  await statusSkill.click();
+  await expect(page.locator('.gr-battle')).toHaveAttribute('data-playback', 'true');
+  await expect(page.locator('.gr-battle')).toHaveAttribute('data-playback', 'false', {
+    timeout: 12_000,
+  });
+  await expect(stage).toHaveAttribute('data-status-auras', /burn-1/);
+  await expect(stage).not.toHaveAttribute('data-status-auras', /burn-0>1/);
+  await expectBattlefieldVisible(page);
+  await expectSingleScreen(page);
+});
+
 test('exposes campaign mastery and starts the selected ascension without mobile overflow', async ({
   page,
 }) => {

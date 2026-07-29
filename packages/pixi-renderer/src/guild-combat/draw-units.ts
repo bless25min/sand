@@ -4,6 +4,7 @@ import { createCombatUnitHud } from './combat-unit-hud';
 import type { GuildCombatScene, GuildCombatSceneUnit } from './contracts';
 import { drawBossPresence } from './draw-boss-presence';
 import { drawEnemyFigure, drawHeroFigure } from './draw-figures';
+import { drawStatusAuras, type StatusAuraNode } from './draw-status-auras';
 
 export interface UnitNode {
   id: string;
@@ -11,6 +12,7 @@ export interface UnitNode {
   baseX: number;
   baseY: number;
   state: GuildCombatSceneUnit['state'];
+  auras: readonly StatusAuraNode[];
 }
 
 const STATUS_COLORS = {
@@ -236,6 +238,7 @@ export function drawCombatUnits(
     root.position.set(unit.x, unit.y);
     drawBossPresence(root, unit, scene.relay, unitAccent(unit));
     drawState(root, unit, scene.relay);
+    const auras = drawStatusAuras(root, unit);
     const figure = unit.hero
       ? drawHeroFigure(unit.hero)
       : drawEnemyFigure(
@@ -275,6 +278,7 @@ export function drawCombatUnits(
       baseX: unit.x,
       baseY: unit.y,
       state: unit.state,
+      auras,
     };
   });
 }

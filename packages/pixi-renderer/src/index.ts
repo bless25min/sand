@@ -8,6 +8,7 @@ export { PixiPointLayer } from './layers/pixi-point-layer';
 export type { PointTextureMap } from './layers/pixi-point-layer';
 export { createCombatEffectPlan } from './guild-combat/combat-effect-plan';
 export { createCombatUnitHud } from './guild-combat/combat-unit-hud';
+export { createStatusAuraPlan } from './guild-combat/status-aura-plan';
 export { mountGuildCombatStage } from './guild-combat/mount-guild-combat-stage';
 export type { CombatEffectPlan, CombatEffectPoint } from './guild-combat/combat-effect-plan';
 export type {
@@ -25,6 +26,12 @@ export type {
   GuildZoneVisual,
 } from './guild-combat/contracts';
 export type { CombatUnitHud } from './guild-combat/combat-unit-hud';
+export type {
+  StatusAuraKind,
+  StatusAuraLayerPlan,
+  StatusAuraPlan,
+  StatusAuraTier,
+} from './guild-combat/status-aura-plan';
 export { mountPointCloud } from './mount/mount-point-cloud';
 export type { MountedPointCloud, MountPointCloudInput } from './mount/mount-point-cloud';
 export { advanceVisualPoint } from './points/advance-visual-point';

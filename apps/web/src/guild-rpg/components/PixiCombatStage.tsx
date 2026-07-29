@@ -1,10 +1,22 @@
 import {
   createCombatEffectPlan,
+  createStatusAuraPlan,
   mountGuildCombatStage,
   type GuildCombatScene,
   type MountedGuildCombatStage,
 } from '@expedition/pixi-renderer';
 import { useEffect, useRef, useState } from 'react';
+
+const statusAuraSummary = (scene: GuildCombatScene) =>
+  scene.units
+    .flatMap((unit) => {
+      const layers = createStatusAuraPlan(unit).layers.map(
+        ({ kind, tier, projectedTier }) =>
+          `${kind}-${tier}${tier === projectedTier ? '' : `>${projectedTier}`}`,
+      );
+      return layers.length > 0 ? [`${unit.id}:${layers.join(',')}`] : [];
+    })
+    .join(';');
 
 export function PixiCombatStage({
   scene,
@@ -20,6 +32,7 @@ export function PixiCombatStage({
   const [error, setError] = useState(false);
   const actingUnit = scene.units.find(({ id }) => id === scene.event?.actorId);
   const effectPlan = createCombatEffectPlan(scene);
+  const auraSummary = statusAuraSummary(scene);
 
   useEffect(() => {
     const host = hostRef.current;
@@ -79,6 +92,7 @@ export function PixiCombatStage({
       data-reaction-force={effectPlan.enemyReaction.force}
       data-preview-total={scene.preview?.totalDamage}
       data-preview-targets={scene.preview?.targetIds.length}
+      data-status-auras={auraSummary || undefined}
     >
       <div ref={hostRef} data-combat-canvas-host="true" />
       {error && (
