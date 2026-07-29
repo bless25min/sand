@@ -1,5 +1,5 @@
 import { GUILD_GAME_CONTENT } from '@expedition/game-data';
-import type { GuildSkillItem, HuntEquipmentItem } from '@expedition/shared-types';
+import type { GuildItemRarity, GuildSkillItem, HuntEquipmentItem } from '@expedition/shared-types';
 import { useState } from 'react';
 
 import {
@@ -19,6 +19,9 @@ const RARITY_SCORE = {
   epic: 4,
   legendary: 5,
 } as const;
+
+const skillRarity = (stars: number): GuildItemRarity =>
+  stars >= 3 ? 'legendary' : stars === 2 ? 'rare' : 'common';
 
 type LootEntry =
   | { kind: 'equipment'; id: string; item: HuntEquipmentItem }
@@ -136,9 +139,9 @@ export function RewardScreen({
               <button
                 type="button"
                 data-loot-item={entry.id}
+                data-loot-kind={entry.kind}
                 data-loot-active={selectedEntry}
-                data-rarity={equipment?.rarity ?? 'skill'}
-                data-element={first?.element}
+                data-rarity={equipment?.rarity ?? skillRarity(skill!.stars)}
                 aria-pressed={selectedEntry}
                 aria-label={`查看${equipment?.name ?? skill?.name}詳情`}
                 key={entry.id}

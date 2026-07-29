@@ -47,6 +47,7 @@ export function SkillLoadoutPanel({
     )
     .sort(
       (left, right) =>
+        Number(right.id === state.tutorialSkillId) - Number(left.id === state.tutorialSkillId) ||
         Number(right.id === state.lastFusedSkillId) - Number(left.id === state.lastFusedSkillId),
     );
   const pageCount = Math.max(1, Math.ceil(filteredSkills.length / 6));
@@ -230,11 +231,13 @@ export function SkillLoadoutPanel({
               );
             });
             const guideId =
-              state.lastFusedSkillId === skill.id
-                ? 'skill:equip-fused'
-                : index === 0 && !state.lastFusedSkillId
-                  ? 'skill:equip'
-                  : undefined;
+              state.tutorialStep === 'equip_skill' && state.tutorialSkillId === skill.id
+                ? 'skill:equip-new'
+                : state.lastFusedSkillId === skill.id
+                  ? 'skill:equip-fused'
+                  : index === 0 && !state.lastFusedSkillId
+                    ? 'skill:equip'
+                    : undefined;
             return (
               <article
                 className="gr-skill-card"

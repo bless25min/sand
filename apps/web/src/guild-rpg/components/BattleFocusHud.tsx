@@ -29,7 +29,7 @@ export function BattleFocusHud({
   const targetPreview = preview?.units.find(({ id }) => id === target?.id);
 
   return (
-    <div className="gr-focus-hud">
+    <div className="gr-focus-hud" data-battle-focus-strip="true">
       {actor && (
         <article className="gr-focus-card" data-focus-actor={actor.id}>
           <strong>{actor.name}</strong>

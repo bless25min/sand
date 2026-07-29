@@ -207,7 +207,10 @@ export function createCombatBeats(
     const hasLaterSegment = projected
       .slice(index + 1)
       .some((entry) => entry.isComboDamage && entry.componentId === componentId);
-    return { ...beat, delayMs: hasLaterSegment ? 70 : 170 };
+    return {
+      ...beat,
+      delayMs: hasLaterSegment ? Math.max(beat.delayMs, beat.visual.durationMs) : 170,
+    };
   });
   return mergeSecondaryIntoDecisive(timed);
 }

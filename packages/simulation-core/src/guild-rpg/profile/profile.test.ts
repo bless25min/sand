@@ -60,7 +60,7 @@ describe('v4 guild profile and rewards', () => {
 
     expect(first).toEqual(second);
     expect(first?.items).toHaveLength(2);
-    expect(first?.skillDrops).toHaveLength(2);
+    expect(first?.skillDrops).toHaveLength(1);
     expect(first?.items.every(({ coreId, coreStrength }) => coreId && coreStrength)).toBe(true);
     expect(first).not.toHaveProperty('experience');
     expect(

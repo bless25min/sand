@@ -115,8 +115,6 @@ export function generateQuestRewards(
         random,
       ),
     ),
-    skillDrops: [0, 1].map((index) =>
-      generateSkillDrop(pool, profile.nextLootSeed * 10 + index, content, random),
-    ),
+    skillDrops: [generateSkillDrop(pool, profile.nextLootSeed * 10, content, random)],
   };
 }

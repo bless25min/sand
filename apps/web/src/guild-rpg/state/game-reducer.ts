@@ -45,6 +45,7 @@ export interface GuildRpgState {
   selectedFusionIds: readonly string[];
   selectedSalvageIds: readonly string[];
   lastFusedSkillId?: string;
+  tutorialSkillId?: string;
   lastForgeEventId?: string | undefined;
   battle?: GuildBattleState | undefined;
   playbackStartBattle?: GuildBattleState | undefined;
@@ -123,6 +124,9 @@ const finishBattle = (state: GuildRpgState, battle: GuildBattleState): GuildRpgS
     profile: result.profile,
     newChallengeIds: result.newChallengeIds,
     recordHighlights: result.recordHighlights,
+    ...(result.rewards.skillDrops[0]?.id
+      ? { tutorialSkillId: result.rewards.skillDrops[0].id }
+      : {}),
     tutorialStep: state.preferences.tutorial === 'active' ? 'equip_loot' : state.tutorialStep,
     message: result.message,
   };
@@ -141,12 +145,9 @@ export function guildRpgReducer(state: GuildRpgState, action: GuildRpgAction): G
       ...state,
       page: action.page,
       lastForgeEventId: action.page === 'equipment' ? state.lastForgeEventId : undefined,
-      skillWorkspace:
-        action.page === 'skills' && state.tutorialStep === 'inspect_skills'
-          ? ('fusion' as const)
-          : ('loadout' as const),
+      skillWorkspace: 'loadout' as const,
     };
-    if (action.page === 'skills') next = withTutorial(next, 'inspect_skills', 'fuse_skill');
+    if (action.page === 'skills') next = withTutorial(next, 'inspect_skills', 'equip_skill');
     return next;
   }
   if (action.type === 'SELECT_SKILL_WORKSPACE' && state.screen === 'guild') {
@@ -173,7 +174,8 @@ export function guildRpgReducer(state: GuildRpgState, action: GuildRpgAction): G
     const index = state.profile.defaultOrder.indexOf(state.selectedHeroId);
     const nextHeroId = state.profile.defaultOrder[(index + 1) % state.profile.defaultOrder.length]!;
     const tutorialStep =
-      state.tutorialStep === 'equip_fused' && action.skillId === state.lastFusedSkillId
+      (state.tutorialStep === 'equip_skill' && action.skillId === state.tutorialSkillId) ||
+      (state.tutorialStep === 'equip_fused' && action.skillId === state.lastFusedSkillId)
         ? 'replay'
         : state.tutorialStep;
     return {

@@ -93,7 +93,7 @@ describe('combat beat presentation', () => {
     expect(stages[5]).toMatchObject({ relay: 6, finisher: true, label: '終結 6 / 6' });
   });
 
-  it('merges trigger narration into its visible chase and accelerates a multi-hit combo', () => {
+  it('merges trigger narration while letting every rapid hit finish its visible impact', () => {
     const comboEvents: readonly GuildBattleEvent[] = [
       {
         id: 10,
@@ -143,7 +143,7 @@ describe('combat beat presentation', () => {
     expect(beats[1]).toMatchObject({
       sourceEventIds: [11],
       comboIndex: 1,
-      delayMs: 70,
+      delayMs: 170,
     });
     expect(beats[2]).toMatchObject({
       sourceEventIds: [12, 13],
@@ -152,6 +152,11 @@ describe('combat beat presentation', () => {
       delayMs: 170,
       visual: expect.objectContaining({ headline: '追擊 2' }),
     });
+    expect(
+      beats
+        .filter(({ eventKind }) => eventKind === 'damage')
+        .every(({ delayMs, visual }) => delayMs >= visual.durationMs),
+    ).toBe(true);
     expect(beats.flatMap(({ sourceEventIds }) => sourceEventIds)).toEqual([10, 11, 12, 13]);
   });
 

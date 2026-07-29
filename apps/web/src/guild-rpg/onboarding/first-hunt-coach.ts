@@ -13,13 +13,13 @@ export const TUTORIAL_STEPS = [
   'equip_loot',
   'forge_loot',
   'inspect_skills',
-  'fuse_skill',
-  'equip_fused',
+  'equip_skill',
   'replay',
   'complete',
 ] as const;
 
-export type FirstHuntCoachStep = (typeof TUTORIAL_STEPS)[number];
+type LegacyFirstHuntCoachStep = 'fuse_skill' | 'equip_fused';
+export type FirstHuntCoachStep = (typeof TUTORIAL_STEPS)[number] | LegacyFirstHuntCoachStep;
 
 export interface FirstHuntCoach {
   step: FirstHuntCoachStep;
@@ -102,6 +102,11 @@ const COPY: Readonly<
     message: '點「技能」，查看目前角色的六格技能與這次獲得的新組合。',
     focusId: 'nav:skills',
   },
+  equip_skill: {
+    title: '把新技能換入六格',
+    message: '選一個技能格，再把本次掉落技能裝上；累積兩張同屬性技能後即可融合。',
+    focusId: 'skill:equip-new',
+  },
   fuse_skill: {
     title: '融合相同屬性技能',
     message: '選兩張同屬性一星技能融合；每個元件的數值與觸發都會保留。',
@@ -126,10 +131,12 @@ export function createFirstHuntCoach(
 ): FirstHuntCoach | undefined {
   if (tutorial !== 'active' || step === 'complete') return undefined;
   const copy = COPY[step];
+  const currentStep =
+    step === 'fuse_skill' || step === 'equip_fused' ? ('equip_skill' as const) : step;
   const relay = step.startsWith('relay_') ? Number(step.slice('relay_'.length)) : undefined;
   return {
     step,
-    stepNumber: TUTORIAL_STEPS.indexOf(step) + 1,
+    stepNumber: TUTORIAL_STEPS.indexOf(currentStep) + 1,
     stepTotal: TUTORIAL_STEPS.length - 1,
     ...copy,
     ...(step === 'equip_loot' && context.surface === 'guild'

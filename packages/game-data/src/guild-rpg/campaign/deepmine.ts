@@ -93,7 +93,7 @@ const rewards = {
     ],
     material: { id: 'raider_edge', name: '襲擊者刃片', baseQuantity: 1 },
     equipment: [
-      equipment('raider_blade', '礦坑襲刃', 'weapon', 'attack', 11, [
+      equipment('raider_blade', '礦坑襲刃', 'weapon', 'attack', 5, [
         'retaliation',
         'command_storm',
       ]),
@@ -194,7 +194,7 @@ const rewards = {
         '鐵座碎城槌',
         'weapon',
         'attack',
-        32,
+        8,
         ['retaliation', 'ricochet'],
         ['retaliation_bash', 'ricochet_focus'],
       ),

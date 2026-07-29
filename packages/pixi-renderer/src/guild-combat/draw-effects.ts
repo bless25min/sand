@@ -13,6 +13,9 @@ export interface EffectNodes {
   number?: Text;
   burst: readonly Graphics[];
   marks: readonly Graphics[];
+  afterimages: readonly Graphics[];
+  flashes: readonly Graphics[];
+  screenFlash?: Graphics;
 }
 
 const ELEMENT_COLOR = {
@@ -25,6 +28,18 @@ const effectColor = (scene: GuildCombatScene) =>
   (scene.event?.element && ELEMENT_COLOR[scene.event.element]) ??
   (scene.preview?.element && ELEMENT_COLOR[scene.preview.element]) ??
   scene.zone.accent;
+
+const routePoint = (plan: CombatEffectPlan, progress: number) => {
+  const segmentProgress = Math.max(0, Math.min(0.999, progress)) * (plan.route.length - 1);
+  const segment = Math.floor(segmentProgress);
+  const local = segmentProgress - segment;
+  const from = plan.route[segment]!;
+  const to = plan.route[Math.min(plan.route.length - 1, segment + 1)]!;
+  return {
+    x: from.x + (to.x - from.x) * local,
+    y: from.y + (to.y - from.y) * local,
+  };
+};
 
 const drawPreviewRoute = (scene: GuildCombatScene, color: number) => {
   const actor = scene.units.find(({ id }) => id === scene.preview?.actorId);
@@ -53,6 +68,7 @@ export function drawCombatEffects(
   const color = effectColor(scene);
   let route: Graphics | undefined;
   let projectile: Graphics | undefined;
+  const afterimages: Graphics[] = [];
   if (!scene.event && scene.preview) {
     route = drawPreviewRoute(scene, color);
     if (route) container.addChild(route);
@@ -60,6 +76,18 @@ export function drawCombatEffects(
   if (plan.route.length >= 2) {
     route = drawRoute(plan, color);
     container.addChild(route);
+
+    for (let index = 0; index < plan.afterimageCount; index += 1) {
+      const point = routePoint(plan, (index + 1) / (plan.afterimageCount + 1));
+      const afterimage = new Graphics()
+        .circle(0, 0, 7 + scene.relay * 1.8)
+        .fill({ color: index % 3 === 0 ? 0xffffff : color, alpha: 0.72 });
+      afterimage.position.set(point.x, point.y);
+      afterimage.scale.set(0.65 + index * 0.04);
+      afterimage.alpha = 0.18 + (index / Math.max(1, plan.afterimageCount - 1)) * 0.34;
+      container.addChild(afterimage);
+      afterimages.push(afterimage);
+    }
 
     projectile = drawProjectile(plan, color);
     projectile.scale.set(0.78 + scene.relay * 0.08);
@@ -73,16 +101,32 @@ export function drawCombatEffects(
   const rings: Graphics[] = [];
   const burst: Graphics[] = [];
   const marks: Graphics[] = [];
+  const flashes: Graphics[] = [];
+  let screenFlash: Graphics | undefined;
   const showImpact =
     scene.event?.phase === 'impact' ||
     scene.event?.phase === 'aftermath' ||
     scene.event?.phase === 'finisher';
   if (showImpact) {
+    screenFlash = new Graphics()
+      .rect(0, 0, scene.width, scene.height)
+      .fill({ color: scene.relay === 6 ? 0xffe5a0 : 0xffffff });
+    screenFlash.alpha = plan.screenFlashAlpha;
+    container.addChild(screenFlash);
+
     const particlesPerTarget = Math.max(
       8,
       Math.ceil(plan.impactParticles / Math.max(1, targets.length)),
     );
     for (const target of targets) {
+      const flash = new Graphics()
+        .circle(0, 0, 34 + scene.relay * 5)
+        .fill({ color: 0xffffff, alpha: 0.92 });
+      flash.position.set(target.x, target.y - 45);
+      flash.scale.set(plan.impactScale * 0.55);
+      container.addChild(flash);
+      flashes.push(flash);
+
       for (let index = 0; index < plan.impactRings; index += 1) {
         const ring = new Graphics()
           .circle(0, 0, 28 + index * 12)
@@ -154,5 +198,8 @@ export function drawCombatEffects(
     ...(number ? { number } : {}),
     burst,
     marks,
+    afterimages,
+    flashes,
+    ...(screenFlash ? { screenFlash } : {}),
   };
 }

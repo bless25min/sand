@@ -5,8 +5,7 @@ const TRAINING = [
   { step: 'equip_loot', label: '穿上第一件屬性裝備' },
   { step: 'forge_loot', label: '校準一次裝備核心' },
   { step: 'inspect_skills', label: '打開六格技能配置' },
-  { step: 'fuse_skill', label: '融合兩張同屬性技能' },
-  { step: 'equip_fused', label: '裝備剛完成的融合技' },
+  { step: 'equip_skill', label: '裝備本次掉落技能' },
   { step: 'replay', label: '帶新組合重刷第一關' },
 ] as const satisfies readonly { step: FirstHuntCoachStep; label: string }[];
 

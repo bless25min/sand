@@ -1,6 +1,8 @@
+import { readFileSync } from 'node:fs';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import { GUILD_GAME_CONTENT } from '@expedition/game-data';
+import type { GuildSkillItem } from '@expedition/shared-types';
 
 import { createGuildRpgState } from '../state/create-game-state';
 import { guildRpgReducer, type GuildRpgState } from '../state/game-reducer';
@@ -81,5 +83,35 @@ describe('RewardScreen', () => {
     expect(markup).toContain('一輪全滅');
     expect(markup).toContain('最高 OVERKILL 324');
     expect(markup).toContain('最長連鎖 6');
+  });
+
+  it('colors every loot tile by rarity instead of elemental attribute', () => {
+    const won = winHunt();
+    const skill = won.rewards!.skillDrops[0]!;
+    const state: GuildRpgState = {
+      ...won,
+      rewards: {
+        ...won.rewards!,
+        items: [],
+        skillDrops: ([1, 2, 3] as const).map(
+          (stars) =>
+            ({
+              ...skill,
+              id: `skill-${stars}`,
+              stars,
+            }) as GuildSkillItem,
+        ),
+      },
+    };
+
+    const markup = renderToStaticMarkup(<RewardScreen state={state} dispatch={dispatch} />);
+    const css = readFileSync(new URL('../guild-rewards.css', import.meta.url), 'utf8');
+
+    expect(markup).toContain('data-rarity="common"');
+    expect(markup).toContain('data-rarity="rare"');
+    expect(markup).toContain('data-rarity="legendary"');
+    expect(markup).not.toContain('data-rarity="skill"');
+    expect(markup).not.toContain('data-element=');
+    expect(css).not.toMatch(/\[data-rarity='skill'\]\[data-element=/);
   });
 });

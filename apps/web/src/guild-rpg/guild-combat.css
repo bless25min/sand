@@ -824,7 +824,7 @@
   max-width: none;
   height: 100dvh;
   min-height: 0;
-  grid-template-rows: minmax(0, 1fr) auto;
+  grid-template-rows: minmax(0, 1fr) auto auto;
   gap: 0;
   margin: 0;
   padding: 0;
@@ -933,23 +933,30 @@
 }
 
 .gr-focus-hud {
-  position: absolute;
+  position: relative;
   z-index: 24;
-  top: max(78px, calc(env(safe-area-inset-top) + 74px));
-  right: 8px;
-  left: 8px;
   display: flex;
   align-items: start;
   justify-content: space-between;
   gap: 8px;
+  padding: 4px 8px;
+  border-top: 1px solid rgb(245 186 73 / 28%);
+  background: rgb(3 12 10 / 94%);
   pointer-events: none;
+}
+
+.gr-battle[data-shell='single-screen'] .gr-focus-hud {
+  position: relative;
+  z-index: 34;
+  grid-row: 2;
 }
 
 .gr-focus-card {
   display: grid;
-  width: min(42%, 180px);
+  width: min(48%, 180px);
+  grid-template-columns: minmax(0, 1fr) auto;
   gap: 1px;
-  padding: 6px 8px;
+  padding: 2px 7px;
   border: 1px solid rgb(99 220 169 / 65%);
   border-radius: 8px;
   background: rgb(3 12 10 / 82%);
@@ -973,18 +980,22 @@
 }
 
 .gr-focus-card strong {
-  font-size: clamp(12px, 3.4vw, 16px);
+  overflow: hidden;
+  font-size: clamp(12px, 3.2vw, 14px);
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .gr-focus-card span {
   color: #fff0a6;
-  font-size: clamp(11px, 3vw, 14px);
+  font-size: clamp(10px, 2.8vw, 12px);
   font-weight: 900;
 }
 
 .gr-focus-card small {
+  grid-column: 1 / -1;
   color: #c9d5ce;
-  font-size: 10px;
+  font-size: 9px;
 }
 
 .gr-battle-unit-controls {
@@ -997,8 +1008,8 @@
 .gr-battle-unit-controls > button {
   position: absolute;
   display: block;
-  width: clamp(58px, 16vw, 92px);
-  height: clamp(72px, 12vh, 94px);
+  width: clamp(52px, 14vw, 86px);
+  height: clamp(58px, 10vh, 68px);
   min-height: 44px;
   padding: 0;
   transform: translate(-50%, -78%);
@@ -1026,7 +1037,7 @@
 }
 
 .gr-battle-unit-controls > button[data-battle-side='enemies'] {
-  width: clamp(64px, 18vw, 104px);
+  width: clamp(58px, 16vw, 96px);
 }
 
 .gr-battle-unit-controls > button[data-cast-ready='true'] {
@@ -1047,7 +1058,7 @@
 
 @media (max-width: 620px) and (max-height: 700px) {
   .gr-battle-unit-controls > button {
-    height: clamp(60px, 10vh, 68px);
+    height: clamp(48px, 8vh, 56px);
   }
 }
 
@@ -1141,7 +1152,7 @@
 .gr-battle[data-shell='single-screen'] .gr-command-dock {
   position: relative;
   z-index: 35;
-  grid-row: 2;
+  grid-row: 3;
   min-height: 0;
   margin: 0;
   padding: 5px max(6px, env(safe-area-inset-right)) max(6px, env(safe-area-inset-bottom))

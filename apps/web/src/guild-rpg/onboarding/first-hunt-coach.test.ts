@@ -17,8 +17,7 @@ describe('complete RPG onboarding coach', () => {
       'equip_loot',
       'forge_loot',
       'inspect_skills',
-      'fuse_skill',
-      'equip_fused',
+      'equip_skill',
       'replay',
       'complete',
     ]);

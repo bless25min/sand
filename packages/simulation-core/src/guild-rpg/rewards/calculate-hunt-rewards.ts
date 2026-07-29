@@ -115,22 +115,21 @@ export function calculateHuntRewards(input: HuntRewardInput, random: RandomSourc
   const axes = calculateAxes(input, defeatedEnemyIds);
   const successful = input.battle.status === 'victory';
   const materialMultiplier = successful ? axes.quantityMultiplier : 1;
-  const skillDropCount = input.hunt.guaranteedBossDrops ?? 1;
   const skillDrops =
     successful && input.content
-      ? Array.from({ length: skillDropCount }, (_, index) =>
+      ? [
           generateSkillDrop(
             input.hunt.skillDropPool ?? {
               id: input.hunt.id,
-              elements: input.content!.elements.map(({ id }) => id),
-              specializationIds: input.content!.skillSpecializations.map(({ id }) => id),
-              triggerIds: input.content!.triggerConditions.map(({ id }) => id),
+              elements: input.content.elements.map(({ id }) => id),
+              specializationIds: input.content.skillSpecializations.map(({ id }) => id),
+              triggerIds: input.content.triggerConditions.map(({ id }) => id),
             },
-            input.profile.nextLootSeed * 10 + index,
-            input.content!,
+            input.profile.nextLootSeed * 10,
+            input.content,
             random,
           ),
-        )
+        ]
       : [];
 
   return {

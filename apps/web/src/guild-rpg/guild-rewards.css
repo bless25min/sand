@@ -146,18 +146,6 @@
   --loot-color: #ffbd4d;
 }
 
-.gr-loot-grid > article[data-rarity='skill'][data-element='fire'] {
-  --loot-color: #ff7350;
-}
-
-.gr-loot-grid > article[data-rarity='skill'][data-element='grass'] {
-  --loot-color: #99d95d;
-}
-
-.gr-loot-grid > article[data-rarity='skill'][data-element='water'] {
-  --loot-color: #64d3ec;
-}
-
 .gr-loot-grid article > b {
   position: absolute;
   top: 11px;
@@ -756,18 +744,6 @@
 
 .gr-loot-grid > button[data-rarity='legendary'] {
   --loot-color: #ffbd4d;
-}
-
-.gr-loot-grid > button[data-rarity='skill'][data-element='fire'] {
-  --loot-color: #ff7350;
-}
-
-.gr-loot-grid > button[data-rarity='skill'][data-element='grass'] {
-  --loot-color: #99d95d;
-}
-
-.gr-loot-grid > button[data-rarity='skill'][data-element='water'] {
-  --loot-color: #64d3ec;
 }
 
 .gr-loot-grid > button > b {

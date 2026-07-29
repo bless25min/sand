@@ -30,6 +30,7 @@ interface RenderNodes {
   effectStartedAt: number;
   cameraX: number;
   cameraY: number;
+  baseScale: number;
 }
 
 const routePosition = (
@@ -83,8 +84,8 @@ export async function mountGuildCombatStage(
     const cameraY = fit.y + (scene.height * fit.scale) / 2;
     world.pivot.set(scene.width / 2, scene.height / 2);
     world.position.set(cameraX, cameraY);
-    world.scale.set(fit.scale * currentPlan.cameraZoom);
-    return { cameraX, cameraY };
+    world.scale.set(fit.scale);
+    return { cameraX, cameraY, baseScale: fit.scale };
   };
 
   const draw = (scene: GuildCombatScene): RenderNodes => {
@@ -123,6 +124,11 @@ export async function mountGuildCombatStage(
     const activeDuration = Math.max(0.05, duration - hitStop);
     const progress = Math.min(1, effectElapsed / activeDuration);
     if (!input.reducedMotion) {
+      const cameraPunch =
+        holdsImpact && currentScene.event?.camera !== 'none'
+          ? Math.sin(Math.min(1, progress) * Math.PI)
+          : 0;
+      nodes.world.scale.set(nodes.baseScale * (1 + (currentPlan.cameraZoom - 1) * cameraPunch));
       for (const ambient of nodes.ambient) {
         ambient.node.position.set(
           ambient.baseX + Math.sin(elapsed * 0.7 + ambient.phase) * ambient.drift,
@@ -159,6 +165,23 @@ export async function mountGuildCombatStage(
       const position = routePosition(currentPlan.route, progress);
       nodes.effects.projectile.position.set(position.x, position.y);
       nodes.effects.projectile.rotation += 0.18;
+    }
+    for (const [index, afterimage] of nodes.effects.afterimages.entries()) {
+      const echo = 0.62 + Math.sin(Math.min(1, progress) * Math.PI) * 0.45;
+      afterimage.scale.set(echo + index * 0.035);
+      afterimage.alpha = Math.max(
+        0,
+        (0.2 + (index / Math.max(1, nodes.effects.afterimages.length)) * 0.42) *
+          (1 - progress * 0.78),
+      );
+    }
+    for (const flash of nodes.effects.flashes) {
+      flash.scale.set(currentPlan.impactScale * (0.42 + progress * 0.82));
+      flash.alpha = Math.max(0, 0.9 - progress * 2.6);
+    }
+    if (nodes.effects.screenFlash) {
+      nodes.effects.screenFlash.alpha =
+        currentPlan.screenFlashAlpha * Math.max(0, 1 - progress * 3.4);
     }
     for (const [index, ring] of nodes.effects.rings.entries()) {
       const ringProgress = Math.min(1, Math.max(0, progress * 1.3 - index * 0.04));

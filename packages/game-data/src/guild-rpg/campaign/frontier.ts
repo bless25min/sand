@@ -91,7 +91,7 @@ const rewards = {
     ],
     material: { id: 'hunter_sinew', name: '獵手筋腱', baseQuantity: 1 },
     equipment: [
-      equipment('hunter_bow', '灰牙獵弓', 'weapon', 'attack', 9, ['ricochet'], ['ricochet_focus']),
+      equipment('hunter_bow', '灰牙獵弓', 'weapon', 'attack', 4, ['ricochet'], ['ricochet_focus']),
     ],
   }),
   alpha: huntEnemy({
@@ -191,7 +191,7 @@ const rewards = {
         '赤牙雙王刃',
         'weapon',
         'attack',
-        24,
+        7,
         ['ricochet', 'command_storm'],
         ['ricochet_focus', 'steel_echo'],
       ),

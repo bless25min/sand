@@ -172,11 +172,11 @@ describe('deterministic six-hero game flow', () => {
     expect(state.rewards?.items).toHaveLength(4);
   });
 
-  it('has no dead end from first victory through six loot, fusion, equip, and replay', () => {
+  it('has no dead end from one skill drop through equip and replay', () => {
     let state = winFirstHunt(createGuildRpgState());
     expect(state.screen).toBe('rewards');
     expect(state.rewards?.items).toHaveLength(4);
-    expect(state.rewards?.skillDrops).toHaveLength(2);
+    expect(state.rewards?.skillDrops).toHaveLength(1);
     const rewardSkillIds = state.rewards!.skillDrops.map(({ id }) => id);
     expect(
       rewardSkillIds.every((id) => state.profile.skillInventory.some((skill) => skill.id === id)),
@@ -198,32 +198,12 @@ describe('deterministic six-hero game flow', () => {
     });
     expect(state).toMatchObject({ page: 'equipment', tutorialStep: 'inspect_skills' });
     state = reduce(state, { type: 'NAVIGATE', page: 'skills' });
-    expect(state.tutorialStep).toBe('fuse_skill');
-    expect(state.skillWorkspace).toBe('fusion');
-    for (const skillId of rewardSkillIds) {
-      state = reduce(state, { type: 'TOGGLE_FUSION_SKILL', skillId });
-    }
-    state = reduce(state, { type: 'FUSE_SELECTED' });
-    expect(state.lastFusedSkillId).toBeTruthy();
-    expect(state.tutorialStep).toBe('equip_fused');
+    expect(state.tutorialStep).toBe('equip_skill');
     expect(state.skillWorkspace).toBe('loadout');
-
-    const fusedId = state.lastFusedSkillId!;
-    const beforeOrder = state.profile.skillInventory
-      .find(({ id }) => id === fusedId)!
-      .components.map(({ id }) => id);
-    state = reduce(state, {
-      type: 'MOVE_FUSED_COMPONENT',
-      fusedSkillId: fusedId,
-      componentIndex: 0,
-      direction: 1,
-    });
-    expect(
-      state.profile.skillInventory.find(({ id }) => id === fusedId)!.components.map(({ id }) => id),
-    ).toEqual([...beforeOrder].reverse());
+    const rewardSkill = state.profile.skillInventory.find(({ id }) => id === rewardSkillIds[0])!;
     state = reduce(state, { type: 'SELECT_SKILL_SLOT', slotIndex: 0 });
-    state = reduce(state, { type: 'EQUIP_SKILL', skillId: fusedId });
-    expect(state.profile.party[0]!.skillIds[0]).toBe(fusedId);
+    state = reduce(state, { type: 'EQUIP_SKILL', skillId: rewardSkill.id });
+    expect(state.profile.party[0]!.skillIds[0]).toBe(rewardSkill.id);
     expect(state.tutorialStep).toBe('replay');
 
     state = reduce(state, { type: 'NAVIGATE', page: 'quest' });

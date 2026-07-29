@@ -35,9 +35,9 @@ export function createCombatMotion(input: CombatMotionInput): CombatMotion {
     scale += (0.025 + relay * 0.006) * pulse;
   }
   if (input.state === 'hit') {
-    x -= direction * (14 + relay * 3) * pulse;
-    rotation -= direction * (0.035 + relay * 0.008) * pulse;
-    scale += 0.04 * pulse;
+    x -= direction * (20 + relay * 6) * pulse;
+    rotation -= direction * (0.05 + relay * 0.012) * pulse;
+    scale += (0.05 + relay * 0.006) * pulse;
   }
   if (input.finisher && input.side === 'heroes') {
     y -= (10 + relay * 1.5) * pulse;

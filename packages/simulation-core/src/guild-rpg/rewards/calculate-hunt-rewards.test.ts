@@ -22,6 +22,15 @@ class FixedRandom implements RandomSource {
   }
 }
 
+class MaximumRandom implements RandomSource {
+  next() {
+    return 0.99;
+  }
+  nextInt(_minimum: number, maximum: number) {
+    return maximum;
+  }
+}
+
 const hunt: HuntDefinition = {
   id: 'training-hunt',
   questId: 'training',
@@ -101,25 +110,29 @@ const profile: GuildProfile = {
 function combo(
   startRatios: Readonly<Record<string, number>>,
   sharedOverflow = 0,
+  individualOverkill = 40,
 ): ComboRuntimeState {
   return {
     phase: 'complete',
     draft: { cardIds: [] },
     availableCardIds: [],
-    events: [
-      {
-        id: 0,
-        causalId: 'overkill:guard-a',
-        kind: 'overkill',
-        message: 'OVERKILL',
-        targetId: 'guard-a',
-        amount: 40,
-      },
-    ],
+    events:
+      individualOverkill > 0
+        ? [
+            {
+              id: 0,
+              causalId: 'overkill:guard-a',
+              kind: 'overkill',
+              message: 'OVERKILL',
+              targetId: 'guard-a',
+              amount: individualOverkill,
+            },
+          ]
+        : [],
     metrics: {
       comboCount: 3,
       totalDamage: 500,
-      totalOverkill: 40 + sharedOverflow,
+      totalOverkill: individualOverkill + sharedOverflow,
       defeatedEnemyIds: Object.keys(startRatios),
       annihilationOverflow: sharedOverflow,
     },
@@ -204,6 +217,59 @@ describe('hunt reward calculation', () => {
     expect(first.items[0]?.mainStat.value).toBeLessThanOrEqual(base.mainStatRoll.max);
   });
 
+  it('always drops exactly one skill even when legacy boss content requests more', () => {
+    const rewards = calculateHuntRewards(
+      {
+        profile,
+        battle: battle('victory', ['guard-a'], { 'guard-a': 1 }),
+        hunt: { ...hunt, guaranteedBossDrops: 4 },
+        equipmentAffixes,
+        content: GUILD_GAME_CONTENT,
+      },
+      new FixedRandom(0.4),
+    );
+
+    expect(rewards.skillDrops).toHaveLength(1);
+  });
+
+  it('starts at common quality and climbs one rarity band through additive Overkill', () => {
+    const rarities = [0, 100, 220, 350, 420].map((sharedOverflow) => {
+      const rewardBattle = battle('victory', ['guard-a'], { 'guard-a': 1 }, sharedOverflow);
+      rewardBattle.combo = combo({ 'guard-a': 1 }, sharedOverflow, 0);
+      return calculateHuntRewards(
+        {
+          profile,
+          battle: rewardBattle,
+          hunt,
+          equipmentAffixes,
+          content: GUILD_GAME_CONTENT,
+        },
+        new FixedRandom(0.4),
+      ).items[0]?.rarity;
+    });
+
+    expect(rarities).toEqual(['common', 'uncommon', 'rare', 'epic', 'legendary']);
+  });
+
+  it('never generates a double-digit attack value on a weapon', () => {
+    const rewards = calculateHuntRewards(
+      {
+        profile,
+        battle: battle('victory', ['guard-a'], { 'guard-a': 1 }, 500),
+        hunt,
+        equipmentAffixes,
+        content: GUILD_GAME_CONTENT,
+      },
+      new MaximumRandom(),
+    );
+
+    expect(rewards.items[0]).toMatchObject({
+      slot: 'weapon',
+      mainStat: { stat: 'attack' },
+    });
+    expect(rewards.items[0]!.mainStat.value).toBeLessThanOrEqual(9);
+  });
+
   it('stacks every annihilation axis and preserves shared overflow in all item quality', () => {
     const startRatios = { 'guard-a': 1, 'guard-b': 1, boss: 1 };
     const rewards = calculateHuntRewards(
@@ -266,15 +332,14 @@ describe('hunt reward calculation', () => {
 
   it.each([
     [0.4, 'common', 0],
-    [0.65, 'uncommon', 1],
-    [0.85, 'rare', 1],
-    [0.94, 'epic', 2],
-    [0.99, 'legendary', 2],
-  ] as const)('gives %s rarity roll a deterministic %s-affix payoff', (roll, rarity, count) => {
+    [0.99, 'uncommon', 1],
+  ] as const)('keeps zero-performance roll %s at a low %s payoff', (roll, rarity, count) => {
+    const rewardBattle = battle('victory', ['guard-a'], { 'guard-a': 1 });
+    rewardBattle.combo = combo({ 'guard-a': 1 }, 0, 0);
     const rewards = calculateHuntRewards(
       {
         profile,
-        battle: battle('victory', ['guard-a'], { 'guard-a': 1 }),
+        battle: rewardBattle,
         hunt,
         equipmentAffixes,
         content: GUILD_GAME_CONTENT,
@@ -286,7 +351,7 @@ describe('hunt reward calculation', () => {
     expect(rewards.items[0]?.affixes).toHaveLength(count);
     expect(rewards.items[0]?.recommendedBuildIds).toEqual(['retaliation']);
     expect(rewards.items[0]?.affixes.every((affix) => affix.sourceId)).toBe(true);
-    expect(rewards.items[0]?.cores).toHaveLength(rarity === 'legendary' ? 2 : 1);
+    expect(rewards.items[0]?.cores).toHaveLength(1);
   });
 
   it('reads v4 additive Overkill events without depending on the retired combo runtime', () => {

@@ -95,7 +95,7 @@ describe('deterministic skill-build content', () => {
           GUILD_EQUIPMENT_BASES.some((base) => base.coreIds.includes(coreId)),
         ),
       ).toBe(true);
-      if (hunt.bossEnemyId) expect(hunt.guaranteedBossDrops).toBeGreaterThanOrEqual(2);
+      if (hunt.bossEnemyId) expect(hunt.guaranteedBossDrops).toBe(1);
     }
   });
 });

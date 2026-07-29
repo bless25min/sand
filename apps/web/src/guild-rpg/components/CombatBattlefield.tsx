@@ -7,7 +7,6 @@ import type { FirstHuntCoachStep } from '../onboarding/first-hunt-coach';
 import type { GuildPreferences } from '../preferences/guild-preferences';
 import { createBattleScene } from '../presentation/battle-scene';
 import { relayPresentation, type CombatBeat } from '../presentation/combat-beats';
-import { BattleFocusHud } from './BattleFocusHud';
 import { BattlefieldUnitControls } from './BattlefieldUnitControls';
 
 const PixiCombatStage = lazy(async () => {
@@ -79,13 +78,6 @@ export function CombatBattlefield({
           />
         ))}
       </div>
-
-      <BattleFocusHud
-        battle={battle}
-        actorId={actingActorId}
-        preview={preview}
-        executionWindow={executionWindow}
-      />
 
       {executionWindow && (
         <div className="gr-execution-window" role="status">

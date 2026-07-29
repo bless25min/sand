@@ -13,6 +13,7 @@ import { chooseSkillIntent, chooseTargetIntent } from '../presentation/skill-com
 import { createSkillEngineContent } from '../state/create-skill-engine-content';
 import type { GuildRpgAction, GuildRpgState } from '../state/game-reducer';
 import { BattleCommandDock } from './BattleCommandDock';
+import { BattleFocusHud } from './BattleFocusHud';
 import { CombatBattlefield } from './CombatBattlefield';
 
 const heroDefinition = (id?: string) =>
@@ -189,6 +190,13 @@ export function BattleScreen({
           setArmedSkillId(undefined);
           dispatch({ type: 'CHOOSE_NEXT_HERO', adventurerId });
         }}
+      />
+
+      <BattleFocusHud
+        battle={displayBattle}
+        actorId={actingActorId}
+        preview={skillPreview}
+        executionWindow={displayExecutionWindow}
       />
 
       <BattleCommandDock

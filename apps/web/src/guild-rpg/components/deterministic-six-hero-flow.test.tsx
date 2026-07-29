@@ -38,7 +38,7 @@ describe('deterministic six-hero interface', () => {
     );
     expect(trainingMarkup).toContain('aria-label="公會訓練清單"');
     expect(trainingMarkup).toContain('data-training-active="equip_loot"');
-    expect(trainingMarkup).toContain('1 / 6');
+    expect(trainingMarkup).toContain('1 / 5');
     expect(trainingMarkup.indexOf('class="gr-coach"')).toBeLessThan(
       trainingMarkup.indexOf('class="gr-help-drawer"'),
     );
@@ -305,6 +305,9 @@ describe('deterministic six-hero interface', () => {
     expect(markup).toContain('data-next-actor="lyra"');
     expect(markup).toContain('data-focus-actor="brann"');
     expect(markup).toContain(`data-focus-target="${targetId}"`);
+    expect(markup).toMatch(
+      /data-combat-battlefield="true"[\s\S]*?<\/section><div class="gr-focus-hud" data-battle-focus-strip="true"[\s\S]*?<section class="gr-command-dock"/,
+    );
     expect(markup).toContain('data-animation-first="true"');
     expect(markup).toContain('class="gr-battle-guide-strip"');
     const activeMember = state.profile.party.find(
@@ -380,7 +383,7 @@ describe('deterministic six-hero interface', () => {
     }
     const markup = renderToStaticMarkup(<RewardScreen state={state} dispatch={dispatch} />);
 
-    expect(markup.match(/data-loot-item=/g) ?? []).toHaveLength(6);
+    expect(markup.match(/data-loot-item=/g) ?? []).toHaveLength(5);
     expect(markup.match(/data-loot-active="true"/g) ?? []).toHaveLength(0);
     expect(markup).not.toContain('data-pager="loot"');
     expect(markup).toContain('data-shell="single-screen"');
@@ -406,6 +409,12 @@ describe('deterministic six-hero interface', () => {
       /@media \(max-width: 620px\)[\s\S]*?\.gr-battle-skills button\s*\{[^}]*min-height:\s*56px/,
     );
     expect(css).toContain('.gr-battle-unit-controls');
+    expect(css).toMatch(
+      /\.gr-battle\[data-shell='single-screen'\]\s*\{[^}]*grid-template-rows:\s*minmax\(0,\s*1fr\)\s+auto\s+auto/,
+    );
+    expect(css).toMatch(
+      /\.gr-battle\[data-shell='single-screen'\]\s+\.gr-focus-hud\s*\{[^}]*position:\s*relative[^}]*grid-row:\s*2/,
+    );
     expect(css).not.toContain('.gr-coach { position: fixed');
   });
 });

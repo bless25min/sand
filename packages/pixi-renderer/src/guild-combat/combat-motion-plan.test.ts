@@ -44,4 +44,23 @@ describe('combat motion plan', () => {
     expect(finisherHero.y).toBeLessThan(-8);
     expect(finisherHero.scale).toBeGreaterThan(1);
   });
+
+  it('makes every relay recoil harder and turns the sixth hit into a major knockback', () => {
+    const recoils = [1, 2, 3, 4, 5, 6].map(
+      (relay) =>
+        createCombatMotion({
+          side: 'enemies',
+          state: 'hit',
+          phase: 'impact',
+          relay,
+          progress: 0.5,
+          finisher: relay === 6,
+        }).x,
+    );
+
+    expect(recoils.every((offset, index) => index === 0 || offset > recoils[index - 1]!)).toBe(
+      true,
+    );
+    expect(recoils[5]).toBeGreaterThan(50);
+  });
 });

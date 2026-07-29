@@ -88,6 +88,6 @@ export const GUILD_HUNTS: readonly HuntDefinition[] = authoredHunts.map((hunt, i
     element,
     skillDropPool: dropPool(hunt.id, element),
     coreDropIds: [corePool[coreStart]!, corePool[(coreStart + 1) % corePool.length]!],
-    ...(hunt.bossEnemyId ? { guaranteedBossDrops: 2 } : {}),
+    ...(hunt.bossEnemyId ? { guaranteedBossDrops: 1 } : {}),
   };
 });

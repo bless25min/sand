@@ -151,7 +151,7 @@ const rewards = {
         '日輪墜星槍',
         'weapon',
         'attack',
-        45,
+        8,
         ['retaliation', 'ricochet'],
         ['retaliation_bash', 'ricochet_focus'],
       ),

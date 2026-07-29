@@ -71,6 +71,9 @@ describe('Pixi guild combat effect plan', () => {
     const hitStopGains = plans
       .slice(1)
       .map(({ hitStopMs }, index) => hitStopMs - plans[index]!.hitStopMs);
+    const flashGains = plans
+      .slice(1)
+      .map(({ screenFlashAlpha }, index) => screenFlashAlpha - plans[index]!.screenFlashAlpha);
 
     expect(
       plans.every(
@@ -89,7 +92,20 @@ describe('Pixi guild combat effect plan', () => {
     expect(
       hitStopGains.every((gain, index) => index === 0 || gain > hitStopGains[index - 1]!),
     ).toBe(true);
-    expect(plans[5]).toMatchObject({ finisher: true, cameraZoom: 1.09, hitStopMs: 126 });
+    expect(
+      plans.every(
+        ({ afterimageCount }, index) =>
+          index === 0 || afterimageCount > plans[index - 1]!.afterimageCount,
+      ),
+    ).toBe(true);
+    expect(flashGains.every((gain) => gain > 0)).toBe(true);
+    expect(plans[5]).toMatchObject({
+      finisher: true,
+      cameraZoom: 1.162,
+      hitStopMs: 168,
+      afterimageCount: 7,
+    });
+    expect(plans[5]!.screenFlashAlpha).toBeGreaterThanOrEqual(0.68);
   });
 
   it('builds a same-target bounce path that visibly leaves and returns to the target', () => {

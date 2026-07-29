@@ -21,12 +21,14 @@ function affixCount(rarity: GuildItemRarity) {
   return 2;
 }
 
-function rarityFor(roll: number, qualityScore: number): GuildItemRarity {
-  const adjusted = Math.min(0.999, roll + Math.min(0.28, qualityScore / 2_000));
-  if (adjusted < 0.58) return 'common';
-  if (adjusted < 0.8) return 'uncommon';
-  if (adjusted < 0.93) return 'rare';
-  if (adjusted < 0.985) return 'epic';
+function rarityFor(roll: number, qualityScore: number, jackpot: boolean): GuildItemRarity {
+  const randomScore = Math.floor(Math.max(0, Math.min(0.999, roll)) * 100);
+  const performanceScore = Math.max(0, Math.trunc(qualityScore));
+  const quality = randomScore + performanceScore + (jackpot ? 80 : 0);
+  if (quality < 90) return 'common';
+  if (quality < 180) return 'uncommon';
+  if (quality < 300) return 'rare';
+  if (quality < 450) return 'epic';
   return 'legendary';
 }
 
@@ -39,7 +41,7 @@ export function createHuntEquipmentItem(
   jackpot: boolean,
   random: RandomSource,
 ): HuntEquipmentItem {
-  const rarity = rarityFor(random.next(), qualityScore);
+  const rarity = rarityFor(random.next(), qualityScore, jackpot);
   const exactCandidates =
     input.content?.equipmentBases.filter(
       (base) => base.slot === definition.slot && base.mainStat === definition.mainStat,
@@ -57,9 +59,13 @@ export function createHuntEquipmentItem(
     (baseCandidates.length > 0
       ? baseCandidates[random.nextInt(0, baseCandidates.length - 1)]
       : undefined);
-  const mainValue = base
+  const rolledMainValue = base
     ? random.nextInt(base.mainStatRoll.min, base.mainStatRoll.max)
     : Math.max(1, Math.round(definition.baseValue * RARITY_SCALE[rarity] + qualityScore / 40));
+  const mainValue =
+    definition.slot === 'weapon' && definition.mainStat === 'attack'
+      ? Math.min(9, rolledMainValue)
+      : rolledMainValue;
   const coreId =
     base && (input.hunt.coreDropIds?.length ?? base.coreIds.length) > 0
       ? (input.hunt.coreDropIds ?? base.coreIds)[

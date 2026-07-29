@@ -74,14 +74,20 @@ async function expectBattlefieldVisible(page: Page, viewportLabel = 'current vie
   await expect(battlefield).toBeVisible();
   await expect(battlefield.locator('[data-hero-formation]')).toHaveCount(6);
   await expect(battlefield.locator('[data-enemy-formation]')).toHaveCount(3);
-  await expect(battlefield.locator('[data-focus-actor]')).toHaveCount(1);
-  await expect(battlefield.locator('[data-focus-target]')).toHaveCount(1);
+  const focus = page.locator('[data-battle-focus-strip="true"]');
+  await expect(focus).toBeVisible();
+  await expect(focus.locator('[data-focus-actor]')).toHaveCount(1);
+  await expect(focus.locator('[data-focus-target]')).toHaveCount(1);
   await expectNoPairwiseOverlap(page, '[data-battle-unit]');
   const box = await battlefield.boundingBox();
   expect(box?.height ?? 0).toBeGreaterThanOrEqual(360);
+  const focusBox = await focus.boundingBox();
   const command = await page.locator('.gr-command-dock').boundingBox();
   expect(command).not.toBeNull();
   expect(box).not.toBeNull();
+  expect(focusBox).not.toBeNull();
+  expect(box!.y + box!.height).toBeLessThanOrEqual(focusBox!.y + 1);
+  expect(focusBox!.y + focusBox!.height).toBeLessThanOrEqual(command!.y + 1);
   const horizontalOverlap =
     Math.min(command!.x + command!.width, box!.x + box!.width) - Math.max(command!.x, box!.x);
   const verticalOverlap =
@@ -303,9 +309,9 @@ test('a new player understands combat, sees six escalating relays, and completes
 
   await expect(page.locator('.gr-rewards')).toBeVisible();
   await expect(page.getByText('戰利品入袋', { exact: true })).toBeVisible();
-  await expect(page.locator('[data-loot-item]')).toHaveCount(6);
-  await expect(page.locator('[data-loot-item][data-rarity="skill"]')).toHaveCount(2);
-  await expect(page.locator('[data-loot-item]:not([data-rarity="skill"])')).toHaveCount(4);
+  await expect(page.locator('[data-loot-item]')).toHaveCount(5);
+  await expect(page.locator('[data-loot-item][data-loot-kind="skill"]')).toHaveCount(1);
+  await expect(page.locator('[data-loot-item][data-loot-kind="equipment"]')).toHaveCount(4);
   await expect(page.locator('[data-pager="loot"]')).toHaveCount(0);
   await expect(page.locator('.gr-loot-detail-drawer')).toHaveCount(0);
   await expectSingleScreen(page);
@@ -334,17 +340,10 @@ test('a new player understands combat, sees six escalating relays, and completes
   await expectNoHorizontalCrop(page);
   await page.locator('[data-guide-id="nav:skills"]').click();
 
-  await page.locator('[data-workspace-tab="fusion"]').click();
-  await expect(page.getByRole('heading', { name: '技能融合工坊' })).toBeVisible();
-  const candidates = page.locator('.gr-fusion__candidates button');
-  await expect(candidates).toHaveCount(2);
-  await candidates.nth(0).click();
-  await candidates.nth(1).click();
-  await page.getByRole('button', { name: /融合已選 2 張技能/ }).click();
-  await expect(page.getByText(/融合完成/)).toBeVisible();
-  await page.locator('[data-workspace-tab="loadout"]').click();
-  const fusedCard = page.locator('.gr-skill-card').filter({ hasText: '2★' }).first();
-  await fusedCard.getByRole('button', { name: /裝備到第/ }).click();
+  await expect(page.getByRole('heading', { name: /目前角色：/ })).toBeVisible();
+  const rewardSkill = page.locator('[data-guide-id="skill:equip-new"]');
+  await expect(rewardSkill).toHaveCount(1);
+  await rewardSkill.click();
   await expect(page.getByText(/下一位：/)).toBeVisible();
 
   await page.locator('[data-guide-id="nav:quest"]').click();

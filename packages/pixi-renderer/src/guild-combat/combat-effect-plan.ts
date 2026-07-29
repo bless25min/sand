@@ -13,6 +13,9 @@ export interface CombatEffectPlan {
   cameraZoom: number;
   shakePx: number;
   hitStopMs: number;
+  afterimageCount: number;
+  screenFlashAlpha: number;
+  impactScale: number;
   finisher: boolean;
   elementMotif: 'ember-shards' | 'toxic-spores' | 'tidal-ribbons' | 'neutral-sparks';
   specializationMotif:
@@ -96,9 +99,12 @@ export function createCombatEffectPlan(scene: GuildCombatScene): CombatEffectPla
     impactParticles: 12 + relay * relay * 5,
     impactRings: relay + Math.floor((relay * relay) / 4) + 1 + (motif === 'detonation' ? 2 : 0),
     impactTargetIds: impactTargetIds(scene),
-    cameraZoom: 1 + relay * relay * 0.0025,
-    shakePx: relay === 1 ? 0 : relay * relay * 0.45,
-    hitStopMs: 18 + relay * relay * 3,
+    cameraZoom: Number((1 + relay * relay * 0.0045).toFixed(3)),
+    shakePx: relay === 1 ? 0 : relay * relay * 0.7,
+    hitStopMs: 24 + relay * relay * 4,
+    afterimageCount: relay + 1,
+    screenFlashAlpha: Number((0.08 + relay * relay * 0.012 + (relay === 6 ? 0.18 : 0)).toFixed(3)),
+    impactScale: 1 + relay * relay * 0.025,
     finisher: relay === 6,
     elementMotif: elementMotif(scene),
     specializationMotif: motif,
