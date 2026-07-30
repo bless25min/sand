@@ -3,6 +3,10 @@ import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 
 import { preview as startVitePreview } from 'vite';
+import {
+  getGuildProfileValidationIssues,
+  parseGuildSave,
+} from '../apps/game-client-cocos/assets/runtime/expedition-runtime.mjs';
 
 import { assertPortAvailable } from './run-e2e.mjs';
 
@@ -83,7 +87,9 @@ const runBrowserChecks = async (url) => {
       ) {
         throw new Error(`${viewport.width}x${viewport.height} introduced page scrolling`);
       }
-      const diagnostics = await waitForDiagnostics(page);
+      const guild = await waitForScreen(page, 'guild');
+      await tapPoint(page, viewport, guild.startQuestPoint);
+      const diagnostics = await waitForScreen(page, 'battle');
       if (diagnostics.mode !== (mobile ? 'mobile-portrait' : 'desktop-landscape')) {
         throw new Error(`${viewport.width}x${viewport.height} used ${diagnostics.mode}`);
       }
@@ -102,7 +108,7 @@ const runBrowserChecks = async (url) => {
       if (message.type() === 'error') errors.push(message.text());
     });
     await page.goto(url, { waitUntil: 'networkidle' });
-    await playCompleteHunt(page, viewport);
+    await playCompleteGuildLoop(page, viewport);
     await context.close();
     if (errors.length > 0) throw new Error(`Browser console errors: ${errors.join(' | ')}`);
   } finally {
@@ -110,19 +116,17 @@ const runBrowserChecks = async (url) => {
   }
 };
 
-const waitForDiagnostics = (page) =>
-  page
-    .waitForFunction(
-      () => {
-        const state = globalThis.__EXPEDITION_DIAGNOSTICS__;
-        return state && Array.isArray(state.units) && Array.isArray(state.skills)
-          ? state
-          : undefined;
-      },
-      undefined,
-      { timeout: 15_000 },
-    )
-    .then((handle) => handle.jsonValue());
+const waitForState = async (page, predicate, timeout = 15_000) => {
+  const deadline = Date.now() + timeout;
+  while (Date.now() < deadline) {
+    const state = await page.evaluate(() => globalThis.__EXPEDITION_DIAGNOSTICS__);
+    if (state && predicate(state)) return state;
+    await page.waitForTimeout(50);
+  }
+  throw new Error(`Timed out waiting for Cocos diagnostics after ${timeout}ms`);
+};
+
+const waitForScreen = (page, screen) => waitForState(page, (state) => state.screen === screen);
 
 const assertUnitLayout = (diagnostics, label) => {
   const units = diagnostics.units;
@@ -151,13 +155,30 @@ const assertUnitLayout = (diagnostics, label) => {
 };
 
 const tapPoint = async (page, viewport, point) => {
-  await page.touchscreen.tap(point.screenX * viewport.width, point.screenY * viewport.height);
+  if (!point) throw new Error('Missing diagnostic interaction point');
+  await page.mouse.click(point.screenX * viewport.width, point.screenY * viewport.height);
 };
 
-const playCompleteHunt = async (page, viewport) => {
-  for (let action = 0; action < 24; action += 1) {
-    const before = await waitForDiagnostics(page);
+const playBattleToVictory = async (page, viewport) => {
+  for (let action = 0; action < 48; action += 1) {
+    let before = await waitForScreen(page, 'battle');
     if (before.status === 'victory') break;
+    const aliveTarget =
+      before.units.find(
+        ({ id, side, hp }) => id === before.targetId && side === 'enemies' && hp > 0,
+      ) ?? before.units.find(({ side, hp }) => side === 'enemies' && hp > 0);
+    const executionTarget =
+      aliveTarget ??
+      before.units.find(({ id, side }) => id === before.targetId && side === 'enemies') ??
+      before.units.find(({ side }) => side === 'enemies');
+    if (!executionTarget) throw new Error(`Action ${action + 1} has no enemy target`);
+    if (executionTarget.id !== before.targetId) {
+      await tapPoint(page, viewport, executionTarget);
+      before = await waitForState(
+        page,
+        (state) => state.screen === 'battle' && state.targetId === executionTarget.id,
+      );
+    }
     const bestSkill = before.skills.slice().sort((left, right) => right.damage - left.damage)[0];
     const target = before.units.find(({ id }) => id === before.targetId);
     if (!bestSkill || !target) throw new Error(`Action ${action + 1} has no skill or target`);
@@ -180,19 +201,168 @@ const playCompleteHunt = async (page, viewport) => {
       { timeout: 25_000 },
     );
   }
-  const victory = await waitForDiagnostics(page);
-  if (victory.status !== 'victory' || !victory.rewardVisible) {
-    throw new Error('Complete mobile hunt did not reach the reward scene');
+  const victory = await waitForState(
+    page,
+    (state) =>
+      state.screen === 'battle' &&
+      state.status === 'victory' &&
+      state.victoryConfirmVisible === true,
+    35_000,
+  );
+  if (!victory.collectPoint) {
+    throw new Error('Complete hunt did not expose the victory confirmation');
   }
-  if (victory.rewardCapacity !== 20 || victory.rewardSkillCount !== 1 || victory.rewardCount < 1) {
+  return victory;
+};
+
+const playCompleteGuildLoop = async (page, viewport) => {
+  const guild = await waitForScreen(page, 'guild');
+  if (guild.page !== 'quest' || guild.partyCount !== 6 || guild.destinationCount !== 4) {
+    throw new Error('New profile did not boot into the complete six-member guild shell');
+  }
+  await tapPoint(page, viewport, guild.startQuestPoint);
+  await waitForScreen(page, 'battle');
+  const victory = await playBattleToVictory(page, viewport);
+  await tapPoint(page, viewport, victory.collectPoint);
+
+  const rewards = await waitForScreen(page, 'rewards');
+  if (rewards.rewardCapacity !== 20 || rewards.rewardSkillCount !== 1 || rewards.rewardCount < 1) {
     throw new Error('Reward scene did not expose the 20-slot, one-skill contract');
   }
-  await tapPoint(page, viewport, victory.rewardFirstPoint);
-  await page.waitForFunction(() => Boolean(globalThis.__EXPEDITION_DIAGNOSTICS__?.selectedLootId));
-  await tapPoint(page, viewport, victory.collectPoint);
-  await page.waitForFunction(
-    () => globalThis.__EXPEDITION_DIAGNOSTICS__?.rewardsCollected === true,
+  await tapPoint(page, viewport, rewards.firstEntryPoint);
+  const detail = await waitForState(
+    page,
+    (state) => state.screen === 'rewards' && Boolean(state.selectedLootId),
   );
+  await tapPoint(page, viewport, detail.rewardEquipPoint);
+  const equippedReward = await waitForState(
+    page,
+    (state) => state.screen === 'rewards' && state.tutorialStep === 'forge_loot',
+  );
+  await tapPoint(page, viewport, equippedReward.routePoints.equipment);
+
+  let equipment = await waitForState(
+    page,
+    (state) => state.screen === 'guild' && state.page === 'equipment',
+  );
+  let forge;
+  for (const point of equipment.equipmentSlotPoints) {
+    await tapPoint(page, viewport, point);
+    try {
+      forge = await waitForState(page, (state) => state.forgeVisible === true, 700);
+      break;
+    } catch {
+      // Empty slots are intentionally inert; try the next equipped slot.
+    }
+  }
+  if (!forge) throw new Error('Equipped reward could not be opened in the forge');
+  await tapPoint(page, viewport, forge.calibratePoint);
+  equipment = await waitForState(
+    page,
+    (state) =>
+      state.screen === 'guild' &&
+      state.page === 'equipment' &&
+      state.tutorialStep === 'inspect_skills',
+  );
+  await tapPoint(page, viewport, equipment.navPoints.skills);
+
+  let skills = await waitForState(
+    page,
+    (state) =>
+      state.screen === 'guild' && state.page === 'skills' && state.tutorialStep === 'equip_skill',
+  );
+  await tapPoint(page, viewport, skills.equipSkillPoint);
+  skills = await waitForState(
+    page,
+    (state) =>
+      state.screen === 'guild' && state.page === 'skills' && state.tutorialStep === 'replay',
+  );
+  await tapPoint(page, viewport, skills.skillWorkspacePoints.fusion);
+  skills = await waitForState(
+    page,
+    (state) => state.screen === 'guild' && state.skillWorkspace === 'fusion',
+  );
+  await tapPoint(page, viewport, skills.skillWorkspacePoints.loadout);
+  skills = await waitForState(
+    page,
+    (state) => state.screen === 'guild' && state.skillWorkspace === 'loadout',
+  );
+
+  await tapPoint(page, viewport, skills.navPoints.party);
+  let party = await waitForState(
+    page,
+    (state) => state.screen === 'guild' && state.page === 'party',
+  );
+  const originalFirst = party.defaultOrder[0];
+  const secondHero = party.defaultOrder[1];
+  await tapPoint(page, viewport, party.partyHeroPoints[1]);
+  party = await waitForState(
+    page,
+    (state) =>
+      state.screen === 'guild' && state.page === 'party' && state.selectedHeroId === secondHero,
+  );
+  await tapPoint(page, viewport, party.moveEarlierPoint);
+  party = await waitForState(
+    page,
+    (state) =>
+      state.screen === 'guild' && state.page === 'party' && state.defaultOrder[0] !== originalFirst,
+  );
+  const persistedAfterReorder = await page.evaluate(() => {
+    const value = globalThis.localStorage.getItem('expedition:guild-rpg:v5');
+    return value ? JSON.parse(value).defaultOrder : undefined;
+  });
+  if (persistedAfterReorder?.[0] === originalFirst) {
+    throw new Error('Controller changed party order without persisting it');
+  }
+  await tapPoint(page, viewport, party.navPoints.quest);
+  const replay = await waitForState(
+    page,
+    (state) => state.screen === 'guild' && state.page === 'quest',
+  );
+  await tapPoint(page, viewport, replay.startQuestPoint);
+  await waitForScreen(page, 'battle');
+  const serializedBeforeReload = await page.evaluate(() =>
+    globalThis.localStorage.getItem('expedition:guild-rpg:v5'),
+  );
+  const persistedBeforeReload = serializedBeforeReload
+    ? JSON.parse(serializedBeforeReload).defaultOrder
+    : undefined;
+  if (!parseGuildSave(serializedBeforeReload)) {
+    const saved = serializedBeforeReload ? JSON.parse(serializedBeforeReload) : undefined;
+    throw new Error(
+      `Browser persisted a profile that the v5 loader rejects: ${getGuildProfileValidationIssues(saved).join(',')}; values=${JSON.stringify(
+        {
+          completedChallengeIds: saved?.completedChallengeIds,
+          discoveredEquipmentIds: saved?.discoveredEquipmentIds,
+          discoveredCoreIds: saved?.discoveredCoreIds,
+        },
+      )}`,
+    );
+  }
+
+  await page.reload({ waitUntil: 'networkidle' });
+  const restored = await waitForState(
+    page,
+    (state) =>
+      state.screen === 'guild' &&
+      state.page === 'quest' &&
+      state.tutorialStep === 'complete' &&
+      state.partyCount === 6,
+  );
+  if (restored.defaultOrder[0] === originalFirst) {
+    throw new Error(
+      `Reload lost the reordered six-member party; stored=${persistedBeforeReload?.join(',')}`,
+    );
+  }
+  await page.evaluate(() => {
+    globalThis.localStorage.setItem(
+      'expedition:guild-rpg:session:v1',
+      '{"version":1,"tutorialStep":"corrupt"}',
+    );
+  });
+  await page.reload({ waitUntil: 'networkidle' });
+  const recovered = await waitForScreen(page, 'guild');
+  if (recovered.partyCount !== 6) throw new Error('Corrupt session recovery lost the v5 profile');
 };
 
 if (path.resolve(process.argv[1] ?? '') === fileURLToPath(import.meta.url)) {

@@ -24,6 +24,10 @@ export async function syncCocosRuntime(outputDirectory) {
     resolve: {
       alias: {
         '@expedition/game-data': path.join(repositoryRoot, 'packages/game-data/src/index.ts'),
+        '@expedition/guild-session-core': path.join(
+          repositoryRoot,
+          'packages/guild-session-core/src/index.ts',
+        ),
         '@expedition/shared-types': path.join(repositoryRoot, 'packages/shared-types/src/index.ts'),
         '@expedition/presentation-core': path.join(
           repositoryRoot,

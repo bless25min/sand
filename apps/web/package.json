@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@expedition/game-data": "workspace:*",
+    "@expedition/guild-session-core": "workspace:*",
     "@expedition/pixi-renderer": "workspace:*",
     "@expedition/progression-core": "workspace:*",
     "@expedition/shared-types": "workspace:*",

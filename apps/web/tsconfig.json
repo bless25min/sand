@@ -10,6 +10,7 @@
   "include": ["src", "worker", "vite.config.ts", "vite.worker.config.ts"],
   "references": [
     { "path": "../../packages/game-data" },
+    { "path": "../../packages/guild-session-core" },
     { "path": "../../packages/pixi-renderer" },
     { "path": "../../packages/progression-core" },
     { "path": "../../packages/shared-types" },

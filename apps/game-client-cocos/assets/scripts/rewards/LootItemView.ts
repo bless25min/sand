@@ -1,6 +1,6 @@
-import { Color, Component, Graphics, Node, UITransform } from 'cc';
+import { Color, Component, Graphics, UITransform } from 'cc';
 
-import { addText, createUiNode } from '../ui/UiFactory';
+import { addButton, addText, createUiNode } from '../ui/UiFactory';
 
 export interface LootEntryViewModel {
   id: string;
@@ -45,7 +45,6 @@ export class LootItemView extends Component {
       18,
       new Color(240, 234, 210, 255),
     );
-    this.node.on(Node.EventType.TOUCH_END, onTap);
-    this.node.on(Node.EventType.MOUSE_UP, onTap);
+    addButton(this.node, onTap);
   }
 }

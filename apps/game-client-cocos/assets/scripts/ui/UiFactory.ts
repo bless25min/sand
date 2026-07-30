@@ -1,5 +1,6 @@
 import {
   Color,
+  Button,
   Graphics,
   HorizontalTextAlignment,
   Label,
@@ -64,4 +65,12 @@ export function addText(node: Node, text: string, size: number, color = COLORS.t
   label.verticalAlign = VerticalTextAlignment.CENTER;
   label.overflow = Label.Overflow.SHRINK;
   return label;
+}
+
+export function addButton(node: Node, onClick: () => void): Button {
+  const button = node.addComponent(Button);
+  button.transition = Button.Transition.SCALE;
+  button.zoomScale = 0.96;
+  node.on(Button.EventType.CLICK, onClick);
+  return button;
 }

@@ -10,7 +10,7 @@ import {
   createSeededRandom,
 } from '@expedition/simulation-core';
 
-interface HuntResult {
+export interface HuntResult {
   profile: GuildProfile;
   rewards: HuntRewards;
   newChallengeIds: readonly string[];

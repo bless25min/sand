@@ -4,12 +4,13 @@ import { resolveBattleFormation, resolveBattleLayout } from '../../runtime/exped
 import type {
   ExpeditionRuntime,
   RuntimeBattle,
+  RuntimeGuildController,
+  RuntimeGuildState,
   RuntimeProfile,
   RuntimeSkill,
   RuntimeUnit,
 } from '../runtime/RuntimeContracts';
-import { RewardScene } from '../rewards/RewardScene';
-import { COLORS, addPanel, addText, createUiNode } from '../ui/UiFactory';
+import { COLORS, addButton, addPanel, addText, createUiNode } from '../ui/UiFactory';
 import { PlaybackDirector } from '../playback/PlaybackDirector';
 import { CommandLens } from './CommandLens';
 import { SkillDock, type SkillTileState } from './SkillDock';
@@ -18,12 +19,13 @@ import { UnitView } from './UnitView';
 
 interface BattleInitialization {
   runtime: ExpeditionRuntime;
-  profile: RuntimeProfile;
-  battle: RuntimeBattle;
+  controller: RuntimeGuildController;
+  state: RuntimeGuildState;
 }
 
 export class BattleScene extends Component {
   private runtime?: ExpeditionRuntime;
+  private controller?: RuntimeGuildController;
   private profile?: RuntimeProfile;
   private battle?: RuntimeBattle;
   private stage?: Node;
@@ -36,6 +38,9 @@ export class BattleScene extends Component {
   private targetId?: string;
   private skillId?: string;
   private busy = false;
+  private destroyed = false;
+  private executionEpoch = 0;
+  private preferences?: RuntimeGuildState['preferences'];
   private diagnosticLayout?: {
     mode: string;
     width: number;
@@ -52,10 +57,13 @@ export class BattleScene extends Component {
 
   initialize(input: BattleInitialization): void {
     this.runtime = input.runtime;
-    this.profile = input.profile;
-    this.battle = input.battle;
+    this.controller = input.controller;
+    this.profile = input.state.profile;
+    this.battle = input.state.battle;
+    this.preferences = input.state.preferences;
+    if (!this.battle) throw new Error('Battle screen has no battle state.');
     this.actorId = this.battle.roundOrder.activeAdventurerId;
-    this.targetId = this.battle.selectedTargetId ?? this.enemies()[0]?.id;
+    this.targetId = this.battle.selectedTargetId;
     this.buildShell();
     this.render();
   }
@@ -100,6 +108,10 @@ export class BattleScene extends Component {
     this.order = orderNode.addComponent(TurnOrderController);
     const heroActors = this.heroes().map(({ id, name }) => ({ id, name }));
     this.order.initialize(heroActors, (actorId) => this.chooseHero(actorId));
+    const tactics = createUiNode('BattleTactics', header, 82, 34, visible.width * 0.43);
+    addPanel(tactics, COLORS.panel, COLORS.gold);
+    addText(tactics, '戰術', 16, COLORS.gold);
+    addButton(tactics, () => this.openBattleMenu());
 
     this.stage = createUiNode(
       'Battlefield',
@@ -131,7 +143,7 @@ export class BattleScene extends Component {
     this.skills = dockNode.addComponent(SkillDock);
     this.skills.initialize((skillId) => this.tapSkill(skillId));
     this.playback = root.addComponent(PlaybackDirector);
-    this.playback.initialize();
+    this.playback.initialize(this.preferences!);
     this.diagnosticLayout = {
       mode: layout.mode,
       width: visible.width,
@@ -201,10 +213,12 @@ export class BattleScene extends Component {
       return;
     } else if (this.skillId && this.actorId) {
       this.targetId = unit.id;
+      this.applyState(this.controller!.dispatch({ type: 'SELECT_TARGET', targetId: unit.id }));
       void this.execute();
       return;
     } else {
       this.targetId = unit.id;
+      this.applyState(this.controller!.dispatch({ type: 'SELECT_TARGET', targetId: unit.id }));
     }
     this.render();
   }
@@ -222,18 +236,39 @@ export class BattleScene extends Component {
   private async execute(): Promise<void> {
     if (!this.actorId || !this.targetId || !this.skillId || this.busy) return;
     this.busy = true;
-    const relayTier = this.battle!.roundOrder.actedIds.length + 1;
-    const action = this.actionInput(this.skillId);
-    const resolved = this.runtime!.resolveAction(action);
-    await this.playback!.play(resolved.events, this.unitNodes, this.stage!, relayTier);
-    this.battle = resolved.battle;
-    this.syncTurnState();
-    this.busy = false;
-    if (this.battle.status === 'victory') {
-      this.showRewards();
+    const epoch = ++this.executionEpoch;
+    try {
+      const relayTier = this.battle!.roundOrder.actedIds.length + 1;
+      const next = this.controller!.dispatch({
+        type: 'USE_SKILL',
+        skillId: this.skillId,
+        targetId: this.targetId,
+      });
+      await this.playback!.play(next.recentEvents, this.unitNodes, this.stage!, relayTier);
+      if (this.destroyed || epoch !== this.executionEpoch) return;
+      this.applyState(next);
+      this.syncTurnState();
+    } catch (error) {
+      console.warn('Combat playback recovered after an animation error.', error);
+    } finally {
+      if (epoch === this.executionEpoch) this.busy = false;
+    }
+    if (this.destroyed || epoch !== this.executionEpoch) return;
+    if (this.battle?.status === 'victory') {
+      this.showVictoryConfirmation();
+      return;
+    }
+    if (this.battle?.status === 'defeat') {
+      this.showDefeatConfirmation();
       return;
     }
     this.render();
+  }
+
+  onDestroy(): void {
+    this.destroyed = true;
+    this.executionEpoch += 1;
+    this.playback?.cancel();
   }
 
   private render(): void {
@@ -295,7 +330,7 @@ export class BattleScene extends Component {
 
   private syncTurnState(): void {
     this.actorId = this.battle!.roundOrder.activeAdventurerId;
-    this.targetId = this.battle!.selectedTargetId ?? this.enemies()[0]?.id;
+    this.targetId = this.battle!.selectedTargetId;
     this.skillId = undefined;
   }
 
@@ -306,24 +341,102 @@ export class BattleScene extends Component {
       this.battle.roundOrder.actedIds.indexOf(actorId) >= 0
     )
       return;
-    this.battle = this.runtime!.chooseNextHero(this.battle!, actorId);
+    this.applyState(this.controller!.dispatch({ type: 'CHOOSE_NEXT_HERO', adventurerId: actorId }));
     this.actorId = this.battle.roundOrder.activeAdventurerId;
     this.skillId = undefined;
     this.render();
   }
 
-  private showRewards(): void {
-    const rewards = this.runtime!.calculateRewards(this.profile!, this.battle!);
-    if (!rewards) return;
+  private openBattleMenu(): void {
+    const existing = this.node.getChildByName('BattleMenu');
+    if (existing) {
+      existing.destroy();
+      return;
+    }
     const size = view.getVisibleSize();
-    const overlay = createUiNode('Rewards', this.node, size.width, size.height);
-    overlay.addComponent(RewardScene).initialize(rewards, size.width, size.height, () => {
-      this.busy = true;
-    });
-    this.publishTerminalDiagnostics(
-      rewards.items.length + Math.min(1, rewards.skillDrops.length),
-      Math.min(1, rewards.skillDrops.length),
+    const menu = createUiNode(
+      'BattleMenu',
+      this.node,
+      Math.min(280, size.width * 0.72),
+      190,
+      size.width * 0.12,
+      size.height * 0.23,
     );
+    addPanel(menu, COLORS.ink, COLORS.gold);
+    const actions = [
+      {
+        id: 'ResetOrder',
+        label: '恢復預設順序',
+        run: () => {
+          this.applyState(this.controller!.dispatch({ type: 'RESET_CURRENT_ORDER' }));
+          menu.destroy();
+          this.render();
+        },
+      },
+      {
+        id: 'CarryOrder',
+        label: this.battle!.roundOrder.carryCurrentOrder ? '下回合恢復預設' : '沿用目前順序',
+        run: () => {
+          this.applyState(
+            this.controller!.dispatch({
+              type: 'SET_CARRY_ORDER',
+              enabled: !this.battle!.roundOrder.carryCurrentOrder,
+            }),
+          );
+          menu.destroy();
+          this.render();
+        },
+      },
+      {
+        id: 'Abandon',
+        label: '撤離任務',
+        run: () => this.controller?.dispatch({ type: 'ABANDON_HUNT' }),
+      },
+    ];
+    actions.forEach((action, index) => {
+      const node = createUiNode(action.id, menu, 240, 46, 0, 57 - index * 57);
+      addPanel(node, COLORS.panel, action.id === 'Abandon' ? COLORS.enemy : COLORS.line);
+      addText(node, action.label, 18, action.id === 'Abandon' ? COLORS.enemy : COLORS.text);
+      addButton(node, action.run);
+    });
+  }
+
+  private showVictoryConfirmation(): void {
+    const size = view.getVisibleSize();
+    const overlay = createUiNode('VictoryConfirm', this.node, size.width * 0.82, 180);
+    addPanel(overlay, COLORS.ink, COLORS.gold);
+    addText(
+      createUiNode('VictoryTitle', overlay, size.width * 0.76, 68, 0, 38),
+      '遠征勝利・確認戰果',
+      32,
+      COLORS.gold,
+    );
+    const confirm = createUiNode('CollectVictory', overlay, size.width * 0.62, 56, 0, -48);
+    addPanel(confirm, COLORS.line, COLORS.gold);
+    addText(confirm, '開啟戰利品', 24, COLORS.ink);
+    addButton(confirm, () => this.controller?.dispatch({ type: 'COLLECT_VICTORY' }));
+    this.publishTerminalDiagnostics();
+  }
+
+  private showDefeatConfirmation(): void {
+    const size = view.getVisibleSize();
+    const overlay = createUiNode('DefeatConfirm', this.node, size.width * 0.82, 180);
+    addPanel(overlay, COLORS.ink, COLORS.enemy);
+    addText(
+      createUiNode('DefeatTitle', overlay, size.width * 0.76, 68, 0, 38),
+      '遠征受挫・整備後再戰',
+      30,
+      COLORS.enemy,
+    );
+    const confirm = createUiNode('ReturnAfterDefeat', overlay, size.width * 0.62, 56, 0, -48);
+    addPanel(confirm, COLORS.panel, COLORS.gold);
+    addText(confirm, '返回公會', 24, COLORS.gold);
+    addButton(confirm, () => this.controller?.dispatch({ type: 'RETURN_GUILD', page: 'quest' }));
+  }
+
+  private applyState(state: RuntimeGuildState): void {
+    this.profile = state.profile;
+    if (state.battle) this.battle = state.battle;
   }
 
   private publishDiagnostics(): void {
@@ -363,6 +476,7 @@ export class BattleScene extends Component {
         __EXPEDITION_DIAGNOSTICS__?: Record<string, unknown>;
       }
     ).__EXPEDITION_DIAGNOSTICS__ = {
+      screen: 'battle',
       mode: layout.mode,
       width: layout.width,
       height: layout.height,
@@ -375,10 +489,11 @@ export class BattleScene extends Component {
       actedIds: this.battle?.roundOrder.actedIds ?? [],
       eventCount: this.battle?.events.length ?? 0,
       status: this.battle?.status,
+      tutorialStep: this.controller?.getState().tutorialStep,
     };
   }
 
-  private publishTerminalDiagnostics(rewardCount: number, skillCount: number): void {
+  private publishTerminalDiagnostics(): void {
     const diagnostics = (
       globalThis as typeof globalThis & {
         __EXPEDITION_DIAGNOSTICS__?: Record<string, unknown>;
@@ -386,23 +501,10 @@ export class BattleScene extends Component {
     ).__EXPEDITION_DIAGNOSTICS__;
     if (diagnostics) {
       diagnostics.status = this.battle?.status;
-      diagnostics.rewardVisible = true;
-      diagnostics.rewardCount = rewardCount;
-      diagnostics.rewardCapacity = 20;
-      diagnostics.rewardSkillCount = skillCount;
+      diagnostics.victoryConfirmVisible = true;
       if (this.diagnosticLayout) {
-        const { width, height } = this.diagnosticLayout;
-        const gridWidth = width - 20;
-        const gridHeight = height * 0.68;
-        const cellWidth = (gridWidth - 25) / 4;
-        const cellHeight = (gridHeight - 30) / 5;
-        const firstX = -gridWidth / 2 + 5 + cellWidth / 2;
-        const firstY = -height * 0.03 + gridHeight / 2 - 5 - cellHeight / 2;
-        diagnostics.rewardFirstPoint = {
-          screenX: 0.5 + firstX / width,
-          screenY: 0.5 - firstY / height,
-        };
-        diagnostics.collectPoint = { screenX: 0.5, screenY: 0.93 };
+        const { height } = this.diagnosticLayout;
+        diagnostics.collectPoint = { screenX: 0.5, screenY: 0.5 + 48 / height };
       }
     }
   }

@@ -21,6 +21,7 @@ interface RuntimeRoundOrder {
   currentOrder: readonly string[];
   actedIds: readonly string[];
   activeAdventurerId?: string;
+  carryCurrentOrder: boolean;
 }
 
 export interface RuntimeEvent {
@@ -33,14 +34,28 @@ export interface RuntimeEvent {
 }
 
 export interface RuntimeProfile {
+  version: 5;
+  gold: number;
   unlockedQuestIds: readonly string[];
-  party: readonly { definitionId: string; skillIds: readonly string[] }[];
+  defaultOrder: readonly string[];
+  party: readonly {
+    definitionId: string;
+    skillIds: readonly string[];
+    equipment: Readonly<Record<string, RuntimeRewardItem | undefined>>;
+  }[];
   skillInventory: readonly RuntimeSkill[];
+  inventory: readonly RuntimeRewardItem[];
+  materials: Readonly<Record<string, number>>;
+  questRecords: Readonly<Record<string, { clears: number }>>;
+  forgeLocks: Readonly<Record<string, readonly string[]>>;
+  progressionEvents: readonly { id: string; kind: string; label: string; detail: string }[];
+  completedChallengeIds: readonly string[];
 }
 
 export interface RuntimeSkill {
   id: string;
   name: string;
+  stars: 1 | 2 | 3;
   components: readonly {
     id: string;
     qualityRank: 1 | 2 | 3 | 4 | 5;
@@ -52,6 +67,7 @@ export interface RuntimeSkill {
     triggerAddition: number;
     repeatCount: number;
   }[];
+  sourceSkills?: readonly RuntimeSkill[];
 }
 
 export interface RuntimePreview {
@@ -83,13 +99,84 @@ export interface RuntimeRewards {
   skillDrops: readonly RuntimeSkill[];
 }
 
-interface RuntimeRewardItem {
+export interface RuntimeRewardItem {
   id: string;
+  baseId: string;
   name: string;
+  slot: 'weapon' | 'armor' | 'accessory';
   rarity: 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary';
   qualityRank: 1 | 2 | 3 | 4 | 5;
   mainStat: { stat: string; value: number };
   affixes: readonly { label?: string; value: number }[];
+  sellValue: number;
+  forgeRank?: number;
+  coreId?: string;
+  coreStrength?: number;
+  cores?: readonly { id: string; strength: number }[];
+  locked?: boolean;
+  favorite?: boolean;
+}
+
+export type RuntimeGuildPage = 'quest' | 'party' | 'skills' | 'equipment';
+
+export interface RuntimeGuildState {
+  screen: 'guild' | 'battle' | 'rewards';
+  page: RuntimeGuildPage;
+  skillWorkspace: 'loadout' | 'fusion';
+  profile: RuntimeProfile;
+  preferences: {
+    tutorial: 'active' | 'complete' | 'skipped';
+    masterVolume: number;
+    musicEnabled: boolean;
+    hapticsEnabled: boolean;
+    motion: 'system' | 'reduced';
+  };
+  tutorialStep: string;
+  selectedHeroId: string;
+  selectedSkillSlot: number;
+  selectedFusionIds: readonly string[];
+  selectedSalvageIds: readonly string[];
+  lastFusedSkillId?: string;
+  tutorialSkillId?: string;
+  battle?: RuntimeBattle;
+  rewards?: RuntimeRewards;
+  recentEvents: readonly RuntimeEvent[];
+  message: string;
+}
+
+export interface RuntimeGuildAction {
+  type: string;
+  [key: string]: unknown;
+}
+
+export interface RuntimeGuildController {
+  getState(): RuntimeGuildState;
+  dispatch(action: RuntimeGuildAction): RuntimeGuildState;
+  subscribe(listener: (state: RuntimeGuildState) => void): () => void;
+}
+
+export interface RuntimeContent {
+  zones: readonly {
+    id: string;
+    name: string;
+    subtitle: string;
+    description: string;
+    questIds: readonly string[];
+  }[];
+  quests: readonly { id: string; zoneId: string; name: string; description: string }[];
+  adventurers: readonly { id: string; name: string; title: string; role: string }[];
+  ascensions: readonly { id: string; name: string; description: string; routeLabel: string }[];
+  challenges: readonly {
+    id: string;
+    questId: string;
+    name: string;
+    description: string;
+    rewardLabel: string;
+  }[];
+  elements: readonly { id: string; name: string; status: string; fantasy: string }[];
+  skillSpecializations: readonly { id: string; name: string; description: string }[];
+  triggerConditions: readonly { id: string; name: string; description: string }[];
+  equipmentCores: readonly { id: string; name: string; description: string }[];
 }
 
 export interface ExpeditionRuntime {

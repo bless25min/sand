@@ -15,7 +15,7 @@ export function compileBuild(profile: GuildProfile, content: ComboContent): Comp
   return {
     buildId: build.id,
     cardIds: [...cardIds],
-    ruleIds: [...new Set([...build.ruleIds, ...equipmentRuleIds])].filter((ruleId) =>
+    ruleIds: Array.from(new Set([...build.ruleIds, ...equipmentRuleIds])).filter((ruleId) =>
       Boolean(content.rules[ruleId]),
     ),
   };

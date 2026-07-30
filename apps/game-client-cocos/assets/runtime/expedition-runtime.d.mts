@@ -1,11 +1,37 @@
 import type {
   RuntimeActionInput,
   RuntimeBattle,
+  RuntimeContent,
   RuntimeEvent,
+  RuntimeGuildController,
   RuntimePreview,
   RuntimeProfile,
   RuntimeRewards,
 } from '../scripts/runtime/RuntimeContracts';
+
+export function createGuildSessionController(storage: {
+  getItem(key: string): string | null;
+  setItem(key: string, value: string): void;
+}): RuntimeGuildController;
+
+export const runtimeContent: RuntimeContent;
+
+export function previewForge(
+  profile: RuntimeProfile,
+  itemId: string,
+  forgeAction: 'calibrate' | 'reforge' | 'lock' | 'transplant' | 'salvage',
+  options?: {
+    lockField?: 'mainStat' | 'affixes' | 'core';
+    sourceItemId?: string;
+  },
+):
+  | {
+      cost: number;
+      materialId?: string;
+      materialName?: string;
+      resultLabel: string;
+    }
+  | undefined;
 
 export function createProfile(): RuntimeProfile;
 export function startQuest(profile: RuntimeProfile, questId: string): RuntimeBattle;
@@ -92,13 +118,35 @@ export function compilePresentation(
 export function playPresentationSequence(
   sequence: RuntimePresentationSequence,
   adapter: { play(beat: RuntimePresentationBeat, signal: AbortSignal): Promise<void> },
-  options: { timeoutMs: number },
+  options: { timeoutMs: number; signal?: AbortSignal },
 ): Promise<{
   completed: boolean;
   aborted: boolean;
   nextIndex: number;
   timedOutBeatIds: readonly string[];
 }>;
+
+export function createFirstHuntCoach(
+  tutorial: 'active' | 'complete' | 'skipped',
+  step: string,
+  context?: {
+    heroName?: string;
+    surface?: 'guild' | 'rewards';
+    battleStatus?: 'active' | 'victory' | 'defeat';
+  },
+):
+  | {
+      step: string;
+      stepNumber: number;
+      stepTotal: number;
+      title: string;
+      message: string;
+      focusId: string;
+    }
+  | undefined;
+
+export function parseGuildSave(serialized: string | null): RuntimeProfile | undefined;
+export function getGuildProfileValidationIssues(value: unknown, version?: 4 | 5): readonly string[];
 
 export function resolveRouteVisual(
   route: RuntimePresentationBeat['route'],

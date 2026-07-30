@@ -2,7 +2,7 @@ import { Color, Component, Graphics, Node, UIOpacity, UITransform, Vec3 } from '
 import type { Label } from 'cc';
 
 import type { RuntimeUnit } from '../runtime/RuntimeContracts';
-import { COLORS, addText, createUiNode } from '../ui/UiFactory';
+import { COLORS, addButton, addText, createUiNode } from '../ui/UiFactory';
 
 const UNIT_COLORS: Readonly<Record<string, Color>> = {
   brann: new Color(206, 80, 52, 255),
@@ -62,8 +62,7 @@ export class UnitView extends Component {
       compact ? -37 * scale : -65,
     );
     this.nameLabel = addText(nameNode, unit.name, compact ? Math.round(19 * scale) : 28);
-    this.node.on(Node.EventType.TOUCH_END, this.handleTap, this);
-    this.node.on(Node.EventType.MOUSE_UP, this.handleTap, this);
+    addButton(this.node, () => this.handleTap());
     this.render(unit, false);
   }
 

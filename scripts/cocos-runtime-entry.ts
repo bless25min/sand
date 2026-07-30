@@ -5,17 +5,36 @@ import {
   createGuildProfile,
   createSeededRandom,
   previewSkillOutcome,
+  previewForgeEquipmentItem,
   resolveSkill,
   startGuildQuest,
   type ResolveSkillInput,
+  type ForgeAction,
+  type ForgeOptions,
   type SkillEngineContent,
 } from '@expedition/simulation-core';
 import type { GuildBattleState, GuildProfile } from '@expedition/shared-types';
 export {
+  createFirstHuntCoach,
+  GUILD_PREFERENCES_KEY,
+  GUILD_RPG_ACTION_TYPES,
+  GUILD_SAVE_KEY,
+  createGuildSession,
+  createGuildSessionController,
+  getGuildProfileValidationIssues,
+  loadGuildSession,
+  parseGuildSave,
+  reduceGuildSession,
+  storeGuildSession,
+} from '@expedition/guild-session-core';
+export {
   closeLootDetail,
   compilePresentation,
   createCommandLens,
+  createGuildShellModel,
   createLootLayout,
+  createPartyPageModel,
+  createQuestPageModel,
   formatComboCue,
   formatTriggerCue,
   playPresentationSequence,
@@ -23,6 +42,7 @@ export {
   resolveBattleFormation,
   resolveBattleLayout,
   resolveDesignResolution,
+  resolveGuildShellLayout,
   resolveRouteVisual,
 } from '@expedition/presentation-core';
 
@@ -71,6 +91,13 @@ export const previewSkill = (input: RuntimeSkillInput) =>
   previewSkillOutcome(toResolveInput(input));
 
 export const resolveAction = (input: RuntimeSkillInput) => resolveSkill(toResolveInput(input));
+
+export const previewForge = (
+  profile: GuildProfile,
+  itemId: string,
+  forgeAction: ForgeAction,
+  options?: ForgeOptions,
+) => previewForgeEquipmentItem(profile, itemId, forgeAction, GUILD_GAME_CONTENT, options);
 
 export const calculateRewards = (profile: GuildProfile, battle: GuildBattleState) => {
   if (battle.status !== 'victory') return undefined;

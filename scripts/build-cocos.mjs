@@ -1,4 +1,4 @@
-import { access, readFile } from 'node:fs/promises';
+import { access, readFile, stat } from 'node:fs/promises';
 import path from 'node:path';
 import process from 'node:process';
 import { spawn } from 'node:child_process';
@@ -12,6 +12,14 @@ const fileExists = async (candidate) => {
   try {
     await access(candidate);
     return true;
+  } catch {
+    return false;
+  }
+};
+
+const fileWasWrittenAfter = async (candidate, timestamp) => {
+  try {
+    return (await stat(candidate)).mtimeMs >= timestamp - 1_000;
   } catch {
     return false;
   }
@@ -74,17 +82,18 @@ export const runProcess = (executable, arguments_, options = {}) =>
     const timeoutMs = options.timeoutMs ?? 12 * 60_000;
     let outputTail = '';
     let settled = false;
-    const remember = (chunk) => {
-      outputTail = `${outputTail}${chunk}`.slice(-16_000);
-    };
     const child = spawn(executable, arguments_, {
       cwd: repositoryRoot,
       stdio: ['ignore', 'pipe', 'pipe'],
       windowsHide: true,
     });
     let timeout;
+    let probeTimer;
+    let completionTimer;
     const cleanup = () => {
       if (timeout !== undefined) globalThis.clearTimeout(timeout);
+      if (probeTimer !== undefined) globalThis.clearInterval(probeTimer);
+      if (completionTimer !== undefined) globalThis.clearTimeout(completionTimer);
       options.signal?.removeEventListener('abort', onAbort);
       process.off('SIGINT', onParentSignal);
       process.off('SIGTERM', onParentSignal);
@@ -95,6 +104,22 @@ export const runProcess = (executable, arguments_, options = {}) =>
       cleanup();
       await terminateProcessTree(child);
       reject(error);
+    };
+    const succeedAfterTermination = async () => {
+      if (settled) return;
+      settled = true;
+      cleanup();
+      await terminateProcessTree(child);
+      resolve(0);
+    };
+    const remember = (chunk) => {
+      outputTail = `${outputTail}${chunk}`.slice(-16_000);
+      if (!options.completionPattern || completionTimer !== undefined || settled) return;
+      options.completionPattern.lastIndex = 0;
+      if (!options.completionPattern.test(outputTail)) return;
+      completionTimer = globalThis.setTimeout(() => {
+        void succeedAfterTermination();
+      }, options.completionGraceMs ?? 1_000);
     };
     const onAbort = () => {
       void failAfterTermination(new Error(`${path.basename(executable)} was aborted`));
@@ -111,6 +136,19 @@ export const runProcess = (executable, arguments_, options = {}) =>
         new Error(`${path.basename(executable)} timed out after ${timeoutMs}ms`),
       );
     }, timeoutMs);
+    if (options.completionProbe) {
+      probeTimer = globalThis.setInterval(() => {
+        void Promise.resolve(options.completionProbe())
+          .then((complete) => {
+            if (complete) void succeedAfterTermination();
+          })
+          .catch((error) =>
+            failAfterTermination(
+              error instanceof Error ? error : new Error('Build completion probe failed'),
+            ),
+          );
+      }, options.probeIntervalMs ?? 500);
+    }
     options.signal?.addEventListener('abort', onAbort, { once: true });
     process.once('SIGINT', onParentSignal);
     process.once('SIGTERM', onParentSignal);
@@ -150,16 +188,32 @@ export async function buildCocosTarget(target, options = {}) {
   if (audioExitCode !== 0)
     throw new Error(`Cocos audio generation failed with exit code ${audioExitCode}`);
   const creator = options.creatorExecutable ?? (await findCreatorExecutable());
-  const buildExitCode = await run(creator, [
-    '--project',
-    projectRoot,
-    '--build',
-    serializeBuildArguments(config),
-  ]);
+  const outputRoot = path.join(projectRoot, config.buildPath, config.outputName);
+  const completionMarker =
+    target === 'windows'
+      ? path.join(outputRoot, 'proj', 'CMakeLists.txt')
+      : path.join(outputRoot, 'index.html');
+  const buildStartedAt = Date.now();
+  let completionMarkerSeenAt;
+  const buildExitCode = await run(
+    creator,
+    ['--project', projectRoot, '--build', serializeBuildArguments(config)],
+    {
+      timeoutMs: 5 * 60_000,
+      completionPattern: /build Task \(.+\) Finished/,
+      completionProbe: async () => {
+        if (!(await fileWasWrittenAfter(completionMarker, buildStartedAt))) {
+          completionMarkerSeenAt = undefined;
+          return false;
+        }
+        completionMarkerSeenAt ??= Date.now();
+        return Date.now() - completionMarkerSeenAt >= 60_000;
+      },
+    },
+  );
   if (buildExitCode !== 0 && buildExitCode !== 36) {
     throw new Error(`Cocos ${target} build failed with exit code ${buildExitCode}`);
   }
-  const outputRoot = path.join(projectRoot, config.buildPath, config.outputName);
   if (target !== 'windows') return outputRoot;
 
   const cmake = path.join(path.dirname(creator), 'resources', 'tools', 'cmake', 'bin', 'cmake.exe');

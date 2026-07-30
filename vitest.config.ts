@@ -9,6 +9,9 @@ export default defineConfig({
     alias: {
       '@expedition/command-schema': workspacePackage('./packages/command-schema/src/index.ts'),
       '@expedition/game-data': workspacePackage('./packages/game-data/src/index.ts'),
+      '@expedition/guild-session-core': workspacePackage(
+        './packages/guild-session-core/src/index.ts',
+      ),
       '@expedition/pixi-renderer': workspacePackage('./packages/pixi-renderer/src/index.ts'),
       '@expedition/progression-core': workspacePackage('./packages/progression-core/src/index.ts'),
       '@expedition/presentation-core': workspacePackage(

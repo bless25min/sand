@@ -41,8 +41,8 @@ describe('Cocos build runner', () => {
 
   it('syncs runtime and audio before invoking Creator and surfaces a failed build', async () => {
     const calls = [];
-    const run = vi.fn(async (executable, arguments_) => {
-      calls.push([executable, ...arguments_]);
+    const run = vi.fn(async (executable, arguments_, options) => {
+      calls.push({ command: [executable, ...arguments_], options });
       return calls.length < 3 ? 0 : 7;
     });
 
@@ -52,15 +52,17 @@ describe('Cocos build runner', () => {
         run,
       }),
     ).rejects.toThrow('Cocos web-mobile build failed with exit code 7');
-    expect(calls[0]?.join(' ')).toContain('sync-cocos-runtime.mjs');
-    expect(calls[1]?.join(' ')).toContain('generate-cocos-audio.mjs');
-    expect(calls[2]).toEqual([
+    expect(calls[0]?.command.join(' ')).toContain('sync-cocos-runtime.mjs');
+    expect(calls[1]?.command.join(' ')).toContain('generate-cocos-audio.mjs');
+    expect(calls[2]?.command).toEqual([
       'C:/CocosCreator.exe',
       '--project',
       path.resolve('apps/game-client-cocos'),
       '--build',
       expect.stringContaining('platform=web-mobile'),
     ]);
+    expect(calls[2]?.options).toMatchObject({ timeoutMs: 5 * 60_000 });
+    expect(calls[2]?.options.completionProbe).toEqual(expect.any(Function));
   });
 
   it('accepts Creator exit code 36 as a successful command-line build', async () => {
@@ -126,5 +128,37 @@ describe('Cocos build runner', () => {
     controller.abort();
 
     await expect(running).rejects.toThrow('aborted');
+  });
+
+  it('terminates a Creator-like process as soon as its output probe reports completion', async () => {
+    let complete = false;
+    globalThis.setTimeout(() => {
+      complete = true;
+    }, 40);
+
+    await expect(
+      runProcess(process.execPath, ['-e', 'setInterval(() => undefined, 1_000)'], {
+        timeoutMs: 2_000,
+        probeIntervalMs: 10,
+        completionProbe: async () => complete,
+      }),
+    ).resolves.toBe(0);
+  });
+
+  it('waits for the explicit Creator finished log before terminating a hung CLI shell', async () => {
+    await expect(
+      runProcess(
+        process.execPath,
+        [
+          '-e',
+          "console.log('build Task (expedition-mobile) Finished'); setInterval(() => 0, 1_000)",
+        ],
+        {
+          timeoutMs: 1_000,
+          completionPattern: /build Task \(.+\) Finished/,
+          completionGraceMs: 10,
+        },
+      ),
+    ).resolves.toBe(0);
   });
 });

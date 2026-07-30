@@ -62,6 +62,9 @@ importers:
       '@expedition/game-data':
         specifier: workspace:*
         version: link:../../packages/game-data
+      '@expedition/guild-session-core':
+        specifier: workspace:*
+        version: link:../../packages/guild-session-core
       '@expedition/pixi-renderer':
         specifier: workspace:*
         version: link:../../packages/pixi-renderer
@@ -102,6 +105,18 @@ importers:
       '@expedition/shared-types':
         specifier: workspace:*
         version: link:../shared-types
+
+  packages/guild-session-core:
+    dependencies:
+      '@expedition/game-data':
+        specifier: workspace:*
+        version: link:../game-data
+      '@expedition/shared-types':
+        specifier: workspace:*
+        version: link:../shared-types
+      '@expedition/simulation-core':
+        specifier: workspace:*
+        version: link:../simulation-core
 
   packages/pixi-renderer:
     dependencies:

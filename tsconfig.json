@@ -4,6 +4,7 @@
     { "path": "./packages/shared-types" },
     { "path": "./packages/simulation-core" },
     { "path": "./packages/game-data" },
+    { "path": "./packages/guild-session-core" },
     { "path": "./packages/command-schema" },
     { "path": "./packages/pixi-renderer" },
     { "path": "./packages/progression-core" },

@@ -60,5 +60,5 @@ export function validateGameGenome(genome: GameGenome): GenomeValidation {
   if (genome.counters.length !== 3) issues.push('counters.length');
   if (!genome.endings.victory.title || !genome.endings.defeat.title) issues.push('endings');
 
-  return { valid: issues.length === 0, issues: [...new Set(issues)] };
+  return { valid: issues.length === 0, issues: Array.from(new Set(issues)) };
 }

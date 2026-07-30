@@ -27,7 +27,7 @@ const numberRecord = (value: unknown) =>
 
 const legacyCards = (value: unknown) => {
   if (!isRecord(value)) return [];
-  return [...new Set(Object.values(value).flatMap(stringArray))];
+  return Array.from(new Set(Object.values(value).flatMap(stringArray)));
 };
 
 export function migrateProfileV4(value: unknown, content: GuildGameContent): GuildProfile {

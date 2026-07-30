@@ -51,4 +51,16 @@ test('bundles the real six-hero hunt as a browser and native safe ESM runtime', 
   expect(runtime.compilePresentation).toBeTypeOf('function');
   expect(runtime.createLootLayout).toBeTypeOf('function');
   expect(runtime.calculateRewards).toBeTypeOf('function');
+  expect(runtime.createGuildSessionController).toBeTypeOf('function');
+  expect(runtime.previewForge).toBeTypeOf('function');
+  expect(runtime.GUILD_RPG_ACTION_TYPES).toHaveLength(34);
+
+  const values = new Map();
+  const controller = runtime.createGuildSessionController({
+    getItem: (key) => values.get(key) ?? null,
+    setItem: (key, value) => values.set(key, value),
+  });
+  controller.dispatch({ type: 'NAVIGATE', page: 'party' });
+  expect(controller.getState().page).toBe('party');
+  expect(values.size).toBeGreaterThan(0);
 });

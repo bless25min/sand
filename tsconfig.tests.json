@@ -8,6 +8,7 @@
     "paths": {
       "@expedition/command-schema": ["./packages/command-schema/src/index.ts"],
       "@expedition/game-data": ["./packages/game-data/src/index.ts"],
+      "@expedition/guild-session-core": ["./packages/guild-session-core/src/index.ts"],
       "@expedition/pixi-renderer": ["./packages/pixi-renderer/src/index.ts"],
       "@expedition/progression-core": ["./packages/progression-core/src/index.ts"],
       "@expedition/presentation-core": ["./packages/presentation-core/src/index.ts"],

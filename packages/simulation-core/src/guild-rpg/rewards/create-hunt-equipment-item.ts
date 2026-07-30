@@ -61,7 +61,7 @@ export function createHuntEquipmentItem(
         ]
       : undefined;
   const coreStrength = base ? random.nextInt(1, qualityRank) : undefined;
-  const corePool = [...new Set(input.hunt.coreDropIds ?? base?.coreIds ?? [])];
+  const corePool = Array.from(new Set(input.hunt.coreDropIds ?? base?.coreIds ?? []));
   const remainingCoreIds = corePool.filter((candidate) => candidate !== coreId);
   const secondCoreId =
     rarity === 'legendary' && remainingCoreIds.length > 0

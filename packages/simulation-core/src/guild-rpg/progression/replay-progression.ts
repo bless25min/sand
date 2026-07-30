@@ -75,21 +75,21 @@ export function applyHuntProgression(
   const completed = evaluateHuntChallenges(profile, battle, hunt, content);
   const previouslyCompleted = new Set(profile.completedChallengeIds);
   const newChallenges = completed.filter((challenge) => !previouslyCompleted.has(challenge.id));
-  const completedChallengeIds = [
-    ...new Set([...profile.completedChallengeIds, ...completed.map((challenge) => challenge.id)]),
-  ];
+  const completedChallengeIds = Array.from(
+    new Set([...profile.completedChallengeIds, ...completed.map((challenge) => challenge.id)]),
+  );
   const record = rewarded.questRecords[rewards.questId]!;
-  const discoveredCoreIds = [
-    ...new Set([
+  const discoveredCoreIds = Array.from(
+    new Set([
       ...profile.discoveredCoreIds,
       ...rewards.items.flatMap((item) =>
         item.cores?.length ? item.cores.map(({ id }) => id) : item.coreId ? [item.coreId] : [],
       ),
     ]),
-  ];
-  const discoveredEquipmentIds = [
-    ...new Set([...profile.discoveredEquipmentIds, ...rewards.items.map((item) => item.baseId)]),
-  ];
+  );
+  const discoveredEquipmentIds = Array.from(
+    new Set([...profile.discoveredEquipmentIds, ...rewards.items.map((item) => item.baseId)]),
+  );
   const progressionEvents = [
     ...profile.progressionEvents,
     ...newChallenges.map((challenge) => ({

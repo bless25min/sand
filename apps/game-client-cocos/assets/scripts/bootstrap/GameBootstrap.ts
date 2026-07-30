@@ -1,22 +1,28 @@
-import { _decorator, Component, ResolutionPolicy, screen, view } from 'cc';
+import { _decorator, Component, ResolutionPolicy, screen, sys, view } from 'cc';
 
 import {
   calculateRewards,
   chooseNextHero,
   createProfile,
+  createGuildSessionController,
   resolveDesignResolution,
+  runtimeContent,
   startQuest,
   previewSkill,
   resolveAction,
 } from '../../runtime/expedition-runtime.mjs';
-import { BattleScene } from '../battle/BattleScene';
-import type { ExpeditionRuntime } from '../runtime/RuntimeContracts';
+import type {
+  ExpeditionRuntime,
+  RuntimeContent,
+  RuntimeGuildController,
+} from '../runtime/RuntimeContracts';
+import { GuildGameController } from './GuildGameController';
 
 const { ccclass } = _decorator;
 
 @ccclass('GameBootstrap')
 export class GameBootstrap extends Component {
-  private controller?: BattleScene;
+  private controller?: GuildGameController;
 
   start(): void {
     this.applyFrameResolution();
@@ -28,17 +34,16 @@ export class GameBootstrap extends Component {
       previewSkill,
       resolveAction,
     };
-    const profile = runtime.createProfile();
-    const questId = profile.unlockedQuestIds[0];
-    if (!questId) throw new Error('Project Expedition has no unlocked quest');
-    const battle = runtime.startQuest(profile, questId);
-    const heroes = battle.units.filter(({ side }) => side === 'heroes');
-    const enemies = battle.units.filter(({ side }) => side === 'enemies');
-    if (heroes.length !== 6) throw new Error(`Expected 6 heroes, received ${heroes.length}`);
-    if (enemies.length !== 3) throw new Error(`Expected 3 enemies, received ${enemies.length}`);
-
-    this.controller = this.node.addComponent(BattleScene);
-    this.controller.initialize({ runtime, profile, battle });
+    const session = createGuildSessionController({
+      getItem: (key: string) => sys.localStorage.getItem(key),
+      setItem: (key: string, value: string) => sys.localStorage.setItem(key, value),
+    }) as RuntimeGuildController;
+    this.controller = this.node.addComponent(GuildGameController);
+    this.controller.initialize({
+      runtime,
+      controller: session,
+      content: runtimeContent as RuntimeContent,
+    });
     screen.on('window-resize', this.handleResize, this);
   }
 

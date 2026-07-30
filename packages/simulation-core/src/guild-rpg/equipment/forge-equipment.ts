@@ -276,9 +276,9 @@ export function forgeEquipmentItem(
   }
   nextProfile = replaceItem(nextProfile, nextItem);
   const sequence = profile.forgeSequence + 1;
-  const coreIds = [
-    ...new Set([...profile.discoveredCoreIds, ...coreRolls(nextItem).map(({ id }) => id)]),
-  ];
+  const coreIds = Array.from(
+    new Set([...profile.discoveredCoreIds, ...coreRolls(nextItem).map(({ id }) => id)]),
+  );
   return {
     profile: {
       ...nextProfile,
