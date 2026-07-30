@@ -1,0 +1,6 @@
+{
+  "name": "Project Expedition",
+  "engine": "cocos-creator",
+  "version": "3.8.8",
+  "entryScene": "db://assets/main.scene"
+}

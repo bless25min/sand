@@ -10,6 +10,7 @@
       "@expedition/game-data": ["./packages/game-data/src/index.ts"],
       "@expedition/pixi-renderer": ["./packages/pixi-renderer/src/index.ts"],
       "@expedition/progression-core": ["./packages/progression-core/src/index.ts"],
+      "@expedition/presentation-core": ["./packages/presentation-core/src/index.ts"],
       "@expedition/shared-types": ["./packages/shared-types/src/index.ts"],
       "@expedition/simulation-core": ["./packages/simulation-core/src/index.ts"],
       "@expedition/test-fixtures": ["./packages/test-fixtures/src/index.ts"]

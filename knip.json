@@ -1,3 +1,14 @@
 {
-  "$schema": "https://unpkg.com/knip@6/schema.json"
+  "$schema": "https://unpkg.com/knip@6/schema.json",
+  "ignoreBinaries": ["taskkill\\.exe"],
+  "workspaces": {
+    ".": {
+      "entry": ["scripts/cocos-runtime-entry.ts"]
+    },
+    "apps/game-client-cocos": {
+      "entry": ["assets/scripts/bootstrap/GameBootstrap.ts"],
+      "project": ["assets/scripts/**/*.ts", "assets/runtime/**/*.d.mts"],
+      "ignoreDependencies": ["cc"]
+    }
+  }
 }

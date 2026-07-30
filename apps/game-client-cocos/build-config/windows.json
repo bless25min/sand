@@ -1,0 +1,9 @@
+{
+  "creatorVersion": "3.8.8",
+  "platform": "windows",
+  "buildPath": "build/windows",
+  "outputName": "expedition-windows",
+  "scenes": ["db://assets/main.scene"],
+  "debug": false,
+  "md5Cache": true
+}

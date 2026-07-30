@@ -34,6 +34,7 @@ enemies loaded from current game data.
 modify root `package.json`, `pnpm-workspace.yaml`, `tsconfig.json`.
 
 **Interface:**
+
 ```ts
 export interface ExpeditionRuntime {
   createProfile(): GuildProfile;
@@ -58,13 +59,14 @@ create Cocos scripts under `assets/scripts/battle/{BattleScene,UnitView,SkillDoc
 TurnOrderController}.ts`; create prefabs under `assets/prefabs/battle/`.
 
 **Interfaces:**
+
 ```ts
 export function createCommandLens(input: CommandLensInput): CommandLensModel;
 export function resolveBattleLayout(viewport: Viewport): BattleLayout;
 ```
 
 - [ ] Write failing tests for select→inspect→target, repeat-tap execute, readiness reasons,
-damage/hit separation, order edits and all four viewport layouts.
+      damage/hit separation, order edits and all four viewport layouts.
 - [ ] Run the focused presentation tests; expect RED, then implement pure models until GREEN.
 - [ ] Bind Cocos nodes to those models; no separate unit button frames and no vertical scroll.
 - [ ] Verify every visible value comes from simulation preview rather than Cocos arithmetic.
@@ -79,13 +81,16 @@ create Cocos scripts under `assets/scripts/playback/{PlaybackDirector,ActorAnima
 VfxDirector,AudioDirector,DamageNumberPool}.ts`; create `assets/{animations,vfx,audio,art}/battle/`.
 
 **Interfaces:**
+
 ```ts
 export function compilePresentation(events: readonly GuildBattleEvent[]): PresentationSequence;
-export interface BeatPlayer { play(beat: PresentationBeat, signal: AbortSignal): Promise<void>; }
+export interface BeatPlayer {
+  play(beat: PresentationBeat, signal: AbortSignal): Promise<void>;
+}
 ```
 
 - [ ] Write failing tests for causal order, six escalation tiers, echo routing, skip, abort,
-animation timeout recovery and reduced motion.
+      animation timeout recovery and reduced motion.
 - [ ] Implement the pure compiler and director contract; run focused tests until GREEN.
 - [ ] Add original layered actor art, clips, particles, trails, hit-stop, camera and pooled numbers.
 - [ ] Record a golden hunt trace proving every beat completes before the next actor begins.
@@ -100,7 +105,7 @@ under `assets/scripts/rewards/{RewardScene,LootGrid,LootItemView,LootDetailSheet
 under `assets/prefabs/rewards/`.
 
 - [ ] Write failing tests for 4×5 fit, one skill maximum, material exclusion, rarity colors,
-Overkill quality progression and detail-sheet focus restoration.
+      Overkill quality progression and detail-sheet focus restoration.
 - [ ] Implement the pure loot model and Cocos reward scene; run focused tests until GREEN.
 - [ ] Verify a baseline win is low quality and escalating conditions increase quantity/quality.
 

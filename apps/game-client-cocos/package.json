@@ -1,0 +1,12 @@
+{
+  "name": "@expedition/game-client-cocos",
+  "version": "0.1.0",
+  "private": true,
+  "uuid": "6a841a34-7946-4daf-91f4-88892b621c75",
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json --noEmit --pretty false"
+  },
+  "creator": {
+    "version": "3.8.8"
+  }
+}

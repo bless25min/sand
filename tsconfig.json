@@ -7,6 +7,7 @@
     { "path": "./packages/command-schema" },
     { "path": "./packages/pixi-renderer" },
     { "path": "./packages/progression-core" },
+    { "path": "./packages/presentation-core" },
     { "path": "./packages/test-fixtures" },
     { "path": "./apps/web" },
     { "path": "./apps/worker-api" }

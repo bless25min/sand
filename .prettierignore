@@ -1,5 +1,13 @@
 apps/worker-api/worker-configuration.d.ts
 .superpowers/
 docs/AI_DEVELOPMENT_SPEC.md
+apps/game-client-cocos/assets/runtime/expedition-runtime.mjs
+apps/game-client-cocos/build/
+apps/game-client-cocos/library/
+apps/game-client-cocos/local/
+apps/game-client-cocos/native/
+apps/game-client-cocos/profiles/
+apps/game-client-cocos/temp/
+.cocos-cache/
 **/dist
 pnpm-lock.yaml

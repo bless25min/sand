@@ -81,6 +81,8 @@ importers:
         specifier: 19.2.8
         version: 19.2.8(react@19.2.8)
 
+  apps/game-client-cocos: {}
+
   apps/worker-api:
     dependencies:
       '@expedition/shared-types':
@@ -122,6 +124,12 @@ importers:
       '@expedition/test-fixtures':
         specifier: workspace:*
         version: link:../test-fixtures
+
+  packages/presentation-core:
+    dependencies:
+      '@expedition/shared-types':
+        specifier: workspace:*
+        version: link:../shared-types
 
   packages/shared-types: {}
 

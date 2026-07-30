@@ -12,6 +12,7 @@
     "build": "pnpm -r --if-present build",
     "typecheck": "tsc -b --pretty false && pnpm typecheck:tests",
     "typecheck:tests": "tsc -p tsconfig.tests.json --pretty false",
+    "typecheck:cocos": "pnpm --filter @expedition/game-client-cocos typecheck",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "pnpm --filter @expedition/web... build && node scripts/run-e2e.mjs",
@@ -21,7 +22,13 @@
     "arch:check": "depcruise --config dependency-cruiser.config.cjs apps packages",
     "arch:graph": "depcruise --config dependency-cruiser.config.cjs --output-type dot apps packages",
     "deadcode": "knip",
-    "check": "pnpm typecheck && pnpm lint && pnpm format:check && pnpm arch:check && pnpm deadcode && pnpm test && pnpm build"
+    "check": "pnpm typecheck && pnpm typecheck:cocos && pnpm lint && pnpm format:check && pnpm arch:check && pnpm deadcode && pnpm test && pnpm build",
+    "cocos:sync": "node scripts/sync-cocos-runtime.mjs --out-dir apps/game-client-cocos/assets/runtime",
+    "cocos:build": "node scripts/build-cocos.mjs all",
+    "cocos:build:web": "node scripts/build-cocos.mjs web-mobile",
+    "cocos:build:windows": "node scripts/build-cocos.mjs windows",
+    "cocos:test:e2e": "node scripts/run-cocos-e2e.mjs",
+    "cocos:test:windows": "node scripts/smoke-cocos-windows.mjs"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",

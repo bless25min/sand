@@ -1,0 +1,9 @@
+{
+  "creatorVersion": "3.8.8",
+  "platform": "web-mobile",
+  "buildPath": "build/web-mobile",
+  "outputName": "expedition-mobile",
+  "scenes": ["db://assets/main.scene"],
+  "debug": false,
+  "md5Cache": true
+}
