@@ -4,6 +4,8 @@ import { createComboTrack } from '../../runtime/expedition-runtime.mjs';
 import type { RuntimeSkill } from '../runtime/RuntimeContracts';
 import { COLORS, addButton, addPanel, addText, createUiNode } from '../ui/UiFactory';
 
+const compactSkillName = (name: string): string => name.split('・')[1] ?? name;
+
 export interface SkillTileState {
   skill: RuntimeSkill;
   selected: boolean;
@@ -62,15 +64,8 @@ export class SkillDock extends Component {
         23,
         COLORS.ink,
       );
-      const name = createUiNode(
-        'Name',
-        tile,
-        tileWidth - 106,
-        42,
-        -tileWidth * 0.04,
-        tileHeight * 0.25,
-      );
-      const label = addText(name, state.skill.name, 29, COLORS.text);
+      const name = createUiNode('Name', tile, tileWidth - 82, 42, 18, tileHeight * 0.25);
+      const label = addText(name, compactSkillName(state.skill.name), 27, COLORS.text);
       label.horizontalAlign = HorizontalTextAlignment.LEFT;
       const track = createComboTrack(state.comboSteps) as readonly {
         state: 'opening' | 'ready' | 'pending' | 'blocked';

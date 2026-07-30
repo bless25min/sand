@@ -17,6 +17,8 @@ const STATUS_LABELS = {
   tide: '潮湧',
 };
 
+const compactSkillName = (name: string): string => name.split('・')[1] ?? name;
+
 interface TrackStep {
   index: number;
   triggerLabel: string;
@@ -92,8 +94,8 @@ export class CommandLens extends Component {
     const color = ELEMENT_COLORS[element];
     const title = addText(
       createUiNode('SkillName', root, width - 18, 28, 0, height / 2 - 15),
-      skill.name,
-      24,
+      compactSkillName(skill.name),
+      27,
       color,
     );
     title.isBold = true;
@@ -126,19 +128,19 @@ export class CommandLens extends Component {
       addText(
         createUiNode('Phase', node, stepWidth - 10, 22, 0, 16),
         `${step.index}. ${step.phaseLabel}`,
-        18,
+        20,
         active ? color : COLORS.muted,
       );
       addText(
         createUiNode('Condition', node, stepWidth - 10, 24, 0, -5),
         step.triggerLabel,
-        19,
+        20,
         active ? COLORS.text : COLORS.muted,
       );
       addText(
         createUiNode('Hint', node, stepWidth - 10, 20, 0, -27),
         step.hint,
-        15,
+        17,
         active ? COLORS.gold : COLORS.muted,
       );
     });
@@ -166,8 +168,8 @@ export class CommandLens extends Component {
     primary.isBold = true;
     addText(
       createUiNode('Segments', root, width - 12, 24, 0, 5),
-      `${preview.damageSegments} 段攻擊 · 額外追擊 ${preview.chaseSegments} 次`,
-      17,
+      `命中 ${preview.damageSegments} 段｜追擊 +${preview.chaseSegments}`,
+      20,
       COLORS.text,
     );
     const status = target ? this.statusChange(preview, target.id) : undefined;
@@ -185,7 +187,7 @@ export class CommandLens extends Component {
       ]
         .filter(Boolean)
         .join('　') || '本次沒有額外狀態',
-      16,
+      18,
       status || relay ? COLORS.gold : COLORS.muted,
     );
   }
