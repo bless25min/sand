@@ -148,6 +148,8 @@ describe('Cocos production client project', () => {
   it('keeps combat information readable and makes each relay visibly stronger', async () => {
     const [
       battleScene,
+      battleBackdrop,
+      actionBanner,
       skillDock,
       commandLens,
       actorAnimator,
@@ -158,6 +160,8 @@ describe('Cocos production client project', () => {
     ] = await Promise.all(
       [
         'battle/BattleScene.ts',
+        'battle/BattleBackdrop.ts',
+        'battle/ActionBanner.ts',
         'battle/SkillDock.ts',
         'battle/CommandLens.ts',
         'playback/ActorAnimator.ts',
@@ -171,7 +175,14 @@ describe('Cocos production client project', () => {
     expect(battleScene).toContain('const relayTier = this.battle!.roundOrder.actedIds.length + 1');
     expect(battleScene).toContain('resolveBattleFormation');
     expect(battleScene).toContain('projectBattlePlayback');
+    expect(battleScene).toContain('BattleBackdrop');
+    expect(battleScene).toContain('ActionBanner');
     expect(battleScene).toContain("'RelayMeter'");
+    expect(battleBackdrop).toContain("'ClashLine'");
+    expect(battleBackdrop).toContain("'EnemyTerritory'");
+    expect(battleBackdrop).toContain("'HeroTerritory'");
+    expect(actionBanner).toContain("'FINISHER'");
+    expect(actionBanner).toContain('`CHAIN ${relayTier}`');
     expect(skillDock).not.toContain('const prefix =');
     expect(skillDock).toContain('const columns = desktop ? 6 : 3');
     expect(skillDock).toContain('createComboTrack');
@@ -184,8 +195,13 @@ describe('Cocos production client project', () => {
     expect(commandLens).toContain('target?.stats.defense');
     expect(commandLens).toContain('createComboTrack');
     expect(commandLens).toContain('compactSkillName(skill.name)');
-    expect(commandLens).toContain('step.hint');
-    expect(commandLens).toContain('追擊 +');
+    expect(commandLens).toContain("'起手'");
+    expect(commandLens).toContain("'觸發'");
+    expect(commandLens).toContain("'爆發'");
+    expect(commandLens).toContain("'總傷'");
+    expect(commandLens).toContain("'命中'");
+    expect(commandLens).toContain("'追擊'");
+    expect(commandLens).not.toContain('｜追擊');
     expect(commandLens).not.toContain('額外追擊');
     expect(commandLens).toContain('preview.executionWindow');
     expect(commandLens).toContain('OVERKILL');
@@ -255,12 +271,18 @@ describe('Cocos production client project', () => {
   });
 
   it('keeps equipment, fusion, quest and unit interactions complete on a fixed screen', async () => {
-    const [equipment, fusion, forge, quest, unit, loot] = await Promise.all(
+    const [equipment, fusion, forge, quest, party, skills, ...supporting] = await Promise.all(
       [
         'guild/EquipmentPage.ts',
         'guild/FusionWorkbench.ts',
         'guild/ForgeSheet.ts',
         'guild/QuestPage.ts',
+        'guild/PartyPage.ts',
+        'guild/SkillsPage.ts',
+        'guild/QuestFocusStage.ts',
+        'guild/HeroFocusStage.ts',
+        'guild/SkillFocusStage.ts',
+        'guild/EquipmentFocusStage.ts',
         'battle/UnitView.ts',
         'rewards/LootItemView.ts',
       ].map((relativePath) => readSource(`assets/scripts/${relativePath}`)),
@@ -274,6 +296,17 @@ describe('Cocos production client project', () => {
     expect(fusion).toContain('FusionSkillNext');
     expect(quest).toContain('if (unlocked)');
     expect(quest).toContain("'未解鎖'");
+    expect(quest).toContain('renderQuestFocus');
+    expect(party).toContain('renderHeroFocus');
+    expect(skills).toContain('renderSkillFocus');
+    expect(equipment).toContain('renderEquipmentFocus');
+    const focusStages = supporting.slice(0, 4).join('\n');
+    const unit = supporting[4];
+    const loot = supporting[5];
+    expect(focusStages).toContain('`RouteNode-${index + 1}`');
+    expect(focusStages).toContain("'HeroSilhouette'");
+    expect(focusStages).toContain("'CausalArrow'");
+    expect(focusStages).toContain('`EquipmentSocket-${index + 1}`');
     expect(unit).not.toContain('MOUSE_UP');
     expect(loot).not.toContain('MOUSE_UP');
   });

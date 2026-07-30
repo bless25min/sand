@@ -33,6 +33,8 @@ export class CommandLens extends Component {
   private contentRoot?: Node;
   private width = 0;
   private height = 0;
+  private triggerLabel = '';
+  private triggerState = '';
 
   initialize(width: number, height: number): void {
     this.width = width;
@@ -83,7 +85,8 @@ export class CommandLens extends Component {
       return;
     }
     this.renderChain(skill, preview);
-    this.renderOutcome(target, preview, heroes);
+    this.renderOutcome(preview);
+    this.renderConsequenceStrip(target, preview, heroes);
   }
 
   private renderChain(skill: RuntimeSkill, preview?: RuntimePreview): void {
@@ -107,19 +110,53 @@ export class CommandLens extends Component {
         eventCount: step.eventIds?.length,
       })),
     ) as readonly TrackStep[];
-    const visible = track.length > 0 ? track.slice(0, 3) : [this.openingStep()];
-    const gap = 6;
-    const stepWidth = (width - 12 - gap * (visible.length - 1)) / visible.length;
-    visible.forEach((step, index) => {
+    const visible = track.length > 0 ? track : [this.openingStep()];
+    const rawSteps = preview?.comboSteps ?? [];
+    const cueIndex = Math.max(
+      0,
+      rawSteps.findIndex(({ readiness }) => readiness === 'not-ready') >= 0
+        ? rawSteps.findIndex(({ readiness }) => readiness === 'not-ready')
+        : rawSteps.findIndex(({ readiness }) => readiness === 'pending-impact') >= 0
+          ? rawSteps.findIndex(({ readiness }) => readiness === 'pending-impact')
+          : rawSteps.findIndex(({ readiness }) => readiness === 'ready'),
+    );
+    const cue = rawSteps[cueIndex];
+    const readiness =
+      cue?.readiness === 'not-ready'
+        ? '未滿足'
+        : cue?.readiness === 'pending-impact'
+          ? '命中後'
+          : cue
+            ? '可觸發'
+            : '選目標';
+    const triggerText = visible[cueIndex]?.triggerLabel ?? visible[0]!.triggerLabel;
+    this.triggerLabel = triggerText;
+    this.triggerState = readiness;
+    const status = this.firstStatusChange(preview);
+    const relayReady = preview?.nextRelays.some(
+      ({ newlyReadySkillIds }) => newlyReadySkillIds.length > 0,
+    );
+    const cards = [
+      { phase: '起手', value: '技能本體', state: '必定' },
+      { phase: '觸發', value: triggerText || '命中判定', state: readiness },
+      {
+        phase: '爆發',
+        value: status ? `${status}變化` : relayReady ? '點亮接力' : '造成傷害',
+        state: preview?.executionWindow ? 'OVERKILL' : preview ? '已預覽' : '選目標',
+      },
+    ] as const;
+    const gap = 9;
+    const stepWidth = (width - 12 - gap * 2) / 3;
+    cards.forEach((step, index) => {
       const node = createUiNode(
-        `Step-${step.index}`,
+        `Step-${index + 1}`,
         root,
         stepWidth,
-        height - 34,
+        height - 46,
         -width / 2 + 6 + stepWidth / 2 + index * (stepWidth + gap),
-        -17,
+        -11,
       );
-      const active = step.state !== 'blocked';
+      const active = step.state !== '未滿足';
       addPanel(
         node,
         active ? new Color(color.r, color.g, color.b, 38) : new Color(20, 25, 25, 210),
@@ -127,30 +164,34 @@ export class CommandLens extends Component {
       );
       addText(
         createUiNode('Phase', node, stepWidth - 10, 22, 0, 16),
-        `${step.index}. ${step.phaseLabel}`,
-        20,
+        step.phase,
+        16,
         active ? color : COLORS.muted,
       );
       addText(
         createUiNode('Condition', node, stepWidth - 10, 24, 0, -5),
-        step.triggerLabel,
-        20,
+        step.value,
+        16,
         active ? COLORS.text : COLORS.muted,
       );
       addText(
         createUiNode('Hint', node, stepWidth - 10, 20, 0, -27),
-        step.hint,
-        17,
+        step.state,
+        14,
         active ? COLORS.gold : COLORS.muted,
       );
+      if (index < 2) {
+        addText(
+          createUiNode('ChainArrow', root, gap, 28, node.position.x + stepWidth / 2 + gap / 2, -11),
+          '›',
+          22,
+          COLORS.gold,
+        );
+      }
     });
   }
 
-  private renderOutcome(
-    target: RuntimeUnit | undefined,
-    preview: RuntimePreview | undefined,
-    heroes: readonly RuntimeUnit[],
-  ): void {
+  private renderOutcome(preview: RuntimePreview | undefined): void {
     const width = this.width * 0.34;
     const height = this.height - 58;
     const root = createUiNode('Outcome', this.contentRoot!, width, height, this.width * 0.32);
@@ -159,37 +200,76 @@ export class CommandLens extends Component {
       addText(root, '先選目標\n即可預覽結果', 20, COLORS.muted);
       return;
     }
-    const primary = addText(
-      createUiNode('Primary', root, width - 12, 32, 0, height / 2 - 18),
-      preview.executionWindow ? `OVERKILL ${preview.overkill}` : `總傷 ${preview.totalDamage}`,
-      preview.executionWindow ? 25 : 28,
+    addText(
+      createUiNode('PreviewLabel', root, width - 12, 20, 0, height / 2 - 12),
+      preview.executionWindow ? `OVERKILL ${preview.overkill}` : '結果預覽',
+      14,
       COLORS.gold,
     );
-    primary.isBold = true;
-    addText(
-      createUiNode('Segments', root, width - 12, 24, 0, 5),
-      `命中 ${preview.damageSegments} 段｜追擊 +${preview.chaseSegments}`,
-      20,
-      COLORS.text,
-    );
+    const outcomes = [
+      { label: '總傷', value: preview.totalDamage },
+      { label: '命中', value: preview.damageSegments },
+      { label: '追擊', value: preview.chaseSegments },
+    ] as const;
+    const badgeWidth = (width - 10) / 3;
+    outcomes.forEach(({ label, value }, index) => {
+      const badge = createUiNode(
+        `Outcome-${label}`,
+        root,
+        badgeWidth - 3,
+        50,
+        -width / 2 + 5 + badgeWidth / 2 + index * badgeWidth,
+        2,
+      );
+      addPanel(badge, new Color(17, 38, 36, 235), label === '總傷' ? COLORS.gold : COLORS.line);
+      addText(
+        createUiNode('BadgeLabel', badge, badgeWidth - 8, 16, 0, 14),
+        label,
+        12,
+        COLORS.muted,
+      );
+      const number = addText(
+        createUiNode('BadgeValue', badge, badgeWidth - 8, 29, 0, -7),
+        String(value),
+        label === '總傷' ? 23 : 20,
+        label === '總傷' ? COLORS.gold : COLORS.text,
+      );
+      number.isBold = true;
+    });
+  }
+
+  private renderConsequenceStrip(
+    target: RuntimeUnit | undefined,
+    preview: RuntimePreview | undefined,
+    heroes: readonly RuntimeUnit[],
+  ): void {
+    if (!preview) return;
     const status = target ? this.statusChange(preview, target.id) : undefined;
     const relay = preview.nextRelays.find(
       ({ newlyReadySkillIds }) => newlyReadySkillIds.length > 0,
     );
     const relayName = heroes.find(({ id }) => id === relay?.actorId)?.name;
+    const consequences = [
+      status,
+      relay && relayName ? `${relayName}接力＋${relay.newlyReadySkillIds.length}` : undefined,
+    ].filter(Boolean);
     addText(
-      createUiNode('Consequences', root, width - 12, 34, 0, -height / 2 + 20),
-      [
-        status,
-        relay && relayName
-          ? `接力：${relayName}亮起 ${relay.newlyReadySkillIds.length} 招`
-          : undefined,
-      ]
-        .filter(Boolean)
-        .join('　') || '本次沒有額外狀態',
-      18,
-      status || relay ? COLORS.gold : COLORS.muted,
+      createUiNode(
+        'ConsequenceStrip',
+        this.contentRoot!,
+        this.width - 24,
+        19,
+        0,
+        -(this.height - 44) / 2 + 11,
+      ),
+      consequences.join(' · ') || '純傷害',
+      15,
+      consequences.length > 0 ? COLORS.gold : COLORS.muted,
     );
+  }
+
+  triggerDiagnostic(): { label: string; state: string } | undefined {
+    return this.triggerLabel ? { label: this.triggerLabel, state: this.triggerState } : undefined;
   }
 
   private statusChange(preview: RuntimePreview, targetId: string): string | undefined {
@@ -203,6 +283,16 @@ export class CommandLens extends Component {
       }))
       .find(({ before, after }) => before !== after);
     return change ? `${STATUS_LABELS[change.key]} ${change.before}→${change.after}` : undefined;
+  }
+
+  private firstStatusChange(preview?: RuntimePreview): string | undefined {
+    if (!preview) return undefined;
+    for (const unit of preview.units) {
+      for (const key of Object.keys(STATUS_LABELS) as (keyof typeof STATUS_LABELS)[]) {
+        if (unit.beforeStatus[key] !== unit.afterStatus[key]) return STATUS_LABELS[key];
+      }
+    }
+    return undefined;
   }
 
   private openingStep(): TrackStep {

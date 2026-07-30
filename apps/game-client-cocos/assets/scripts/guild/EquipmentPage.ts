@@ -9,6 +9,7 @@ import type {
 import { COLORS, addButton, addPanel, addText, createUiNode } from '../ui/UiFactory';
 import { EquipmentInventory } from './EquipmentInventory';
 import { ForgeSheet } from './ForgeSheet';
+import { EquipmentFocusStage } from './EquipmentFocusStage';
 
 export class EquipmentPage extends Component {
   private state?: RuntimeGuildState;
@@ -56,6 +57,7 @@ export class EquipmentPage extends Component {
     );
     if (!member) return;
     const slots = ['weapon', 'armor', 'accessory'] as const;
+    const slotLabels = { weapon: '武器', armor: '護甲', accessory: '飾品' } as const;
     const slotWidth = (this.width - 30) / 3;
     slots.forEach((slot, index) => {
       const item = member.equipment[slot];
@@ -70,12 +72,27 @@ export class EquipmentPage extends Component {
       addPanel(node, COLORS.panel, item ? COLORS.gold : COLORS.muted);
       addText(
         node,
-        `${slot}\n${item ? `${item.name}・${item.mainStat.value}` : '尚未裝備'}`,
+        `${slotLabels[slot]}\n${item ? `${item.name}・${item.mainStat.value}` : '尚未裝備'}`,
         15,
         item ? COLORS.text : COLORS.muted,
       );
       if (item) addButton(node, () => this.openItem(item));
     });
+
+    const focus = createUiNode('EquipmentFocus', this.node, this.width - 28, 142, 0, 55);
+    focus.addComponent(EquipmentFocusStage).renderEquipmentFocus(
+      {
+        heroName:
+          content.adventurers.find(({ id }) => id === this.state!.selectedHeroId)?.name ??
+          this.state!.selectedHeroId,
+        slots: slots.map((slot) => ({
+          label: slotLabels[slot],
+          ...(member.equipment[slot] ? { itemName: member.equipment[slot]!.name } : {}),
+        })),
+      },
+      this.width - 28,
+      142,
+    );
 
     const pageCount = Math.max(1, Math.ceil(this.state!.profile.inventory.length / 6));
     this.page = Math.max(0, Math.min(pageCount - 1, this.page));
@@ -84,18 +101,14 @@ export class EquipmentPage extends Component {
       'EquipmentInventory',
       this.node,
       this.width - 16,
-      Math.min(250, this.height - 250),
+      112,
       0,
-      8,
+      -80,
     );
     inventoryNode
       .addComponent(EquipmentInventory)
-      .render(
-        visible,
-        this.width - 16,
-        Math.min(250, this.height - 250),
-        this.state!.selectedSalvageIds,
-        (item) => this.openItem(item),
+      .render(visible, this.width - 16, 112, this.state!.selectedSalvageIds, (item) =>
+        this.openItem(item),
       );
     addText(
       createUiNode(

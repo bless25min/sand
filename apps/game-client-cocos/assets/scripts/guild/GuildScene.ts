@@ -1,4 +1,4 @@
-import { Component, view } from 'cc';
+import { Component, UITransform, view } from 'cc';
 
 import { createFirstHuntCoach } from '../../runtime/expedition-runtime.mjs';
 import type {
@@ -122,7 +122,7 @@ export class GuildScene extends Component {
     }
 
     const contentHeight = visible.height - headerHeight - navigationHeight - messageHeight;
-    const partyCardHeight = Math.min(116, (contentHeight - 180) / 2);
+    const partyCardHeight = 68;
     const content = createUiNode(
       `Page-${input.state.page}`,
       root,
@@ -148,6 +148,32 @@ export class GuildScene extends Component {
         .addComponent(EquipmentPage)
         .initialize(input.state, input.content, visible.width, contentHeight, input.dispatch);
     }
+    const focusNames = {
+      quest: 'QuestDetail',
+      party: 'HeroDetail',
+      skills: 'SkillSelection',
+      equipment: 'EquipmentFocus',
+    } as const;
+    const focusNode = content.getChildByName(focusNames[input.state.page]);
+    const focusTransform = focusNode?.getComponent(UITransform);
+    const pageNodes: {
+      name: string;
+      x: number;
+      y: number;
+      width: number;
+      height: number;
+    }[] = [];
+    for (const node of content.children) {
+      const transform = node.getComponent(UITransform);
+      if (!transform) continue;
+      pageNodes.push({
+        name: node.name,
+        x: node.position.x,
+        y: node.position.y,
+        width: transform.contentSize.width,
+        height: transform.contentSize.height,
+      });
+    }
 
     const nav = createUiNode(
       'GuildNavigation',
@@ -169,6 +195,18 @@ export class GuildScene extends Component {
     ).__EXPEDITION_DIAGNOSTICS__ = {
       screen: 'guild',
       page: input.state.page,
+      focusStage:
+        focusNode && focusTransform
+          ? {
+              page: input.state.page,
+              name: focusNode.name,
+              width: focusTransform.contentSize.width,
+              height: focusTransform.contentSize.height,
+              x: focusNode.position.x,
+              y: focusNode.position.y,
+            }
+          : undefined,
+      pageNodes,
       width: visible.width,
       height: visible.height,
       partyCount: input.state.profile.party.length,

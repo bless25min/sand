@@ -55,6 +55,7 @@ const runBrowserChecks = async (url) => {
     const viewports = [
       { width: 375, height: 812 },
       { width: 390, height: 844 },
+      { width: 414, height: 698 },
       { width: 1280, height: 720 },
       { width: 1920, height: 1080 },
     ];
@@ -88,6 +89,11 @@ const runBrowserChecks = async (url) => {
         throw new Error(`${viewport.width}x${viewport.height} introduced page scrolling`);
       }
       const guild = await waitForScreen(page, 'guild');
+      if (guild.focusStage?.page !== 'quest') {
+        throw new Error(
+          `${viewport.width}x${viewport.height} did not render the quest focus stage`,
+        );
+      }
       await tapPoint(page, viewport, guild.startQuestPoint);
       const diagnostics = await waitForScreen(page, 'battle');
       if (diagnostics.mode !== (mobile ? 'mobile-portrait' : 'desktop-landscape')) {
@@ -96,11 +102,14 @@ const runBrowserChecks = async (url) => {
       if (diagnostics.skillColumns !== (mobile ? 3 : 6)) {
         throw new Error(`${viewport.width}x${viewport.height} used wrong skill columns`);
       }
+      if (!diagnostics.battleBackdrop?.visible) {
+        throw new Error(`${viewport.width}x${viewport.height} did not render the battle backdrop`);
+      }
       assertUnitLayout(diagnostics, `${viewport.width}x${viewport.height}`);
       await context.close();
     }
 
-    const viewport = { width: 390, height: 844 };
+    const viewport = { width: 414, height: 698 };
     const context = await browser.newContext({ viewport, hasTouch: true, isMobile: true });
     const page = await context.newPage();
     page.on('pageerror', (error) => errors.push(error.message));
@@ -154,6 +163,23 @@ const assertUnitLayout = (diagnostics, label) => {
   }
 };
 
+const overlaps = (left, right) =>
+  Math.abs(left.x - right.x) < (left.width + right.width) / 2 &&
+  Math.abs(left.y - right.y) < (left.height + right.height) / 2;
+
+const assertPageNodesDoNotOverlap = (diagnostics, pairs) => {
+  for (const [leftName, rightName] of pairs) {
+    const left = diagnostics.pageNodes?.find(({ name }) => name === leftName);
+    const right = diagnostics.pageNodes?.find(({ name }) => name === rightName);
+    if (!left || !right) {
+      throw new Error(`Missing layout nodes ${leftName}/${rightName}`);
+    }
+    if (overlaps(left, right)) {
+      throw new Error(`${diagnostics.page} nodes ${leftName}/${rightName} overlapped`);
+    }
+  }
+};
+
 const tapPoint = async (page, viewport, point) => {
   if (!point) throw new Error('Missing diagnostic interaction point');
   await page.mouse.click(point.screenX * viewport.width, point.screenY * viewport.height);
@@ -190,8 +216,23 @@ const playBattleToVictory = async (page, viewport) => {
         ),
       bestSkill.id,
     );
+    const selected = await waitForState(
+      page,
+      (state) =>
+        state.screen === 'battle' &&
+        Boolean(state.commandTrigger?.label) &&
+        ['可觸發', '命中後', '未滿足'].includes(state.commandTrigger?.state),
+      2_000,
+    );
+    if (!selected.commandTrigger.label) throw new Error('Selected skill had no trigger cue');
     const eventCount = before.eventCount ?? 0;
     await tapPoint(page, viewport, target);
+    const banner = await waitForState(
+      page,
+      (state) => state.screen === 'battle' && state.actionBanner?.active === true,
+      2_000,
+    );
+    if (!banner.actionBanner.label) throw new Error('Action playback had no escalating headline');
     try {
       await page.waitForFunction(
         (previousCount) => {
@@ -229,11 +270,19 @@ const playBattleToVictory = async (page, viewport) => {
 
 const playCompleteGuildLoop = async (page, viewport) => {
   const guild = await waitForScreen(page, 'guild');
-  if (guild.page !== 'quest' || guild.partyCount !== 6 || guild.destinationCount !== 4) {
+  if (
+    guild.page !== 'quest' ||
+    guild.focusStage?.page !== 'quest' ||
+    guild.partyCount !== 6 ||
+    guild.destinationCount !== 4
+  ) {
     throw new Error('New profile did not boot into the complete six-member guild shell');
   }
   await tapPoint(page, viewport, guild.startQuestPoint);
-  await waitForScreen(page, 'battle');
+  const openingBattle = await waitForScreen(page, 'battle');
+  if (!openingBattle.battleBackdrop?.visible || !openingBattle.actionBanner?.visible) {
+    throw new Error('Battle did not expose its environment and action headline');
+  }
   const victory = await playBattleToVictory(page, viewport);
   await tapPoint(page, viewport, victory.collectPoint);
 
@@ -255,8 +304,15 @@ const playCompleteGuildLoop = async (page, viewport) => {
 
   let equipment = await waitForState(
     page,
-    (state) => state.screen === 'guild' && state.page === 'equipment',
+    (state) =>
+      state.screen === 'guild' &&
+      state.page === 'equipment' &&
+      state.focusStage?.page === 'equipment',
   );
+  assertPageNodesDoNotOverlap(equipment, [
+    ['EquipmentFocus', 'EquipmentInventory'],
+    ['EquipmentInventory', 'InventoryCount'],
+  ]);
   let forge;
   for (const point of equipment.equipmentSlotPoints) {
     await tapPoint(page, viewport, point);
@@ -281,8 +337,19 @@ const playCompleteGuildLoop = async (page, viewport) => {
   let skills = await waitForState(
     page,
     (state) =>
-      state.screen === 'guild' && state.page === 'skills' && state.tutorialStep === 'equip_skill',
+      state.screen === 'guild' &&
+      state.page === 'skills' &&
+      state.focusStage?.page === 'skills' &&
+      state.tutorialStep === 'equip_skill',
   );
+  const skillFocus = skills.pageNodes?.find(({ name }) => name === 'SkillSelection');
+  const libraryNodes = skills.pageNodes?.filter(({ name }) => name.startsWith('Library-')) ?? [];
+  if (!skillFocus || libraryNodes.length === 0)
+    throw new Error('Skill focus/library did not render');
+  if (libraryNodes.some((node) => overlaps(skillFocus, node))) {
+    throw new Error('Skill library overlapped the selected-skill causal focus');
+  }
+  assertPageNodesDoNotOverlap(skills, [['SkillSelection', 'SkillPage']]);
   await tapPoint(page, viewport, skills.equipSkillPoint);
   skills = await waitForState(
     page,
@@ -303,7 +370,8 @@ const playCompleteGuildLoop = async (page, viewport) => {
   await tapPoint(page, viewport, skills.navPoints.party);
   let party = await waitForState(
     page,
-    (state) => state.screen === 'guild' && state.page === 'party',
+    (state) =>
+      state.screen === 'guild' && state.page === 'party' && state.focusStage?.page === 'party',
   );
   const originalFirst = party.defaultOrder[0];
   const secondHero = party.defaultOrder[1];

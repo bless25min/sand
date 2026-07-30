@@ -6,6 +6,7 @@ import type {
   RuntimeGuildState,
 } from '../runtime/RuntimeContracts';
 import { COLORS, addButton, addPanel, addText, createUiNode } from '../ui/UiFactory';
+import { QuestFocusStage } from './QuestFocusStage';
 
 export class QuestPage extends Component {
   private state?: RuntimeGuildState;
@@ -106,18 +107,19 @@ export class QuestPage extends Component {
     if (!quest) return;
     const unlocked = this.state!.profile.unlockedQuestIds.indexOf(quest.id) >= 0;
     const detail = createUiNode('QuestDetail', this.node, this.width - 28, 150, 0, questY - 128);
-    addPanel(detail);
     const clearCount = this.state!.profile.questRecords?.[quest.id]?.clears ?? 0;
-    const challenges = this.content!.challenges.filter(({ questId }) => questId === quest.id)
-      .map(
-        (challenge) =>
-          `${this.state!.profile.completedChallengeIds.indexOf(challenge.id) >= 0 ? '✓' : '◇'} ${challenge.name}`,
-      )
-      .join('　');
-    addText(
-      detail,
-      `${quest.name}\n${quest.description}\n${challenges}\n最高紀錄 ${clearCount > 0 ? `${clearCount} 次制霸` : '尚未完成'}`,
-      17,
+    const challengeCount = this.content!.challenges.filter(
+      ({ questId }) => questId === quest.id,
+    ).length;
+    detail.addComponent(QuestFocusStage).renderQuestFocus(
+      {
+        name: quest.name,
+        description: quest.description,
+        clearCount,
+        challengeCount,
+      },
+      this.width - 28,
+      150,
     );
 
     const ascensions = [

@@ -8,6 +8,7 @@ import type {
 } from '../runtime/RuntimeContracts';
 import { COLORS, addButton, addPanel, addText, createUiNode } from '../ui/UiFactory';
 import { FusionWorkbench } from './FusionWorkbench';
+import { SkillFocusStage } from './SkillFocusStage';
 
 const elementLabel = (content: RuntimeContent, id: string) =>
   content.elements.find((entry) => entry.id === id)?.name ?? id;
@@ -180,9 +181,9 @@ export class SkillsPage extends Component {
         `Library-${skill.id}`,
         this.node,
         cardWidth - 5,
-        68,
+        52,
         -this.width / 2 + 15 + cardWidth / 2 + column * cardWidth,
-        this.height / 2 - 310 - row * 73,
+        this.height / 2 - 282 - row * 58,
       );
       const selected = skill.id === this.selectedSkillId;
       addPanel(node, selected ? COLORS.line : COLORS.panel, selected ? COLORS.gold : COLORS.line);
@@ -203,26 +204,43 @@ export class SkillsPage extends Component {
 
   private renderSelection(fallback?: RuntimeSkill): void {
     const skill = this.skill(this.selectedSkillId ?? '') ?? fallback;
-    const y = -this.height / 2 + 82;
+    const y = -this.height / 2 + 84;
+    const detailWidth = this.width * 0.69;
     const detail = createUiNode(
       'SkillSelection',
       this.node,
-      this.width * 0.62,
-      92,
-      -this.width * 0.17,
+      detailWidth,
+      82,
+      -this.width * 0.145,
       y,
     );
-    addPanel(detail);
     if (!skill) {
+      addPanel(detail);
       addText(detail, '技能庫目前沒有符合條件的技能', 17, COLORS.muted);
       return;
     }
-    const segments = skill.components.map(
-      (component, index) =>
-        `${index + 1}.${elementLabel(this.content!, component.element)} ${specializationLabel(this.content!, component.specializationId)}／${triggerLabel(this.content!, component.triggerId)}：${component.power}傷・${component.repeatCount}擊`,
+    detail.addComponent(SkillFocusStage).renderSkillFocus(
+      {
+        name: skill.name,
+        stars: skill.stars,
+        components: skill.components.map((component) => ({
+          element: elementLabel(this.content!, component.element),
+          specialization: specializationLabel(this.content!, component.specializationId),
+          trigger: triggerLabel(this.content!, component.triggerId),
+          result: `${component.power}傷 ${component.repeatCount}擊 ${component.layerStrength}層`,
+        })),
+      },
+      detailWidth,
+      82,
     );
-    addText(detail, `${skill.name} ${skill.stars}★\n${segments.join('\n')}`, 15);
-    const equip = createUiNode('EquipSkill', this.node, this.width * 0.3, 92, this.width * 0.32, y);
+    const equip = createUiNode(
+      'EquipSkill',
+      this.node,
+      this.width * 0.26,
+      82,
+      this.width * 0.36,
+      y,
+    );
     addPanel(equip, COLORS.line, COLORS.gold);
     addText(
       equip,

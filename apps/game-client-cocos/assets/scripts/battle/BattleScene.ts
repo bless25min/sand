@@ -16,6 +16,8 @@ import type {
 } from '../runtime/RuntimeContracts';
 import { COLORS, addButton, addPanel, addText, createUiNode } from '../ui/UiFactory';
 import { PlaybackDirector } from '../playback/PlaybackDirector';
+import { ActionBanner } from './ActionBanner';
+import { BattleBackdrop } from './BattleBackdrop';
 import { CommandLens } from './CommandLens';
 import { SkillDock, type SkillTileState } from './SkillDock';
 import { TurnOrderController } from './TurnOrderController';
@@ -37,6 +39,8 @@ export class BattleScene extends Component {
   private lens?: CommandLens;
   private skills?: SkillDock;
   private relayMeter?: Node;
+  private actionBanner?: ActionBanner;
+  private activeActionLabel?: string;
   private playback?: PlaybackDirector;
   private order?: TurnOrderController;
   private actorId?: string;
@@ -126,6 +130,13 @@ export class BattleScene extends Component {
       visible.width / 2,
       visible.height - layout.header.height - layout.battlefield.height / 2,
     );
+    const backdrop = createUiNode(
+      'BattleBackdrop',
+      this.stage,
+      visible.width,
+      layout.battlefield.height,
+    );
+    backdrop.addComponent(BattleBackdrop).render(visible.width, layout.battlefield.height);
     this.createUnits(layout.battlefield.height, visible.width);
     this.relayMeter = createUiNode(
       'RelayMeter',
@@ -135,6 +146,16 @@ export class BattleScene extends Component {
       0,
       layout.battlefield.height / 2 - 25,
     );
+    const banner = createUiNode(
+      'ActionBanner',
+      this.stage,
+      Math.min(310, visible.width * 0.76),
+      52,
+      0,
+      layout.battlefield.height * 0.02,
+    );
+    this.actionBanner = banner.addComponent(ActionBanner);
+    this.actionBanner.initialize(Math.min(310, visible.width * 0.76));
     const lensNode = createUiNode(
       'CommandLens',
       root,
@@ -252,6 +273,9 @@ export class BattleScene extends Component {
     const epoch = ++this.executionEpoch;
     try {
       const relayTier = this.battle!.roundOrder.actedIds.length + 1;
+      const skillName = this.skillById(this.skillId)?.name ?? this.skillId;
+      this.activeActionLabel = this.actionBanner?.show(skillName, relayTier);
+      this.publishDiagnostics();
       const next = this.controller!.dispatch({
         type: 'USE_SKILL',
         skillId: this.skillId,
@@ -287,6 +311,8 @@ export class BattleScene extends Component {
       ).__EXPEDITION_PLAYBACK_ERROR__ =
         error instanceof Error ? `${error.message}\n${error.stack ?? ''}` : String(error);
     } finally {
+      this.actionBanner?.hide();
+      this.activeActionLabel = undefined;
       if (epoch === this.executionEpoch) this.busy = false;
     }
     if (this.destroyed || epoch !== this.executionEpoch) return;
@@ -562,6 +588,23 @@ export class BattleScene extends Component {
       actedIds: this.battle?.roundOrder.actedIds ?? [],
       relayTier: Math.min(6, (this.battle?.roundOrder.actedIds.length ?? 0) + 1),
       commandLensMode: this.skillId ? 'focus' : 'summary',
+      battleBackdrop: (() => {
+        const node = this.stage?.getChildByName('BattleBackdrop');
+        const transform = node?.getComponent(UITransform);
+        return node && transform
+          ? {
+              visible: node.activeInHierarchy,
+              width: transform.contentSize.width,
+              height: transform.contentSize.height,
+            }
+          : undefined;
+      })(),
+      actionBanner: {
+        visible: Boolean(this.stage?.getChildByName('ActionBanner')?.activeInHierarchy),
+        active: Boolean(this.activeActionLabel),
+        label: this.activeActionLabel,
+      },
+      commandTrigger: this.lens?.triggerDiagnostic(),
       playbackTrace: (
         globalThis as typeof globalThis & {
           __EXPEDITION_PLAYBACK_TRACE__?: Record<string, unknown>;
