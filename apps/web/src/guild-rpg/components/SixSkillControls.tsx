@@ -32,15 +32,19 @@ export function SixSkillControls({
           const preview = previews.get(skillId);
           const presentation =
             skill && preview ? createSkillActionPresentation(skill, preview) : undefined;
-          const facts = presentation
-            ? [
-                presentation.damageLabel ?? presentation.healingLabel,
-                presentation.hitLabel,
-                presentation.statusLabel,
-              ].filter((value): value is string => Boolean(value))
-            : [];
+          const guideActive =
+            index === 0 &&
+            isFirstHuntCoachFocus(state.preferences.tutorial, state.tutorialStep, 'battle:skill', {
+              battleStatus: state.battle?.status,
+            });
           const skillLabel = presentation
-            ? `${index + 1}，${presentation.name}${facts.length > 0 ? `，${facts.join('，')}` : ''}${presentation.ready ? '，連招可用' : ''}`
+            ? `${index + 1}，${presentation.name}，${presentation.baseLabel}${
+                presentation.conditionLabel
+                  ? `，${presentation.conditionLabel}${
+                      presentation.conditionState === 'not-ready' ? '尚未成立' : '會觸發'
+                    }，${presentation.addedLabel ?? '追加效果'}`
+                  : ''
+              }`
             : `${index + 1}，未裝備`;
           return (
             <div className="gr-battle-skill-slot" key={`${skillId}:${index}`}>
@@ -59,44 +63,32 @@ export function SixSkillControls({
                 data-combo-ready={presentation?.ready}
                 data-skill-switch={focused ? index + 1 : undefined}
                 data-guide-id={index === 0 ? 'battle:skill' : undefined}
-                data-guide-active={
-                  index === 0
-                    ? isFirstHuntCoachFocus(
-                        state.preferences.tutorial,
-                        state.tutorialStep,
-                        'battle:skill',
-                        { battleStatus: state.battle?.status },
-                      )
-                    : undefined
-                }
+                data-guide-active={index === 0 ? guideActive : undefined}
                 disabled={locked || !skill}
                 onClick={() => skill && onChooseSkill(skillId)}
               >
                 <span className="gr-skill-glyph" aria-hidden="true">
                   {first ? elementName(first.element).slice(0, 1) : '－'}
                 </span>
-                <strong>{presentation?.name ?? '空位'}</strong>
+                <span className="gr-skill-title">
+                  <strong>{presentation?.name ?? '空位'}</strong>
+                  {!focused && presentation && <b>{presentation.baseLabel}</b>}
+                </span>
                 {!focused && presentation && (
-                  <small className="gr-skill-facts">
-                    {facts.slice(0, 3).map((fact, factIndex) => (
-                      <b
-                        data-skill-fact={
-                          factIndex === 0
-                            ? presentation.damageLabel
-                              ? 'damage'
-                              : 'healing'
-                            : fact === presentation.hitLabel
-                              ? 'hits'
-                              : 'status'
-                        }
-                        key={fact}
-                      >
-                        {fact}
-                      </b>
-                    ))}
+                  <small
+                    className="gr-skill-cause"
+                    data-cause-state={presentation.conditionState ?? 'not-ready'}
+                  >
+                    <span>{presentation.conditionLabel ?? '立即'}</span>
+                    <i aria-hidden="true">›</i>
+                    <b>{presentation.addedLabel ?? '追加效果'}</b>
                   </small>
                 )}
-                {presentation?.ready && <i className="gr-skill-ready" aria-hidden="true" />}
+                {guideActive && (
+                  <span className="gr-guide-callout" role="status">
+                    點技能預演
+                  </span>
+                )}
               </button>
             </div>
           );

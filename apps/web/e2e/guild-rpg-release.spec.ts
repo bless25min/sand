@@ -223,7 +223,12 @@ async function castVisibleSkill(page: Page, castOnBattlefieldTarget = false) {
   await expect(skill).toHaveAttribute('data-skill-segments', /\d+/);
   await expect(skill).toHaveAttribute('data-skill-total', /\d+/);
   await expect(skill).toHaveAttribute('data-combo-ready', /true|false/);
-  await expect(skill.locator('[data-skill-fact]')).not.toHaveCount(0);
+  await expect(skill.locator('.gr-skill-cause')).toHaveCount(1);
+  await expect(skill.locator('.gr-skill-cause')).toHaveAttribute(
+    'data-cause-state',
+    /ready|pending-impact|not-ready/,
+  );
+  await expect(skill.locator('.gr-skill-ready')).toHaveCount(0);
   await expect(skill.locator('[data-combo-node]')).toHaveCount(0);
   const execution = (await skill.getAttribute('data-execution')) === 'true';
   const finalExecution = (await skill.getAttribute('data-final-execution')) === 'true';
@@ -236,7 +241,6 @@ async function castVisibleSkill(page: Page, castOnBattlefieldTarget = false) {
   await expect(page.locator('[data-skill-preview]')).toBeVisible();
   await expect(page.locator('[data-skill-mode="focus"]')).toBeVisible();
   await expect(page.locator('[data-skill-switch]')).toHaveCount(6);
-  await expect(page.locator('[data-skill-preview] [data-action-sentence]')).toBeVisible();
   await expect(page.locator('[data-confirm-skill="true"]')).toContainText('施放');
   if (execution) {
     await expect(page.locator('[data-combat-battlefield]')).toHaveAttribute(
@@ -251,8 +255,12 @@ async function castVisibleSkill(page: Page, castOnBattlefieldTarget = false) {
       await expect(page.locator('[data-execution-preview]')).toContainText('不新增假傷害');
     }
   } else {
+    await expect(page.locator('[data-skill-preview] .gr-causal-preview')).toBeVisible();
+    await expect(page.locator('[data-skill-preview] [data-causal-stage]')).toHaveCount(3);
     await expect(page.locator('[data-skill-preview] [data-preview-endpoints]')).toHaveCount(1);
-    await expect(page.locator('[data-skill-preview] [data-action-sentence]')).not.toBeEmpty();
+    await expect(
+      page.locator('[data-skill-preview] [data-causal-stage="condition"]'),
+    ).toHaveAttribute('data-condition-state', /ready|pending-impact|not-ready/);
     await expect(page.locator('[data-skill-preview]')).not.toContainText(
       /起手|條件|結果|事件|路線|已亮|缺/,
     );
@@ -276,7 +284,11 @@ async function castVisibleSkill(page: Page, castOnBattlefieldTarget = false) {
       (await alternativeTarget.getAttribute('aria-label'))?.split('，')[0] ?? '',
     );
   }
-  await page.locator('[data-confirm-skill="true"]').click();
+  if (castOnBattlefieldTarget) {
+    await page.locator('[data-confirm-skill="true"]').click();
+  } else {
+    await skill.click();
+  }
   await expect(battle).toHaveAttribute('data-playback', 'true');
   await expect(page.locator('[data-resolve-strip="true"]')).toBeVisible();
   const relay = Number(
@@ -408,12 +420,15 @@ test('a new player understands combat, sees six escalating relays, and completes
   await page.getByRole('button', { name: '開始第一場教學戰' }).click();
   await expectBattlefieldVisible(page);
   await expectSingleScreen(page);
-  await expect(page.locator('.gr-battle-guide-strip')).toBeVisible();
+  await expect(page.locator('.gr-guide-callout')).toContainText('點敵人鎖定');
+  await expect(page.locator('.gr-battle-guide-strip')).toHaveCount(0);
+  await expect(page.locator('.gr-command-context')).toHaveCount(0);
   await expect(page.locator('button[data-battle-skill]')).toHaveCount(6);
   const skillText = (await page.locator('button[data-battle-skill]').allTextContents()).join('');
   expect(skillText).not.toMatch(/威力|疊層|追燃|總傷|×/);
   await expect(page.locator('button[data-battle-skill] [data-combo-node]')).toHaveCount(0);
-  await expect(page.locator('button[data-battle-skill] [data-skill-fact]')).not.toHaveCount(0);
+  await expect(page.locator('button[data-battle-skill] .gr-skill-cause')).toHaveCount(6);
+  await expect(page.locator('button[data-battle-skill] .gr-skill-ready')).toHaveCount(0);
   await expect(page.locator('[data-battle-hud="actor"]')).toBeVisible();
   await expect(page.locator('[data-battle-hud="target"]')).toBeVisible();
   await expectMinTouchTarget(page, 'button[data-battle-skill]');
@@ -432,6 +447,7 @@ test('a new player understands combat, sees six escalating relays, and completes
   );
   await page.getByRole('button', { name: /灰牙斥候/ }).click();
   await expect(page.locator('[data-battle-side="enemies"][data-targeted="true"]')).toHaveCount(1);
+  await expect(page.locator('.gr-guide-callout')).toContainText('點技能預演');
 
   const firstRelays: {
     actorId: string | null;
@@ -609,6 +625,7 @@ test('keeps the semantic WebGL battle readable at wide mobile and desktop sizes'
   page,
 }) => {
   for (const viewport of [
+    { width: 375, height: 667 },
     { width: 430, height: 932 },
     { width: 1_280, height: 800 },
   ]) {

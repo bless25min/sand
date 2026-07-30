@@ -94,28 +94,17 @@ export function BattleCommandDock({
         </div>
       ) : (
         <>
-          {coach && (
-            <aside className="gr-battle-guide-strip" role="status">
-              <b>引導</b>
-              <span>{coach.title}</span>
-              <small>{coach.message}</small>
-            </aside>
-          )}
           {preview && actor && target && skill ? (
             <SkillOutcomePreviewPanel
               actor={actor}
               target={target}
               skill={skill}
+              skills={state.profile.skillInventory}
+              units={state.battle!.units}
               preview={preview}
               onConfirm={onConfirmSkill}
             />
-          ) : (
-            <header className="gr-command-context">
-              <strong>{commandActorName ?? '選擇角色'}</strong>
-              <span aria-hidden="true">→</span>
-              <strong>{executionWindow ? '敵軍破勢' : (target?.name ?? '選擇目標')}</strong>
-            </header>
-          )}
+          ) : null}
           <p className="gr-sr-only" role="status">
             {playback.isPlaying
               ? playback.currentBeat?.label

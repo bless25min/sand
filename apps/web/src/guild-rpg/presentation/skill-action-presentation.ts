@@ -1,4 +1,4 @@
-import type { SkillOutcomePreview } from '@expedition/simulation-core';
+import type { SkillOutcomePreview, TriggerReadiness } from '@expedition/simulation-core';
 import type { GuildSkillItem, StatusLayer, TriggerCondition } from '@expedition/shared-types';
 
 import { skillIntentName } from './skill-tile-presentation';
@@ -87,6 +87,11 @@ export interface SkillActionPresentation {
   healingLabel?: string | undefined;
   hitLabel?: string | undefined;
   statusLabel?: string | undefined;
+  baseLabel: string;
+  conditionLabel?: string | undefined;
+  conditionState?: TriggerReadiness | undefined;
+  addedLabel?: string | undefined;
+  nextRelay?: { actorId: string; skillId: string } | undefined;
   sentence: string;
   blockingReason?: string | undefined;
   ready: boolean;
@@ -102,6 +107,21 @@ const strongestStatusChange = (preview: SkillOutcomePreview) => {
     .sort((a, b) => Math.abs(b.amount) - Math.abs(a.amount))[0];
 };
 
+const potentialAddedLabel = (skill: GuildSkillItem, componentId: string): string | undefined => {
+  const component = skill.components.find(({ id }) => id === componentId);
+  if (!component) return undefined;
+  const layer = component.element === 'fire' ? '燃' : component.element === 'grass' ? '毒' : '潮';
+  if (component.specializationId === 'stack') return `可${layer}+${component.layerStrength}`;
+  if (component.specializationId === 'weaken') return `可破防+${component.layerStrength}`;
+  if (component.specializationId === 'empower') return `可強化+${component.layerStrength}`;
+  if (component.specializationId === 'multistrike') {
+    return `可追加${Math.max(1, component.repeatCount)}擊`;
+  }
+  if (component.specializationId === 'chain') return `可彈射傷${component.triggerAddition}`;
+  if (component.specializationId === 'blast') return `可爆發傷${component.triggerAddition}`;
+  return `可追加傷${component.triggerAddition}`;
+};
+
 export function createSkillActionPresentation(
   skill: GuildSkillItem,
   preview: SkillOutcomePreview,
@@ -110,6 +130,12 @@ export function createSkillActionPresentation(
   const activeSteps = preview.comboSteps.filter(({ readiness }) => readiness !== 'not-ready');
   const chaseDamage = activeSteps.reduce((sum, step) => sum + step.chaseDamage, 0);
   const baseDamage = Math.max(0, preview.totalDamage - chaseDamage);
+  const causeStep =
+    preview.comboSteps.find(({ readiness }) => readiness === 'ready') ??
+    preview.comboSteps.find(({ readiness }) => readiness === 'pending-impact') ??
+    preview.comboSteps[0];
+  const relay = preview.nextRelays[0];
+  const relaySkillId = relay?.newlyReadySkillIds[0] ?? relay?.readySkillIds[0];
   const sentence: string[] = [];
 
   if (preview.executionWindow) {
@@ -136,6 +162,25 @@ export function createSkillActionPresentation(
   }
 
   const blocked = preview.comboSteps.find(({ readiness }) => readiness === 'not-ready');
+  const baseParts = [
+    baseDamage > 0
+      ? `先傷${baseDamage}`
+      : preview.totalHealing > 0
+        ? `先療${preview.totalHealing}`
+        : '先改變狀態',
+    status
+      ? `${STATUS_SHORT[status.kind]}${status.amount > 0 ? '+' : ''}${status.amount}`
+      : undefined,
+  ].filter((value): value is string => Boolean(value));
+  const addedLabel = causeStep
+    ? causeStep.readiness === 'not-ready'
+      ? potentialAddedLabel(skill, causeStep.componentId)
+      : causeStep.chaseDamage > 0
+        ? `追加傷${causeStep.chaseDamage}`
+        : potentialAddedLabel(skill, causeStep.componentId)
+            ?.replace(/^可(?=追加)/, '')
+            .replace(/^可/, '追加')
+    : undefined;
   return {
     name: skillIntentName(skill),
     ...(preview.totalDamage > 0 ? { damageLabel: `傷${preview.totalDamage}` } : {}),
@@ -145,6 +190,21 @@ export function createSkillActionPresentation(
       ? {
           statusLabel: `${STATUS_SHORT[status.kind]}${status.amount > 0 ? '+' : ''}${status.amount}`,
         }
+      : {}),
+    baseLabel: preview.executionWindow
+      ? preview.finisherPower > 0
+        ? `終結${preview.finisherPower}`
+        : `溢傷${preview.overkill}`
+      : baseParts.join('·'),
+    ...(causeStep
+      ? {
+          conditionLabel: TRIGGER_PHRASES[causeStep.triggerId],
+          conditionState: causeStep.readiness,
+        }
+      : {}),
+    ...(addedLabel ? { addedLabel } : {}),
+    ...(relay && relaySkillId
+      ? { nextRelay: { actorId: relay.actorId, skillId: relaySkillId } }
       : {}),
     sentence: sentence.join('') || '改變目前戰場狀態。',
     ...(blocked ? { blockingReason: BLOCKING_REASONS[blocked.triggerId] } : {}),

@@ -116,8 +116,9 @@ export function BattleScreen({
     dispatch({ type: 'USE_SKILL', skillId, targetId });
   };
   const chooseSkill = (skillId: string) => {
-    const intent = chooseSkillIntent(skillId);
+    const intent = chooseSkillIntent(skillId, armedSkillId, battle.selectedTargetId);
     if ('arm' in intent) setArmedSkillId(intent.arm);
+    if ('cast' in intent) castSkill(intent.cast.skillId, intent.cast.targetId);
   };
   const chooseTarget = (targetId: string) => {
     const intent = chooseTargetIntent(targetId);

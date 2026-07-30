@@ -27,16 +27,22 @@ const setup = () => {
 };
 
 describe('SixSkillControls', () => {
-  it('keeps each unselected skill to a name and at most three outcome facts', () => {
+  it('shows one readable cause and result on every unselected skill without a mystery dot', () => {
     const { state, previews } = setup();
+    const guidedState = { ...state, tutorialStep: 'relay_1' as const };
     const markup = renderToStaticMarkup(
-      <SixSkillControls state={state} previews={previews} onChooseSkill={() => undefined} />,
+      <SixSkillControls state={guidedState} previews={previews} onChooseSkill={() => undefined} />,
     );
 
     expect(markup).toContain('data-skill-mode="choose"');
     expect(markup.match(/data-battle-skill=/g) ?? []).toHaveLength(6);
-    expect(markup).toContain('data-skill-fact="damage"');
-    expect(markup).not.toMatch(/data-combo-node|已亮|出招亮|缺燃燒|目標燃燒|上一棒火/);
+    expect(markup.match(/class="gr-skill-cause"/g) ?? []).toHaveLength(6);
+    expect(markup).toContain('data-cause-state="ready"');
+    expect(markup).toContain('data-cause-state="not-ready"');
+    expect(markup).toContain('開戰時');
+    expect(markup).toContain('敵人燃燒時');
+    expect(markup).toContain('class="gr-guide-callout"');
+    expect(markup).not.toMatch(/gr-skill-ready|gr-skill-facts|已亮|出招亮|缺燃燒/);
   });
 
   it('turns the six skills into compact switch tabs while one skill is focused', () => {
@@ -52,6 +58,6 @@ describe('SixSkillControls', () => {
 
     expect(markup).toContain('data-skill-mode="focus"');
     expect(markup.match(/data-skill-switch=/g) ?? []).toHaveLength(6);
-    expect(markup).not.toContain('class="gr-skill-outcome"');
+    expect(markup).not.toContain('class="gr-skill-cause"');
   });
 });

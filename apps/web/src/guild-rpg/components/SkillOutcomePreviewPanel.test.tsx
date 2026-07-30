@@ -8,7 +8,7 @@ import { guildRpgReducer } from '../state/game-reducer';
 import { SkillOutcomePreviewPanel } from './SkillOutcomePreviewPanel';
 
 describe('SkillOutcomePreviewPanel', () => {
-  it('shows one result sentence and one explicit commit action without a report panel', () => {
+  it('shows one compact base-condition-result preview with next relay and one commit action', () => {
     const state = guildRpgReducer(createGuildRpgState(), {
       type: 'START_QUEST',
       questId: 'border_pack',
@@ -32,6 +32,8 @@ describe('SkillOutcomePreviewPanel', () => {
         actor={actor}
         target={target}
         skill={skill}
+        skills={state.profile.skillInventory}
+        units={battle.units}
         preview={preview}
         onConfirm={() => undefined}
       />,
@@ -43,9 +45,14 @@ describe('SkillOutcomePreviewPanel', () => {
     expect(markup).toContain('data-preview-endpoints="true"');
     expect(markup).toContain(`data-preview-unit="${target.id}"`);
     expect(markup).toContain(`${target.currentHp} →`);
-    expect(markup).not.toMatch(
-      /data-cue-stage|data-next-relay|data-relay-skill|<details|已亮|出招亮|起手|事件/,
-    );
+    expect(markup).toContain('class="gr-causal-preview"');
+    expect(markup).toContain('data-causal-stage="base"');
+    expect(markup).toContain('data-causal-stage="condition"');
+    expect(markup).toContain('data-causal-stage="added"');
+    expect(markup).toContain('data-condition-state="ready"');
+    expect(markup).toContain('data-next-relay=');
+    expect(markup).toContain('data-relay-skill=');
+    expect(markup).not.toMatch(/<details|已亮|出招亮|起手|事件/);
   });
 
   it('shows the real round finisher total without presenting it as repeated damage', () => {
@@ -83,6 +90,8 @@ describe('SkillOutcomePreviewPanel', () => {
         actor={actor}
         target={{ ...target, currentHp: 0 }}
         skill={skill}
+        skills={state.profile.skillInventory}
+        units={battle.units}
         preview={preview}
         onConfirm={() => undefined}
       />,
@@ -119,6 +128,8 @@ describe('SkillOutcomePreviewPanel', () => {
         actor={actor}
         target={{ ...target, currentHp: 0 }}
         skill={skill}
+        skills={state.profile.skillInventory}
+        units={battle.units}
         preview={{
           ...base,
           executionWindow: true,

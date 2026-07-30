@@ -352,7 +352,9 @@ describe('deterministic six-hero interface', () => {
     expect(markup).toContain('data-feedback-settings="battle"');
     expect(markup).toContain('aria-label="主音量"');
     expect(markup).not.toContain('重播新手教學');
-    expect(markup).toContain('class="gr-battle-guide-strip"');
+    expect(markup).toContain('class="gr-guide-callout"');
+    expect(markup).not.toContain('gr-battle-guide-strip');
+    expect(markup).not.toContain('gr-command-context');
     const activeMember = state.profile.party.find(
       ({ definitionId }) => definitionId === state.battle?.roundOrder?.activeAdventurerId,
     )!;
@@ -360,8 +362,9 @@ describe('deterministic six-hero interface', () => {
     expect(markup.match(/data-skill-total=/g) ?? []).toHaveLength(6);
     expect(markup.match(/data-skill-segments=/g) ?? []).toHaveLength(6);
     expect(markup).toContain('data-skill-mode="choose"');
-    expect(markup).toContain('data-skill-fact="damage"');
-    expect(markup).not.toContain('data-combo-node=');
+    expect(markup).toContain('class="gr-skill-cause"');
+    expect(markup).toContain('data-cause-state=');
+    expect(markup).not.toContain('gr-skill-ready');
     expect(markup).not.toContain('data-skill-hit-label=');
     expect(markup).not.toContain('data-skill-total-label=');
     expect(markup).not.toContain('data-skill-hit-pip=');
@@ -369,7 +372,7 @@ describe('deterministic six-hero interface', () => {
     expect(markup).not.toContain('×2');
     expect(markup).not.toContain('追擊');
     expect(markup).not.toContain('段</');
-    expect(markup).not.toMatch(/已亮|出招亮|缺燃燒|目標燃燒|上一棒火/);
+    expect(markup).not.toMatch(/已亮|出招亮|缺燃燒/);
     expect(markup).not.toContain('data-skill-power=');
     expect(markup).not.toContain('data-skill-layers=');
     expect(markup).not.toContain('威力 +');

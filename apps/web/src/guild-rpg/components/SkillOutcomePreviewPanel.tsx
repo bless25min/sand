@@ -2,22 +2,30 @@ import type { SkillOutcomePreview } from '@expedition/simulation-core';
 import type { BattleUnit, GuildSkillItem } from '@expedition/shared-types';
 
 import { createSkillActionPresentation } from '../presentation/skill-action-presentation';
+import { skillIntentName } from '../presentation/skill-tile-presentation';
 
 export function SkillOutcomePreviewPanel({
   actor,
   target,
   skill,
+  skills,
+  units,
   preview,
   onConfirm,
 }: {
   actor: BattleUnit;
   target: BattleUnit;
   skill: GuildSkillItem;
+  skills: readonly GuildSkillItem[];
+  units: readonly BattleUnit[];
   preview: SkillOutcomePreview;
   onConfirm(): void;
 }) {
   const presentation = createSkillActionPresentation(skill, preview);
   const targetPreview = preview.units.find(({ id }) => id === target.id)!;
+  const nextRelay = presentation.nextRelay;
+  const nextActor = nextRelay ? units.find(({ id }) => id === nextRelay.actorId) : undefined;
+  const nextSkill = nextRelay ? skills.find(({ id }) => id === nextRelay.skillId) : undefined;
 
   if (preview.executionWindow) {
     const hasRoundFinisher = preview.finisherPower > 0;
@@ -31,9 +39,11 @@ export function SkillOutcomePreviewPanel({
         aria-live="polite"
       >
         <div className="gr-preview-endpoints" data-preview-endpoints="true">
-          <strong>{actor.name}</strong>
-          <span aria-hidden="true">→</span>
-          <strong>{target.name}</strong>
+          <strong className="gr-sr-only">{actor.name}</strong>
+          <span className="gr-sr-only" aria-hidden="true">
+            →
+          </span>
+          <strong className="gr-sr-only">{target.name}</strong>
           <em>破勢</em>
         </div>
         <div className="gr-execution-summary">
@@ -61,18 +71,47 @@ export function SkillOutcomePreviewPanel({
       aria-live="polite"
     >
       <div className="gr-preview-endpoints" data-preview-endpoints="true">
-        <strong>{actor.name}</strong>
-        <span aria-hidden="true">→</span>
-        <strong>{target.name}</strong>
+        <strong className="gr-sr-only">{actor.name}</strong>
+        <span className="gr-sr-only" aria-hidden="true">
+          →
+        </span>
+        <strong className="gr-sr-only">{target.name}</strong>
         <em data-preview-unit={target.id}>
-          {targetPreview.beforeHp} → {targetPreview.afterHp}
+          HP {targetPreview.beforeHp} → {targetPreview.afterHp}
         </em>
       </div>
-      <div className="gr-skill-focus-copy">
-        <b>{presentation.name}</b>
-        <p data-action-sentence="true">{presentation.sentence}</p>
-        {presentation.blockingReason && <small>{presentation.blockingReason}</small>}
+      <div className="gr-causal-preview" aria-label="技能效果順序">
+        <span data-causal-stage="base">
+          <small>先</small>
+          <b>{presentation.baseLabel.replace(/^先/, '')}</b>
+        </span>
+        <i aria-hidden="true">›</i>
+        <span data-causal-stage="condition" data-condition-state={presentation.conditionState}>
+          <small>當</small>
+          <b>{presentation.conditionLabel ?? '立即'}</b>
+        </span>
+        <i aria-hidden="true">›</i>
+        <span data-causal-stage="added">
+          <small>再</small>
+          <b>{presentation.addedLabel?.replace(/^(追加|可)/, '') ?? '追加效果'}</b>
+        </span>
       </div>
+      {nextRelay && nextActor && nextSkill && (
+        <div
+          className="gr-next-relay"
+          data-next-relay={nextRelay.actorId}
+          data-relay-skill={nextRelay.skillId}
+        >
+          <span>下一棒</span>
+          <strong>{nextActor.name}</strong>
+          <i aria-hidden="true">›</i>
+          <b>{skillIntentName(nextSkill)}</b>
+        </div>
+      )}
+      <p className="gr-sr-only" data-action-sentence="true">
+        {presentation.sentence}
+        {presentation.blockingReason ? ` ${presentation.blockingReason}。` : ''}
+      </p>
       <button type="button" data-confirm-skill="true" onClick={onConfirm}>
         對{target.name}施放
       </button>

@@ -5,6 +5,7 @@ import type { GuildCombatScene, GuildCombatSceneUnit } from './contracts';
 import { drawBossPresence } from './draw-boss-presence';
 import { drawEnemyFigure, drawHeroFigure } from './draw-figures';
 import { drawStatusAuras, type StatusAuraNode } from './draw-status-auras';
+import { unitSelectionMarker } from './unit-selection-marker';
 
 export interface UnitNode {
   id: string;
@@ -124,39 +125,45 @@ function drawIdentity(root: Container, unit: GuildCombatSceneUnit) {
 
 function drawState(root: Container, unit: GuildCombatSceneUnit, relay: number) {
   const accent = unitAccent(unit);
-  if (unit.selected || unit.state === 'targeted') {
+  const marker = unitSelectionMarker(unit);
+  if (marker === 'target') {
     root.addChildAt(
       new Graphics()
-        .ellipse(0, 7, 63, 22)
-        .stroke({ color: 0xffd669, width: 5, alpha: 0.92 })
-        .ellipse(0, 7, 76, 28)
-        .stroke({ color: 0xffd669, width: 2, alpha: 0.4 }),
+        .moveTo(-66, -12)
+        .lineTo(-66, 18)
+        .lineTo(-42, 18)
+        .moveTo(66, -12)
+        .lineTo(66, 18)
+        .lineTo(42, 18)
+        .stroke({ color: 0xff7350, width: 5, alpha: 0.94 }),
       0,
     );
   }
-  if (unit.state === 'acting') {
+  if (marker === 'actor') {
     root.addChildAt(
       new Graphics()
-        .circle(0, -48, 68 + relay * 3)
-        .fill({ color: accent, alpha: 0.08 + relay * 0.018 })
-        .circle(0, -48, 58 + relay * 2)
-        .stroke({ color: accent, width: 4, alpha: 0.68 }),
+        .ellipse(0, 7, 60 + relay * 2, 20 + relay)
+        .fill({ color: accent, alpha: 0.12 + relay * 0.014 })
+        .stroke({ color: accent, width: 4, alpha: 0.82 }),
       0,
     );
   }
-  if (unit.state === 'next') {
+  if (marker === 'next') {
     root.addChildAt(
-      new Graphics().ellipse(0, 7, 52, 17).stroke({ color: accent, width: 3, alpha: 0.58 }),
+      new Graphics()
+        .moveTo(-18, 17)
+        .lineTo(0, 27)
+        .lineTo(18, 17)
+        .stroke({ color: accent, width: 4, alpha: 0.74 }),
       0,
     );
   }
-  if (unit.comboReady) {
+  if (marker === 'relay') {
     root.addChildAt(
       new Graphics()
-        .circle(0, -48, 70)
-        .stroke({ color: 0x8fffc3, width: 3, alpha: 0.86 })
-        .circle(0, -48, 77)
-        .stroke({ color: 0xffd669, width: 2, alpha: 0.48 }),
+        .moveTo(-28, 20)
+        .quadraticCurveTo(0, 34, 28, 20)
+        .stroke({ color: 0x8fffc3, width: 4, alpha: 0.88 }),
       0,
     );
   }

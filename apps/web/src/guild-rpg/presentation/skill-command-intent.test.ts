@@ -3,9 +3,12 @@ import { describe, expect, it } from 'vitest';
 import { chooseSkillIntent, chooseTargetIntent, confirmSkillIntent } from './skill-command-intent';
 
 describe('skill command intent', () => {
-  it('only arms the tapped skill even when it is tapped again', () => {
-    expect(chooseSkillIntent('fire')).toEqual({ arm: 'fire' });
-    expect(chooseSkillIntent('fire')).toEqual({ arm: 'fire' });
+  it('arms the first tap and casts the second tap against the current target', () => {
+    expect(chooseSkillIntent('fire', undefined, 'guard')).toEqual({ arm: 'fire' });
+    expect(chooseSkillIntent('fire', 'fire', 'guard')).toEqual({
+      cast: { skillId: 'fire', targetId: 'guard' },
+    });
+    expect(chooseSkillIntent('fire', 'fire', undefined)).toEqual({ blocked: 'target' });
   });
 
   it('only changes the target while a skill is armed', () => {

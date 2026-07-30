@@ -36,8 +36,14 @@ describe('skill action presentation', () => {
       name: '引火',
       damageLabel: `傷${preview.totalDamage}`,
       hitLabel: `${preview.damageSegments}擊`,
+      baseLabel: `先傷${preview.totalDamage - chaseDamage}·燃+1`,
+      conditionLabel: '開戰時',
+      conditionState: 'ready',
+      addedLabel: expect.stringMatching(/^追加/),
       ready: true,
     });
+    expect(result.nextRelay?.actorId).toBeTruthy();
+    expect(result.nextRelay?.skillId).toBeTruthy();
     expect(result.sentence).toContain(`造成${preview.totalDamage - chaseDamage}傷`);
     expect(result.sentence).toContain(`再造成${chaseDamage}傷`);
     expect(result.sentence).toMatch(/附加\d+燃燒/);
@@ -49,6 +55,12 @@ describe('skill action presentation', () => {
     const result = createSkillActionPresentation(skill, preview);
 
     expect(result.ready).toBe(false);
+    expect(result).toMatchObject({
+      baseLabel: expect.stringMatching(/^先傷/),
+      conditionLabel: '敵人燃燒時',
+      conditionState: 'not-ready',
+      addedLabel: expect.stringMatching(/^可/),
+    });
     expect(result.blockingReason).toBe('需要敵人燃燒');
     expect(result.sentence).not.toMatch(/缺燃燒|not-ready|已亮|出招亮/);
   });

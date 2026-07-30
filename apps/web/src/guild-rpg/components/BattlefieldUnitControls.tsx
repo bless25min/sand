@@ -99,6 +99,15 @@ export function BattlefieldUnitControls({
             : unit.side === 'heroes' && unit.id === guideHeroId
               ? 'order:next'
               : undefined;
+        const guideActive = Boolean(
+          guideId &&
+          isFirstHuntCoachFocus(
+            preferences.tutorial,
+            tutorialStep,
+            guideId,
+            unit.side === 'enemies' ? { battleStatus: battle.status } : undefined,
+          ),
+        );
         const disabled =
           locked ||
           defeated ||
@@ -128,16 +137,7 @@ export function BattlefieldUnitControls({
             data-enemy-intent-target={intentTarget || undefined}
             data-enemy-intent-outcome={intentTarget ? intent?.outcome : undefined}
             data-guide-id={guideId}
-            data-guide-active={
-              guideId
-                ? isFirstHuntCoachFocus(
-                    preferences.tutorial,
-                    tutorialStep,
-                    guideId,
-                    unit.side === 'enemies' ? { battleStatus: battle.status } : undefined,
-                  )
-                : undefined
-            }
+            data-guide-active={guideId ? guideActive : undefined}
             disabled={disabled}
             key={unit.id}
             style={{
@@ -148,6 +148,11 @@ export function BattlefieldUnitControls({
               unit.side === 'enemies' ? onSelectTarget(unit.id) : onChooseHero(unit.id)
             }
           >
+            {guideActive && (
+              <span className="gr-guide-callout" role="status">
+                {unit.side === 'enemies' ? '點敵人鎖定' : '點角色換順序'}
+              </span>
+            )}
             {(intentSource || intentTarget) && intent && (
               <span className="gr-enemy-intent-cue" aria-hidden="true">
                 <IntentGlyph source={intentSource} outcome={intent.outcome} />

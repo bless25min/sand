@@ -4,7 +4,12 @@ export type SkillCommandIntent =
   | { cast: { skillId: string; targetId: string } }
   | { blocked: 'skill' | 'target' };
 
-export function chooseSkillIntent(skillId: string): SkillCommandIntent {
+export function chooseSkillIntent(
+  skillId: string,
+  armedSkillId?: string,
+  targetId?: string,
+): SkillCommandIntent {
+  if (skillId === armedSkillId) return confirmSkillIntent(skillId, targetId);
   return { arm: skillId };
 }
 
