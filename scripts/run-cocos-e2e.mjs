@@ -192,14 +192,26 @@ const playBattleToVictory = async (page, viewport) => {
     );
     const eventCount = before.eventCount ?? 0;
     await tapPoint(page, viewport, target);
-    await page.waitForFunction(
-      (previousCount) => {
-        const state = globalThis.__EXPEDITION_DIAGNOSTICS__;
-        return state?.status === 'victory' || (state?.eventCount ?? 0) > previousCount;
-      },
-      eventCount,
-      { timeout: 25_000 },
-    );
+    try {
+      await page.waitForFunction(
+        (previousCount) => {
+          const state = globalThis.__EXPEDITION_DIAGNOSTICS__;
+          return state?.status === 'victory' || (state?.eventCount ?? 0) > previousCount;
+        },
+        eventCount,
+        { timeout: 25_000 },
+      );
+    } catch (error) {
+      const stalled = await page.evaluate(() => ({
+        diagnostics: globalThis.__EXPEDITION_DIAGNOSTICS__,
+        timedOutBeats: globalThis.__EXPEDITION_TIMED_OUT_BEATS__,
+        playbackTrace: globalThis.__EXPEDITION_PLAYBACK_TRACE__,
+      }));
+      throw new Error(
+        `Action ${action + 1} stalled after skill ${bestSkill.id}: ${JSON.stringify(stalled)}`,
+        { cause: error },
+      );
+    }
   }
   const victory = await waitForState(
     page,

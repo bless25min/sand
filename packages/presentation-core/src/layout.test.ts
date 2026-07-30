@@ -39,6 +39,26 @@ describe('resolveBattleLayout', () => {
       rows: 2,
     });
   });
+
+  it('reserves enough desktop battlefield height for two non-overlapping unit rows', () => {
+    const layout = resolveBattleLayout({ width: 1280, height: 720 });
+    const formation = resolveBattleFormation({
+      width: 1280,
+      height: layout.battlefield.height,
+      heroCount: 6,
+      enemyCount: 3,
+    });
+
+    expect(Math.abs(formation.heroes[0]!.y) + formation.tapHeight / 2).toBeLessThanOrEqual(
+      layout.battlefield.height / 2,
+    );
+    expect(Math.abs(formation.enemies[0]!.y) + formation.tapHeight / 2).toBeLessThanOrEqual(
+      layout.battlefield.height / 2,
+    );
+    expect(Math.abs(formation.enemies[0]!.y - formation.heroes[0]!.y)).toBeGreaterThanOrEqual(
+      formation.tapHeight,
+    );
+  });
 });
 
 describe('resolveBattleFormation', () => {

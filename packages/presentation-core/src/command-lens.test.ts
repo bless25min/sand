@@ -2,6 +2,7 @@ import type { BattleUnit, GuildElement, TriggerCondition } from '@expedition/sha
 import { describe, expect, it } from 'vitest';
 
 import {
+  createComboTrack,
   createCommandLens,
   formatComboCue,
   formatTriggerCue,
@@ -31,8 +32,40 @@ describe('formatTriggerCue', () => {
       ]),
     ).toEqual({
       state: 'partial',
-      text: '連招 1/2・缺目標燃燒',
+      text: '連技 1/2・缺目標燃燒',
     });
+  });
+
+  it('separates the guaranteed opening, an impact follow-up, and a skipped condition', () => {
+    expect(
+      createComboTrack([
+        { triggerId: 'target_burning', readiness: 'not-ready', eventCount: 1 },
+        { triggerId: 'on_hit', readiness: 'pending-impact', eventCount: 3 },
+        { triggerId: 'previous_water', readiness: 'not-ready', eventCount: 0 },
+      ]),
+    ).toEqual([
+      {
+        index: 1,
+        triggerLabel: '目標燃燒',
+        state: 'opening',
+        phaseLabel: '起手',
+        hint: '條件未滿・基礎仍施放',
+      },
+      {
+        index: 2,
+        triggerLabel: '命中',
+        state: 'pending',
+        phaseLabel: '接招',
+        hint: '命中後接上',
+      },
+      {
+        index: 3,
+        triggerLabel: '前招為水',
+        state: 'blocked',
+        phaseLabel: '跳過',
+        hint: '條件未滿・不施放',
+      },
+    ]);
   });
 });
 

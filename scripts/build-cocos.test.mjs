@@ -63,6 +63,7 @@ describe('Cocos build runner', () => {
     ]);
     expect(calls[2]?.options).toMatchObject({ timeoutMs: 5 * 60_000 });
     expect(calls[2]?.options.completionProbe).toEqual(expect.any(Function));
+    expect(await calls[2]?.options.completionProbe()).toBe(false);
   });
 
   it('accepts Creator exit code 36 as a successful command-line build', async () => {

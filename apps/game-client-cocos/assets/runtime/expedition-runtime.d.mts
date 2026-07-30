@@ -45,6 +45,12 @@ export function calculateRewards(
   profile: RuntimeProfile,
   battle: RuntimeBattle,
 ): RuntimeRewards | undefined;
+export function projectBattlePlayback(
+  before: RuntimeBattle,
+  final: RuntimeBattle,
+  events: readonly RuntimeEvent[],
+  visibleCount: number,
+): RuntimeBattle;
 
 export function resolveBattleLayout(viewport: { width: number; height: number }): {
   mode: 'mobile-portrait' | 'desktop-landscape';
@@ -81,11 +87,28 @@ export function formatComboCue(
   steps: readonly {
     triggerId: string;
     readiness: 'ready' | 'pending-impact' | 'not-ready';
+    eventCount?: number;
   }[],
 ): { state: 'ready' | 'partial' | 'blocked'; text: string };
 
+export function createComboTrack(
+  steps: readonly {
+    triggerId: string;
+    readiness: 'ready' | 'pending-impact' | 'not-ready';
+    eventCount?: number;
+  }[],
+): readonly {
+  index: number;
+  triggerLabel: string;
+  state: 'opening' | 'ready' | 'pending' | 'blocked';
+  phaseLabel: '起手' | '接招' | '跳過';
+  hint: string;
+}[];
+
 export interface RuntimePresentationBeat {
   id: string;
+  sourceEventIds: readonly number[];
+  eventKind: string;
   kind: string;
   durationMs: number;
   tier: number;
@@ -104,6 +127,24 @@ export interface RuntimePresentationBeat {
   element?: string;
   number?: { kind: string; value: number };
 }
+
+export function createCinematicBeatPlan(input: {
+  kind: string;
+  tier: number;
+  route: RuntimePresentationBeat['route'];
+  cue: RuntimePresentationBeat['cue'];
+  reducedMotion?: boolean;
+}): {
+  phases: readonly {
+    kind: 'anticipation' | 'travel' | 'impact' | 'reaction' | 'recovery';
+    durationMs: number;
+  }[];
+  route: RuntimePresentationBeat['route'];
+  travel: boolean;
+  hitStopMs: number;
+  intensity: number;
+  finisher: boolean;
+};
 
 export interface RuntimePresentationSequence {
   beats: readonly RuntimePresentationBeat[];

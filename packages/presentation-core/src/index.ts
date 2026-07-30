@@ -1,4 +1,5 @@
 export * from './command-lens';
+export * from './cinematic';
 export * from './guild-shell';
 export * from './guild-collections';
 export * from './layout';

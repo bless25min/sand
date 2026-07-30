@@ -10,6 +10,8 @@ export interface RuntimeUnit {
 
 export interface RuntimeBattle {
   questId: string;
+  seed: string;
+  sequence: number;
   status: 'active' | 'victory' | 'defeat';
   units: readonly RuntimeUnit[];
   roundOrder: RuntimeRoundOrder;
@@ -27,10 +29,18 @@ interface RuntimeRoundOrder {
 export interface RuntimeEvent {
   id: number;
   kind: string;
+  message?: string;
   actorId?: string;
   targetId?: string;
   amount?: number;
   element?: 'fire' | 'grass' | 'water';
+  skillId?: string;
+  componentId?: string;
+  specializationId?: string;
+  triggerId?: string;
+  causalDepth?: number;
+  causalId?: string;
+  parentCausalId?: string;
 }
 
 export interface RuntimeProfile {
@@ -83,6 +93,10 @@ export interface RuntimePreview {
     triggerId: string;
     readiness: 'ready' | 'pending-impact' | 'not-ready';
     missingStatus?: 'burn' | 'poison' | 'tide';
+    damageSegments?: number;
+    chaseSegments?: number;
+    chaseDamage?: number;
+    eventIds?: readonly number[];
   }[];
   nextRelays: readonly { actorId: string; newlyReadySkillIds: readonly string[] }[];
   units: readonly {

@@ -1,8 +1,8 @@
-import { Color, Component, HorizontalTextAlignment, Node } from 'cc';
+import { Color, Component, HorizontalTextAlignment } from 'cc';
 
-import { formatComboCue } from '../../runtime/expedition-runtime.mjs';
+import { createComboTrack } from '../../runtime/expedition-runtime.mjs';
 import type { RuntimeSkill } from '../runtime/RuntimeContracts';
-import { COLORS, addPanel, addText, createUiNode } from '../ui/UiFactory';
+import { COLORS, addButton, addPanel, addText, createUiNode } from '../ui/UiFactory';
 
 export interface SkillTileState {
   skill: RuntimeSkill;
@@ -10,6 +10,7 @@ export interface SkillTileState {
   comboSteps: readonly {
     triggerId: string;
     readiness: 'ready' | 'pending-impact' | 'not-ready';
+    eventCount?: number;
   }[];
   damage?: number;
   hits?: number;
@@ -52,67 +53,55 @@ export class SkillDock extends Component {
         state.selected ? COLORS.gold : elementColor,
       );
       panel.lineWidth = state.selected ? 5 : 2;
-      const name = createUiNode('Name', tile, tileWidth - 18, 42, 0, tileHeight * 0.25);
-      const label = addText(name, state.skill.name, 34, elementColor);
+      const badge = createUiNode('Element', tile, 42, 42, -tileWidth / 2 + 30, tileHeight * 0.25);
+      const badgePanel = addPanel(badge, elementColor, elementColor);
+      badgePanel.lineWidth = 0;
+      addText(
+        badge,
+        component?.element === 'fire' ? '火' : component?.element === 'grass' ? '草' : '水',
+        23,
+        COLORS.ink,
+      );
+      const name = createUiNode(
+        'Name',
+        tile,
+        tileWidth - 106,
+        42,
+        -tileWidth * 0.04,
+        tileHeight * 0.25,
+      );
+      const label = addText(name, state.skill.name, 29, COLORS.text);
       label.horizontalAlign = HorizontalTextAlignment.LEFT;
-      if (component) {
-        const cue = formatComboCue(state.comboSteps);
-        addText(
-          createUiNode('Trigger', tile, tileWidth - 18, 30, 0, 0),
-          cue.text,
-          24,
-          cue.state === 'ready'
-            ? COLORS.gold
-            : cue.state === 'partial'
-              ? COLORS.text
-              : COLORS.muted,
-        );
-      }
+      const track = createComboTrack(state.comboSteps) as readonly {
+        state: 'opening' | 'ready' | 'pending' | 'blocked';
+        hint: string;
+      }[];
+      const playable = track.filter(({ state }) => state !== 'blocked').length;
+      const full = track.length > 0 && playable === track.length;
+      const cue =
+        track.length <= 1
+          ? track[0]?.hint.includes('基礎')
+            ? '只打基礎'
+            : track[0]?.hint.includes('判定')
+              ? '命中判定'
+              : '加成可用'
+          : full
+            ? '完整連技'
+            : `可接 ${playable}/${track.length} 段`;
+      const cueNode = createUiNode('Trigger', tile, tileWidth - 18, 38, 0, -tileHeight * 0.04);
+      addPanel(cueNode, new Color(0, 0, 0, 88), full ? COLORS.gold : COLORS.muted);
+      addText(cueNode, cue, 22, full ? COLORS.gold : COLORS.text);
       if (state.damage !== undefined) {
-        this.addMetrics(
-          tile,
-          tileWidth,
-          tileHeight,
-          state.damage,
-          state.hits ?? 1,
-          state.chases ?? 0,
-          state.execution ?? false,
-          state.echoes ?? 0,
+        const damage = createUiNode('Damage', tile, tileWidth - 20, 44, 0, -tileHeight * 0.31);
+        const damageLabel = addText(
+          damage,
+          state.execution ? `OVERKILL ${state.damage}` : `總傷 ${state.damage}`,
+          state.execution ? 25 : 27,
+          state.execution ? COLORS.gold : COLORS.text,
         );
+        damageLabel.isBold = true;
       }
-      tile.on(Node.EventType.TOUCH_END, () => this.onTap?.(state.skill.id));
-      tile.on(Node.EventType.MOUSE_UP, () => this.onTap?.(state.skill.id));
+      addButton(tile, () => this.onTap?.(state.skill.id));
     });
-  }
-
-  private addMetrics(
-    tile: Node,
-    tileWidth: number,
-    tileHeight: number,
-    damage: number,
-    hits: number,
-    chases: number,
-    execution: boolean,
-    echoes: number,
-  ): void {
-    const metrics = createUiNode('Metrics', tile, tileWidth - 18, 48, 0, -tileHeight * 0.26);
-    addPanel(metrics, new Color(0, 0, 0, 105), COLORS.muted);
-    const contentWidth = tileWidth - 26;
-    addText(
-      createUiNode('Damage', metrics, contentWidth * 0.46, 42, -contentWidth * 0.24),
-      execution ? `處刑 +${damage}` : `總傷 ${damage}`,
-      29,
-      COLORS.gold,
-    );
-    addText(
-      createUiNode('Segments', metrics, contentWidth * 0.5, 42, contentWidth * 0.23),
-      execution
-        ? `${echoes} 次・OVERKILL`
-        : chases > 0
-          ? `${hits} 段・追擊 +${chases}`
-          : `${hits} 段・無追擊`,
-      22,
-      COLORS.text,
-    );
   }
 }

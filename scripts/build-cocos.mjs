@@ -207,7 +207,7 @@ export async function buildCocosTarget(target, options = {}) {
           return false;
         }
         completionMarkerSeenAt ??= Date.now();
-        return Date.now() - completionMarkerSeenAt >= 60_000;
+        return Date.now() - completionMarkerSeenAt >= 5_000;
       },
     },
   );

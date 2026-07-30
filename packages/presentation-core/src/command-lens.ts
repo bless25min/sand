@@ -56,6 +56,60 @@ export function formatTriggerCue(
 export interface ComboCueStep {
   triggerId: TriggerCondition;
   readiness: 'ready' | 'pending-impact' | 'not-ready';
+  eventCount?: number;
+}
+
+export interface ComboTrackStep {
+  index: number;
+  triggerLabel: string;
+  state: 'opening' | 'ready' | 'pending' | 'blocked';
+  phaseLabel: '起手' | '接招' | '跳過';
+  hint: string;
+}
+
+export function createComboTrack(steps: readonly ComboCueStep[]): readonly ComboTrackStep[] {
+  return steps.map((step, index) => {
+    const triggerLabel = TRIGGER_CUE_LABELS[step.triggerId];
+    if (index === 0) {
+      return {
+        index: 1,
+        triggerLabel,
+        state: 'opening',
+        phaseLabel: '起手',
+        hint:
+          step.readiness === 'not-ready'
+            ? '條件未滿・基礎仍施放'
+            : step.readiness === 'pending-impact'
+              ? '命中時判定加成'
+              : '條件已滿足',
+      };
+    }
+    if (step.readiness === 'not-ready' || step.eventCount === 0) {
+      return {
+        index: index + 1,
+        triggerLabel,
+        state: 'blocked',
+        phaseLabel: '跳過',
+        hint: '條件未滿・不施放',
+      };
+    }
+    if (step.readiness === 'pending-impact') {
+      return {
+        index: index + 1,
+        triggerLabel,
+        state: 'pending',
+        phaseLabel: '接招',
+        hint: '命中後接上',
+      };
+    }
+    return {
+      index: index + 1,
+      triggerLabel,
+      state: 'ready',
+      phaseLabel: '接招',
+      hint: '條件已滿足',
+    };
+  });
 }
 
 export function formatComboCue(steps: readonly ComboCueStep[]): {
@@ -75,7 +129,7 @@ export function formatComboCue(steps: readonly ComboCueStep[]): {
   const firstBlocked = steps.find(({ readiness }) => readiness === 'not-ready');
   return {
     state: readyCount === steps.length ? 'ready' : readyCount > 0 ? 'partial' : 'blocked',
-    text: `連招 ${readyCount}/${steps.length}・${
+    text: `連技 ${readyCount}/${steps.length}・${
       firstBlocked ? `缺${TRIGGER_CUE_LABELS[firstBlocked.triggerId]}` : '全部觸發'
     }`,
   };

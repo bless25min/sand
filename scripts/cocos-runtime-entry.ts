@@ -6,6 +6,7 @@ import {
   createSeededRandom,
   previewSkillOutcome,
   previewForgeEquipmentItem,
+  projectBattlePlayback,
   resolveSkill,
   startGuildQuest,
   type ResolveSkillInput,
@@ -14,6 +15,7 @@ import {
   type SkillEngineContent,
 } from '@expedition/simulation-core';
 import type { GuildBattleState, GuildProfile } from '@expedition/shared-types';
+export { projectBattlePlayback };
 export {
   createFirstHuntCoach,
   GUILD_PREFERENCES_KEY,
@@ -30,6 +32,8 @@ export {
 export {
   closeLootDetail,
   compilePresentation,
+  createCinematicBeatPlan,
+  createComboTrack,
   createCommandLens,
   createGuildShellModel,
   createLootLayout,

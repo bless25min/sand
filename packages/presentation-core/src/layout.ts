@@ -51,10 +51,10 @@ export function resolveBattleLayout(viewport: Viewport): BattleLayout {
   const width = Math.max(1, Math.trunc(viewport.width));
   const height = Math.max(1, Math.trunc(viewport.height));
   const mode = width < height ? 'mobile-portrait' : 'desktop-landscape';
-  const headerHeight = mode === 'mobile-portrait' ? 64 : 84;
-  const commandLensHeight = mode === 'mobile-portrait' ? 96 : 86;
-  const desiredBattlefieldHeight = Math.floor(height * (mode === 'mobile-portrait' ? 0.54 : 0.57));
-  const minimumSkillDockHeight = mode === 'mobile-portrait' ? 240 : 160;
+  const headerHeight = mode === 'mobile-portrait' ? 58 : 76;
+  const commandLensHeight = mode === 'mobile-portrait' ? 148 : 112;
+  const desiredBattlefieldHeight = Math.floor(height * (mode === 'mobile-portrait' ? 0.53 : 0.56));
+  const minimumSkillDockHeight = mode === 'mobile-portrait' ? 264 : 150;
   const battlefieldHeight = Math.max(
     1,
     Math.min(

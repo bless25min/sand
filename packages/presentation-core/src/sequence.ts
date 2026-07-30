@@ -108,6 +108,16 @@ const routeFor = (event: GuildBattleEvent): PresentationRoute => {
   if (event.kind === 'victory' || event.kind === 'finisher' || event.kind === 'infinite_engine') {
     return 'area';
   }
+  if (
+    event.kind === 'status_applied' ||
+    event.kind === 'weaken' ||
+    event.kind === 'strengthen' ||
+    event.kind === 'triggered' ||
+    event.kind === 'core_triggered' ||
+    event.kind === 'passive'
+  ) {
+    return 'none';
+  }
   return event.actorId && event.targetId ? 'direct' : 'none';
 };
 

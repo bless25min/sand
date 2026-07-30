@@ -1,4 +1,4 @@
-import { Color, Component, Label, Vec3, tween } from 'cc';
+import { Color, Component, Label, UIOpacity, Vec3, tween } from 'cc';
 import type { Node } from 'cc';
 
 import { addText, createUiNode } from '../ui/UiFactory';
@@ -13,11 +13,14 @@ export class DamageNumberPool extends Component {
     const text = node.getComponent(Label) ?? addText(node, '', 24);
     text.string =
       kind === 'healing'
-        ? `治療 +${value}`
+        ? `+${value}`
         : kind === 'status'
-          ? `層數 +${value}`
-          : `傷害 ${value}`;
-    text.fontSize = 30 + tier * 3;
+          ? `+${value} 層`
+          : kind === 'overkill'
+            ? `OVERKILL ${value}`
+            : `-${value}`;
+    text.fontSize = (kind === 'overkill' ? 32 : 36) + tier * 4;
+    text.isBold = true;
     text.color =
       kind === 'healing'
         ? new Color(89, 232, 151, 255)
@@ -25,15 +28,19 @@ export class DamageNumberPool extends Component {
           ? new Color(255, 196, 54, 255)
           : new Color(255, 241, 221, 255);
     node.active = true;
-    node.setPosition(new Vec3(0, 76));
-    node.setScale(0.65, 0.65);
+    node.setPosition(new Vec3(0, 68));
+    node.setScale(0.52, 0.52);
+    const opacity = node.getComponent(UIOpacity) ?? node.addComponent(UIOpacity);
+    opacity.opacity = 255;
     tween(node)
-      .to(0.08, { scale: new Vec3(1.1 + tier * 0.04, 1.1 + tier * 0.04, 1) })
-      .by(0.36, { position: new Vec3(0, 52) })
+      .to(0.055, { scale: new Vec3(1.18 + tier * 0.05, 1.18 + tier * 0.05, 1) })
+      .to(0.07, { scale: new Vec3(0.98 + tier * 0.035, 0.98 + tier * 0.035, 1) })
+      .by(0.32, { position: new Vec3(0, 58) })
       .call(() => {
         node.active = false;
         this.pool.push(node);
       })
       .start();
+    tween(opacity).delay(0.19).to(0.24, { opacity: 0 }).start();
   }
 }

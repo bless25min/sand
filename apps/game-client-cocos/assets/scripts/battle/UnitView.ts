@@ -17,6 +17,7 @@ export class UnitView extends Component {
   private unit?: RuntimeUnit;
   private selected = false;
   private nameLabel?: Label;
+  private hpLabel?: Label;
   private onTap?: (unit: RuntimeUnit) => void;
   private compact = false;
   private compactScale = 1;
@@ -62,6 +63,19 @@ export class UnitView extends Component {
       compact ? -37 * scale : -65,
     );
     this.nameLabel = addText(nameNode, unit.name, compact ? Math.round(19 * scale) : 28);
+    this.hpLabel = addText(
+      createUiNode(
+        'HpText',
+        this.node,
+        this.width * 0.78,
+        compact ? 22 * scale : 28,
+        0,
+        -this.height / 2 + (compact ? 10 * scale : 12),
+      ),
+      '',
+      compact ? Math.round(15 * scale) : 19,
+      COLORS.text,
+    );
     addButton(this.node, () => this.handleTap());
     this.render(unit, false);
   }
@@ -70,10 +84,10 @@ export class UnitView extends Component {
     this.unit = unit;
     this.selected = selected;
     this.nameLabel!.string =
-      unit.side === 'enemies' && unit.currentHp <= 0
-        ? `${unit.name}・處刑`
-        : `${unit.name}  ${unit.currentHp}/${unit.stats.hp}`;
+      unit.side === 'enemies' && unit.currentHp <= 0 ? `${unit.name}・處刑` : unit.name;
+    this.hpLabel!.string = selected ? `${unit.currentHp}/${unit.stats.hp}` : '';
     this.drawHp();
+    this.drawStatus();
     this.drawSelection();
     this.node.getComponent(UIOpacity)!.opacity =
       unit.side === 'enemies' && unit.currentHp <= 0 ? (selected ? 220 : 105) : 255;
@@ -145,12 +159,7 @@ export class UnitView extends Component {
     const scale = this.compactScale;
     body.lineWidth = this.compact ? 3 * scale : 5;
     if (!hero) {
-      body.moveTo(-18 * scale, 25 * scale);
-      body.lineTo(-30 * scale, 43 * scale);
-      body.moveTo(18 * scale, 25 * scale);
-      body.lineTo(30 * scale, 43 * scale);
-      body.moveTo(-23 * scale, -7 * scale);
-      body.lineTo(23 * scale, -7 * scale);
+      this.drawEnemySilhouette(body, scale);
       body.stroke();
       return;
     }
@@ -192,6 +201,69 @@ export class UnitView extends Component {
       body.lineTo(reach * 0.32, this.compact ? 22 * scale : 22);
     }
     body.stroke();
+  }
+
+  private drawEnemySilhouette(body: Graphics, scale: number): void {
+    const id = this.unit?.id ?? '';
+    const wide = id.includes('alpha') || id.includes('tyrant') || id.includes('sovereign');
+    const hunter = id.includes('hunter') || id.includes('slinger') || id.includes('lancer');
+    const caster =
+      id.includes('alchemist') ||
+      id.includes('magus') ||
+      id.includes('cantor') ||
+      id.includes('matron');
+    const ear = wide ? 37 : 30;
+    body.moveTo(-18 * scale, 25 * scale);
+    body.lineTo(-ear * scale, (wide ? 52 : 43) * scale);
+    body.moveTo(18 * scale, 25 * scale);
+    body.lineTo(ear * scale, (wide ? 52 : 43) * scale);
+    body.moveTo(-23 * scale, -7 * scale);
+    body.lineTo(23 * scale, -7 * scale);
+    if (hunter) {
+      body.arc(38 * scale, 2, 27 * scale, -1.25, 1.25, false);
+      body.moveTo(42 * scale, -27 * scale);
+      body.lineTo(42 * scale, 31 * scale);
+    } else if (caster) {
+      body.circle(40 * scale, 29 * scale, 9 * scale);
+      body.moveTo(40 * scale, 20 * scale);
+      body.lineTo(40 * scale, -32 * scale);
+    } else if (wide) {
+      body.moveTo(-34 * scale, 10 * scale);
+      body.lineTo(0, -25 * scale);
+      body.lineTo(34 * scale, 10 * scale);
+    } else {
+      body.moveTo(-32 * scale, -20 * scale);
+      body.lineTo(32 * scale, 24 * scale);
+    }
+  }
+
+  private drawStatus(): void {
+    const root = this.node.getChildByName('StatusTokens') ?? new Node('StatusTokens');
+    if (!root.parent) this.node.addChild(root);
+    root.removeAllChildren();
+    const layers = this.unit?.statusLayers;
+    if (!layers) return;
+    const entries = [
+      { key: 'burn' as const, value: layers.burn, color: new Color(255, 101, 75, 255) },
+      { key: 'poison' as const, value: layers.poison, color: new Color(88, 218, 122, 255) },
+      { key: 'tide' as const, value: layers.tide, color: new Color(75, 183, 255, 255) },
+    ].filter(({ value }) => value > 0);
+    const scale = this.compactScale;
+    entries.forEach(({ key, value, color }, index) => {
+      const token = createUiNode(
+        `Status-${key}`,
+        root,
+        30 * scale,
+        30 * scale,
+        this.width * 0.33 - index * 34 * scale,
+        (this.compact ? 39 : 62) * scale,
+      );
+      const graphics = token.addComponent(Graphics);
+      graphics.fillColor = color;
+      graphics.circle(0, 0, 14 * scale);
+      graphics.fill();
+      addText(token, `${value}`, Math.round(17 * scale), COLORS.ink).isBold = true;
+    });
   }
 
   private handleTap(): void {

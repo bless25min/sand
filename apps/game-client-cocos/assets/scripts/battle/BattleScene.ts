@@ -1,6 +1,10 @@
 import { Component, Node, UITransform, view } from 'cc';
 
-import { resolveBattleFormation, resolveBattleLayout } from '../../runtime/expedition-runtime.mjs';
+import {
+  projectBattlePlayback,
+  resolveBattleFormation,
+  resolveBattleLayout,
+} from '../../runtime/expedition-runtime.mjs';
 import type {
   ExpeditionRuntime,
   RuntimeBattle,
@@ -32,6 +36,7 @@ export class BattleScene extends Component {
   private shell?: Node;
   private lens?: CommandLens;
   private skills?: SkillDock;
+  private relayMeter?: Node;
   private playback?: PlaybackDirector;
   private order?: TurnOrderController;
   private actorId?: string;
@@ -122,6 +127,14 @@ export class BattleScene extends Component {
       visible.height - layout.header.height - layout.battlefield.height / 2,
     );
     this.createUnits(layout.battlefield.height, visible.width);
+    this.relayMeter = createUiNode(
+      'RelayMeter',
+      this.stage,
+      Math.min(300, visible.width * 0.46),
+      42,
+      0,
+      layout.battlefield.height / 2 - 25,
+    );
     const lensNode = createUiNode(
       'CommandLens',
       root,
@@ -244,12 +257,35 @@ export class BattleScene extends Component {
         skillId: this.skillId,
         targetId: this.targetId,
       });
-      await this.playback!.play(next.recentEvents, this.unitNodes, this.stage!, relayTier);
+      const before = this.battle!;
+      await this.playback!.play(
+        next.recentEvents,
+        this.unitNodes,
+        this.stage!,
+        relayTier,
+        (visibleCount) => {
+          if (!next.battle || this.destroyed || epoch !== this.executionEpoch) return;
+          this.battle = projectBattlePlayback(
+            before,
+            next.battle,
+            next.recentEvents,
+            visibleCount,
+          ) as RuntimeBattle;
+          this.renderUnits();
+          this.renderRelayMeter(relayTier);
+        },
+      );
       if (this.destroyed || epoch !== this.executionEpoch) return;
       this.applyState(next);
       this.syncTurnState();
     } catch (error) {
       console.warn('Combat playback recovered after an animation error.', error);
+      (
+        globalThis as typeof globalThis & {
+          __EXPEDITION_PLAYBACK_ERROR__?: string;
+        }
+      ).__EXPEDITION_PLAYBACK_ERROR__ =
+        error instanceof Error ? `${error.message}\n${error.stack ?? ''}` : String(error);
     } finally {
       if (epoch === this.executionEpoch) this.busy = false;
     }
@@ -278,11 +314,8 @@ export class BattleScene extends Component {
       this.battle!.roundOrder.actedIds,
       this.actorId,
     );
-    this.battle!.units.forEach((unit) =>
-      this.unitViews
-        .get(unit.id)
-        ?.render(unit, unit.id === (unit.side === 'heroes' ? this.actorId : this.targetId)),
-    );
+    this.renderUnits();
+    this.renderRelayMeter(this.battle!.roundOrder.actedIds.length + 1);
     const actor = this.heroes().find(({ id }) => id === this.actorId);
     const target = this.enemies().find(({ id }) => id === this.targetId);
     const options =
@@ -294,7 +327,12 @@ export class BattleScene extends Component {
       return {
         skill,
         selected: skill.id === this.skillId,
-        comboSteps: preview?.comboSteps ?? [],
+        comboSteps:
+          preview?.comboSteps.map((step) => ({
+            triggerId: step.triggerId,
+            readiness: step.readiness,
+            eventCount: step.eventIds?.length,
+          })) ?? [],
         ...(preview
           ? {
               damage: preview.executionWindow ? preview.overkill : preview.totalDamage,
@@ -314,7 +352,7 @@ export class BattleScene extends Component {
       selectedSkill && target
         ? this.runtime!.previewSkill(this.actionInput(selectedSkill.id))
         : undefined;
-    this.lens!.render(actor, target, selectedSkill, preview);
+    this.lens!.render(actor, target, selectedSkill, preview, this.heroes());
     this.publishDiagnostics();
   }
 
@@ -332,6 +370,39 @@ export class BattleScene extends Component {
     this.actorId = this.battle!.roundOrder.activeAdventurerId;
     this.targetId = this.battle!.selectedTargetId;
     this.skillId = undefined;
+  }
+
+  private renderUnits(): void {
+    this.battle?.units.forEach((unit) =>
+      this.unitViews
+        .get(unit.id)
+        ?.render(unit, unit.id === (unit.side === 'heroes' ? this.actorId : this.targetId)),
+    );
+  }
+
+  private renderRelayMeter(tier: number): void {
+    if (!this.relayMeter) return;
+    this.relayMeter.removeAllChildren();
+    const width = this.relayMeter.getComponent(UITransform)!.contentSize.width;
+    const ribbon = createUiNode('RelayRibbon', this.relayMeter, width, 38);
+    addPanel(ribbon, COLORS.ink, tier >= 6 ? COLORS.gold : COLORS.line);
+    addText(
+      createUiNode('RelayLabel', ribbon, width * 0.4, 34, -width * 0.28),
+      tier >= 6 ? '終結接力' : `接力 ${tier}/6`,
+      18 + Math.min(4, tier),
+      tier >= 6 ? COLORS.gold : COLORS.text,
+    );
+    const startX = -width * 0.02;
+    for (let index = 0; index < 6; index += 1) {
+      const pip = createUiNode(`RelayPip-${index + 1}`, ribbon, 22, 12, startX + index * 31);
+      const active = index < tier;
+      const panel = addPanel(
+        pip,
+        active ? COLORS.gold : COLORS.panel,
+        active ? COLORS.gold : COLORS.muted,
+      );
+      panel.lineWidth = active ? 0 : 1;
+    }
   }
 
   private chooseHero(actorId: string): void {
@@ -474,6 +545,8 @@ export class BattleScene extends Component {
     (
       globalThis as typeof globalThis & {
         __EXPEDITION_DIAGNOSTICS__?: Record<string, unknown>;
+        __EXPEDITION_PLAYBACK_TRACE__?: Record<string, unknown>;
+        __EXPEDITION_PLAYBACK_ERROR__?: string;
       }
     ).__EXPEDITION_DIAGNOSTICS__ = {
       screen: 'battle',
@@ -487,6 +560,18 @@ export class BattleScene extends Component {
       actorId: this.actorId,
       targetId: this.targetId,
       actedIds: this.battle?.roundOrder.actedIds ?? [],
+      relayTier: Math.min(6, (this.battle?.roundOrder.actedIds.length ?? 0) + 1),
+      commandLensMode: this.skillId ? 'focus' : 'summary',
+      playbackTrace: (
+        globalThis as typeof globalThis & {
+          __EXPEDITION_PLAYBACK_TRACE__?: Record<string, unknown>;
+        }
+      ).__EXPEDITION_PLAYBACK_TRACE__,
+      playbackError: (
+        globalThis as typeof globalThis & {
+          __EXPEDITION_PLAYBACK_ERROR__?: string;
+        }
+      ).__EXPEDITION_PLAYBACK_ERROR__,
       eventCount: this.battle?.events.length ?? 0,
       status: this.battle?.status,
       tutorialStep: this.controller?.getState().tutorialStep,
