@@ -18,6 +18,7 @@ export function BattleCommandDock({
   skillPreviews,
   executionWindow,
   onChooseSkill,
+  onConfirmSkill,
 }: {
   state: GuildRpgState;
   dispatch: React.Dispatch<GuildRpgAction>;
@@ -30,6 +31,7 @@ export function BattleCommandDock({
   skillPreviews: ReadonlyMap<string, SkillOutcomePreview>;
   executionWindow: boolean;
   onChooseSkill(skillId: string): void;
+  onConfirmSkill(): void;
 }) {
   const victory = state.battle?.status === 'victory';
   const defeat = state.battle?.status === 'defeat';
@@ -45,7 +47,17 @@ export function BattleCommandDock({
       data-relay={relay}
       data-execution={executionWindow}
     >
-      {victory ? (
+      {playback.isPlaying ? (
+        <div className="gr-resolve-strip" data-resolve-strip="true" role="status">
+          <span>接力第 {Math.max(1, relay)} 棒</span>
+          <div aria-hidden="true">
+            {Array.from({ length: 3 }, (_, index) => (
+              <i key={index} />
+            ))}
+          </div>
+          <strong>{playback.currentBeat?.label ?? '戰鬥演出中'}</strong>
+        </div>
+      ) : victory ? (
         <div className="gr-finisher-dock" role="status">
           <header>
             <span>SIXTH RELAY · FINISHER</span>
@@ -82,7 +94,7 @@ export function BattleCommandDock({
         </div>
       ) : (
         <>
-          {coach && !playback.isPlaying && (
+          {coach && (
             <aside className="gr-battle-guide-strip" role="status">
               <b>引導</b>
               <span>{coach.title}</span>
@@ -94,9 +106,8 @@ export function BattleCommandDock({
               actor={actor}
               target={target}
               skill={skill}
-              skills={state.profile.skillInventory}
               preview={preview}
-              units={state.battle!.units}
+              onConfirm={onConfirmSkill}
             />
           ) : (
             <header className="gr-command-context">

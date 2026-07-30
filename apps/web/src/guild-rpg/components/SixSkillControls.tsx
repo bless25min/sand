@@ -2,14 +2,8 @@ import type { SkillOutcomePreview } from '@expedition/simulation-core';
 
 import { elementName } from '../content-labels';
 import { isFirstHuntCoachFocus } from '../onboarding/first-hunt-coach';
-import { createSkillTilePresentation } from '../presentation/skill-tile-presentation';
+import { createSkillActionPresentation } from '../presentation/skill-action-presentation';
 import type { GuildRpgState } from '../state/game-reducer';
-
-const STATUS_LABELS = {
-  burn: '燃',
-  poison: '毒',
-  tide: '潮',
-} as const;
 
 export function SixSkillControls({
   state,
@@ -27,29 +21,26 @@ export function SixSkillControls({
   const actorId = state.battle?.roundOrder?.activeAdventurerId;
   const member = state.profile.party.find(({ definitionId }) => definitionId === actorId);
   if (!member) return null;
+  const focused = armedSkillId !== undefined;
 
   return (
-    <div className="gr-skill-command-layer">
+    <div className="gr-skill-command-layer" data-skill-mode={focused ? 'focus' : 'choose'}>
       <div className="gr-battle-skills" aria-label="六個可用技能">
         {member.skillIds.map((skillId, index) => {
           const skill = state.profile.skillInventory.find(({ id }) => id === skillId);
           const first = skill?.components[0];
           const preview = previews.get(skillId);
           const presentation =
-            skill && preview ? createSkillTilePresentation(skill, preview) : undefined;
-          const status = presentation?.statusDelta;
-          const totalLabel =
-            presentation?.execution && presentation.primaryKind !== 'finisher'
-              ? '溢傷'
-              : presentation?.primaryKind === 'healing'
-                ? '療'
-                : presentation?.primaryKind === 'finisher'
-                  ? '終'
-                  : '傷';
+            skill && preview ? createSkillActionPresentation(skill, preview) : undefined;
+          const facts = presentation
+            ? [
+                presentation.damageLabel ?? presentation.healingLabel,
+                presentation.hitLabel,
+                presentation.statusLabel,
+              ].filter((value): value is string => Boolean(value))
+            : [];
           const skillLabel = presentation
-            ? presentation.execution
-              ? `${index + 1}，${presentation.intentName}，${totalLabel}${presentation.primaryValue}，${presentation.triggerSummary}`
-              : `${index + 1}，${presentation.intentName}，${presentation.hitLabel}，${presentation.totalLabel}，${presentation.triggerSummary}${status ? `，${STATUS_LABELS[status.kind]}${status.amount >= 0 ? '增加' : '消耗'}${Math.abs(status.amount)}` : ''}`
+            ? `${index + 1}，${presentation.name}${facts.length > 0 ? `，${facts.join('，')}` : ''}${presentation.ready ? '，連招可用' : ''}`
             : `${index + 1}，未裝備`;
           return (
             <div className="gr-battle-skill-slot" key={`${skillId}:${index}`}>
@@ -60,14 +51,13 @@ export function SixSkillControls({
                 data-battle-skill={index + 1}
                 data-element={first?.element}
                 data-execution={presentation?.execution}
-                data-final-execution={presentation?.primaryKind === 'finisher'}
-                data-trigger-readiness={presentation?.readiness}
+                data-final-execution={preview ? preview.finisherPower > 0 : undefined}
+                data-trigger-readiness={presentation?.ready ? 'ready' : 'not-ready'}
                 data-armed={armedSkillId === skillId}
-                data-skill-total={presentation?.primaryValue}
-                data-skill-segments={presentation?.segments}
-                data-combo-ready={
-                  presentation ? `${presentation.readyCount}/${presentation.stepCount}` : undefined
-                }
+                data-skill-total={preview?.totalDamage ?? preview?.totalHealing}
+                data-skill-segments={preview?.damageSegments}
+                data-combo-ready={presentation?.ready}
+                data-skill-switch={focused ? index + 1 : undefined}
                 data-guide-id={index === 0 ? 'battle:skill' : undefined}
                 data-guide-active={
                   index === 0
@@ -85,39 +75,28 @@ export function SixSkillControls({
                 <span className="gr-skill-glyph" aria-hidden="true">
                   {first ? elementName(first.element).slice(0, 1) : '－'}
                 </span>
-                <strong>{presentation?.intentName ?? '空位'}</strong>
-                {presentation && (
-                  <small className="gr-skill-outcome">
-                    <b data-skill-hit-label={presentation.segments}>{presentation.hitLabel}</b>
-                    <span data-skill-total-label={presentation.primaryValue}>
-                      {presentation.totalLabel}
-                    </span>
-                    {status && (
-                      <em>
-                        {STATUS_LABELS[status.kind]}
-                        {status.amount > 0 ? '+' : ''}
-                        {status.amount}
-                      </em>
-                    )}
+                <strong>{presentation?.name ?? '空位'}</strong>
+                {!focused && presentation && (
+                  <small className="gr-skill-facts">
+                    {facts.slice(0, 3).map((fact, factIndex) => (
+                      <b
+                        data-skill-fact={
+                          factIndex === 0
+                            ? presentation.damageLabel
+                              ? 'damage'
+                              : 'healing'
+                            : fact === presentation.hitLabel
+                              ? 'hits'
+                              : 'status'
+                        }
+                        key={fact}
+                      >
+                        {fact}
+                      </b>
+                    ))}
                   </small>
                 )}
-                {presentation && (
-                  <span className="gr-skill-nodes" aria-label={presentation.triggerSummary}>
-                    {presentation.comboSteps.map((step, stepIndex) => (
-                      <span
-                        data-combo-node={stepIndex + 1}
-                        data-node-active={stepIndex === 0 || step.readiness === 'ready'}
-                        data-readiness={step.readiness}
-                        title={`${step.conditionLabel}：${step.readinessLabel}`}
-                        key={step.componentId}
-                      >
-                        <i aria-hidden="true">{step.conditionGlyph}</i>
-                        <b>{step.conditionLabel}</b>
-                        <em>{step.readinessLabel}</em>
-                      </span>
-                    ))}
-                  </span>
-                )}
+                {presentation?.ready && <i className="gr-skill-ready" aria-hidden="true" />}
               </button>
             </div>
           );

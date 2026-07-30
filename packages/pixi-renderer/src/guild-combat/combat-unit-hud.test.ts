@@ -30,6 +30,7 @@ const target: GuildCombatSceneUnit = {
 describe('combat unit HUD', () => {
   it('keeps only identity-critical HP and compact projected changes on the unit', () => {
     expect(createCombatUnitHud(target)).toEqual({
+      identityMode: 'bar-only',
       nameLabel: '灰牙首領',
       hpLabel: '136/175',
       projectedHpLabel: '136 → 81',
@@ -43,6 +44,7 @@ describe('combat unit HUD', () => {
     const withoutPreview = { ...target };
     delete withoutPreview.preview;
     expect(createCombatUnitHud(withoutPreview)).toMatchObject({
+      identityMode: 'bar-only',
       hpLabel: '136/175',
       projectedHpLabel: undefined,
       statLabel: '攻34 防12',

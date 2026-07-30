@@ -6,7 +6,7 @@ import { useBattlefieldLayout } from '../hooks/use-battlefield-layout';
 import type { FirstHuntCoachStep } from '../onboarding/first-hunt-coach';
 import type { GuildPreferences } from '../preferences/guild-preferences';
 import { createBattleScene } from '../presentation/battle-scene';
-import { createCombatBeatCue } from '../presentation/combat-beat-cue';
+import { createCombatBeatCue, shouldShowCombatBeatCue } from '../presentation/combat-beat-cue';
 import { relayPresentation, type CombatBeat } from '../presentation/combat-beats';
 import { BattlefieldUnitControls } from './BattlefieldUnitControls';
 
@@ -59,6 +59,15 @@ export function CombatBattlefield({
     ...(enemyIntent ? { enemyIntent } : {}),
     ...(executionWindow ? { executionWindow: true } : {}),
   });
+  const focusActor = battle.units.find(
+    ({ id }) => id === (actingActorId ?? battle.roundOrder?.activeAdventurerId),
+  );
+  const focusTarget = battle.units.find(({ id }) => id === battle.selectedTargetId);
+  const targetPreview = preview?.units.find(({ id }) => id === focusTarget?.id);
+  const targetDefense = focusTarget
+    ? Math.max(0, focusTarget.stats.defense - (focusTarget.defenseReduction ?? 0))
+    : 0;
+
   return (
     <section
       className="gr-combat-battlefield"
@@ -84,6 +93,36 @@ export function CombatBattlefield({
           />
         ))}
       </div>
+
+      {focusActor && focusTarget && (
+        <div className="gr-battle-focus-hud">
+          <section data-battle-hud="actor" data-hud-unit={focusActor.id}>
+            <span>目前角色</span>
+            <strong>{focusActor.name}</strong>
+            <b>
+              HP {focusActor.currentHp}/{focusActor.stats.hp}
+            </b>
+            <small>
+              攻 {focusActor.stats.attack}
+              {(focusActor.strengthened ?? 0) > 0 && ` · 強化 +${focusActor.strengthened}`}
+            </small>
+          </section>
+          <section data-battle-hud="target" data-hud-unit={focusTarget.id}>
+            <span>目前目標</span>
+            <strong>{focusTarget.name}</strong>
+            <b data-preview-hp={targetPreview ? 'true' : undefined}>
+              HP{' '}
+              {targetPreview
+                ? `${targetPreview.beforeHp} → ${targetPreview.afterHp}`
+                : `${focusTarget.currentHp}/${focusTarget.stats.hp}`}
+            </b>
+            <small>
+              防 {targetDefense}
+              {(focusTarget.defenseReduction ?? 0) > 0 && ` · 削弱 ${focusTarget.defenseReduction}`}
+            </small>
+          </section>
+        </div>
+      )}
 
       {executionWindow && (
         <div className="gr-execution-window" role="status">
@@ -119,28 +158,30 @@ export function CombatBattlefield({
 
       {currentBeat && (
         <>
-          <div
-            className="gr-impact-callout"
-            data-combat-beat={currentBeat.kind}
-            data-combat-cue={beatCue?.tone}
-            data-trigger-id={currentBeat.visual.triggerId}
-            data-combo-index={currentBeat.comboIndex}
-            data-element={currentBeat.element}
-            aria-hidden="true"
-          >
-            {beatCue && (
-              <small>
-                <span>{beatCue.eyebrow}</span>
-                <b>{beatCue.label}</b>
-              </small>
-            )}
-            {currentBeat.visual.number !== undefined && (
-              <strong key={currentBeat.id}>
-                {currentBeat.visual.number > 0 ? '+' : ''}
-                {currentBeat.visual.number}
-              </strong>
-            )}
-          </div>
+          {shouldShowCombatBeatCue(currentBeat) && (
+            <div
+              className="gr-impact-callout"
+              data-combat-beat={currentBeat.kind}
+              data-combat-cue={beatCue?.tone}
+              data-trigger-id={currentBeat.visual.triggerId}
+              data-combo-index={currentBeat.comboIndex}
+              data-element={currentBeat.element}
+              aria-hidden="true"
+            >
+              {beatCue && (
+                <small>
+                  <span>{beatCue.eyebrow}</span>
+                  <b>{beatCue.label}</b>
+                </small>
+              )}
+              {currentBeat.visual.number !== undefined && (
+                <strong key={currentBeat.id}>
+                  {currentBeat.visual.number > 0 ? '+' : ''}
+                  {currentBeat.visual.number}
+                </strong>
+              )}
+            </div>
+          )}
           <p className="gr-sr-only" role="status">
             {currentBeat.label}
           </p>

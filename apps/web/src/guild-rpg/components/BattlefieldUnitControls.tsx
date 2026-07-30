@@ -24,11 +24,33 @@ const statusValues = (unit: GuildCombatSceneUnit) =>
 const intentLabel = (outcome: 'damage' | 'guard' | 'dodge', amount: number) =>
   outcome === 'damage' ? `危險 ${amount}` : outcome === 'dodge' ? '閃避' : '格擋';
 
+function IntentGlyph({
+  source,
+  outcome,
+}: {
+  source: boolean;
+  outcome: EnemyPressureIntent['outcome'];
+}) {
+  return (
+    <svg viewBox="0 0 24 24" data-intent-glyph={source ? 'source' : outcome} aria-hidden="true">
+      {source ? (
+        <path d="m7 17 10-10m-8-2 10 10m-3-9 3 3M5 15l4 4-3 1-2-2 1-3Z" />
+      ) : outcome === 'damage' ? (
+        <path d="m13 2-8 12h6l-1 8 9-13h-6V2Z" />
+      ) : outcome === 'dodge' ? (
+        <path d="M4 8h11l-3-3m3 3-3 3M20 16H9l3-3m-3 3 3 3" />
+      ) : (
+        <path d="M12 3 5 6v5c0 5 3 8 7 10 4-2 7-5 7-10V6l-7-3Zm0 4v9" />
+      )}
+    </svg>
+  );
+}
+
 const controlLabel = (
   unit: GuildCombatSceneUnit,
   battle: GuildBattleState,
   acted: boolean,
-  castReady: boolean,
+  previewing: boolean,
   intent?: EnemyPressureIntent,
 ) => {
   const source = battle.units.find(({ id }) => id === unit.id);
@@ -38,7 +60,7 @@ const controlLabel = (
   if (unit.side === 'enemies') {
     const selected = battle.selectedTargetId === unit.id;
     const counter = unit.enemyIntentRole === 'source' ? '，即將反擊' : '';
-    return `${unit.name}${counter}，${castReady ? '點擊施放已選技能' : selected ? '目前目標' : '點擊鎖定'}，生命 ${hp}`;
+    return `${unit.name}${counter}，${previewing ? '點擊切換預演目標' : selected ? '目前目標' : '點擊鎖定'}，生命 ${hp}`;
   }
   const active = battle.roundOrder?.activeAdventurerId === unit.id;
   const danger =
@@ -64,7 +86,7 @@ export function BattlefieldUnitControls({
     <div className="gr-battle-unit-controls" aria-label="戰場人物操作">
       {scene.units.map((unit, index) => {
         const defeated = unit.hpRatio <= 0;
-        const castReady = unit.side === 'enemies' && scene.preview !== undefined;
+        const previewing = unit.side === 'enemies' && scene.preview !== undefined;
         const acted = order?.actedIds.includes(unit.id) ?? false;
         const active = order?.activeAdventurerId === unit.id;
         const intent = scene.enemyIntent;
@@ -85,7 +107,7 @@ export function BattlefieldUnitControls({
         return (
           <button
             type="button"
-            aria-label={controlLabel(unit, battle, acted, castReady, intent)}
+            aria-label={controlLabel(unit, battle, acted, previewing, intent)}
             aria-pressed={
               unit.side === 'enemies'
                 ? battle.selectedTargetId === unit.id
@@ -101,7 +123,7 @@ export function BattlefieldUnitControls({
             data-combo-ready={unit.side === 'heroes' && unit.comboReady}
             data-acted={unit.side === 'heroes' && acted}
             data-defeated={defeated}
-            data-cast-ready={castReady}
+            data-preview-ready={previewing}
             data-enemy-intent-source={intentSource || undefined}
             data-enemy-intent-target={intentTarget || undefined}
             data-enemy-intent-outcome={intentTarget ? intent?.outcome : undefined}
@@ -128,7 +150,8 @@ export function BattlefieldUnitControls({
           >
             {(intentSource || intentTarget) && intent && (
               <span className="gr-enemy-intent-cue" aria-hidden="true">
-                {intentSource ? '反擊' : intentLabel(intent.outcome, intent.amount)}
+                <IntentGlyph source={intentSource} outcome={intent.outcome} />
+                {!intentSource && intent.outcome === 'damage' && <b>{intent.amount}</b>}
               </span>
             )}
             <span className="gr-unit-fallback" aria-hidden="true">

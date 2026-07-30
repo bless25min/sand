@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { CombatBeat } from './combat-beats';
-import { createCombatBeatCue } from './combat-beat-cue';
+import { createCombatBeatCue, shouldShowCombatBeatCue } from './combat-beat-cue';
 
 const beat = (overrides: Partial<CombatBeat>): CombatBeat => ({
   id: 'beat',
@@ -67,5 +67,11 @@ describe('combat beat cue', () => {
       tone: 'relay',
       label: '接力 4 / 6',
     });
+  });
+
+  it('keeps generic totals out of the visual callout layer', () => {
+    expect(shouldShowCombatBeatCue(beat({ kind: 'total' }))).toBe(false);
+    expect(shouldShowCombatBeatCue(beat({ kind: 'chain' }))).toBe(true);
+    expect(shouldShowCombatBeatCue(beat({ kind: 'relay' }))).toBe(true);
   });
 });

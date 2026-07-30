@@ -49,6 +49,8 @@ const STATUS_LABELS = {
   strengthen: '我方強化',
 } as const;
 
+export const shouldShowCombatBeatCue = (beat: CombatBeat) => beat.kind !== 'total';
+
 export function createCombatBeatCue(beat: CombatBeat): CombatBeatCue {
   if (beat.kind === 'chain') {
     return {

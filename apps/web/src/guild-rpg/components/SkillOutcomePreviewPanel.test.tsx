@@ -8,7 +8,7 @@ import { guildRpgReducer } from '../state/game-reducer';
 import { SkillOutcomePreviewPanel } from './SkillOutcomePreviewPanel';
 
 describe('SkillOutcomePreviewPanel', () => {
-  it('shows the causal route, hit pips, and trigger nodes without a formula wall', () => {
+  it('shows one result sentence and one explicit commit action without a report panel', () => {
     const state = guildRpgReducer(createGuildRpgState(), {
       type: 'START_QUEST',
       questId: 'border_pack',
@@ -32,37 +32,20 @@ describe('SkillOutcomePreviewPanel', () => {
         actor={actor}
         target={target}
         skill={skill}
-        skills={state.profile.skillInventory}
         preview={preview}
-        units={battle.units}
+        onConfirm={() => undefined}
       />,
     );
 
-    expect(markup).toContain(`data-preview-total="${preview.totalDamage}"`);
+    expect(markup).toContain('data-action-sentence="true"');
+    expect(markup).toContain('data-confirm-skill="true"');
+    expect(markup).toContain(`對${target.name}施放`);
     expect(markup).toContain('data-preview-endpoints="true"');
-    expect(markup).toContain('data-preview-route="true"');
-    expect(markup).toContain('data-cue-stage="opening"');
-    expect(markup).toContain('data-cue-stage="condition"');
-    expect(markup).toContain('data-cue-stage="result"');
-    expect(markup).toContain(`${preview.damageSegments}擊`);
-    expect(markup).toContain(`總${preview.totalDamage}`);
-    expect(markup).toContain('data-combo-node=');
-    expect(markup).toContain('開戰');
-    expect(markup).toContain('已亮');
-    expect(markup).toContain('data-next-relay=');
-    const nextRelay = preview.nextRelays[0]!;
-    const suggestedSkillId = nextRelay.newlyReadySkillIds[0] ?? nextRelay.readySkillIds[0]!;
-    expect(markup).toContain(`data-relay-skill="${suggestedSkillId}"`);
-    expect(markup).not.toContain('×2');
-    expect(markup).not.toContain('data-impact-pip=');
-    expect(markup).not.toContain('段');
-    expect(markup).not.toContain('本次：');
     expect(markup).toContain(`data-preview-unit="${target.id}"`);
     expect(markup).toContain(`${target.currentHp} →`);
-    expect(markup).toContain('<details');
-    expect(markup).toContain('事件');
-    expect(markup).not.toContain('計算');
-    expect(markup).not.toContain('基本命中');
+    expect(markup).not.toMatch(
+      /data-cue-stage|data-next-relay|data-relay-skill|<details|已亮|出招亮|起手|事件/,
+    );
   });
 
   it('shows the real round finisher total without presenting it as repeated damage', () => {
@@ -100,9 +83,8 @@ describe('SkillOutcomePreviewPanel', () => {
         actor={actor}
         target={{ ...target, currentHp: 0 }}
         skill={skill}
-        skills={state.profile.skillInventory}
         preview={preview}
-        units={battle.units}
+        onConfirm={() => undefined}
       />,
     );
 
@@ -137,7 +119,6 @@ describe('SkillOutcomePreviewPanel', () => {
         actor={actor}
         target={{ ...target, currentHp: 0 }}
         skill={skill}
-        skills={state.profile.skillInventory}
         preview={{
           ...base,
           executionWindow: true,
@@ -149,7 +130,7 @@ describe('SkillOutcomePreviewPanel', () => {
           chaseSegments: 0,
           nextRelays: [],
         }}
-        units={battle.units}
+        onConfirm={() => undefined}
       />,
     );
 

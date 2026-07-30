@@ -6,6 +6,7 @@ import { describe, expect, it } from 'vitest';
 
 import { createGuildRpgState } from '../state/create-game-state';
 import { guildRpgReducer } from '../state/game-reducer';
+import { BattleCommandDock } from './BattleCommandDock';
 import { BattleScreen } from './BattleScreen';
 import { GuildScreen } from './GuildScreen';
 import { RewardScreen } from './RewardScreen';
@@ -13,6 +14,31 @@ import { RewardScreen } from './RewardScreen';
 const dispatch = () => undefined;
 
 describe('deterministic six-hero interface', () => {
+  it('retracts command controls while a combat sequence is resolving', () => {
+    const state = guildRpgReducer(createGuildRpgState(), {
+      type: 'START_QUEST',
+      questId: 'border_pack',
+    });
+    const markup = renderToStaticMarkup(
+      <BattleCommandDock
+        state={state}
+        dispatch={dispatch}
+        playback={{ visibleBeats: [], isPlaying: true }}
+        relay={2}
+        commandActorName="布蘭"
+        skillPreviews={new Map()}
+        executionWindow={false}
+        onChooseSkill={() => undefined}
+        onConfirmSkill={() => undefined}
+      />,
+    );
+
+    expect(markup).toContain('data-resolve-strip="true"');
+    expect(markup).toContain('接力第 2 棒');
+    expect(markup).not.toContain('data-battle-skill=');
+    expect(markup).not.toContain('gr-command-context');
+  });
+
   it('starts with one dominant teaching hunt and defers the configuration checklist', () => {
     const fresh = createGuildRpgState();
     const freshMarkup = renderToStaticMarkup(<GuildScreen state={fresh} dispatch={dispatch} />);
@@ -313,6 +339,12 @@ describe('deterministic six-hero interface', () => {
     expect(markup).not.toContain('戰鬥詳情');
     expect(markup).toContain('data-current-actor="brann"');
     expect(markup).toContain('data-next-actor="lyra"');
+    expect(markup).toContain('data-battle-hud="actor"');
+    expect(markup).toContain('data-battle-hud="target"');
+    expect(markup).toContain('目前角色');
+    expect(markup).toContain('目前目標');
+    expect(markup).toContain('data-intent-glyph=');
+    expect(markup).not.toMatch(/class="gr-enemy-intent-cue"[^>]*>反擊/);
     expect(markup).toMatch(
       /data-combat-battlefield="true"[\s\S]*?<\/section><section class="gr-command-dock"/,
     );
@@ -327,19 +359,21 @@ describe('deterministic six-hero interface', () => {
     expect(activeMember.skillIds).toHaveLength(6);
     expect(markup.match(/data-skill-total=/g) ?? []).toHaveLength(6);
     expect(markup.match(/data-skill-segments=/g) ?? []).toHaveLength(6);
-    expect(markup).toContain('data-combo-node=');
-    expect(markup).toContain('data-skill-hit-label=');
-    expect(markup).toContain('data-skill-total-label=');
+    expect(markup).toContain('data-skill-mode="choose"');
+    expect(markup).toContain('data-skill-fact="damage"');
+    expect(markup).not.toContain('data-combo-node=');
+    expect(markup).not.toContain('data-skill-hit-label=');
+    expect(markup).not.toContain('data-skill-total-label=');
     expect(markup).not.toContain('data-skill-hit-pip=');
     expect(markup).toContain('傷');
     expect(markup).not.toContain('×2');
     expect(markup).not.toContain('追擊');
     expect(markup).not.toContain('段</');
+    expect(markup).not.toMatch(/已亮|出招亮|缺燃燒|目標燃燒|上一棒火/);
     expect(markup).not.toContain('data-skill-power=');
     expect(markup).not.toContain('data-skill-layers=');
     expect(markup).not.toContain('威力 +');
     expect(markup).not.toContain('疊層 ·');
-    expect(markup).toContain('開戰');
     expect(markup).not.toContain('gr-skill-info');
     expect(markup).not.toContain('gr-unit-hp');
     expect(markup).not.toContain('gr-unit-status');

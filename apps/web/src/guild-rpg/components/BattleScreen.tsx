@@ -10,7 +10,11 @@ import { useEffect, useMemo, useState } from 'react';
 
 import { useCombatPlayback } from '../hooks/use-combat-playback';
 import { createFirstHuntCoach } from '../onboarding/first-hunt-coach';
-import { chooseSkillIntent, chooseTargetIntent } from '../presentation/skill-command-intent';
+import {
+  chooseSkillIntent,
+  chooseTargetIntent,
+  confirmSkillIntent,
+} from '../presentation/skill-command-intent';
 import { createSkillEngineContent } from '../state/create-skill-engine-content';
 import type { GuildRpgAction, GuildRpgState } from '../state/game-reducer';
 import { BattleCommandDock } from './BattleCommandDock';
@@ -112,20 +116,16 @@ export function BattleScreen({
     dispatch({ type: 'USE_SKILL', skillId, targetId });
   };
   const chooseSkill = (skillId: string) => {
-    const intent = chooseSkillIntent(armedSkillId, skillId, battle.selectedTargetId);
-    if ('cast' in intent) {
-      castSkill(intent.cast.skillId, intent.cast.targetId);
-      return;
-    }
+    const intent = chooseSkillIntent(skillId);
     if ('arm' in intent) setArmedSkillId(intent.arm);
   };
   const chooseTarget = (targetId: string) => {
-    const intent = chooseTargetIntent(armedSkillId, targetId);
-    if ('cast' in intent) {
-      castSkill(intent.cast.skillId, intent.cast.targetId);
-      return;
-    }
+    const intent = chooseTargetIntent(targetId);
     if ('select' in intent) dispatch({ type: 'SELECT_TARGET', targetId: intent.select });
+  };
+  const confirmSkill = () => {
+    const intent = confirmSkillIntent(armedSkillId, battle.selectedTargetId);
+    if ('cast' in intent) castSkill(intent.cast.skillId, intent.cast.targetId);
   };
 
   return (
@@ -217,6 +217,7 @@ export function BattleScreen({
         skillPreviews={skillPreviews}
         executionWindow={displayExecutionWindow}
         onChooseSkill={chooseSkill}
+        onConfirmSkill={confirmSkill}
       />
       <p className="gr-status-line gr-sr-only" role="status">
         {playback.isPlaying ? playback.currentBeat?.label : state.message}

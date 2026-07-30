@@ -3,6 +3,7 @@ import type { StatusLayers } from '@expedition/shared-types';
 import type { GuildCombatSceneUnit } from './contracts';
 
 export interface CombatUnitHud {
+  identityMode: 'bar-only';
   nameLabel: string;
   hpLabel: string;
   projectedHpLabel: string | undefined;
@@ -31,6 +32,7 @@ export function createCombatUnitHud(unit: GuildCombatSceneUnit): CombatUnitHud {
         : undefined;
 
   return {
+    identityMode: 'bar-only',
     nameLabel: unit.name,
     hpLabel: `${currentHp}/${maxHp}`,
     projectedHpLabel: unit.preview ? `${currentHp} → ${unit.preview.afterHp}` : undefined,

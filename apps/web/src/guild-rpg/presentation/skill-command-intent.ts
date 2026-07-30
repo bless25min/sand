@@ -1,20 +1,22 @@
 export type SkillCommandIntent =
-  { arm: string } | { select: string } | { cast: { skillId: string; targetId: string } };
+  | { arm: string }
+  | { select: string }
+  | { cast: { skillId: string; targetId: string } }
+  | { blocked: 'skill' | 'target' };
 
-export function chooseSkillIntent(
-  armedSkillId: string | undefined,
-  skillId: string,
-  targetId: string | undefined,
-): SkillCommandIntent {
-  if (armedSkillId === skillId && targetId) {
-    return { cast: { skillId, targetId } };
-  }
+export function chooseSkillIntent(skillId: string): SkillCommandIntent {
   return { arm: skillId };
 }
 
-export function chooseTargetIntent(
+export function chooseTargetIntent(targetId: string): SkillCommandIntent {
+  return { select: targetId };
+}
+
+export function confirmSkillIntent(
   armedSkillId: string | undefined,
-  targetId: string,
+  targetId: string | undefined,
 ): SkillCommandIntent {
-  return armedSkillId ? { cast: { skillId: armedSkillId, targetId } } : { select: targetId };
+  if (!armedSkillId) return { blocked: 'skill' };
+  if (!targetId) return { blocked: 'target' };
+  return { cast: { skillId: armedSkillId, targetId } };
 }

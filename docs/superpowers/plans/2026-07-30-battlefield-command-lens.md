@@ -25,6 +25,7 @@ the Pixi playback. Replace, rather than stack, command surfaces.
 ### Task 1: Deliver the battlefield command lens
 
 **Files:**
+
 - Modify: `apps/web/src/guild-rpg/presentation/skill-command-intent.test.ts`
 - Modify: `apps/web/src/guild-rpg/presentation/skill-command-intent.ts`
 - Create: `apps/web/src/guild-rpg/presentation/skill-action-presentation.test.ts`
@@ -42,18 +43,19 @@ the Pixi playback. Replace, rather than stack, command surfaces.
 - Modify: `apps/web/e2e/guild-rpg-release.spec.ts`
 
 **Interfaces:**
+
 - Produces: `createSkillActionPresentation(skill, preview)` with a compact tile outcome,
   one natural-language result sentence, one unmet-condition sentence, and status delta.
 - Produces: `chooseSkillIntent(skillId)` and `chooseTargetIntent(targetId)` that only arm
   or select; casting occurs only through `confirmSkillIntent(armedSkillId, targetId)`.
 
-- [ ] **Step 1: RED — lock explicit confirmation and player-language contracts**
+- [x] **Step 1: RED — lock explicit confirmation and player-language contracts**
 
   Update intent and presentation tests to require target taps to remain selection-only,
   require a separate confirm result, and reject `已亮`, `出招亮`, `起手`, `事件`, and
   `data-next-relay` from the primary preview.
 
-- [ ] **Step 2: Run focused tests and observe the expected failures**
+- [x] **Step 2: Run focused tests and observe the expected failures**
 
   Run:
   `.\node_modules\.bin\vitest.cmd run apps/web/src/guild-rpg/presentation/skill-command-intent.test.ts apps/web/src/guild-rpg/presentation/skill-action-presentation.test.ts apps/web/src/guild-rpg/components/SkillOutcomePreviewPanel.test.tsx`
@@ -61,32 +63,32 @@ the Pixi playback. Replace, rather than stack, command surfaces.
   Expected: failures because explicit confirmation and the focused presentation do not
   exist.
 
-- [ ] **Step 3: GREEN — implement explicit selection, preview and confirmation**
+- [x] **Step 3: GREEN — implement explicit selection, preview and confirmation**
 
   Add the presentation model, make all target taps selection-only, add one
   `對{target}施放` button, replace the six-card grid with six compact switch tabs while a
   skill is selected, and remove event and relay text cards from the primary surface.
 
-- [ ] **Step 4: Run focused tests until green, then refactor**
+- [x] **Step 4: Run focused tests until green, then refactor**
 
   Run the Step 2 command. Split presentation-only logic from components, keep
   `BattleScreen` as the thin state coordinator, and rerun until all focused tests pass.
 
-- [ ] **Step 5: RED/GREEN — unify battlefield HUD and combat cues**
+- [x] **Step 5: RED/GREEN — unify battlefield HUD and combat cues**
 
   Add failing component/cue assertions for focused actor and target HUDs, transparent
   unit controls, target-only prediction, trigger-specific chase labels, and relay cues
   without generic total callouts. Implement the smallest projection and CSS changes,
   then run the affected component, cue, Pixi plan, and renderer tests.
 
-- [ ] **Step 6: RED/GREEN — verify the whole mobile player loop**
+- [x] **Step 6: RED/GREEN — verify the whole mobile player loop**
 
   Update E2E to require one confirm action, no target auto-cast, no report-like preview,
   compact unselected skills, no overlap at all four viewports, visible semantic trigger
   escalation, six relays, victory and the existing loot flow. Run `pnpm test:e2e` and
   confirm port 4173 closes.
 
-- [ ] **Step 7: Consolidated batch gate**
+- [x] **Step 7: Consolidated batch gate**
 
   Run `pnpm check`, review the complete diff once, fix only findings tied to this player
   outcome, and run one focused follow-up plus `pnpm check` again only if source changed.
